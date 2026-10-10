@@ -9,6 +9,14 @@ transport; on Xcode 27 the service behind it can run headless (`xcrun mcp-server
 protocol 2025-06-18. The 54-tool set and every tool schema are identical to the released
 27.0 (27A266a, `serverInfo` 25317) and beta 6 (27A5252f, `serverInfo` 25295.11).
 
+**Xcode 27.2 beta 2 (27B5028f, `serverInfo` 25447.1)** lists 53 tools. Its unapproved/no-workspace
+and approved/with-workspace captures have identical names and schemas: `DocumentationSearch`
+is absent, `RenderPreview` gains destination selection, and `InvokeDebuggerCommand` changes
+its variable-inspection guidance. The entries below retain the 27.1 RC baseline and label
+these beta-2 differences. `GetCodeCoverage` is advertised in the 27.2 beta 2 release notes
+(181141715) but absent from both captures; no callable schema was verified. Check the live
+`tools/list` before using a tool or a build-specific parameter.
+
 **All 54 tools are listed even with no workspace open** (verified on beta 6 and again on the
 27.0 SDK: `xcrun mcp-server
 status` reported `Open workspaces: none` and `tools/list` still returned 54, `DocumentationSearch`
@@ -294,6 +302,12 @@ Sends an lldb command to Xcode's active debugging session and returns the output
 
 - **Returns**: `debugSessionActive`*, `isWaitingForMore`*, `output`*, `processIdentifier`
 
+- **Notes**: The 27.2 beta 2 description recommends `p` or `v` for variable inspection,
+  reserving `po` or `expression` for operations that need them (function calls, casts,
+  arithmetic). The process must already be running with the debugger attached;
+  `RunProject(attachDebugger: true)` can establish that session. Check `process status`
+  before commands that require a stopped process unless its state is already known.
+
 ### RunCodeSnippet
 
 Builds and runs a snippet of code in the context of a specific file and waits until results are available.
@@ -401,6 +415,35 @@ Builds and renders a Preview and waits until a snapshot of the resulting UI is a
 - **Returns**: `displayName`, `errors`, `previewSnapshotPath`, `renderedDestination`, `sourceLineNumber`, `supportedCanvasControlOverrides`, `supportedLocalizations`, `supportedPreviewVariantOverrides`
 
 - **Notes**: `timeout` defaults to 120s. Use `supportedLocalizations` and variant keys returned by a previous call rather than guessing override values.
+
+#### Destination selection in Xcode 27.2 beta 2
+
+The 27B5028f schema adds optional input `preferredRenderDestination`, an object with four
+optional string fields: `identifier`, `platformName`, `deviceModelName`, `systemVersion`.
+Use values from a prior call's `availableRenderDestinations` for the same active scheme.
+Every supplied field must match; omitted fields impose no constraint, and the first matching
+destination is selected. Omitting the object lets the server choose automatically.
+
+The output adds optional `availableRenderDestinations`, an array whose entries require
+`identifier`; `platformName`, `deviceModelName`, and `systemVersion` are optional strings.
+The array can be omitted if the server cannot determine destinations. Beta 2 also adds
+`renderedDestination.identifier`: the `renderedDestination` object remains optional, but
+`identifier` is required when that object is present; its other three string fields remain
+optional. The top-level `errors` array becomes required in the beta-2 output schema.
+The schema specifies that an unmatched preference falls back to automatic selection and
+adds a message to `errors`; inspect the returned destination identity and errors rather
+than assuming the preference was honored. The preference, available-destination array,
+and rendered identifier are absent from the 27.1 RC (27A9275) schema, whose output has
+no required fields.
+
+#### Canvas group items in Xcode 27.2 beta 2
+
+The 27B5028f schema changes `supportedCanvasControlOverrides.groupItems` from an array of
+integers to an array of objects. Each object requires integer `index` and can include string
+`title`; titles need not be unique. Pass the selected object's `index` as
+`previewCanvasControlOverrides.groupItemIndex`. The group-items array is optional and is
+omitted when the preview has no group-item control. The 27A9275 schema declares integer
+entries instead; inspect the live schema before consuming this field.
 
 ---
 
@@ -554,7 +597,7 @@ Searches Apple Developer Documentation using semantic matching.
 
 - **Returns**: `documents`*
 
-- **Notes**: Listed without an open workspace on beta 6 and the released 27.0, and present in the 27.1 RC capture. The tool set is dynamic: re-list and check server status when it is missing; its absence alone does not establish a workspace requirement.
+- **Notes**: Listed without an open workspace on beta 6 and the released 27.0, and present in the 27.1 RC capture. Absent on 27.2 beta 2 (27B5028f), including the approved-with-workspace capture. The tool set is dynamic: re-list and check the server/build when it is missing; its absence alone does not establish a workspace or approval requirement. Use `axiom-apple-docs` for bundled guides and SDK-first Apple documentation research when this tool is unavailable.
 
 ## Resources
 

@@ -128,6 +128,60 @@ Render SwiftUI previews and verify UI changes visually.
 
 `RenderPreview` also takes `previewLocalizationOverride` (a locale identifier), `previewVariantOverrides`, and `previewCanvasControlOverrides` — use the `supportedLocalizations` and variant keys returned by a previous invocation rather than guessing. Default `timeout` is 120s.
 
+### Choose a Render Destination on Xcode 27.2 beta 2
+
+**Check the live schema first.** On 27B5028f, `RenderPreview` accepts
+`preferredRenderDestination` and can return `availableRenderDestinations`. The 27.1 RC
+(27A9275) schema has neither field; use automatic rendering on that build.
+
+First call `RenderPreview` without a preference. Use your project's workspace identifier
+and source path in both examples:
+
+```json
+{
+  "workspaceIdentifier": "workspace-Gxw7GRzGoI",
+  "sourceFilePath": "MyApp/ContentView.swift",
+  "previewDefinitionIndexInFile": 0
+}
+```
+
+If `availableRenderDestinations` is returned, select an entry and use its exact `identifier`
+in a subsequent `RenderPreview` call for the same active scheme. Replace the placeholder
+below with that returned identifier:
+
+```json
+{
+  "workspaceIdentifier": "workspace-Gxw7GRzGoI",
+  "sourceFilePath": "MyApp/ContentView.swift",
+  "previewDefinitionIndexInFile": 0,
+  "preferredRenderDestination": {
+    "identifier": "identifier-from-availableRenderDestinations"
+  }
+}
+```
+
+You can also constrain `platformName`, `deviceModelName`, and `systemVersion` using returned
+values; all specified fields must match. If destinations are unavailable, keep automatic
+selection. The schema specifies automatic fallback plus an `errors` message when a preference
+matches nothing. On this build, `errors` is required by the output schema; when the optional
+`renderedDestination` object is present, it includes a required `identifier`. Compare that
+identifier with the selection and inspect errors to confirm the result.
+
+For argument-based previews on 27B5028f, `supportedCanvasControlOverrides.groupItems` contains
+objects with required integer `index` and optional string `title`. Use the returned `index`
+as `previewCanvasControlOverrides.groupItemIndex`; titles can repeat. The group-items array
+can be omitted when the control is unavailable. This differs from the integer-entry array
+declared by the 27A9275 schema.
+
+## Workflow: Debugger Inspection
+
+Start with a debugger-attached process (`RunProject` with `attachDebugger: true` if needed).
+Use `InvokeDebuggerCommand` with `command: "process status"` to check the process state before
+issuing commands that require it to be stopped, unless that state is already known.
+The 27.2 beta 2 description recommends `p` or `v` for variable inspection. Use `po` or
+`expression` when you need function calls, casts, or arithmetic. These are LLDB commands
+inside the `command` parameter, not additional MCP tools.
+
 ## Workflow: IssueTriage
 
 Collect diagnostics from the build, then drill into individual files.
@@ -150,7 +204,18 @@ Query Apple's documentation corpus through MCP.
 2. Cross-reference with axiom-apple-docs for bundled Xcode guides
 ```
 
-**The tool set is dynamic** — the server advertises `capabilities.tools.listChanged: true`. On beta 6 and the released 27.0 all 54 tools list even with no workspace open (`DocumentationSearch` included), so a short list points at the server, not at a missing workspace. The released 27.0's tool set and schemas are identical to beta 6 (`serverInfo` 25295.11 → 25317). Re-list and check `xcrun mcp-server status`.
+**Check that the tool is listed before calling it.** The server advertises
+`capabilities.tools.listChanged: true`. Beta 6 and released 27.0 list all 54 tools with no
+workspace open, including `DocumentationSearch`; 27.1 RC (27A9275) has the same 54 schemas.
+On 27.2 beta 2 (27B5028f), `DocumentationSearch` is absent from both the unapproved/no-workspace
+and approved/with-workspace captures. A shorter list alone does not establish a workspace or
+approval problem. Re-list and check the selected Xcode/build and `xcrun mcp-server status`.
+When the tool is unavailable, use `axiom-apple-docs` for bundled guides and SDK-first Apple
+documentation research.
+
+`GetCodeCoverage` is advertised in the 27.2 beta 2 release notes but absent from both measured
+27B5028f listings. Verify a live callable schema before using it; do not invent its parameters
+from the release-note summary.
 
 `query` is required; `frameworks` is an optional array that scopes the search (all frameworks if omitted). Matching is semantic, not keyword.
 

@@ -1,11 +1,11 @@
 ---
 name: xcode-mcp-ref
-description: Complete parameter, return-shape, and behavior reference for all 54 tools exposed by Xcode's MCP server, captured live from Xcode 27
+description: Tool parameters, return shapes, and build-specific behavior for Xcode's MCP server, including verified 27.2 beta 2 schema changes
 ---
 
 # Xcode MCP Tool Reference
 
-Complete reference for every tool exposed by Xcode's MCP server — the Model Context Protocol interface that lets an AI assistant drive Xcode directly. Covers parameters, return shapes, and the behavioral caveats that the tool descriptions leave out. Verified against a live `tools/list` capture on Xcode 27.1 RC (27A9275, server 25320); its 54 tools and schemas match Xcode 27.0.
+Reference for Xcode's Model Context Protocol server, which lets an AI assistant drive Xcode directly. Covers the 54-tool Xcode 27.1 RC baseline (27A9275, server 25320), matching Xcode 27.0, plus verified differences in the 53-tool Xcode 27.2 beta 2 capture (27B5028f, server 25447.1).
 
 ## When to Use This Reference
 
@@ -27,12 +27,15 @@ Use this reference when:
 - "Why does my tool call say workspaceIdentifier is required when only one project is open?"
 - "Why can't I find DocumentationSearch in the tool list?"
 - "What does XcodeNewProject need — projectName or productName?"
+- "How do I choose a RenderPreview destination on Xcode 27.2 beta 2?"
+- "Why is GetCodeCoverage mentioned in release notes but missing from my tool list?"
+- "Which LLDB commands does InvokeDebuggerCommand recommend for inspecting variables?"
 
 ## Two Things That Trip Everyone Up
 
-**All 54 tools list even with no workspace open.** Verified on beta 6 and again on the Xcode 27.0 SDK: `xcrun mcp-server status` reported `Open workspaces: none` and `tools/list` still returned all 54, `DocumentationSearch` included. The server does advertise `capabilities.tools.listChanged: true`, so treat the set as dynamic — but a short list is a server problem, not a missing workspace.
+**Tool availability depends on the captured build.** Beta 6 and Xcode 27.0 list all 54 tools with no workspace open, including `DocumentationSearch`; the 27.1 RC has the same schemas. Xcode 27.2 beta 2 lists 53 tools, with `DocumentationSearch` absent even in the approved-with-workspace capture. Its release-noted `GetCodeCoverage` is also absent. The server advertises `listChanged`, so check the live list before calling a tool; a shorter list alone does not establish a workspace or approval problem.
 
-**`workspaceIdentifier` is required even though it never appears in a `required` list.** All 46 tools that accept it demand it, even when a single workspace is open. The error names the valid identifiers, so a missed one costs a round trip rather than a wrong-target write. Identifiers are readable slugs (`workspace-Gxw7GRzGoI`), not UUIDs, and come from `XcodeListWorkspaces`. On Xcode 26.x this parameter was `tabIdentifier`. It survived into Xcode 27 beta 5 on the running-Xcode path, and beta 6 removed it everywhere — along with `XcodeListWindows`, `XcodeGetCurrentFile`, and `XcodeListNavigatorIssues`. Code written against a beta-5 capture taken with Xcode open will break.
+**Pass `workspaceIdentifier` even though it never appears in a `required` list.** It is required wherever tested, including `XcodeListSchemes` and `XcodeListTargets` with a single workspace open; treat it as required for all 46 tools that accept it. The error names the valid identifiers, so a missed one costs a round trip rather than a wrong-target write. Identifiers are readable slugs (`workspace-Gxw7GRzGoI`), not UUIDs, and come from `XcodeListWorkspaces`. On Xcode 26.x this parameter was `tabIdentifier`. It survived into Xcode 27 beta 5 on the running-Xcode path, and beta 6 removed it everywhere — along with `XcodeListWindows`, `XcodeGetCurrentFile`, and `XcodeListNavigatorIssues`. Code written against a beta-5 capture taken with Xcode open will break.
 
 ## What's Covered
 
@@ -55,7 +58,7 @@ Use this reference when:
 `XcodeListSchemes`, `XcodeSwitchScheme`, `XcodeListRunDestinations`, `XcodeSwitchRunDestination`
 
 ### Previews
-`RenderPreview`
+`RenderPreview`, `preferredRenderDestination`, `availableRenderDestinations`, `renderedDestination.identifier`, `supportedCanvasControlOverrides.groupItems` (Xcode 27.2 beta 2)
 
 ### Device interaction
 `DeviceInteractionStartSession`, `DeviceInteractionStartWorkspaceSession`, `DeviceInteractionInstallAndRun`, `DeviceInteractionSynthesize`, `DeviceInteractionEndSession`
@@ -70,9 +73,9 @@ Use this reference when:
 `AddEntitlement`, `AddInfoPlist`
 
 ### Documentation
-`DocumentationSearch`
+`DocumentationSearch` (absent in Xcode 27.2 beta 2)
 
-Fifteen entries carry extra notes for caveats their schema descriptions bury — among them the word "test" being forbidden in `RunCodeSnippet`'s `purpose`, `XcodeRM` moving files to the Trash by default, `XcodeListTemplates` truncating to 100 of 193 templates, and `GetTestList` capping inline output at 100 tests.
+Entries carry extra notes for caveats their schema descriptions bury — among them the word "test" being forbidden in `RunCodeSnippet`'s `purpose`, `XcodeRM` moving files to the Trash by default, `XcodeListTemplates` truncating to 100 of 193 templates, and `GetTestList` capping inline output at 100 tests. The full reference covers preview-destination selection and debugger-command recommendations for Xcode 27.2 beta 2, plus the unverified `GetCodeCoverage` release-note claim.
 
 ## Documentation Scope
 

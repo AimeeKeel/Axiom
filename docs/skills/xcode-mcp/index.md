@@ -1,6 +1,6 @@
 # Xcode MCP Integration
 
-Xcode ships a built-in MCP (Model Context Protocol) server that exposes IDE tools to external AI clients — 54 of them on Xcode 27. This skill suite teaches Claude how to set up, connect, and use those tools effectively, from building and testing to rendering SwiftUI previews programmatically. On Xcode 27 the server can also run headless, with Xcode closed.
+Xcode ships a built-in MCP (Model Context Protocol) server that exposes IDE tools to external AI clients. This skill suite teaches Claude how to set up, connect, and use those tools, from building and testing to rendering SwiftUI previews programmatically. The verified 27.1 RC baseline has 54 tools; 27.2 beta 2 has 53 and adds preview-destination fields. On Xcode 27 the server can also run headless, with Xcode closed.
 
 ```mermaid
 flowchart LR
@@ -44,12 +44,13 @@ Questions you can ask Claude that will draw from these skills:
 - "Run just the failing test, not the whole suite"
 - "Render the preview for my ContentView"
 - "My MCP tool call just hangs and never returns"
+- "How do I choose a preview destination on Xcode 27.2 beta 2?"
 
 ## What This Skill Provides
 
 - **Setup guides** for 5 MCP clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI), in attached or headless mode
 - **Workflow patterns** – workspace bootstrap, iterative BuildFix loops, TestFix loops, preview verification
-- **All 54 tool references** – parameters, return schemas, and gotchas
+- **Tool references** – the 54-tool 27.1 RC baseline, verified 27.2 beta 2 differences, return schemas, and gotchas
 - **Workspace targeting** – identifier management, and why it's required even with one project open
 - **Troubleshooting** – hung calls, agent approval, empty tool lists, stale connections
 - **Conflict resolution** – when to use MCP tools vs `xcodebuild` vs standard file tools
@@ -63,12 +64,12 @@ This is a router skill with four sub-skills:
 | `axiom-xcode-mcp` | Router | Routes to the right specialized skill |
 | `xcode-mcp-setup` | Discipline | Enable, connect, and troubleshoot per client |
 | `xcode-mcp-tools` | Discipline | Workflow patterns, gotchas, workspace targeting |
-| `xcode-mcp-ref` | Reference | All 54 tools with params, schemas, examples |
+| `xcode-mcp-ref` | Reference | Baseline tool schemas and build-specific differences |
 | `axe-ref` | Reference | AXe simulator input (`tap`/`type`/`swipe`), documented at [AXe](/reference/axe-ref) |
 
 ## The Xcode MCP Tools
 
-The server lists all 54 tools whether or not a workspace is open, `DocumentationSearch` included — so a shorter list points at the server, not at a missing workspace. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
+Beta 6 and Xcode 27.0 list all 54 tools with no workspace open, including `DocumentationSearch`; the 27.1 RC has the same schemas. On 27.2 beta 2 (27B5028f), both the unapproved/no-workspace and approved/with-workspace captures list 53 tools without `DocumentationSearch`. The release-noted `GetCodeCoverage` is also absent. Check the live list before calling a tool; a shorter list alone does not establish a workspace or approval problem. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
 
 | Category | Tools |
 |----------|-------|
@@ -85,7 +86,7 @@ The server lists all 54 tools whether or not a workspace is open, `Documentation
 | Crash & Field Diagnostics | `GetTopCrashIssues`, `GetCrashIssueLogs`, and field-performance tools |
 | Localization | `LocalizationPlanner`, `StringCatalogRead`, `StringCatalogEdit`, `StringCatalogContext` |
 | Project Configuration | `AddEntitlement`, `AddInfoPlist` |
-| Search | `DocumentationSearch` |
+| Search | `DocumentationSearch` (absent on 27.2 beta 2) |
 
 ## Requirements
 

@@ -1878,23 +1878,23 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-ref.md",
-      "sha256": "49d6f5a5269797926d417044301c5f4c0165eb8e341b3f0788f22fbfaa711be9",
-      "bytes": 32339
+      "sha256": "2f1a52fbf266e586c0ea91dc1cbc2a9b2178c1d0c14cf90187acae89c3ba2f46",
+      "bytes": 35546
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-setup.md",
-      "sha256": "00d98e8ac2079161287048155c19fd87af8d15ea446f66b1b345708c99f88357",
-      "bytes": 16978
+      "sha256": "1843baa93de6a65ac17e553986cf3fa5ab1d3d135f50921f99f0937cc1f6c79e",
+      "bytes": 17755
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-tools.md",
-      "sha256": "fc0271aa6acafe89f5657d36c67246dd1a8b42b109280330a1b7565d2fc61ab1",
-      "bytes": 13969
+      "sha256": "2b7c42b90db1808b785ae7c611c6dc5436375439983d7e2ced58cc7e70b48fe3",
+      "bytes": 16938
     }
   ],
   "totals": {
     "files": 378,
-    "bytes": 7684907
+    "bytes": 7691860
   },
   "excludedMirrors": 30,
   "classes": {

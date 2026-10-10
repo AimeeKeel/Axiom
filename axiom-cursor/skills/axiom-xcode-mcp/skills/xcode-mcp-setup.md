@@ -198,6 +198,12 @@ successful tool listing is not evidence you can call anything. And **approval is
 `XcodeOpenWorkspace` / `XcodeNewProject`**, not by connecting: opening or creating a project is the
 act that prompts the user, and it grants the agent *and* that project's folder together.
 
+**A missing tool is not proof of missing approval or a workspace.** On 27.2 beta 2
+(27B5028f), the unapproved/no-workspace and approved/with-workspace listings are identical:
+53 tools, with neither `DocumentationSearch` nor the release-noted `GetCodeCoverage`.
+Compare the selected build's live schema before changing permissions or opening a workspace
+to recover an absent tool. The 27.1 RC (27A9275) lists 54 tools, including `DocumentationSearch`.
+
 **Before issuing tool calls, confirm your agent appears under `Permitted agents` in
 `xcrun mcp-server status`.** Its output also lists `Permitted folders` and `Open workspaces`:
 
@@ -313,7 +319,7 @@ digraph troubleshoot {
     "STOP: agent not approved" [shape=octagon];
     "XcodeOpenWorkspace to trigger the prompt" [shape=box];
     "Check mcp-server status Permitted agents" [shape=box];
-    "Check status; mcp-server open <path>" [shape=box];
+    "Check service status and selected build" [shape=box];
     "Pass workspaceIdentifier from XcodeListWorkspaces" [shape=box];
     "Expected: unsigned agents get time-boxed grants" [shape=box];
 
@@ -324,7 +330,7 @@ digraph troubleshoot {
     "STOP: agent not approved" -> "XcodeOpenWorkspace to trigger the prompt";
     "XcodeOpenWorkspace to trigger the prompt" -> "Check mcp-server status Permitted agents";
     "tools/call fails or hangs?" -> "tools/list empty?" [label="succeeds"];
-    "tools/list empty?" -> "Check status; mcp-server open <path>" [label="no tools"];
+    "tools/list empty?" -> "Check service status and selected build" [label="no tools"];
     "tools/list empty?" -> "Wrong project?" [label="tools listed"];
     "Wrong project?" -> "Pass workspaceIdentifier from XcodeListWorkspaces" [label="yes"];
     "Wrong project?" -> "Repeated permission prompts?" [label="no"];
@@ -339,8 +345,9 @@ digraph troubleshoot {
 | **`tools/call` rejected: "This agent isn't approved…"** (beta 6 and later, including 27.0) or **hangs forever, no error** (through beta 5) | Agent not approved | Call `XcodeOpenWorkspace` to trigger the prompt; confirm under `Permitted agents` in `xcrun mcp-server status`; or `sudo xcrun mcp-server approve <id>` |
 | "Connection refused" (attached) | Xcode not running or MCP toggle off | Launch Xcode, enable MCP in Settings > Intelligence |
 | "Connection refused" (headless) | Service not running, or headless never enabled | `xcrun mcp-server status`; then `xcrun mcp-server open <path>`, or `sudo xcrun mcp-server enable` first |
-| tools/list returns empty | Server not reachable — **not** approval: beta 6 and 27.0 list all 54 tools to an unapproved agent | `xcrun mcp-server status`; launch with `xcrun mcp-server open <path>` if stopped, then reconnect |
-| `DocumentationSearch` missing from tools/list | Tool set is dynamic (`listChanged: true`) — but on beta 6 and 27.0 all 54 list with no workspace open | Re-list; if still missing, check `xcrun mcp-server status` |
+| tools/list returns empty | Cause not established by the empty list alone | Inspect errors, selected Xcode/build and `xcrun mcp-server status`; re-list before changing permissions or workspaces |
+| `DocumentationSearch` missing from tools/list | Build-specific tool surface: absent on 27.2 beta 2 (27B5028f), even with approval and a workspace; present on beta 6, 27.0 and 27.1 RC | Re-list and verify the selected build; use `axiom-apple-docs` for bundled guides and SDK-first research when absent |
+| `GetCodeCoverage` mentioned in release notes but not listed | Advertised for 27.2 beta 2, but no callable schema in either measured 27B5028f listing | Verify `tools/list` before calling; do not infer parameters or request new permissions from the release note |
 | "workspaceIdentifier is required" | Identifier omitted — required even with one workspace open | Use the identifier the error itself lists, or call `XcodeListWorkspaces` |
 | Tools target wrong project | Multiple workspaces open | Call `XcodeListWorkspaces`, pass the right `workspaceIdentifier` |
 | Repeated permission prompts | Unsigned agents get time-boxed grants; "Always allow" still expires | Expected — re-approve, or run a signed agent binary |
