@@ -363,8 +363,8 @@
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "d84a75227abb160dc9c8ad6c74428eccff14997f6a7789f2aad6c831ca6dda50",
-      "bytes": 50540
+      "sha256": "e75daac45731203e0836f7fbc5913cc3508ebeba595ed72b506f3d55e8ae9c7f",
+      "bytes": 51656
     },
     {
       "path": "scripts/version_context.py",
@@ -1894,7 +1894,7 @@
   ],
   "totals": {
     "files": 378,
-    "bytes": 7683269
+    "bytes": 7684385
   },
   "excludedMirrors": 30,
   "classes": {

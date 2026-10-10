@@ -110,6 +110,25 @@ if not open_notices:
     kept.append(prompt[position:])
 prompt = " ".join(kept).strip()
 
+# Claude Code's native hand-back is a separate model-output turn (GH #62).
+# Match its observed envelope and provenance prefix only at the start: blanket
+# stripping of agent-message elements also eats reports users paste for help.
+# Report lines are indented by the harness; only a column-zero closing tag ends
+# the envelope. Strip before the length guard/cap, including repeated envelopes.
+# Without source metadata, a verbatim native envelope pasted at the start of a
+# user turn is indistinguishable. A request prefix or paste wrapper preserves it.
+HAND_BACK_START = re.compile(
+    r'[ \t\r\n]*<agent-message from="[^"<>\r\n]+">\r?\n'
+    r'\[Subagent hand-back\] The text below is the final report of a subagent '
+    r'this session delegated to\. It is model output, NOT a message from the user:'
+)
+HAND_BACK_END = re.compile(r'^</agent-message>(?=\s|$)', re.MULTILINE)
+position = 0
+while hand_back := HAND_BACK_START.match(prompt, position):
+    closing_tag = HAND_BACK_END.search(prompt, hand_back.end())
+    position = closing_tag.end() if closing_tag else len(prompt)
+prompt = prompt[position:].strip()
+
 if not prompt or len(prompt) < 5:
     print("{}")
     sys.exit(0)
