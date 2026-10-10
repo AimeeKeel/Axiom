@@ -5,7 +5,7 @@ description: Use when app is rejected by App Review, submission blocked, or appe
 
 # App Store Rejection Diagnostics
 
-Systematic App Store rejection diagnosis and remediation. Maps rejection messages to targeted fixes for the 6 categories that account for 90% of all App Review failures.
+Systematic App Store rejection diagnosis and remediation. Maps rejection messages to nine patterns covering technical, metadata, privacy, business, subjective, and safety issues, plus appeals.
 
 ## Overview
 
@@ -34,6 +34,8 @@ Questions you can ask Claude that will draw from this diagnostic:
 - "My app was rejected 3 times for different reasons each time"
 - "Binary Rejected but no guideline number — what happened?"
 - "How do I write an App Review appeal?"
+- "How do I respond to a Guideline 4.2 or 4.3 rejection?"
+- "What does a Guideline 1.x rejection mean for user-generated content or a Kids category app?"
 
 ## Diagnostic Workflow
 
@@ -51,6 +53,8 @@ Questions you can ask Claude that will draw from this diagnostic:
    |- Guideline 4.8 -> Pattern 4 (Sign in with Apple)
    |- Guideline 3.x -> Pattern 5 (Business/Monetization)
    |- No guideline  -> Pattern 6 (Binary/Technical)
+   |- Guideline 4.2/4.3 -> Pattern 8 (Minimum Functionality/Spam)
+   |- Guideline 1.x -> Pattern 9 (Safety/Content/UGC/Kids)
    +- Disagree       -> Pattern 7 (Appeal)
 
 3. Apply pattern fix (varies)
@@ -103,6 +107,14 @@ For the iOS 27.2 EU ATT prompt, the diagnostic points to Privacy UX for expanded
 **Diagnosis**: Verify compliance with cited guideline, gather evidence
 **Fix**: Reply in ASC with specific evidence first; formal appeal if unresolved
 
+### Pattern 8: Guideline 4.2/4.3 — Minimum Functionality / Spam
+
+Guidance for subjective rejections involving minimum functionality, web wrappers, duplicate apps, or spam.
+
+### Pattern 9: Guideline 1.x — Safety: Content / UGC / Kids
+
+Guidance for content safety, user-generated content moderation, and Kids category requirements.
+
 ## Quick Reference
 
 | Rejection Type | Likely Cause | Pattern | Typical Fix Time |
@@ -137,7 +149,7 @@ For the iOS 27.2 EU ATT prompt, the diagnostic points to Privacy UX for expanded
 This is a **diagnostic skill** — systematic rejection diagnosis with guideline-specific remediation patterns.
 
 #### Diagnostic includes
-- 7 diagnostic patterns covering 90% of App Store rejections
+- 9 diagnostic patterns covering common App Store rejection categories and appeals
 - Decision tree mapping rejection messages to patterns
 - Production crisis scenario with multi-rejection protocol
 - Appeal writing guidance with good/bad examples

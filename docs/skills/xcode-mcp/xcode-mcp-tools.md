@@ -37,7 +37,7 @@ Use this skill when:
 
 ## What This Skill Provides
 
-- **Workspace targeting and bootstrap** – `XcodeListWorkspaces` first, cache the identifier, then open or create a project with `XcodeListTemplates` and `XcodeNewProject`; an empty workspace list is a normal starting state, and targeted calls still need an identifier when only one project is open
+- **Workspace targeting and bootstrap** – `XcodeListWorkspaces` first, then open an existing project with `XcodeOpenWorkspace` or create one with `XcodeListTemplates` and `XcodeNewProject`; cache the returned identifier for targeted calls, even when only one project is open
 - **BuildFix loop** – `BuildProject` → `GetBuildLog` (filtered by severity) → `XcodeRefreshCodeIssuesInFile` → `XcodeUpdate` → repeat (max 5 iterations); fall back to environment-first diagnostics when the same error survives 3 attempts
 - **TestFix loop** – `GetTestList` → `RunSomeTests` for fast iteration → `XcodeUpdate` → `RunAllTests` for final verification, plus the `{targetName, testIdentifier}` specifier shape and the 100-test inline cap
 - **PreviewVerify workflow** – localization, variant and returned group-item overrides, plus destination discovery and selection on Xcode 27.2 beta 2; inspect fallback results instead of assuming the requested destination was used
