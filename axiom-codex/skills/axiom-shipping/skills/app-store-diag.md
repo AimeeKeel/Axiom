@@ -378,6 +378,11 @@ Your privacy policy MUST specifically list:
 ```
 
 ##### App Tracking Transparency
+
+The classic call below works with older SDKs. For the iOS 27.2 EU expanded prompt, use `axiom-integration (skills/privacy-ux.md)`: it covers the 27.2 SDK requirement, availability gate, classic fallback, and `NSUserTrackingMarkdownUsageDescription` alongside the required plain usage description.
+
+Treat `.notDetermined` as no authorization decision, including after the user taps "Additional Information"; keep tracking disabled and do not retry from the completion handler. Eligible EU users may be re-prompted after a year even after denial, subject to device settings. A previous request is not proof that another prompt is impossible.
+
 ```swift
 // Required if app tracks users across other companies' apps/websites
 import AppTrackingTransparency

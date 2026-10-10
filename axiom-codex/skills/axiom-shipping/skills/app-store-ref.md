@@ -364,10 +364,14 @@ Required if your app "tracks" per Apple's definition above.
 - Respect the result:
   - `.authorized` — User granted permission to track
   - `.denied` — User denied tracking; do not track
-  - `.notDetermined` — User has not yet been asked
+  - `.notDetermined` — No authorization decision recorded; the prompt may not have appeared, or the user may have dismissed the iOS 27.2 expanded prompt through "Additional Information". Do not track or automatically retry
   - `.restricted` — Device-level restriction prevents tracking
 
 Request at a contextually appropriate moment, not at first launch.
+
+From iOS 27.2, EU users can receive an expanded prompt; France, Germany, Italy, Poland, and Romania use it regardless of the interface preference. The new `requestTrackingAuthorization(preferExpandedInterface:additionalInformationAction:completionHandler:)` requires the 27.2 SDK and an iOS 27.2 availability gate, with the classic call as the earlier-OS fallback. `NSUserTrackingMarkdownUsageDescription` supplies rich text for the expanded prompt; keep the required `NSUserTrackingUsageDescription` as well.
+
+Eligible EU users may be re-prompted one year after either an approval or a denial, unless device settings prevent tracking requests. Let ATT enforce eligibility instead of assuming a request can only happen once. See `axiom-integration (skills/privacy-ux.md)` for the callback flow, consent handling, and older-SDK fallback.
 
 ### Common Purpose Strings (NS*UsageDescription)
 

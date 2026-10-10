@@ -294,10 +294,14 @@ You **don't** need ATT if you **only**:
 
 ### ATTrackingManager.requestTrackingAuthorization
 
+This excerpt belongs to your main-actor-isolated view controller; the SDK initialization methods are app-owned.
+
 ```swift
+import UIKit
 import AppTrackingTransparency
 import AdSupport
 
+@MainActor
 func requestTrackingPermission() {
     // ATT only prompts while the app is active and no other permission alert is
     // pending. If either precondition fails, no prompt appears and the status stays
@@ -306,7 +310,7 @@ func requestTrackingPermission() {
     guard UIApplication.shared.applicationState == .active else { return }
 
     ATTrackingManager.requestTrackingAuthorization { status in
-        // The completion runs on a system queue — hop back to the main actor
+        // Hop to MainActor before updating UI or consent-dependent SDK state.
         Task { @MainActor in
             switch status {
             case .authorized:
@@ -321,10 +325,8 @@ func requestTrackingPermission() {
                 self.initializeNonTrackingSDKs()
 
             case .notDetermined:
-                // No decision recorded — the prompt may not have been shown (app not
-                // active, another permission alert pending), or the user tapped
-                // "Additional Information" on the expanded iOS 27 prompt.
-                // Treat as not authorized.
+                // No decision recorded. Keep tracking disabled; retry only at a
+                // later appropriate user-initiated point, not in this completion.
                 self.initializeNonTrackingSDKs()
 
             case .restricted:
@@ -339,13 +341,67 @@ func requestTrackingPermission() {
 }
 ```
 
+### Expanded ATT Prompt from iOS 27.2
+
+Build with the iOS 27.2 SDK to use `requestTrackingAuthorization(preferExpandedInterface:additionalInformationAction:completionHandler:)`. Gate the call at runtime with `#available(iOS 27.2, *)`; the classic method remains the fallback on earlier iOS versions. If building with an older SDK, use the classic example above: an availability check does not make a missing SDK declaration compile. The new method is explicitly unavailable on macOS, tvOS, watchOS, and visionOS.
+
+- In the EU, `preferExpandedInterface: true` requests the alternative prompt where permitted. France, Germany, Italy, Poland, and Romania use the expanded interface regardless of this preference. Outside the EU, the new method behaves like the classic call. Let the system select the regional behavior; do not infer eligibility from the app's language.
+- Pass an action to offer the optional "Additional Information" button, or `nil` to omit it. Tapping the button dismisses the prompt without a decision, invokes that action, and completes with `.notDetermined`. Show your privacy information and continue without tracking; a later request belongs at an appropriate user-initiated moment, not in a completion-handler retry loop.
+- Hop to MainActor before updating UI or consent-dependent SDK state. The callbacks below carry no assumption about the queue on which ATT invokes them.
+
+The callbacks are app-owned: `showPrivacyInformation` presents your privacy details, and `applyTrackingAuthorization` enables IDFA access and tracking **only** for `.authorized`, disabling tracking for every other status. Call from an active, user-initiated point with no other permission alert pending; serialize requests rather than firing concurrent prompts.
+
+```swift
+import UIKit
+import AppTrackingTransparency
+
+@MainActor
+func requestTrackingPermission(
+    showPrivacyInformation: @escaping @MainActor @Sendable () -> Void,
+    applyTrackingAuthorization: @escaping @MainActor @Sendable (ATTrackingManager.AuthorizationStatus) -> Void
+) {
+    guard UIApplication.shared.applicationState == .active else { return }
+
+    let completion: @Sendable (ATTrackingManager.AuthorizationStatus) -> Void = { status in
+        Task { @MainActor in
+            applyTrackingAuthorization(status)
+        }
+    }
+
+    if #available(iOS 27.2, *) {
+        ATTrackingManager.requestTrackingAuthorization(
+            preferExpandedInterface: true,
+            additionalInformationAction: {
+                Task { @MainActor in
+                    showPrivacyInformation()
+                }
+            },
+            completionHandler: completion
+        )
+    } else {
+        ATTrackingManager.requestTrackingAuthorization(completionHandler: completion)
+    }
+}
+```
+
+### Re-Prompting from iOS 27.2
+
+Eligible EU users may be prompted again one year after their previous decision, whether they accepted or denied. The system enforces eligibility; if no new prompt is permitted, completion returns the existing decision. Disabling the device's setting that allows apps to request tracking prevents re-prompting. Do not treat a local "asked once" flag or a permanent `.notDetermined`-only request guard as the eligibility authority, and do not reset consent on your own annual timer. Request at an appropriate active, user-initiated point and apply the returned status. Until the status is `.authorized`, keep IDFA access and cross-company tracking disabled.
+
 ### Custom ATT Prompt Message
 
 **Info.plist**:
 ```xml
 <key>NSUserTrackingUsageDescription</key>
-<string>This allows us to show you personalized ads and improve your experience</string>
+<string>We link activity across companies to personalize ads and measure advertising performance.</string>
+<key>NSUserTrackingMarkdownUsageDescription</key>
+<string>We link activity across companies to **personalize ads**.
+
+- See relevant offers
+- Measure advertising performance</string>
 ```
+
+`NSUserTrackingUsageDescription` remains required. From iOS 27.2, the expanded prompt can display `NSUserTrackingMarkdownUsageDescription` with bold, italic, bullet points, and paragraph breaks; if the Markdown key is absent, it uses the plain usage description. Keep both descriptions accurate and localized. Markdown text and the additional-information action do not grant tracking permission.
 
 **Best practices**:
 - Be honest and specific
@@ -942,6 +998,6 @@ UserDefaults.standard.set(value, forKey: "setting")
 
 **WWDC**: 2023-10060, 2023-10053
 
-**Docs**: /bundleresources/privacy_manifest_files, /bundleresources/describing-use-of-required-reason-api, /app-store/app-privacy-details, /app-store/user-privacy-and-data-use
+**Docs**: /bundleresources/privacy_manifest_files, /bundleresources/describing-use-of-required-reason-api, /app-store/app-privacy-details, /app-store/user-privacy-and-data-use, /apptrackingtransparency/attrackingmanager, /bundleresources/information-property-list/nsusertrackingmarkdownusagedescription
 
 **Skills**: skills/contacts.md (contact permission handling), skills/eventkit.md (calendar permission handling), axiom-shipping (skills/app-store-ref.md), Launch `security-privacy-scanner` agent (ATT and manifest detection)

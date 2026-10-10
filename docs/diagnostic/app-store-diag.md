@@ -29,6 +29,7 @@ Questions you can ask Claude that will draw from this diagnostic:
 - "My app was rejected for Guideline 2.1, what do I do?"
 - "I got 'Metadata Rejected' — do I need a new build?"
 - "App rejected for missing privacy policy, how do I fix this?"
+- "How do I verify my ATT flow when iOS 27.2 Additional Information returns no consent decision?"
 - "Should I appeal this App Store rejection?"
 - "My app was rejected 3 times for different reasons each time"
 - "Binary Rejected but no guideline number — what happened?"
@@ -79,6 +80,8 @@ Questions you can ask Claude that will draw from this diagnostic:
 **Symptom**: Missing privacy policy, undeclared data collection, no ATT
 **Diagnosis**: Check policy accessibility (ASC + in-app), generate Privacy Report, audit SDKs
 **Fix**: Update privacy manifest, add purpose strings, ensure policy matches actual collection
+
+For the iOS 27.2 EU ATT prompt, the diagnostic points to Privacy UX for expanded-prompt setup, consent handling after Additional Information, and yearly re-prompt eligibility.
 
 ### Pattern 4: Guideline 4.8 — Missing Sign in with Apple
 **Symptom**: Third-party login without SIWA

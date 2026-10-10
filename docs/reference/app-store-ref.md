@@ -34,6 +34,7 @@ Questions you can ask Claude that will draw from this reference:
 - "What screenshot sizes do I need for iPhone and iPad?"
 - "What guideline covers Sign in with Apple requirements?"
 - "What are the Required Reason API categories for privacy manifests?"
+- "What changes for ATT purpose strings and consent handling with the iOS 27.2 EU prompt?"
 - "What are the new age rating tiers as of 2025?"
 - "What's required for EU DSA trader status?"
 - "How does the IAP review pipeline work?"
@@ -44,7 +45,7 @@ Questions you can ask Claude that will draw from this reference:
 ## What's Covered
 
 - **Part 1: Metadata Fields** – Immutable fields warning (Bundle ID, Product ID, Subscription Duration), all required fields with character limits, complete screenshot pixel dimensions for all device sizes with fallback chains, App Preview codec specs (H.264/ProRes 422 HQ, 15-30s, 500MB), icon requirements, localization rules
-- **Part 2: Privacy Requirements** – Privacy manifest XML schema, Required Reason API categories with reason codes, Privacy Nutrition Labels, ATT, purpose strings, plus gotchas (custom values silently rejected by Xcode, IP address declaration, iOS 17 tracking domain blocking, web view collection)
+- **Part 2: Privacy Requirements** – Privacy manifest XML schema, Required Reason API categories with reason codes, Privacy Nutrition Labels, ATT (iOS 27.2 expanded EU prompt, `.notDetermined`, yearly re-prompting, `NSUserTrackingMarkdownUsageDescription`), purpose strings, plus gotchas (custom values silently rejected by Xcode, IP address declaration, iOS 17 tracking domain blocking, web view collection)
 - **Part 3: App Review Guidelines** – Verified index (Feb 6 2026 revision) for all sections 1-5, top 10 rejection causes, zero-tolerance guidelines, sensitive app types requiring extra documentation
 - **Part 4: Age Rating System** – Five-tier ratings (4+/9+/13+/16+/18+), OS 26 adds 12+ and 17+, capability declarations, regional mapping, questionnaire topics
 - **Part 5: Export Compliance** – Three-tier encryption system (exempt/industry-standard/proprietary), decision tree, Info.plist keys, France-specific ANSSI requirements

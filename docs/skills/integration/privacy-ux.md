@@ -24,6 +24,7 @@ Use this skill when:
 - "How do I structure my `PrivacyInfo.xcprivacy`?"
 - "What's the right just-in-time pattern for requesting camera access?"
 - "How do I implement ATT without users denying me 90% of the time?"
+- "How do I handle the iOS 27.2 EU ATT prompt, Additional Information, and yearly re-prompting?"
 - "Which of my APIs need a Required Reason declaration?"
 - "How do I declare tracking domains in my privacy manifest?"
 - "What data types go into Privacy Nutrition Labels and how do they map to manifest entries?"
@@ -33,7 +34,7 @@ Use this skill when:
 
 - **Privacy manifest discipline** – `PrivacyInfo.xcprivacy` structure, `NSPrivacyTracking` flag, `NSPrivacyTrackingDomains` array, `NSPrivacyCollectedDataTypes` declarations, `NSPrivacyAccessedAPITypes` with reason codes (e.g., `CA92.1` for UserDefaults)
 - **Just-in-time permission pattern** – show a pre-permission education screen, request system access on user action (not at launch), handle denial gracefully with a Settings redirect path
-- **App Tracking Transparency UX** – pre-prompt education, `ATTrackingManager.requestTrackingAuthorization`, status checking, IDFA access only after `.authorized`
+- **App Tracking Transparency UX** – pre-prompt education, authorization-only IDFA access, iOS 27.2 expanded EU prompt and Markdown purpose string, Additional Information returning `.notDetermined`, yearly re-prompt eligibility, and older-OS/SDK fallbacks
 - **Tracking domains** – what counts as tracking, automatic blocking in iOS 17+, how to declare partner domains in the manifest
 - **Required Reason APIs** – the four common categories (UserDefaults, file timestamps, system boot time, disk space) and the specific reason codes that satisfy App Review
 - **Privacy Nutrition Labels** – data collection categories, data use purposes, linked vs. not-linked-to-identity, how to keep the manifest and Nutrition Labels in sync

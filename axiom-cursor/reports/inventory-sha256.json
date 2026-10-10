@@ -1003,8 +1003,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/privacy-ux.md",
-      "sha256": "d3e782846d3677d47036e77dd03f5fdcedb62944d481bc137654efe109977200",
-      "bytes": 25702
+      "sha256": "296ccefb6c4629a80ee247efeb09ba7fed8ad40fd80027bc858a5fdd481f01c8",
+      "bytes": 29886
     },
     {
       "path": "skills/axiom-integration/skills/push-notifications-diag.md",
@@ -1518,13 +1518,13 @@
     },
     {
       "path": "skills/axiom-shipping/skills/app-store-diag.md",
-      "sha256": "4025d0f481ac96a89bca43582639d6d4d65de4d52064e3d5c92234acca33c2c9",
-      "bytes": 52606
+      "sha256": "40e7e2b2b97bb40e9b1549150cd38f25441657cffee4d8148ec23cb232c04826",
+      "bytes": 53248
     },
     {
       "path": "skills/axiom-shipping/skills/app-store-ref.md",
-      "sha256": "b8a5ed1e69af68d0b5e8ca43caa012350cebe31b05021ff8483cbb74faa7b6ba",
-      "bytes": 54487
+      "sha256": "d3d0cb4471dc1bc917a6fca2a466bf3c6aeed926ae1534d9ae6e957f8a6b4299",
+      "bytes": 55497
     },
     {
       "path": "skills/axiom-shipping/skills/app-store-submission.md",
@@ -1894,7 +1894,7 @@
   ],
   "totals": {
     "files": 378,
-    "bytes": 7691860
+    "bytes": 7697696
   },
   "excludedMirrors": 30,
   "classes": {
