@@ -29,7 +29,7 @@ This skill covers creating privacy manifests, requesting system permissions with
 
 ---
 
-## Part 1: Privacy Manifests (WWDC 2023/10060)
+## Part 1: Privacy Manifests
 
 ### Creating a Privacy Manifest
 
@@ -64,7 +64,7 @@ This skill covers creating privacy manifests, requesting system permissions with
 
 **Does your app track users?**
 
-Tracking = combining user/device data from your app with data from other apps/websites to create a profile for targeted advertising or data broker purposes.
+Tracking means linking user or device data from your app with data from other companies' apps, websites, or offline properties for targeted advertising or advertising measurement, or sharing user or device data with data brokers. Apply the qualifying exceptions in Part 3 before declaring whether your app tracks.
 
 ```xml
 <key>NSPrivacyTracking</key>
@@ -169,7 +169,7 @@ func application(_ application: UIApplication,
 ```swift
 // GOOD - clear causality
 @objc func takePhotoButtonTapped() {
-    // Show pre-permission education first
+    // Optional explanation when the feature context needs more detail
     showCameraEducation {
         // Then request permission
         AVCaptureDevice.requestAccess(for: .video) { granted in
@@ -188,7 +188,9 @@ func application(_ application: UIApplication,
 
 ### Pre-Permission Education Screens
 
-Explain **why** you need permission **before** showing system dialog:
+Use the feature context and a specific purpose string to explain the request. Add a pre-alert only when essential details need more explanation. These excerpts belong to a main-actor-isolated view controller; camera and permission-handling helpers are app-owned.
+
+A pre-alert has one "Continue" or "Next" action that opens the system permission alert. The user grants or denies permission in that system alert. Do not add a cancel or close action. If an additional action is needed to obtain legal consent, Apple permits that exception; keep legal consent distinct from system authorization.
 
 ```swift
 func showCameraEducation(completion: @escaping () -> Void) {
@@ -202,16 +204,11 @@ func showCameraEducation(completion: @escaping () -> Void) {
         completion()  // Now request actual permission
     })
 
-    alert.addAction(UIAlertAction(title: "Not Now", style: .cancel))
-
     present(alert, animated: true)
 }
 ```
 
-**Why this works**:
-- User understands value proposition
-- System dialog rejection rate drops 60-80%
-- Better App Store ratings (fewer "why does it need that?" reviews)
+Explain the specific data use so people can make an informed choice. A camera feature needs camera authorization; offer alternatives when permission is denied. Do not promise an opt-in increase.
 
 ### Permission Denied Handling
 
@@ -282,15 +279,19 @@ UIApplication.shared.open(URL(string: UIApplication.openNotificationSettingsURLS
 
 ### When ATT Is Required
 
-You **must** request ATT permission if you:
-- Track users across apps/websites owned by other companies
-- Share user data with data brokers
-- Use third-party SDKs that track (Facebook SDK, Google Analytics, etc.)
+Obtain ATT authorization **before**:
+- Linking user or device data from your app with data from other companies' apps, websites, or offline properties for targeted advertising or advertising measurement
+- Sharing user or device data with data brokers, subject to the exceptions below
+- Allowing third-party SDKs or libraries to perform that tracking
 
-You **don't** need ATT if you **only**:
-- Use first-party analytics (no sharing with other companies)
-- Personalize ads based only on data from your own app
-- Use fraud detection/security measures
+You are responsible for SDK and server-side behavior. Tracking still requires permission if your server shares the data, your app does not use the SDK's tracking features directly, or you receive only aggregate reports after cross-company data linkage. Check the SDK's actual data practices and consent configuration rather than inferring them from its name.
+
+ATT is not required for first-party analytics or ads based solely on your own company's data when no tracking as defined above occurs. Apple's additional exceptions are:
+- Data linkage occurs solely on the user's device, and the linked data is not sent off-device in a way that can identify the user or device.
+- A data broker uses the shared data solely for fraud detection, fraud prevention, or security purposes.
+- The broker is a consumer reporting agency and receives data to report creditworthiness or obtain creditworthiness information specifically to make a credit determination.
+
+A fraud/security feature does not exempt other tracking by your app or its SDKs. Privacy manifest and App Store privacy disclosures remain separate obligations; ATT authorization does not permit fingerprinting.
 
 ### ATTrackingManager.requestTrackingAuthorization
 
@@ -405,27 +406,29 @@ Eligible EU users may be prompted again one year after their previous decision, 
 
 **Best practices**:
 - Be honest and specific
-- Explain user benefit (not company benefit)
+- Describe the specific data use and resulting feature; a generic benefit or funding message is insufficient
 - Keep it concise (1-2 sentences)
 
 **❌ Bad examples**:
 - "We value your privacy" (vague)
 - "This is required for the app to work" (dishonest)
-- "To monetize our app" (user doesn't care)
+- "Personalized ads help keep this app free" (does not explain the data use)
 
 **✅ Good examples**:
-- "This helps us show you relevant ads for products you might like"
-- "Personalized ads help keep this app free"
+- "We link your activity across companies to deliver personalized advertising."
+- "We link your activity across companies to measure advertising performance."
 
 ### Pre-Tracking Prompt Design
 
-Show your own dialog before ATT system prompt:
+A clear purpose string and feature context may be sufficient. If essential details need a pre-alert, explain the data use neutrally with one "Continue" action that opens ATT. Do not offer incentives, imply tracking is needed to keep features available, imitate the system alert, or steer the user toward allowing. Separate legal consent does not grant ATT authorization.
+
+This excerpt belongs to your main-actor-isolated view controller; `requestTrackingPermission()` is the app-owned entry point shown above. Present it when active and no other permission alert is pending.
 
 ```swift
 func showPreTrackingPrompt() {
     let alert = UIAlertController(
-        title: "Support Free Features",
-        message: "We use tracking to show you personalized ads, which helps keep advanced features free. You can always change this in Settings.",
+        title: "About Personalized Ads",
+        message: "We link your activity across companies to personalize ads. You can allow or decline in the next system alert. All features remain available either way.",
         preferredStyle: .alert
     )
 
@@ -433,13 +436,11 @@ func showPreTrackingPrompt() {
         self.requestTrackingPermission()
     })
 
-    alert.addAction(UIAlertAction(title: "Not Now", style: .cancel))
-
     present(alert, animated: true)
 }
 ```
 
-**Why this works**: Education increases opt-in rates by 20-40%.
+The explanation supports an informed decision; keep every app feature available when tracking is declined.
 
 ### Graceful Degradation
 
@@ -674,10 +675,7 @@ https://developer.apple.com/contact/request/privacy-manifest-reason/
 
 ### Tracking Disclosure
 
-Data is used for **tracking** if:
-- Combined with data from other apps/websites
-- Shared with data brokers
-- Used for targeted advertising based on cross-app behavior
+Apply the tracking definition and qualifying exceptions in Part 3. Disclose cross-company linkage for targeted advertising or advertising measurement, and data-broker sharing that meets that definition. A Privacy Nutrition Label describes data practices; it does not obtain ATT permission.
 
 **Example declaration**:
 ```
@@ -930,17 +928,9 @@ func application(_ application: UIApplication,
 }
 ```
 
-### No explanation before permission dialog
+### Unclear permission requests
 
-```swift
-// ❌ Wrong
-AVCaptureDevice.requestAccess(for: .video) { granted in }
-
-// ✅ Correct
-showCameraEducation {
-    AVCaptureDevice.requestAccess(for: .video) { granted in }
-}
-```
+Use a specific, localized purpose string explaining what your app does with the data. Request access in the feature context. A direct system request is appropriate when that context is clear; add a pre-alert only when essential details need explanation, following the single-action pattern in Part 2.
 
 ### Not handling denial gracefully
 
@@ -996,8 +986,8 @@ UserDefaults.standard.set(value, forKey: "setting")
 
 ## Resources
 
-**WWDC**: 2023-10060, 2023-10053
+**WWDC**: 2022-10166, 2023-10060, 2023-10053
 
-**Docs**: /bundleresources/privacy_manifest_files, /bundleresources/describing-use-of-required-reason-api, /app-store/app-privacy-details, /app-store/user-privacy-and-data-use, /apptrackingtransparency/attrackingmanager, /bundleresources/information-property-list/nsusertrackingmarkdownusagedescription
+**Docs**: /design/human-interface-guidelines/privacy, /help/app-review/guideline-reference/5-1-1-purpose-strings, /technotes/tn3181-debugging-invalid-privacy-manifest, /technotes/tn3182-adding-privacy-tracking-keys-to-your-privacy-manifest, /bundleresources/privacy_manifest_files, /bundleresources/describing-use-of-required-reason-api, /app-store/app-privacy-details, /app-store/user-privacy-and-data-use, /apptrackingtransparency/attrackingmanager, /bundleresources/information-property-list/nsusertrackingmarkdownusagedescription
 
 **Skills**: skills/contacts.md (contact permission handling), skills/eventkit.md (calendar permission handling), axiom-shipping (skills/app-store-ref.md), `axiom-scan-security-privacy` (ATT and manifest detection)

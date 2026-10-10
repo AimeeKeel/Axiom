@@ -1003,8 +1003,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/privacy-ux.md",
-      "sha256": "296ccefb6c4629a80ee247efeb09ba7fed8ad40fd80027bc858a5fdd481f01c8",
-      "bytes": 29886
+      "sha256": "a219e487787f6ba0107a98d55f0ada8a39b3c1818e17ffc35d4d8e73f266391a",
+      "bytes": 32771
     },
     {
       "path": "skills/axiom-integration/skills/push-notifications-diag.md",
@@ -1894,7 +1894,7 @@
   ],
   "totals": {
     "files": 378,
-    "bytes": 7697696
+    "bytes": 7700581
   },
   "excludedMirrors": 30,
   "classes": {
