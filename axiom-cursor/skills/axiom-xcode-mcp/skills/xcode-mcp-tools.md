@@ -223,7 +223,7 @@ client from a signed binary, or — only on an isolated machine — `sudo xcrun 
 ### Workspace Identifier Staleness
 
 Workspace identifiers become invalid when the workspace is closed (`XcodeCloseWorkspace`), or the
-headless server is restarted (`mcp-server stop` / `start`).
+headless server is restarted (`mcp-server stop`, then `mcp-server open <path>`).
 
 **Fix**: Re-call `XcodeListWorkspaces` to get fresh identifiers. The "required" error also lists
 the currently valid ones, so a stale call is self-correcting.

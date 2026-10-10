@@ -51,7 +51,7 @@ Questions you can ask Claude that will draw from this reference:
 - Session hardware cost and system pressure monitoring
 - AVCaptureDevice types, discovery sessions, configuration (focus, exposure, zoom, torch)
 - Center Stage front camera: dynamic aspect ratio, smart framing monitor, sensor orientation compensation, low-latency stabilization (iOS 26 and later, iPhone 17 lineup)
-- iPhone Duo front cameras: virtual front camera, individual inner and outer ultra-wide cameras, choosing a camera by direction (iOS 27.1+)
+- iPhone Duo front cameras: virtual front camera, individual inner and outer ultra-wide cameras, choosing a camera by direction (iOS 27.1+; verified with Xcode 27.1 RC, absent from Xcode 27.2 beta 2)
 - AVCaptureDevice.RotationCoordinator setup, properties, and KVO observation (iOS 17+)
 - AVCapturePhotoOutput configuration, responsive capture APIs, and deferred processing
 - High-resolution capture (24/48 MP) with prepared photo settings

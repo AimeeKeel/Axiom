@@ -5,9 +5,9 @@ Complete reference for every tool exposed by Xcode's MCP server. `xcrun mcpbridg
 transport; on Xcode 27 the service behind it can run headless (`xcrun mcp-server`) — see
 `axiom-xcode-mcp (skills/xcode-mcp-setup.md)`.
 
-**Source**: live `tools/list` on the released Xcode 27.0 (27A266a), `serverInfo` version 25317,
-protocol 2025-06-18. The 54-tool set and every tool schema are identical to beta 6 (27A5252f,
-`serverInfo` 25295.11) — zero additions, removals, or schema changes.
+**Source**: live `tools/list` on Xcode 27.1 RC (27A9275), `serverInfo` version 25320,
+protocol 2025-06-18. The 54-tool set and every tool schema are identical to the released
+27.0 (27A266a, `serverInfo` 25317) and beta 6 (27A5252f, `serverInfo` 25295.11).
 
 **All 54 tools are listed even with no workspace open** (verified on beta 6 and again on the
 27.0 SDK: `xcrun mcp-server
@@ -554,7 +554,7 @@ Searches Apple Developer Documentation using semantic matching.
 
 - **Returns**: `documents`*
 
-- **Notes**: **Workspace-gated** — the only tool that appears solely when a workspace is open (53 tools without, 54 with). Its absence means "open a workspace", not "removed".
+- **Notes**: Listed without an open workspace on beta 6 and the released 27.0, and present in the 27.1 RC capture. The tool set is dynamic: re-list and check server status when it is missing; its absence alone does not establish a workspace requirement.
 
 ## Resources
 

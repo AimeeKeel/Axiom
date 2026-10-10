@@ -45,7 +45,7 @@ Attached suits a developer already working in Xcode. Headless suits CI, agents t
 ## What This Skill Provides
 
 - **Mode selection** – what attached and headless each require, and which to pick
-- **Headless lifecycle** – `mcp-server enable`, `start`, `open`, `status`, `stop`, `disable`, and what `--unsafe-always-allow-all-agents` actually grants
+- **Headless lifecycle** – `mcp-server enable`, `open <path>` to launch and load a project, `status`, `stop`, `disable`, and what `--unsafe-always-allow-all-agents` actually grants
 - **Per-client config** for Claude Code, Codex, Cursor, VS Code + GitHub Copilot, Gemini CLI
 - **Connection verification** – call `XcodeListWorkspaces`, and how to read an empty result
 - **The approval model** – the Xcode dialog for attached mode, `sudo` grants for headless, and why unsigned agents only ever get time-boxed trust

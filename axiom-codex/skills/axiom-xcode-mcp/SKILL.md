@@ -12,7 +12,7 @@ Xcode ships an MCP server exposing IDE tools to external AI clients. `xcrun mcpb
 
 **On Xcode 26.x, mcpbridge requires a running Xcode with a project open.** If that's a liability, the device/simulator half of these operations has a fully Xcode-independent CLI path: `devicectl` + `simctl` + Axiom's `xcui`/`xclog`/`xcsym`/`xcprof`. See `axiom-tools (skills/device-control-ref.md)`.
 
-**That constraint is gone on Xcode 27.** `xcrun mcp-server` runs the tool service with Xcode.app closed — `sudo xcrun mcp-server enable`, then `start` and `open <path>`. Clients still register `xcrun mcpbridge`; the bridge is the transport, `mcp-server` is the service. Apple's tool schemas describe `workspaceIdentifier` as "used in headless mode", so headless is a supported model rather than a workaround.
+**That constraint is gone on Xcode 27.** `xcrun mcp-server` runs the tool service with Xcode.app closed — `sudo xcrun mcp-server enable`, then `xcrun mcp-server open <project-or-workspace-path>`, which launches the service if needed. Clients still register `xcrun mcpbridge`; the bridge is the transport, `mcp-server` is the service. Apple's tool schemas describe `workspaceIdentifier` as "used in headless mode", so headless is a supported model rather than a workaround.
 
 Choose between MCP and the CLI tools (`devicectl`, `simctl`, and Axiom's `xcui`/`xclog`/`xcsym`/`xcprof`) on **capability, not uptime**. `xcui` asserts, waits, toggles accessibility settings, and computes VoiceOver announcements, and none of them need `sudo` — which still matters in CI, where the headless server's sudo opt-in may not be available. The IDE-authoring tools (build state, render previews) remain MCP-only; `xcodebuild` builds and tests but does not render previews.
 

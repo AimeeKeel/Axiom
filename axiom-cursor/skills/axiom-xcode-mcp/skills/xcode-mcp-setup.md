@@ -36,10 +36,13 @@ step; everything after is unprivileged.
 
 ```bash
 sudo xcrun mcp-server enable          # turn headless mode on
-xcrun mcp-server start                # launch the service (no-op if already running)
-xcrun mcp-server open /abs/MyApp.xcodeproj   # optional — agents can open workspaces themselves
+xcrun mcp-server open /abs/MyApp.xcodeproj   # launch if needed, then open the project
 xcrun mcp-server status               # verify; add --format json for machine-readable output
 ```
+
+`open` requires a project or workspace path. Xcode 27.1 RC has no `mcp-server start`
+command; its `open --help` describes the launch operation. Check the selected Xcode's
+`xcrun mcp-server --help` before using a command from another build.
 
 Winding down:
 
@@ -305,23 +308,23 @@ digraph troubleshoot {
     "Wrong project?" [shape=diamond];
     "Repeated permission prompts?" [shape=diamond];
 
-    "Headless: mcp-server start" [shape=box];
+    "Headless: mcp-server open <path>" [shape=box];
     "Attached: launch Xcode + toggle on" [shape=box];
     "STOP: agent not approved" [shape=octagon];
     "XcodeOpenWorkspace to trigger the prompt" [shape=box];
     "Check mcp-server status Permitted agents" [shape=box];
-    "Restart: mcp-server start" [shape=box];
+    "Check status; mcp-server open <path>" [shape=box];
     "Pass workspaceIdentifier from XcodeListWorkspaces" [shape=box];
     "Expected: unsigned agents get time-boxed grants" [shape=box];
 
-    "Connection failed?" -> "Headless: mcp-server start" [label="refused, headless"];
+    "Connection failed?" -> "Headless: mcp-server open <path>" [label="refused, headless"];
     "Connection failed?" -> "Attached: launch Xcode + toggle on" [label="refused, attached"];
     "Connection failed?" -> "tools/call fails or hangs?" [label="connects OK"];
     "tools/call fails or hangs?" -> "STOP: agent not approved" [label="'isn't approved' (27b6) or hangs (<=27b5)"];
     "STOP: agent not approved" -> "XcodeOpenWorkspace to trigger the prompt";
     "XcodeOpenWorkspace to trigger the prompt" -> "Check mcp-server status Permitted agents";
     "tools/call fails or hangs?" -> "tools/list empty?" [label="succeeds"];
-    "tools/list empty?" -> "Restart: mcp-server start" [label="no tools"];
+    "tools/list empty?" -> "Check status; mcp-server open <path>" [label="no tools"];
     "tools/list empty?" -> "Wrong project?" [label="tools listed"];
     "Wrong project?" -> "Pass workspaceIdentifier from XcodeListWorkspaces" [label="yes"];
     "Wrong project?" -> "Repeated permission prompts?" [label="no"];
@@ -335,8 +338,8 @@ digraph troubleshoot {
 |---------|-------|-----|
 | **`tools/call` rejected: "This agent isn't approved…"** (beta 6 and later, including 27.0) or **hangs forever, no error** (through beta 5) | Agent not approved | Call `XcodeOpenWorkspace` to trigger the prompt; confirm under `Permitted agents` in `xcrun mcp-server status`; or `sudo xcrun mcp-server approve <id>` |
 | "Connection refused" (attached) | Xcode not running or MCP toggle off | Launch Xcode, enable MCP in Settings > Intelligence |
-| "Connection refused" (headless) | Service not running, or headless never enabled | `xcrun mcp-server status`; then `xcrun mcp-server start`, or `sudo xcrun mcp-server enable` first |
-| tools/list returns empty | Server not reachable — **not** approval: beta 6 and 27.0 list all 54 tools to an unapproved agent | `xcrun mcp-server status`; restart with `xcrun mcp-server start` |
+| "Connection refused" (headless) | Service not running, or headless never enabled | `xcrun mcp-server status`; then `xcrun mcp-server open <path>`, or `sudo xcrun mcp-server enable` first |
+| tools/list returns empty | Server not reachable — **not** approval: beta 6 and 27.0 list all 54 tools to an unapproved agent | `xcrun mcp-server status`; launch with `xcrun mcp-server open <path>` if stopped, then reconnect |
 | `DocumentationSearch` missing from tools/list | Tool set is dynamic (`listChanged: true`) — but on beta 6 and 27.0 all 54 list with no workspace open | Re-list; if still missing, check `xcrun mcp-server status` |
 | "workspaceIdentifier is required" | Identifier omitted — required even with one workspace open | Use the identifier the error itself lists, or call `XcodeListWorkspaces` |
 | Tools target wrong project | Multiple workspaces open | Call `XcodeListWorkspaces`, pass the right `workspaceIdentifier` |
@@ -344,7 +347,7 @@ digraph troubleshoot {
 | Cursor/strict client errors | Missing `structuredContent` — **Xcode 26.x only** | 26.x: XcodeMCPWrapper proxy. 27: fixed, don't add the proxy |
 | "No such command: mcpbridge" | Xcode < 26.3 | Update to Xcode 26.3+ |
 | "No such command: mcp-server" | Xcode < 27 | Headless mode is 27-only; use attached mode on 26.x |
-| Server unresponsive after a stuck call | A blocked call stalls the session | `xcrun mcp-server stop && xcrun mcp-server start` |
+| Server unresponsive after a stuck call | A blocked call stalls the session | Confirm no other client needs the service, then `xcrun mcp-server stop` followed by `xcrun mcp-server open <path>`; reconnect and rediscover workspace identifiers |
 | Slow tool calls | Large project indexing | Wait for indexing to complete |
 
 ## Extending the Agent That Runs Inside Xcode

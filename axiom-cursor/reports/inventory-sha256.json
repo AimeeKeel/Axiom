@@ -1168,13 +1168,13 @@
     },
     {
       "path": "skills/axiom-media/skills/camera-capture-ref.md",
-      "sha256": "0313bcf6b3b49d0b66d79a7a1bf961c3217bc098ec8c934fcffa8e7f04ba5bd7",
-      "bytes": 51771
+      "sha256": "e7bdb48dd5a2cf8951c92f5d7ee89981731ae0f0592ae0c63f064791ed021cb1",
+      "bytes": 51838
     },
     {
       "path": "skills/axiom-media/skills/camera-capture.md",
-      "sha256": "0f376f3b06e5b1d43c7b357f7e12c49b3dc06ba498b1925603002856c4ff9e52",
-      "bytes": 40254
+      "sha256": "b6b00b67a7ce684a9f7f3192a85b3c3e11a7e400bd34ed4d1e9c1477110ede15",
+      "bytes": 40231
     },
     {
       "path": "skills/axiom-media/skills/carplay-hig.md",
@@ -1628,8 +1628,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/iphone-duo.md",
-      "sha256": "91b9ffac45e83863c2e82bd407c051a202616d009d16e492aeecaf41073b2c40",
-      "bytes": 43640
+      "sha256": "fe325d27c5552ab113f1b71b6081d12cae43b369a70dff79ee82494ce764a8fc",
+      "bytes": 43634
     },
     {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
@@ -1868,8 +1868,8 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/SKILL.md",
-      "sha256": "468ae94ab6c6822164769646e386453744037b5c71cc4e89f885b2c2700b87dc",
-      "bytes": 8513
+      "sha256": "90d9c6720822271cc1124270857e3473140f4f257eaa714b5dd723ebc10f361c",
+      "bytes": 8577
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/axe-ref.md",
@@ -1878,23 +1878,23 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-ref.md",
-      "sha256": "71e6d54119932d62f5aa50471b0552acf8caef72ed95e4837966dca436d9ba9b",
-      "bytes": 32269
+      "sha256": "49d6f5a5269797926d417044301c5f4c0165eb8e341b3f0788f22fbfaa711be9",
+      "bytes": 32339
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-setup.md",
-      "sha256": "ce88b8549cdde13f9112334f00a07bceb7d50210754f0f5e4149202563234660",
-      "bytes": 16649
+      "sha256": "00d98e8ac2079161287048155c19fd87af8d15ea446f66b1b345708c99f88357",
+      "bytes": 16978
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-tools.md",
-      "sha256": "e00e3427bc47f47e3654f7a174d90fb3d7bfdff089b7a2ce1d2bd2fa334a402e",
-      "bytes": 13948
+      "sha256": "fc0271aa6acafe89f5657d36c67246dd1a8b42b109280330a1b7565d2fc61ab1",
+      "bytes": 13969
     }
   ],
   "totals": {
     "files": 378,
-    "bytes": 7684385
+    "bytes": 7684907
   },
   "excludedMirrors": 30,
   "classes": {

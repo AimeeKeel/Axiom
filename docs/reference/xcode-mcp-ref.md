@@ -5,7 +5,7 @@ description: Complete parameter, return-shape, and behavior reference for all 54
 
 # Xcode MCP Tool Reference
 
-Complete reference for every tool exposed by Xcode's MCP server — the Model Context Protocol interface that lets an AI assistant drive Xcode directly. Covers parameters, return shapes, and the behavioral caveats that the tool descriptions leave out. Generated from a live `tools/list` capture on Xcode 27.0 (27A266a, server 25317), not from documentation.
+Complete reference for every tool exposed by Xcode's MCP server — the Model Context Protocol interface that lets an AI assistant drive Xcode directly. Covers parameters, return shapes, and the behavioral caveats that the tool descriptions leave out. Verified against a live `tools/list` capture on Xcode 27.1 RC (27A9275, server 25320); its 54 tools and schemas match Xcode 27.0.
 
 ## When to Use This Reference
 

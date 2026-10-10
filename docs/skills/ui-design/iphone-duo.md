@@ -31,7 +31,7 @@ Use this skill when:
 - **Readiness today** – per-side safe areas, the tab sidebar, and window-request handling that work with the current SDK
 - **Vertical bars** – which bars move to the side, item order, overflow priorities, and when to turn the behavior off
 - **The fold** – rules for keeping controls reachable without hiding them, and for spacing and sizing custom grids around it
-- **27.1 APIs** – vertical-bar overrides, reserved regions, arrangements, the hinge, and the camera accessory, with iOS 27.1 availability and `@available` gating
+- **27.1 APIs** – vertical-bar overrides, reserved regions, arrangements, the hinge, and the camera accessory, with iOS 27.1 availability and `@available` gating; the camera-direction family is present in Xcode 27.1 RC and absent from Xcode 27.2 beta 2
 - **Simulator testing** – which runtime carries the Duo device type, which poses only Device Hub can set, and how to capture each display
 - **Bar metrics** – the vertical bar's measured width, and why a symbol's point size in the bar doesn't match the same symbol elsewhere
 

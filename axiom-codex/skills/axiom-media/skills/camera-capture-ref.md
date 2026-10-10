@@ -519,7 +519,7 @@ A discovery session for `.front` with the wide-angle or ultra-wide type returns 
 
 `position` can't tell two front cameras apart, and a `.front` camera can face away from the user. `AVCaptureDeviceDirectionCoordinator` (AVKit) reports which cameras face toward and away from the user relative to one view, and calls its handler when that view's display changes — as the device opens or closes, or as the app moves to the outer display while flipped open. It's main-actor; one coordinator per view, so two when you show UI on both displays. (111465 4:06)
 
-**If these types are missing, check the Xcode build first.** Xcode 27.2 beta 2 (`xcodebuild -version` prints `Build version 27B5028f`) lacks `AVCaptureDeviceDirectionCoordinator`, `AVCaptureDeviceDescriptor`, and `AVCaptureDeviceDirectionMap`, and its release notes send Duo development to Xcode 27.1 beta. There, `cannot find … in scope` for these types means the wrong Xcode: build Duo camera code with Xcode 27.1 beta; don't rewrite it around `position` or call the API removed.
+**If these types are missing, check the Xcode build first.** Xcode 27.2 beta 2 (`xcodebuild -version` prints `Build version 27B5028f`) lacks `AVCaptureDeviceDirectionCoordinator`, `AVCaptureDeviceDescriptor`, and `AVCaptureDeviceDirectionMap`. All three are present in Xcode 27.1 RC (`27A9275`), and the snippet below compiles against its iOS 27.1 SDK. On the affected 27.2 beta build, `cannot find … in scope` for these types means the wrong Xcode: build Duo camera code with Xcode 27.1; don't rewrite it around `position` or call the API removed.
 
 ```swift
 // iOS 27.1: report camera direction relative to a view; hand descriptors to your camera actor
