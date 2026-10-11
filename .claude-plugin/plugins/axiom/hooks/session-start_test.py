@@ -14,6 +14,7 @@ import os
 import plistlib
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -39,8 +40,10 @@ def run_in(cwd: str, env_override: dict | None = None, plugin_root: str = PLUGIN
     env.pop("DEVELOPER_DIR", None)
     if env_override:
         env.update(env_override)
+    # Not "python3": on PATH that can be /usr/bin/python3, an xcrun shim that
+    # refuses to start under the fake DEVELOPER_DIR these tests pass.
     out = subprocess.run(
-        ["python3", HOOK, plugin_root],
+        [sys.executable, HOOK, plugin_root],
         cwd=cwd, env=env, capture_output=True, text=True, timeout=15,
     )
     assert out.returncode == 0, f"hook exited {out.returncode}: {out.stderr}"
