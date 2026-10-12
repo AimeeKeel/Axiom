@@ -15,7 +15,7 @@ Comprehensive guide to App Intents framework for exposing app functionality to S
 - Integrating with Focus filters, widgets, Live Activities
 - Adding Action button support (Apple Watch Ultra)
 - Debugging intent resolution or parameter validation failures
-- Testing intents with Shortcuts app
+- Testing intents — AppIntentsTesting `OS27`, then by hand in Shortcuts and Siri
 - Implementing entity queries for app content
 
 ## Related Skills
@@ -1361,13 +1361,140 @@ Some Siri flows need more than one schema. Adopt `sendMessage` but not the relat
 
 Siri requests often span apps ("email my wife this reply"). Annotate views with their entities (`userActivity` for one primary item; view-level annotations for lists) so Siri can resolve "this message", then adopt `Transferable` with an `IntentValueRepresentation` to export entities to other apps. On import, resolve to an existing entity with `IntentValueQuery`, or create a new one via `IntentValueRepresentation` importing.
 
-### Testing
-
-Validate intents in isolation with **AppIntentsTesting** (no Siri needed), then move through Shortcuts → Spotlight → Siri (WWDC 2026-295). See the Testing & Debugging section below.
-
 ---
 
 ## Testing & Debugging
+
+### AppIntentsTesting `OS27`
+
+Runs intents out of process through the same App Intents stack as Siri and Shortcuts: real parameter resolution, real entity queries. Intents are looked up by bundle ID and Swift type name (`"CreateEventIntent"`, not the title), so the test target doesn't link the app. Test in this order: intent behavior here, then system surfaces (Spotlight, annotations, Transferable), then a manual Shortcuts/Siri pass.
+
+- **UI Testing Bundle only.** The runner accepts only clients in UI automation mode. From a unit-test bundle, hosted or not, every call fails with `transportCancelled`. Calling `perform()` in process from a unit test exercises only your logic and skips parameter resolution and entity queries.
+- **OS 27 test destination.** The app's deployment target can be lower (verified with 26.0).
+- **Same signing team** for the runner and the app.
+- **Launch the app in `setUp`.** After a reinstall the system serves the previous build's intent list until the app launches, so a new intent fails with `401 "does not expose any AppIntent named …"` and retrying doesn't help. `run()` launches a stopped app in the background, but only after the lookup.
+- **Not covered; leave these to the manual pass.** Only the result `value` is readable; dialogs, snippets and `opensIntent` aren't. `requestConfirmation` auto-confirms, so the cancel path can't be tested. App Shortcuts phrases and Siri's language understanding aren't exercised.
+
+```swift
+import AppIntentsTesting
+import XCTest
+
+@MainActor
+final class EventIntentTests: XCTestCase {
+    let definitions = IntentDefinitions(bundleIdentifier: "com.example.calendar")
+
+    override func setUp() async throws {
+        XCUIApplication().launch()
+        try await definitions.intents["ResetDatabaseIntent"].makeIntent().run()
+    }
+
+    func testCreateEventThenAddAttendee() async throws {
+        let created = try await definitions.intents["CreateEventIntent"]
+            .makeIntent(title: "Sprint Planning", calendar: "Work", priority: "high")
+            .run()
+        let added = try await definitions.intents["AddAttendeeIntent"]
+            .makeIntent(event: created.value, email: "jada@example.com")
+            .run()
+        let attendees: Int = try added.value.attendeeCount
+        XCTAssertEqual(attendees, 1)
+    }
+}
+```
+
+Test-only intents go in the app: `isDiscoverable = false` hides them from Shortcuts and Spotlight but not from AppIntentsTesting, and `#if DEBUG` drops them from Release.
+
+```swift
+#if DEBUG
+struct ResetDatabaseIntent: AppIntent {
+    static let title: LocalizedStringResource = "Reset Database"
+    static let isDiscoverable = false
+
+    func perform() async throws -> some IntentResult {
+        try await EventStore.shared.deleteAll()
+        return .result()
+    }
+}
+#endif
+```
+
+#### Parameters
+
+Labels are the `@Parameter` property names. `makeIntent` is `@dynamicCallable`, so a misspelled label compiles and fails at run time with 206.
+
+| Type | Pass |
+|---|---|
+| String, Int, Double, Bool, Date, URL, Measurement… | The Swift value |
+| `AppEnum` | Its raw value (`priority: "high"`) or `definitions.enums["EventPriority"].makeCase("high")` |
+| `AppEntity` | Any of three: a string, resolved through the entity's `EntityStringQuery` (first match wins); an entity from a query or an earlier result (`event: created.value`); or `definitions.entities["CalendarEntity"].makeReference(identifier:)` |
+| `TransientAppEntity` | `definitions.transientEntities["EventDraft"].makeEntity(title: "Offsite", attendees: 3)`. The labels are its `@Property` names |
+| A test-side type of your own | Conform it to `IntentValueConvertibleWrapper` (`BaseValue`, `init(baseValue:)`, `baseValue`). Passing it works. Reading an enum result back into it fails (`elementType: "AppEnumSpecification"`); read enums as `AnyAppEnum` |
+
+#### Results and queries
+
+`run()` returns a `ResolvedIntentResult`. `value` and its properties are dynamic members; annotate the type for a typed read, which throws `castingFailed` on a mismatch.
+
+```swift
+let result = try await definitions.intents["CountEventsIntent"].makeIntent().run()
+let count: Int = try result.value
+```
+
+- **Readable:** `@Property` and `@ComputedProperty`. **Not readable**, reading as NSNull: plain stored properties and `@DeferredProperty`. Read optionals as `T?`; a nil value read as a non-optional `T` also comes back as NSNull.
+- **Enums** come back as `AnyAppEnum`; use `.rawValue`.
+- **`makeReference(identifier:)`** holds only the identifier. It works as a parameter, but its properties can't be read; fetch the entity with `entities(identifiers:)` first.
+- **Entity queries.** `definitions.entities["X"]` offers `entities(matching:)`, `entities(identifiers:)`, `suggestedEntities()` and `allEntities()`. `allEntities()` requires `EnumerableEntityQuery`, and otherwise fails with 10002.
+
+#### System surfaces
+
+| Surface | Test | App |
+|---|---|---|
+| Spotlight (not tvOS/watchOS) | `definitions.entities["EventEntity"].spotlightQuery("Design Review")`, returning `[AnyAppEntity]` | `IndexedEntity` + `CSSearchableIndex.default().indexAppEntities(_:)` |
+| On-screen annotations | `definitions.entities["EventEntity"].viewAnnotations()`, returning `[ViewAnnotation]` (`.entity`, `.isSelected`) | SwiftUI: `.appEntityIdentifier(EntityIdentifier(for:))`. UIKit: `view.appEntityIdentifier`. Navigate with a `.foreground` intent, and wait with `XCUIApplication` |
+| Transferable | `exported(as:)` on an `AnyAppEntity`, with a content type the entity's `transferRepresentation` exports, returns an `IntentFile`; pass that file to the definition's `resolved(from:)` | `Transferable` on the entity |
+
+#### Errors
+
+| Error | Cause |
+|---|---|
+| `transportCancelled` ("Underlying session was cancelled") | The tests are in a unit-test bundle. Move them to a UI Testing Bundle |
+| Metadata 401: "does not expose any AppIntent named …" | Typo in the type name; an intent added or renamed since the app last launched; or a `#if DEBUG` intent in a non-Debug test build |
+| Metadata 400: "… is not present" | Wrong bundle ID |
+| Execution 206: "requested value for parameter '…' … AutoConfirmingPerformDelegate" | A required parameter is empty: a misspelled label, or an entity string or identifier that matched nothing. The error names the parameter that's missing, not the label you typed |
+| Error text `castingFailed(elementType:targetType:)` | The wrong type in a typed read. With `"NSNull"`: an unreadable property kind, a nil value read as non-optional, or a property read from a `makeReference` entity. With `"AppEnumSpecification"`: read the enum as `AnyAppEnum` |
+| `LNPerformQueryErrorDomain` 10002 | `allEntities()` on a query that isn't `EnumerableEntityQuery` |
+| `LNConnectionErrorDomain` 1014 "timeout" | `run()` gives up after 30 s. Keep setup and seeding intents short |
+
+Apple's docs have two errors. The article's `definitions.intent[…]` is `intents`, and the `AnyTransientAppEntity` doc comment's `withProperties(…)` is `makeEntity(…)`.
+
+#### Swift Testing
+
+UI Testing Bundles alias `Testing` away: `TESTING_FRAMEWORK_MODULE_ALIAS_FLAGS` (`-module-alias Testing=_Testing_Unavailable`) makes `import Testing` fail. Setting it to empty on the UI test target (`TESTING_FRAMEWORK_MODULE_ALIAS_FLAGS =`) lets Swift Testing run AppIntentsTesting and `XCUIApplication` there. The override is undocumented and Apple's samples use XCTest.
+
+```swift
+import AppIntentsTesting
+import Testing
+import XCTest
+
+@MainActor
+@Suite(.serialized)
+struct EventIntentSwiftTests {
+    let definitions = IntentDefinitions(bundleIdentifier: "com.example.calendar")
+
+    init() async throws {
+        XCUIApplication().launch()
+        try await definitions.intents["ResetDatabaseIntent"].makeIntent().run()
+    }
+
+    @Test func createEvent() async throws {
+        let created = try await definitions.intents["CreateEventIntent"]
+            .makeIntent(title: "Sprint Planning", calendar: "Work", priority: "high")
+            .run()
+        let title: String = try created.value.title
+        #expect(title == "Sprint Planning")
+    }
+}
+```
+
+Every test shares one app and its data, but `.serialized` covers only its own suite. With several intent suites, nest them under one `.serialized` parent.
 
 ### Testing with Shortcuts App
 
@@ -1386,24 +1513,6 @@ Validate intents in isolation with **AppIntentsTesting** (no Siri needed), then 
    - "Hey Siri, [your intent name]"
    - Siri should prompt for parameters
    - Verify dialog text and results
-
-### Xcode Intent Testing
-
-```swift
-// In your app target, not tests
-#if DEBUG
-extension OrderSoupIntent {
-    static func testIntent() async throws {
-        let intent = OrderSoupIntent()
-        intent.soup = SoupEntity(id: "1", name: "Tomato", price: 8.99)
-        intent.quantity = 2
-
-        let result = try await intent.perform()
-        print("Result: \(result)")
-    }
-}
-#endif
-```
 
 ### Common Debugging Issues
 
@@ -1706,6 +1815,7 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 - ☐ Background intents don't access MainActor
 - ☐ Foreground intents declare `.foreground` in `supportedModes` (iOS 26+; `openAppWhenRun = true` is the deprecated pre-26 equivalent)
 - ☐ Entity `displayRepresentation` shows meaningful info
+- ☐ Each intent covered by an AppIntentsTesting test in a UI Testing Bundle `OS27`
 - ☐ Tested with Siri voice commands
 - ☐ Tested in Shortcuts app
 - ☐ Tested with different parameter combinations
@@ -1717,7 +1827,7 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 **WWDC**: 2025-244, 2025-275, 2025-260, 2026-240, 2026-343, 2026-345, 2026-295, 2026-347
 
-**Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintents/adopting-app-intents-to-support-system-experiences, /appintents/apple-intelligence-and-siri-ai, /Updates/AppIntents
+**Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintents/adopting-app-intents-to-support-system-experiences, /appintents/apple-intelligence-and-siri-ai, /appintentstesting, /appintentstesting/testing-your-app-intents-code, /Updates/AppIntents
 
 **Skills**: skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md, skills/app-discoverability.md, axiom-security (skills/agentic-security.md)
 

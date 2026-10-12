@@ -662,7 +662,7 @@ Once implemented, your App Shortcuts are available in:
 **If shortcuts don't appear:**
 - Ensure AppShortcutsProvider is in your main app target
 - Check that `isDiscoverable` is true for the AppIntents (default)
-- Rebuild and reinstall app
+- Rebuild, reinstall, then launch the app once. Until it launches, the system keeps serving the previous build's intent list; a minute of retries didn't refresh it
 - Check console for AppShortcuts errors
 
 ---
@@ -697,7 +697,7 @@ Once implemented, your App Shortcuts are available in:
 **If shortcut doesn't appear in Spotlight:**
 - Wait a few minutes (indexing delay)
 - Restart device
-- Check System Settings → Siri & Search → [Your App] → Show App in Search
+- Check Settings → Search → [Your App] → Show App in Search. For suggestions before typing, Settings → Search → Suggest App Shortcuts
 
 ---
 

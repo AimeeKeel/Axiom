@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "968ec2df53431c0ed81f5825823e337c1102a3c0f4f1fe3cae2b44a594be0477",
+      "sha256": "abc9f7ce553fde0a7c42d351f095544b0b722e895cdb31f846923eef775121d2",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "6ac96bc648a865e85d01318f36ebeea9699462f518c502997c5555eb907bcc08",
+      "sha256": "dd711073d5cb80088584b033e621eccee28a1364c87f3c31d41e2a29ce12341e",
       "bytes": 3314
     },
     {
@@ -893,13 +893,13 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-intents-ref.md",
-      "sha256": "cc8a83dc23c880b81f1e1874b1a66536a5c98e19272030978d9ed0bd7351405f",
-      "bytes": 52446
+      "sha256": "f6848a3d8a31ccafe9b87c5656b4b35305c0ebd22c6ae3e57b6584189f0f07de",
+      "bytes": 60318
     },
     {
       "path": "skills/axiom-integration/skills/app-shortcuts-ref.md",
-      "sha256": "073a7d9e714c6f2d0c66714f66e29dc349fe94d489a7142ff02af507c0f1d616",
-      "bytes": 24079
+      "sha256": "5fb654f9dc30ede75f26b266b75847cbe0e4a760b3fb1bfbebceae57e7ab9cb2",
+      "bytes": 24279
     },
     {
       "path": "skills/axiom-integration/skills/background-assets-ref.md",
@@ -948,8 +948,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/core-spotlight-ref.md",
-      "sha256": "16cc6bb0d74ca334074b4beff759ec278c6978cbf44b4e2f7add88bf8c03928d",
-      "bytes": 36507
+      "sha256": "e19f82aaa34643fb7f6343e5fe8b6c106d981118ccb7e4672730af9ede1a7ee7",
+      "bytes": 36536
     },
     {
       "path": "skills/axiom-integration/skills/eventkit-ref.md",
@@ -1688,8 +1688,8 @@
     },
     {
       "path": "skills/axiom-testing/SKILL.md",
-      "sha256": "204da4ef7e049e4fc860ae426ca359c201fa45fb6d2088ebd6f8319196e64aac",
-      "bytes": 9027
+      "sha256": "44cde4628e6b31dc0647f2e31257b19f246669ed530da3acce5f0ce433606d34",
+      "bytes": 9358
     },
     {
       "path": "skills/axiom-testing/skills/swift-testing.md",
@@ -1708,8 +1708,8 @@
     },
     {
       "path": "skills/axiom-testing/skills/ui-testing.md",
-      "sha256": "86244e2ac435a1ca6eed9de0eb47041671bdd1e6f9b369c69ce443915c52b76d",
-      "bytes": 51798
+      "sha256": "fa70d183893be4d039845aac3ffa1f7c90f697b565c9fb620e415f3096c88c7f",
+      "bytes": 52802
     },
     {
       "path": "skills/axiom-testing/skills/xctest-automation.md",
@@ -1894,7 +1894,7 @@
   ],
   "totals": {
     "files": 378,
-    "bytes": 7700581
+    "bytes": 7710017
   },
   "excludedMirrors": 30,
   "classes": {
