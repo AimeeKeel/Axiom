@@ -197,6 +197,21 @@ This is the assertion that catches an accessible-looking UI that reads badly: a 
 
 Utterances are localized speech. Unlike Pattern 4's identifiers, the string *is* what's under test, so run these tests on a fixed locale rather than applying the hardcoded-label rule below.
 
+### Pattern 8: Testing App Intents through the system `OS27`
+
+AppIntentsTesting runs the app's intents out of process from a UI test, through the same App Intents stack as Siri and Shortcuts, and reads back their results.
+
+```swift
+let definitions = IntentDefinitions(bundleIdentifier: "com.example.calendar")
+let created = try await definitions.intents["CreateEventIntent"]
+    .makeIntent(title: "Sprint Planning", calendar: "Work")
+    .run()
+let title: String = try created.value.title
+XCTAssertEqual(title, "Sprint Planning")
+```
+
+It works only from a UI Testing Bundle; in a unit-test bundle every call fails with `transportCancelled`. Launch the app in `setUp`, because after a reinstall the system serves stale intent metadata until the app launches. Reset data with a test-only intent (`#if DEBUG`, `isDiscoverable = false`): hidden intents are still reachable by name. For parameters, the error table, and Swift Testing, see axiom-integration (`skills/app-intents-ref.md`, AppIntentsTesting).
+
 ## Testing Checklist
 
 ### Before Writing Tests

@@ -827,7 +827,7 @@ CSSearchableIndex.default().fetchLastClientState { clientState, error in
 #### Items not appearing in Spotlight
 - Indexing is asynchronous — the completion handler fires once the data is journaled, so check its error rather than waiting out a fixed delay
 - Verify `isEligibleForSearch = true`
-- Check System Settings → Siri & Search → [App] → Show App in Search
+- Check Settings → Search → [App] → Show Content in Search (indexed items) and Show App in Search
 - Restart device
 - Check console for indexing errors
 
