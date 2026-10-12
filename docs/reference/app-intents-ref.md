@@ -17,6 +17,7 @@ Use this reference when you need:
 - Shortcuts app action creation
 - Spotlight search indexing
 - Apple Intelligence integration
+- Automated tests that run your intents through the system (iOS 27)
 
 **For quick start:** Define an AppIntent, add parameters, implement perform().
 
@@ -31,6 +32,8 @@ Questions you can ask Claude that will draw from this reference:
 - "How do I handle authentication in App Intents?"
 - "How do I index my intents for Spotlight search?"
 - "How do I adopt an app schema so Siri can drive my app? (iOS 27)"
+- "How do I write automated tests for my App Intents? (iOS 27)"
+- "Why does my App Intents test say the intent doesn't exist?"
 
 ## What's Covered
 
@@ -75,8 +78,15 @@ Questions you can ask Claude that will draw from this reference:
 - Intent modes and background-to-foreground transitions
 - Interactive snippets (SnippetIntent)
 
+### Testing (iOS 27)
+- AppIntentsTesting — `IntentDefinitions`, `makeIntent`, `run()`, `ResolvedIntentResult`
+- Passing strings, enums, entities, transient entities, and your own wrapper types as parameters
+- Which entity properties a test can read
+- Spotlight (`spotlightQuery`), on-screen annotations (`viewAnnotations`), and Transferable round trips
+- Error reference: wrong bundle type, stale intent metadata, misspelled parameters, the 30-second timeout
+- Running the tests with Swift Testing instead of XCTest
+
 ### Debugging
-- Intent testing in Xcode
 - Shortcuts app debugging
 - Siri transcript logging
 
@@ -127,17 +137,19 @@ struct SongEntityQuery: EntityQuery {
 
 ## Documentation Scope
 
-This page documents the `axiom-integration` reference skill — complete API coverage Claude uses when you need specific App Intents APIs or integration patterns.
+This page documents the `app-intents-ref` reference skill in the `axiom-integration` suite — complete API coverage Claude uses when you need specific App Intents APIs, integration patterns, or automated intent tests.
 
-**For troubleshooting:** Check Info.plist, rebuild app, wait 5-10 minutes for Shortcuts discovery.
+**For troubleshooting:** If an intent doesn't show up, first check that it isn't marked `isDiscoverable = false`. Then launch the app once after installing the new build. The intent list is compiled into the app bundle (not Info.plist), and in testing on the iOS 27 simulator the system kept serving the previous build's intents after a reinstall until the app launched — a minute of retries didn't refresh it.
 
 ## Related
 
-- [swiftui-26-ref](/reference/swiftui-26-ref) – iOS 26 SwiftUI features
-- [extensions-widgets](/skills/integration/extensions-widgets) – Widget development
+- [app-shortcuts-ref](/reference/app-shortcuts-ref) – Wraps the intents defined here in App Shortcuts so they work in Siri and Spotlight with no user setup
+- [core-spotlight-ref](/reference/core-spotlight-ref) – Indexes the entities your intents operate on, so they appear in Spotlight search
+- [ui-testing](/skills/ui-design/ui-testing) – Where AppIntentsTesting tests live: they must run from a UI test target
+- [extensions-widgets](/skills/integration/extensions-widgets) – Interactive widgets and Control Center controls run App Intents for their buttons and toggles
 
 ## Resources
 
-**WWDC**: 2025-260 (App Intents), 2023-10103 (Dive into App Intents), 2022-10170 (App Shortcuts)
+**WWDC**: 2026-295 (App Intents testing), 2025-260 (App Intents), 2023-10103 (Dive into App Intents), 2022-10170 (App Shortcuts)
 
-**Docs**: /appintents, /appintents/appintent, /appintents/appentity
+**Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintentstesting
