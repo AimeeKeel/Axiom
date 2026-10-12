@@ -30,6 +30,7 @@ license: MIT
 | @MainActor tests, parallel execution | See `skills/testing-async.md` |
 | Writing UI tests, XCUITest | See `skills/ui-testing.md` |
 | Driving VoiceOver from a UI test, asserting spoken output (`OS27`) | See `skills/ui-testing.md` Pattern 7 |
+| Testing App Intents through the system, AppIntentsTesting (`OS27`) | See `skills/ui-testing.md` Pattern 8, then axiom-integration (`skills/app-intents-ref.md`) |
 | Condition-based waiting patterns | See `skills/ui-testing.md` |
 | Recording UI Automation (Xcode 26) | See `skills/ui-testing.md` |
 | Network conditioning, multi-factor testing | See `skills/ui-testing.md` |
@@ -79,6 +80,7 @@ digraph testing {
 |------|-----|
 | Unit tests (logic, models) | Swift Testing |
 | UI tests (tap, swipe, assert screens) | XCUITest (XCTest) |
+| App Intents run through the system (AppIntentsTesting) | UI Testing Bundle with XCTest. Swift Testing works there only with an undocumented build-setting override |
 | Tests without simulator | Package/Framework (either framework) |
 | Parameterized tests | Swift Testing |
 | Performance measurements | XCTest (XCTMetric) |

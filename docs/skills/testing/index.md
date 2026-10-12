@@ -61,4 +61,5 @@ XCUITest patterns for reliable UI tests. Condition-based waiting, Recording UI A
 | UI tests (tap, swipe, screens) | [UI Testing](/skills/ui-design/ui-testing) |
 | Tests without simulator | [Swift Testing](./swift-testing) |
 | Flaky UI tests | [UI Testing](/skills/ui-design/ui-testing) |
+| Testing App Intents through the system (iOS 27) | [App Intents Reference](/reference/app-intents-ref) |
 | Migrating from XCTest | [Swift Testing](./swift-testing) |

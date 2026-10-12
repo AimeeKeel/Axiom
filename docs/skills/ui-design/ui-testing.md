@@ -19,6 +19,7 @@ Use this skill when you're:
 - Want to test across multiple network conditions
 - Testing a resizable app: window-dimension matrix, RTL/pseudolocalization passes, live-resize checks
 - Asserting what VoiceOver actually speaks for your UI, not just that a label exists (iOS 27)
+- Testing your App Intents through the system from a UI test (iOS 27)
 
 **Core principle:** Wait for conditions, not arbitrary timeouts. Flaky tests come from guessing how long operations take.
 
@@ -36,6 +37,7 @@ Questions you can ask Claude that will draw from this skill:
 - "How do I run my UI tests in RTL with AppleLanguages?"
 - "How do I test my app at different window sizes automatically?"
 - "How do I drive VoiceOver from a UI test and check what it reads for my button?"
+- "How do I test my App Intents without running them through Siri by hand?"
 
 ## What This Skill Provides
 
@@ -57,6 +59,10 @@ Questions you can ask Claude that will draw from this skill:
 - Accessibility Inspector for reviewing elements
 - `performAccessibilityAudit()` in tests
 - `XCUIDevice.shared.voiceOverService` (iOS 27) – move the VoiceOver cursor and assert the spoken output
+
+### App Intents (iOS 27)
+- AppIntentsTesting runs your intents out of process from a UI Testing Bundle and checks their results
+- Full API, parameter rules, and error reference in [app-intents-ref](/reference/app-intents-ref)
 
 ### Test Plans
 - Multiple device/language configurations
@@ -137,6 +143,7 @@ This page documents the `axiom-testing` (ui-testing reference) skill — reliabl
 - [swift-testing](/skills/testing/swift-testing) – Swift Testing framework patterns
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – @MainActor patterns for crash debugging
 - [xcode-debugging](/skills/debugging/xcode-debugging) – Environment diagnostics when tests fail due to Xcode issues
+- [app-intents-ref](/reference/app-intents-ref) – Full AppIntentsTesting reference for testing App Intents from a UI test target
 
 ## Resources
 
