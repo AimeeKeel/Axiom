@@ -4,12 +4,13 @@ Model Context Protocol (MCP) server for Axiom's Apple-platform development skill
 
 ## Features
 
-- **Skills** — Apple-platform (iOS, iPadOS, macOS, watchOS, tvOS) development expertise as MCP Resources (on-demand loading)
-- **Commands** — Structured prompts as MCP Prompts
-- **Agents** — Autonomous auditors, retrievable as MCP Tools
-- **Profiling tools** — the bundled `xcprof` CLI exposed as MCP Tools (Apple Silicon Mac + Xcode)
-- **Dual Distribution** — Works standalone or bundled with Claude Code plugin
-- **Hybrid Runtime** — Development mode (live files) or production mode (bundled)
+- **Skills** — Axiom's full Apple-platform skill catalog as MCP Resources, loaded on demand, plus tools to browse, search, and read it
+- **Agents** — fetch any agent's instructions with `axiom_get_agent`, then follow them
+- **Commands** — structured workflows as MCP Prompts
+- **Command-line tools** — `xclog`, `xcsym`, and `xcprof` as MCP Tools, for console capture, crash symbolication, and profiling (Apple Silicon Mac with Xcode)
+- **`xcproject`** — a command the package installs alongside the server, for reading `project.pbxproj` and JSON5 `project.xcproj` files; it has no MCP tool
+- **Apple's bundled documentation** — the guides and diagnostics inside Xcode, searchable alongside the skills when Xcode is installed
+- **Two modes** — production (the bundled snapshot, the default) or development (reads a plugin checkout)
 
 ## Installation
 
@@ -30,25 +31,23 @@ No clone or build step needed. Add to your tool's MCP configuration:
 
 This downloads and runs the server in production mode with all skills bundled.
 
-### For Claude Code Users (Bundled)
+### Claude Code and the Claude app
 
-The MCP server starts automatically when you install the Axiom plugin:
+The Axiom plugin gives Claude Code and the Claude app its skills, agents, commands, and hooks natively; the plugin does not start this server. See the [install guides](https://charleswiltgen.github.io/Axiom/start/). To add the MCP server to Claude Code as well:
 
 ```bash
-claude-code plugin add axiom@axiom-marketplace
+claude mcp add axiom -- npx -y axiom-mcp
 ```
-
-No additional configuration needed — the plugin's `.mcp.json` launches the server in development mode.
 
 ## Usage
 
 ### VS Code + GitHub Copilot
 
-Add to your VS Code `settings.json`:
+Add to `.mcp.json` at the root of your project, or to `~/.copilot/mcp-config.json` for every project:
 
 ```json
 {
-  "github.copilot.chat.mcp.servers": {
+  "mcpServers": {
     "axiom": {
       "command": "npx",
       "args": ["-y", "axiom-mcp"]
@@ -57,7 +56,9 @@ Add to your VS Code `settings.json`:
 }
 ```
 
-### Claude Desktop
+VS Code still reads the older `.vscode/mcp.json` (with a top-level `servers` object), but marks it deprecated.
+
+### Claude desktop app
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -89,13 +90,17 @@ Add to `.cursor/mcp.json` in your workspace:
 
 ### Gemini CLI
 
-Configure MCP server in `~/.gemini/config.toml`:
+Add to `~/.gemini/settings.json` (or `.gemini/settings.json` in a project):
 
-```toml
-[[mcp_servers]]
-name = "axiom"
-command = "npx"
-args = ["-y", "axiom-mcp"]
+```json
+{
+  "mcpServers": {
+    "axiom": {
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
+    }
+  }
+}
 ```
 
 ## Configuration
@@ -105,10 +110,12 @@ args = ["-y", "axiom-mcp"]
 | Variable | Values | Default | Description |
 |----------|--------|---------|-------------|
 | `AXIOM_MCP_MODE` | `development`, `production` | `production` | Runtime mode |
-| `AXIOM_DEV_PATH` | File path | — | Plugin directory for dev mode |
+| `AXIOM_DEV_PATH` | File path | — | Plugin directory for development mode |
 | `AXIOM_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` | Logging verbosity |
-| `AXIOM_XCPROF_PATH` | File path | bundled binary | Override the `xcprof` binary the profiling tools invoke |
-| `AXIOM_XCPROF_TIMEOUT` | Seconds | `300` | Per-invocation ceiling for `xcprof` calls (raise for long recordings) |
+| `AXIOM_APPLE_DOCS` | `false` | Enabled | Set to `false` to leave Xcode's bundled Apple documentation out of the catalog |
+| `AXIOM_XCODE_PATH` | Path to an Xcode app | The one `xcode-select` points to | The Xcode whose bundled documentation and version the server reads |
+| `AXIOM_XCLOG_PATH`, `AXIOM_XCSYM_PATH`, `AXIOM_XCPROF_PATH` | File path | Bundled binary | Use a different `xclog`, `xcsym`, or `xcprof` binary |
+| `AXIOM_XCLOG_TIMEOUT`, `AXIOM_XCSYM_TIMEOUT`, `AXIOM_XCPROF_TIMEOUT` | Seconds | `120`, `120`, `300` | Time limit for each call to that tool; raise it for long recordings |
 
 ### Modes
 
@@ -118,10 +125,9 @@ args = ["-y", "axiom-mcp"]
 AXIOM_MCP_MODE=development AXIOM_DEV_PATH=/path/to/plugin node dist/index.js
 ```
 
-- Reads skills directly from Claude Code plugin directory
-- Changes to skills reflected immediately (no rebuild needed)
-- Ideal for skill development and testing
-- Used by Claude Code plugin's `.mcp.json`
+- Reads skills directly from a checkout of the plugin directory
+- Changes to skills are reflected immediately (no rebuild needed)
+- For developing and testing Axiom's skills
 
 #### Production Mode (Bundled Skills)
 
@@ -130,9 +136,8 @@ AXIOM_MCP_MODE=development AXIOM_DEV_PATH=/path/to/plugin node dist/index.js
 npx axiom-mcp
 ```
 
-- Reads pre-bundled snapshot from `dist/bundle.json`
-- Bundle contains the full Axiom skill, command, and agent set
-- No file system access after initialization
+- Reads Axiom's skills, commands, and agents from the snapshot in `dist/bundle.json`, never from a plugin checkout
+- Reads Xcode's bundled Apple documentation at startup, when Xcode is installed and `AXIOM_APPLE_DOCS` isn't `false`
 - Self-contained, distributed via npm
 
 ## MCP Resources
@@ -143,11 +148,12 @@ Skills are exposed as MCP Resources with URI scheme:
 axiom://skill/{skill-name}
 ```
 
-Examples:
-- `axiom://skill/xcode-debugging`
-- `axiom://skill/swiftui-nav`
-- `axiom://skill/memory-debugging`
-- `axiom://skill/liquid-glass-ref`
+A router's id is its name; a specialized skill's id is its router's name, two hyphens, then its own name. Apple's guides and diagnostics bundled inside Xcode use `apple-guide-` and `apple-diag-` prefixes. Examples:
+- `axiom://skill/axiom-swiftui` (a router)
+- `axiom://skill/axiom-build--xcode-debugging`
+- `axiom://skill/axiom-swiftui--nav`
+- `axiom://skill/axiom-design--liquid-glass-ref`
+- `axiom://skill/apple-diag-actor-isolated-call`
 
 ### Resource Discovery
 
@@ -156,9 +162,9 @@ Examples:
 {
   "resources": [
     {
-      "uri": "axiom://skill/xcode-debugging",
-      "name": "Xcode Debugging",
-      "description": "Environment-first diagnostics for BUILD FAILED, test crashes, simulator hangs",
+      "uri": "axiom://skill/axiom-build--xcode-debugging",
+      "name": "Axiom Build Xcode Debugging",
+      "description": "Check build environment BEFORE debugging code. …",
       "mimeType": "text/markdown"
     }
   ]
@@ -172,39 +178,32 @@ Examples:
 {
   "method": "resources/read",
   "params": {
-    "uri": "axiom://skill/xcode-debugging"
+    "uri": "axiom://skill/axiom-build--xcode-debugging"
   }
 }
 
 // Response includes full skill content as markdown
 {
   "contents": [{
-    "uri": "axiom://skill/xcode-debugging",
+    "uri": "axiom://skill/axiom-build--xcode-debugging",
     "mimeType": "text/markdown",
-    "text": "# Xcode Debugging\n\n..."
+    "text": "# Axiom Build Xcode Debugging\n\n..."
   }]
 }
 ```
 
 ## MCP Tools
 
-Beyond the read-only skill-lookup tools (`axiom_get_catalog`, `axiom_search_skills`, `axiom_read_skill`, `axiom_get_agent`), the server wraps the bundled **`xcprof`** profiler so non-Claude-Code clients get the same Instruments workflow. These tools shell out to a macOS arm64 binary shipped inside the package (`dist/bin/xcprof`).
+| Family | Tools | Side effects |
+|--------|-------|--------------|
+| Lookup | `axiom_get_catalog`, `axiom_search_skills`, `axiom_read_skill`, `axiom_get_agent` | None |
+| `xclog` console capture | `axiom_xclog_list`, `axiom_xclog_launch`, `axiom_xclog_attach`, `axiom_xclog_show` | `launch` terminates and relaunches the target app in the simulator |
+| `xcsym` crash symbolication | `axiom_xcsym_crash`, `axiom_xcsym_verify`, `axiom_xcsym_resolve`, `axiom_xcsym_find_dsym`, `axiom_xcsym_list_dsyms`, `axiom_xcsym_triage`, `axiom_xcsym_anonymize` | None |
+| `xcprof` profiling | `axiom_xcprof_doctor`, `axiom_xcprof_analyze`, `axiom_xcprof_compare`, `axiom_xcprof_record` | `record` captures a new trace |
 
-**Requires an Apple Silicon Mac with Xcode installed.** `xcprof` drives `xctrace`, which is macOS-only — on other platforms the tools return an explanatory message instead of running.
+The `xclog`, `xcsym`, and `xcprof` tools run macOS arm64 binaries shipped inside the package (`dist/bin/`). **They need an Apple Silicon Mac with Xcode installed**; on other platforms they return an explanatory message instead of running.
 
-| Tool | What it does | Read-only |
-|------|--------------|-----------|
-| `axiom_xcprof_doctor` | Verify `xctrace`; count Instruments templates + devices | yes |
-| `axiom_xcprof_analyze` | Analyze an existing `.trace` → structured CPU/hang/network JSON | yes |
-| `axiom_xcprof_compare` | Diff two traces (baseline vs current) for regression detection | yes |
-| `axiom_xcprof_record` | Capture a new `.trace` by attaching to, launching, or system-wide profiling | **no** |
-
-**`record` is the only side-effecting tool.** It defaults to attaching to a process and always runs non-interactively (`--no-prompt`). Its higher-risk modes stay gated, mirroring the CLI's ADR-002 security gates:
-
-- Launching a process (`launch`) requires `allowLaunch: true`.
-- System-wide capture (`allProcesses`) requires `allowAllProcesses: true`.
-
-Without those explicit flags the binary refuses the operation. Recordings are always duration-bounded.
+**`axiom_xcprof_record` keeps its higher-risk modes gated.** It attaches to a process by default and always runs non-interactively. Launching a process (`launch`) requires `allowLaunch: true`, and system-wide capture (`allProcesses`) requires `allowAllProcesses: true`; without those flags the binary refuses. Recordings are always duration-bounded.
 
 ## Development
 
@@ -218,57 +217,73 @@ axiom-mcp/
 ├── src/
 │   ├── index.ts              # Entry point + stdio transport
 │   ├── config.ts             # Configuration + logging
+│   ├── instructions.ts       # Server instructions sent to clients
+│   ├── version-context.ts    # iOS/Xcode version ground truth
 │   ├── loader/
 │   │   ├── types.ts          # Loader interface
 │   │   ├── parser.ts         # Frontmatter parsing
 │   │   ├── dev-loader.ts     # Live file reading
-│   │   └── prod-loader.ts    # Bundle reading
+│   │   ├── prod-loader.ts    # Bundle reading
+│   │   └── xcode-docs.ts     # Xcode's bundled Apple docs
 │   ├── resources/
 │   │   └── handler.ts        # Resources protocol
 │   ├── prompts/
 │   │   └── handler.ts        # Prompts protocol
 │   ├── tools/
-│   │   └── handler.ts        # Tools protocol
+│   │   ├── handler.ts        # Tools protocol + lookup tools
+│   │   ├── xclog.ts          # Console capture tools
+│   │   ├── xcsym.ts          # Crash symbolication tools
+│   │   ├── xcprof.ts         # Profiling tools
+│   │   ├── binaries.ts       # Bundled binary list
+│   │   └── binary-exec.ts    # Bounded binary execution
 │   ├── catalog/
 │   │   └── index.ts          # Skill catalog + search
 │   ├── search/
 │   │   └── index.ts          # BM25 search engine
 │   └── scripts/
-│       └── bundle.ts         # Bundle generator
+│       ├── bundle.ts                 # Bundle generator
+│       ├── binary-coverage.ts        # Bundled binary checks
+│       └── generate-annotations.ts   # skill-annotations.json generator
 └── dist/                     # Compiled output
     ├── index.js              # Server entry point
     ├── bundle.json           # Production bundle
+    ├── bin/                  # xclog, xcsym, xcprof, xcproject binaries
     └── ...
 ```
 
 ### Build Commands
 
+The package uses pnpm (`pnpm-lock.yaml`).
+
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Build once
-npm run build
+pnpm run build
 
 # Build with production bundle
-npm run build:bundle
+pnpm run build:bundle
 
 # Watch mode (rebuild on changes)
-npm run dev
+pnpm run dev
 
 # Run server
-npm start
+pnpm start
+
+# Run tests
+pnpm test
 ```
 
 The `build:bundle` command:
 1. Compiles TypeScript (`tsc`)
-2. Generates `dist/bundle.json` from plugin files
-3. Bundle includes all skills, commands, and agents
-4. Required for production mode
+2. Adds annotations for any new skills to `skill-annotations.json`
+3. Generates `dist/bundle.json` from the plugin's skills, commands, and agents, and copies the tool binaries into `dist/bin/`
+4. Is required for production mode
 
 ### Adding Skills
 
-Skills are automatically discovered from `{AXIOM_DEV_PATH}/skills/<name>/SKILL.md`.
+Routers are discovered from `{AXIOM_DEV_PATH}/skills/<router>/SKILL.md`, and their specialized skills from `{AXIOM_DEV_PATH}/skills/<router>/skills/<name>.md`, which the server names `<router>--<name>`.
 
 Skill frontmatter follows the Agent Skills spec:
 
@@ -280,14 +295,14 @@ license: MIT
 ---
 ```
 
-MCP search/catalog annotations (category, tags, related) are stored separately in `skill-annotations.json`:
+MCP search/catalog annotations (category, tags, related) live in `skill-annotations.json`, keyed by the same ids. `pnpm run annotations` (also part of `build:bundle`) adds an entry for each skill that lacks one and keeps existing entries, so you can edit an entry by hand:
 
 ```json
 {
   "my-skill": {
     "category": "debugging",
     "tags": ["xcode", "swift", "performance"],
-    "related": ["other-skill", "another-skill"]
+    "related": ["axiom-build--xcode-debugging", "axiom-swiftui"]
   }
 }
 ```
@@ -298,36 +313,22 @@ Changes are picked up automatically in development mode.
 
 ### Manual Testing (Development Mode)
 
-```bash
-# Terminal 1: Start server
-AXIOM_MCP_MODE=development \
-AXIOM_DEV_PATH=../.claude-plugin/plugins/axiom \
-AXIOM_LOG_LEVEL=debug \
-node dist/index.js
+Pipe a request into a development-mode server. It answers on stdout, logs to stderr, and exits when its input ends:
 
-# Terminal 2: Send MCP requests via stdin
-echo '{"jsonrpc":"2.0","id":1,"method":"resources/list"}' | node dist/index.js
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"resources/list"}' | \
+  AXIOM_MCP_MODE=development AXIOM_DEV_PATH=../.claude-plugin/plugins/axiom node dist/index.js
 ```
 
 ### Testing with MCP Inspector
 
-Install the official MCP Inspector:
+Run the official MCP Inspector:
 
 ```bash
 npx @modelcontextprotocol/inspector npx axiom-mcp
 ```
 
 Opens a web UI for testing MCP protocol interactions.
-
-### Testing Claude Code Integration
-
-```bash
-# Reload plugin (triggers .mcp.json)
-claude-code plugin reload axiom
-
-# Check MCP server logs
-# (Logs go to stderr, visible in plugin console)
-```
 
 ## Troubleshooting
 
@@ -371,57 +372,22 @@ npx axiom-mcp
 # Should start without errors, waiting for stdin
 ```
 
-## Roadmap
-
-### Phase 1: Foundation ✅
-- MCP server with stdio transport
-- Resources protocol (skills)
-- Development mode loader
-- Claude Code `.mcp.json` integration
-
-### Phase 2: MCP Annotations ✅
-- Add MCP metadata to test skills
-- Enhanced skill categorization
-- Cross-references between skills
-
-### Phase 3: Full Primitives ✅
-- Prompts protocol (commands)
-- Tools protocol (agents)
-- Complete MCP feature coverage
-
-### Phase 4: Production Bundle ✅
-- Pre-compiled skill snapshot
-- Production mode loader
-- Bundle generator script
-- Dual-mode Loader interface
-
-### Phase 5: npm Distribution ✅
-- Published as `axiom-mcp` on npm
-- Zero-config install via `npx axiom-mcp`
-- Multi-client configuration guides
-
 ## Architecture
 
-### Dual Distribution Model
+### Two Distributions
 
-**Bundled (Claude Code Plugin)**
-```
-User installs plugin → .mcp.json → MCP server (dev mode) → Live skills
-```
+**Plugin (Claude Code, the Claude app, Codex, Cursor)** – skills, agents, and commands load natively in the harness. The Codex and Cursor plugins also start this server through `npx -y axiom-mcp`.
 
-**Standalone (Other Tools)**
+**npm package (any MCP client)**
 ```
-npx axiom-mcp → Server (prod mode) → Bundled skills
+npx axiom-mcp → server (production mode) → bundled skills, commands, agents, and tools
 ```
 
-**Key Insight:** Same codebase, different entry points. Development mode for rapid iteration, production mode for distribution.
+Development mode runs the same server against a plugin checkout, for working on Axiom's skills.
 
 ### Why MCP?
 
-**Before:** Maintain platform-specific formats for Cursor, VS Code, Gemini CLI, etc.
-**After:** One MCP server works everywhere.
-
-**Maintenance:** O(platforms × skills) → O(skills)
+Many AI coding tools, such as VS Code, Gemini CLI, and OpenCode, have no plugin format Axiom ships for. Any of them that speaks MCP gets the same skills, commands, agents, and tools from this one server.
 
 ## Contributing
 
