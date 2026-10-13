@@ -203,7 +203,7 @@ User question about Apple API/framework?
 If the resolved Xcode has no `IDEIntelligenceChat.framework` documentation directory (older Xcode, or only Command Line Tools installed), fall back to the list below. For a Swift diagnostic, first try the Command Line Tools copy at `/Library/Developer/CommandLineTools/usr/share/doc/swift/diagnostics/`.
 
 1. **sosumi.ai** (markdown mirror of developer.apple.com — see `skills/apple-docs-research.md`)
-2. **WebFetch** of the equivalent developer.apple.com URL
+2. **The SDK's own declarations** – its Swift interfaces and Objective-C headers (also in `skills/apple-docs-research.md`); Command Line Tools includes only the macOS SDK
 3. **Suggest** installing the latest Xcode for full Apple docs coverage
 
 Do not silently fail — tell the user when Xcode docs aren't available locally and which fallback you used.
@@ -214,7 +214,7 @@ Clients using axiom-mcp can also invoke `axiom_read_skill` with the legacy ID (e
 
 ## Research Methodology
 
-For WWDC transcript capture (Chrome auto-capture), sosumi.ai documentation access, and multi-session research workflows, see [skills/apple-docs-research.md](skills/apple-docs-research.md).
+When the bundled guides don't cover it — Apple's full API reference, the SDK's own declarations, or a WWDC session's transcript and code — see [skills/apple-docs-research.md](skills/apple-docs-research.md).
 
 ## Resources
 

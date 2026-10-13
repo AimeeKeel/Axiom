@@ -1,16 +1,16 @@
 # Apple Documentation Access
 
-Router skill providing direct access to Apple's official for-LLM markdown documentation bundled inside Xcode. 20 guide topics and 32 Swift compiler diagnostics, written by Apple engineers.
+Points your assistant to Apple's own for-LLM markdown documentation, which ships inside Xcode: 20 framework guides and 46 Swift compiler diagnostic explanations, written by Apple engineers.
 
 ## When to Use
 
 Use this skill when:
 - You need the exact API signature or behavior from Apple
-- A Swift compiler diagnostic needs explanation with examples
-- Axiom skills reference an Apple framework and you want the official source
-- You want authoritative code examples for Liquid Glass, Foundation Models, SwiftData, or Swift 6.2 concurrency
+- A Swift compiler diagnostic needs an explanation with examples
+- An Axiom skill references an Apple framework and you want the official source
+- You want Apple's own code examples for Liquid Glass, Foundation Models, SwiftData, or Swift concurrency
 
-**Priority**: Axiom skills provide opinionated guidance (decision trees, anti-patterns, pressure scenarios). Apple docs provide authoritative API details. Use both together.
+**Priority**: Axiom skills provide opinionated guidance (decision trees, anti-patterns, pressure scenarios). Apple's docs provide authoritative API details. Use both together.
 
 ## Example Prompts
 
@@ -23,50 +23,42 @@ Use this skill when:
 
 ### Guide Topics (20)
 
-**UI & Design** -- Liquid Glass (SwiftUI, UIKit, AppKit, WidgetKit), toolbar features, styled text editing, WebKit integration, AlarmKit integration, Swift Charts 3D, Foundation AttributedString
+- **UI & Design** – Liquid Glass (SwiftUI, UIKit, AppKit, WidgetKit), toolbar features, styled text editing, WebKit integration, AlarmKit integration, Swift Charts 3D, Foundation `AttributedString`
+- **Data & Persistence** – SwiftData class inheritance
+- **Concurrency & Performance** – Swift concurrency updates, `InlineArray` and `Span`
+- **Apple Intelligence** – Foundation Models (the on-device LLM)
+- **System Integration** – App Intents updates, StoreKit updates, MapKit GeoToolbox place descriptors, widgets for visionOS
+- **Accessibility** – Assistive Access in iOS
+- **Computer Vision** – Visual Intelligence in iOS
 
-**Data & Persistence** -- SwiftData class inheritance
+### Swift Compiler Diagnostics (46)
 
-**Concurrency & Performance** -- Swift 6.2 concurrency updates, InlineArray and Span
-
-**Apple Intelligence** -- Foundation Models (on-device LLM)
-
-**System Integration** -- App Intents updates, StoreKit updates, MapKit GeoToolbox, Widgets for visionOS
-
-**Accessibility** -- Assistive Access in iOS
-
-**Computer Vision** -- Visual Intelligence in iOS
-
-### Swift Compiler Diagnostics (32)
-
-Official explanations with code examples for concurrency errors (actor isolation, Sendable, data races), type system diagnostics (existential any, opaque types, protocol conformance), and build/migration diagnostics (deprecated declarations, strict language features, module visibility).
+Official explanations with code examples for concurrency errors (actor isolation, `Sendable`, data races), type system diagnostics (existential `any`, opaque types, protocol conformance), build and migration diagnostics (deprecated declarations, strict language features, module visibility), and Swift language diagnostics (property wrappers, result builders, temporary pointers), plus an index of diagnostic groups.
 
 ## How It Works
 
-Apple bundles for-LLM markdown documentation inside Xcode at two locations:
+Apple bundles for-LLM markdown documentation inside Xcode in two places:
 - **AdditionalDocumentation** – Framework guides with implementation patterns
-- **Swift diagnostics** – Compiler error/warning explanations with before/after code
+- **Swift diagnostics** – Compiler error and warning explanations with before-and-after code
 
-Axiom's MCP server reads these files at runtime from the local Xcode installation. They stay current when Xcode updates.
+Your assistant reads these files directly from the Xcode you've selected, so they stay current when Xcode updates. MCP clients can also fetch the same files through Axiom's MCP server. If no Xcode with these docs is installed, the skill falls back to sosumi.ai and tells you which source it used.
 
 ### Configuration
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `AXIOM_XCODE_PATH` | The Xcode `xcode-select` points to (honoring `DEVELOPER_DIR`) | Read a different Xcode's docs than the one you've switched to |
-| `AXIOM_APPLE_DOCS` | `true` | Set to `false` to disable Apple docs loading |
+| `AXIOM_APPLE_DOCS` | `true` | MCP server only: set to `false` to leave Apple's docs out of the server's catalog |
 
 ## Documentation Scope
 
-This page documents the `axiom-apple-docs` router skill. The router maps user questions to specific Apple doc files (prefixed `apple-guide-*` and `apple-diag-*`).
+This page documents the `axiom-apple-docs` router skill. The router maps your question to a specific Apple guide or diagnostic file; MCP clients address the same files by legacy IDs that start with `apple-guide-` or `apple-diag-`.
 
-- For WWDC transcript research, see [apple-docs-research](/skills/integration/apple-docs-research)
-- For Axiom's own Liquid Glass guidance, see [liquid-glass](/skills/ui-design/liquid-glass)
-- For Axiom's own concurrency guidance, see [swift-concurrency](/skills/concurrency/swift-concurrency)
+- For every MCP server setting, see the [MCP setup guide](/start/mcp-install)
 
 ## Related
 
-- [apple-docs-research](/skills/integration/apple-docs-research) – Research Apple frameworks via WWDC transcripts and sosumi.ai
-- [foundation-models](/skills/integration/foundation-models) – Axiom's opinionated Foundation Models guidance
-- [swift-concurrency](/skills/concurrency/swift-concurrency) – Axiom's Swift 6 concurrency patterns
-- [liquid-glass](/skills/ui-design/liquid-glass) – Axiom's Liquid Glass implementation guidance
+- [Apple Documentation Research](/skills/integration/apple-docs-research) – This router's companion skill for researching WWDC transcripts and sosumi.ai
+- [Foundation Models](/skills/integration/foundation-models) – Axiom's opinionated Foundation Models guidance
+- [Swift 6 Concurrency](/skills/concurrency/swift-concurrency) – Axiom's Swift 6 concurrency patterns
+- [Liquid Glass](/skills/ui-design/liquid-glass) – Axiom's Liquid Glass implementation guidance
