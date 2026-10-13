@@ -7,7 +7,7 @@ Battle-tested skills, agents, and tools for modern Apple OS development — Swif
 Axiom gives AI coding assistants deep Apple OS development expertise — the kind that prevents data loss from bad migrations, catches memory leaks before users complain, and stops you from spending 30 minutes debugging a zombie xcodebuild process.
 
 <!-- AXIOM_STATS_BEGIN — auto-maintained by scripts/set-version.js; do not hand-edit -->
-- **276 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
+- **280 skills** covering UI, data, concurrency, performance, networking, accessibility, and more
 - **42 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
 - **17 commands** for quick audits and diagnostics
 <!-- AXIOM_STATS_END -->
@@ -29,6 +29,10 @@ Every discipline skill is TDD-tested against real developer pressure scenarios. 
 ```
 
 Then search for "axiom" in the `/plugin` menu and install.
+
+### Claude app (browser and desktop)
+
+In your browser at claude.ai or in the Claude desktop app, open **Customize > Plugins**, select **Add > Add marketplace** and enter `CharlesWiltgen/Axiom`, then add the **axiom** plugin. Chat loads the skills, Cowork adds the agents and hooks, and Claude Code picks the plugin up from your account. See the [Claude app guide](https://charleswiltgen.github.io/Axiom/start/claude-app-install).
 
 ### Cursor (native plugin)
 

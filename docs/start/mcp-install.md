@@ -5,15 +5,17 @@ const skills = stats.disciplineSkills + stats.referenceSkills + stats.diagnostic
 
 # MCP Server
 
-Axiom includes an MCP (Model Context Protocol) server that brings its iOS development skills to any MCP-compatible AI coding tool — VS Code, Claude Desktop, Cursor, Gemini CLI, OpenCode, and more.
+Axiom includes an MCP (Model Context Protocol) server that brings its Apple-platform development skills to any MCP-compatible AI coding tool — VS Code, the Claude desktop app, Cursor, Gemini CLI, OpenCode, and more.
 
 ## What You Get
 
-The MCP server exposes Axiom's full catalog through the MCP protocol:
+The MCP server exposes Axiom's full catalog:
 
-- **{{ skills }} skills** as MCP Resources (on-demand loading)
-- **{{ stats.agents }} agents** as MCP Tools (autonomous scanning and fixing)
+- **{{ skills }} skills** as MCP Resources, loaded on demand, plus tools to browse, search, and read them (`axiom_get_catalog`, `axiom_search_skills`, `axiom_read_skill`)
+- **{{ stats.agents }} agents**, whose instructions your assistant fetches with the `axiom_get_agent` tool and then follows
 - **{{ stats.commands }} commands** as MCP Prompts (structured workflows)
+- **`xclog`, `xcsym`, and `xcprof`** as MCP Tools, for console capture, crash symbolication, and CPU profiling on an Apple Silicon Mac with Xcode
+- **Apple's documentation bundled inside Xcode**, searchable alongside Axiom's skills when Xcode is installed
 
 ## Prerequisites
 
@@ -27,11 +29,11 @@ Each tool needs a configuration snippet that tells it how to launch the Axiom MC
 
 ### VS Code
 
-Run the **MCP: Open User Configuration** command (Command Palette) to open your user-profile `mcp.json`, then add:
+Add this to `~/.copilot/mcp-config.json` to use Axiom in every project, or to `.mcp.json` at the root of a project for just that one:
 
 ```json
 {
-  "servers": {
+  "mcpServers": {
     "axiom": {
       "command": "npx",
       "args": ["-y", "axiom-mcp"]
@@ -40,9 +42,9 @@ Run the **MCP: Open User Configuration** command (Command Palette) to open your 
 }
 ```
 
-For a single workspace instead, put the same `{ "servers": { … } }` block in `.vscode/mcp.json`. (You can also use **MCP: Add Server** for a guided flow.)
+**MCP: Add Server** in the Command Palette walks you through the same setup. VS Code still reads the older `.vscode/mcp.json` and user-profile `mcp.json` files, which use a top-level `servers` object, but marks them deprecated.
 
-### Claude Desktop
+### Claude desktop app
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -76,13 +78,17 @@ For an **MCP-only setup without the native plugin**, add this exact configuratio
 
 ### Gemini CLI
 
-Add to `~/.gemini/config.toml`:
+Add to `~/.gemini/settings.json` (or `.gemini/settings.json` in a project):
 
-```toml
-[[mcp_servers]]
-name = "axiom"
-command = "npx"
-args = ["-y", "axiom-mcp"]
+```json
+{
+  "mcpServers": {
+    "axiom": {
+      "command": "npx",
+      "args": ["-y", "axiom-mcp"]
+    }
+  }
+}
 ```
 
 ### OpenCode
@@ -111,10 +117,14 @@ Or use the CLI: `opencode mcp add` and follow the prompts.
 | `AXIOM_MCP_MODE` | `development`, `production` | `production` | Runtime mode |
 | `AXIOM_DEV_PATH` | File path | — | Plugin directory for development mode |
 | `AXIOM_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` | Logging verbosity |
+| `AXIOM_APPLE_DOCS` | `false` | Enabled | Set to `false` to leave Xcode's bundled Apple documentation out of the catalog |
+| `AXIOM_XCODE_PATH` | Path to an Xcode app | The one `xcode-select` points to | The Xcode whose bundled documentation and version the server reads |
+| `AXIOM_XCLOG_PATH`, `AXIOM_XCSYM_PATH`, `AXIOM_XCPROF_PATH` | File path | Bundled binary | Use a different `xclog`, `xcsym`, or `xcprof` binary |
+| `AXIOM_XCLOG_TIMEOUT`, `AXIOM_XCSYM_TIMEOUT`, `AXIOM_XCPROF_TIMEOUT` | Seconds | `120`, `120`, `300` | Time limit for each call to that tool; raise it for long recordings |
 
 ### Development Mode (Live Skills)
 
-For Axiom contributors who want live-reloading skills during development:
+For Axiom contributors working on skills:
 
 ```bash
 AXIOM_MCP_MODE=development \
@@ -126,7 +136,7 @@ Changes to skill files are reflected immediately — no rebuild needed.
 
 ### Production Mode (Bundled)
 
-The default when installed via npm. Reads from a pre-compiled snapshot with no file system access after initialization.
+The default when you install from npm. The server reads Axiom's skills from a pre-compiled snapshot instead of a plugin checkout.
 
 ```bash
 npx axiom-mcp
@@ -156,36 +166,39 @@ This opens a web UI where you can browse resources, test prompts, and invoke too
 
 ### In Your Tool
 
-Once configured, try asking your AI tool:
+Once it's configured, try asking your assistant:
 
-> "What iOS debugging skills do you have?"
+> "What Axiom skills do you have for debugging iOS builds?"
 
-It should list Axiom's available skills via the MCP resources protocol.
+It should list Axiom's skills from the MCP server.
 
 ## Troubleshooting
 
 ### Server Won't Start
 
-**Check Node version** — must be 18+:
+Check that Node.js is version 18 or newer:
+
 ```bash
 node --version
 ```
 
 ### Skills Not Appearing
 
-**Enable debug logging** to see what the server loads:
+Turn on debug logging to see what the server loads:
+
 ```bash
 AXIOM_LOG_LEVEL=debug npx axiom-mcp 2>&1 | grep -i skill
 ```
 
 ### Client Can't Connect
 
-MCP uses stdin/stdout for communication. Common issues:
+MCP communicates over stdin and stdout. Common issues:
 
-- **Wrong config** – ensure `command` is `"npx"` and `args` is `["-y", "axiom-mcp"]`
-- **Other stdout writers** – make sure nothing else writes to stdout; logs go to stderr only
+- **Wrong config** – Make sure `command` is `"npx"` and `args` is `["-y", "axiom-mcp"]`
+- **Other stdout writers** – Make sure nothing else writes to stdout; the server logs only to stderr
 
-Test the command from your config manually:
+Run the command from your config by hand:
+
 ```bash
 npx axiom-mcp
 # Should start without errors, waiting for stdin
@@ -194,5 +207,6 @@ npx axiom-mcp
 ## What's Next
 
 - [View all skills →](/skills/) – Browse the complete skill catalog
-- [Agents overview →](/agents/) – See what autonomous agents can do
+- [Agents overview →](/agents/) – See what Axiom's agents check and fix
 - [Example Workflows →](/start/workflows) – Step-by-step guides for common tasks
+- [Xcode Integration →](/start/xcode-setup) – Add this server to Xcode's Claude Agent and Codex

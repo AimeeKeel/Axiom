@@ -1,10 +1,10 @@
 # Codex Plugin
 
-Axiom is available as a native plugin for OpenAI Codex, bringing its iOS development skills directly into the Codex CLI, web app, and IDE extensions.
+Axiom is available as a native plugin for OpenAI Codex, bringing its Apple-platform development skills into the Codex CLI, web app, and IDE extensions.
 
 ## What You Get
 
-The native Codex plugin includes router suites, auditor workflows, and supporting reference and diagnostic guides covering:
+The native Codex plugin includes Axiom's skills, its auditor workflows, and supporting reference and diagnostic guides covering:
 
 - **SwiftUI** – layout, navigation, animations, performance, architecture, debugging
 - **Data** – SwiftData, Core Data, GRDB, CloudKit, migrations, Codable
@@ -18,8 +18,8 @@ The native Codex plugin includes router suites, auditor workflows, and supportin
 
 ## Prerequisites
 
-- **Codex CLI** or Codex web app
-- **Node.js 18+** (for npx)
+- **Codex** – the CLI, web app, or an IDE extension
+- **Node.js 18+** – for `npx`
 
 ## Installation
 
@@ -29,7 +29,7 @@ The native Codex plugin includes router suites, auditor workflows, and supportin
 npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-This installs all <!--ax:skills-->276<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
+This installs all <!--ax:skills-->280<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
 
 To install for the current project only (omit `-g`):
 
@@ -43,7 +43,7 @@ Run `npx skills list -g` (or `npx skills list` for project-scoped) to see instal
 
 ### Codex plugin marketplace (full plugin, including hooks)
 
-`npx skills` installs the skill content. To install the **full Codex plugin** — skills, bundled helpers, an installation check, and Axiom's lifecycle hooks (compact session onboarding, automatic skill routing, terminal diagnostic hints, and the `@State` write-time guardrail) — add Axiom as a native Codex plugin from its bundled marketplace:
+`npx skills` installs the skill content. To install the **full Codex plugin** — skills, bundled helpers, an installation check, and Axiom's lifecycle hooks (compact session onboarding, automatic skill routing, subagent guidance, terminal diagnostic hints, and Swift write-time guardrails) — add Axiom as a native Codex plugin from its bundled marketplace:
 
 ```bash
 codex plugin marketplace add CharlesWiltgen/Axiom
@@ -69,9 +69,11 @@ node "<plugin-root>/scripts/doctor.mjs"
 
 The report checks packaged skills, hooks and their dependencies, bundled helper availability, and the MCP startup configuration. The plugin starts the latest published `axiom-mcp`, the same as every other MCP install path, so the report shows it as `unpinned`. Host trust, server connectivity, and optional Xcode availability show as unknown unless you pass an optional `--host-metadata` file, described in the plugin's `scripts/README.md`.
 
-The full plugin bundles `xclog`, `xcsym`, `xcui`, `xcprof`, `xcproject`, and `axbuild` under `<plugin-root>/tools/`. Use those absolute paths unless the helper is already on PATH. `xcproject` reads both `project.pbxproj` and JSON5 `project.xcproj`; it is also packaged as an npm CLI with the MCP server, without an MCP wrapper. Axiom has Codex run builds and tests through axbuild, so the full log and report are saved even when output is too long to show. The doctor check above confirms the helper runs. See [Tools](/tools/) for what axbuild reports and its known limits. The `npx skills` installation contains skill content only.
+The full plugin bundles `axbuild`, `xcproject`, `xclog`, `xcsym`, `xcui`, and `xcprof` under `<plugin-root>/tools/`. Use those absolute paths unless a helper is already on your `PATH`. `xcproject` reads both `project.pbxproj` and JSON5 `project.xcproj`; it also ships as an npm command-line tool alongside the MCP server, without an MCP wrapper. The `npx skills` installation contains skill content only.
 
-Hook diagnostics are off by default. To investigate a hook failure, set `AXIOM_HOOK_DIAGNOSTICS_DIR` for the Codex process to a private directory you own. Diagnostics record which Axiom hook ran, how long it took, and whether it finished, never your prompts, tool output, credentials, or error messages.
+Axiom has Codex run builds and tests through axbuild, so the full log and report are saved even when the output is too long to show. The doctor check above confirms that axbuild runs. See [Tools](/tools/) for what axbuild reports and its known limits.
+
+Hook diagnostics are off by default. To investigate a hook failure, set `AXIOM_HOOK_DIAGNOSTICS_DIR` for the Codex process to a private directory you own. Diagnostics record which Axiom hook ran, how long it took, and whether it finished — never your prompts, tool output, credentials, or error messages.
 
 **Known issue** Codex sometimes reports "hook exited without a status code". Its cause has not been found, and Axiom has not been identified as the source. If you see it, turn on diagnostics as described above and include the resulting journal when you [report it](https://github.com/CharlesWiltgen/Axiom/issues).
 
@@ -159,12 +161,12 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 | Feature | Claude Code | Codex |
 |---------|-------------|-------|
 | Skills | Router suites and supporting guides | Same routers and references; auditor procedures are exposed as skills |
-| Agents | 42 autonomous auditors | All 42, converted to skills you invoke by name (`axiom-audit-memory`, `axiom-fix-build`, …) |
-| Commands | 17 `/axiom:*` commands | Not supported in Codex plugins — use the equivalent agent-skill above |
-| Hooks | Lifecycle hooks (skill routing, `@State` guardrail, version ground-truth) | Supported via the native plugin install — set `features.hooks = true` |
+| Agents | <!--ax:agents-->42<!--/ax--> autonomous auditors | All <!--ax:agents-->42<!--/ax-->, converted to skills you invoke by name (`axiom-audit-memory`, `axiom-fix-build`, …) |
+| Commands | <!--ax:commands-->17<!--/ax--> `/axiom:*` commands | Not supported in Codex plugins — use the equivalent agent-skill above |
+| Hooks | Lifecycle hooks (skill routing, Swift write guardrails, version ground truth) | Supported via the native plugin install — set `features.hooks = true` |
 | Installation | `/plugin marketplace add` | `npx skills add`, native `codex plugin`, or manual marketplace |
 
-**The 31 specialized skills Codex doesn't get as files.** Thirty are auditor procedures that each router carries inline for spec-only harnesses; Codex receives every one as a first-class skill instead, so shipping the file too would duplicate the same procedure under two names. The last is `getting-started`, which drives a Claude Code tool (`AskUserQuestion`) and cites `/axiom:*` commands that don't exist in Codex. Nothing else is withheld — every router and every reference ships.
+**The specialized skills Codex doesn't get as files.** All but one are auditor procedures that each router carries inline for assistants that can't run agents; Codex receives every one as a first-class skill instead, so shipping the file too would duplicate the same procedure under two names. The last is `getting-started`, which drives a Claude Code tool (`AskUserQuestion`) and cites `/axiom:*` commands that don't exist in Codex. Nothing else is withheld — every router and every reference ships.
 
 ## Troubleshooting
 
@@ -183,6 +185,8 @@ The Codex plugin includes the same skill content as the Claude Code plugin, with
 ## Also Available
 
 - **[Claude Code](/start/install)** – Full Axiom experience with <!--ax:agents-->42<!--/ax--> autonomous agents and <!--ax:commands-->17<!--/ax--> commands
+- **[Claude App](/start/claude-app-install)** – Skills in chat, plus agents and hooks in Cowork
+- **[Cursor Plugin](/start/cursor-install)** – Native skills, agents, commands, and hooks for Cursor on macOS
 - **[Pi Coding Agent](/start/pi-install)** – Native skills for the Pi terminal coding agent
 - **[MCP Server](/start/mcp-install)** – Skills in VS Code, Cursor, Gemini CLI, and any MCP-compatible tool
-- **[Xcode Integration](/start/xcode-setup)** – Direct Xcode MCP bridge for in-editor assistance
+- **[Xcode Integration](/start/xcode-setup)** – Axiom's skills inside Xcode's Claude Agent and Codex, through MCP
