@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "abc9f7ce553fde0a7c42d351f095544b0b722e895cdb31f846923eef775121d2",
+      "sha256": "09ca274d76f020030bc24f6344b309e6312f7421653a05f9eb25353f73bf6083",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "dd711073d5cb80088584b033e621eccee28a1364c87f3c31d41e2a29ce12341e",
+      "sha256": "2444ec333286018b3341b302219a70e67cbb6e6f43af847ed8b980e6da64d9b2",
       "bytes": 3314
     },
     {
@@ -398,12 +398,12 @@
     },
     {
       "path": "skills/axiom-ai/SKILL.md",
-      "sha256": "0280eec3a1f9f5d7c4db64e8fc38ea76a88a6f6c366a2cef2e18447d0b5e9f7e",
+      "sha256": "ab03f47bc37b386ddb46b73a3a1e3cff26fc4c542f6e8d21bf96b4e9cf650ed1",
       "bytes": 23436
     },
     {
       "path": "skills/axiom-ai/skills/core-ai.md",
-      "sha256": "d29823699affa58f52f7c4294d38cc65bded51c3e3f7860ac8ba7305d62acf0d",
+      "sha256": "f644f5b8400ac97d93fe99687868fa0399d5ebd44e7b610a0a1404b8138d81d1",
       "bytes": 19231
     },
     {
@@ -413,32 +413,32 @@
     },
     {
       "path": "skills/axiom-ai/skills/coreml-conversion.md",
-      "sha256": "2e91577afe250e2d57a59df859a3d22ca549a6f2d8d59832721d5cef312170fe",
+      "sha256": "95e12de63d6264323b4b0e167aa4e43ee012ae017300121f6ad76113db225fac",
       "bytes": 5909
     },
     {
       "path": "skills/axiom-ai/skills/coreml-training.md",
-      "sha256": "3f8a008674006d297a4252c3518c803f0a5ecb3cb3f91f48bb48bbb25f4fe242",
+      "sha256": "5548bb83734d481f95e0c03640b1e3f4113c6025783893672ccbff7da0505b86",
       "bytes": 7318
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-adapters-diag.md",
-      "sha256": "02d06019de915b7cf1f45c173bea43fb54a2fdf462669806ef90e45ae802a4db",
+      "sha256": "836f4ae60328ba82480d6f7f293a4b6e7c148298c1ca339987a0e6d2b0b83248",
       "bytes": 23267
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-adapters-ref.md",
-      "sha256": "4f8f8ce77a79ebd2509cbd875ae1fde097016a0f0cef43d3927fb7122bf66d5f",
+      "sha256": "e2e7d2a280b6a2916f00b514429bd6be025fbff780bb7ff6d2df2d094a5df2d2",
       "bytes": 32725
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-adapters.md",
-      "sha256": "2cc9e934a2c26c1ed9260f0835268a28e3a78868eb05bd83d59e02b4703d6dbf",
+      "sha256": "7e2c9c63a068c05907abf3de5581036d0494a4fefb1b7ed841b00f76a2ab7506",
       "bytes": 25927
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-diag.md",
-      "sha256": "752f7b635c6742b20c9c90f9e42eb0f0aa00574f8ad1a392f0cccec7b4fe2041",
+      "sha256": "210d6a7920656217804f884e050a562ce83dd99b2b83c1efb05c4b0677c2d92b",
       "bytes": 39510
     },
     {
@@ -463,12 +463,12 @@
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models-ref.md",
-      "sha256": "84a74b2653481af4ab6a0a68fcc7d1cf588eacb5504db899f7b3838bcc45952d",
+      "sha256": "9fe1aca9b094490d80b6da16a962f95045dd4fe4d4e290247061b45a3bd477ae",
       "bytes": 63928
     },
     {
       "path": "skills/axiom-ai/skills/foundation-models.md",
-      "sha256": "aba666d65b2823cb3347dff1bb418fb23474460f3e87a81cf9bb4ce3cf284126",
+      "sha256": "82c7331210e540df2c2739b5556f5d0a6fcaba26d1b52939d03aaa93d996455c",
       "bytes": 50562
     },
     {
@@ -483,7 +483,7 @@
     },
     {
       "path": "skills/axiom-ai/skills/training-paths.md",
-      "sha256": "a1ca849c3168cdefba162a05e79bf0754f16b24361b24e03d64f067e6ca912e5",
+      "sha256": "e3df7ae6748e33e4764589c3eeb2926f024ceb20ed924edb61fa505c5b571cae",
       "bytes": 7063
     },
     {
@@ -778,7 +778,7 @@
     },
     {
       "path": "skills/axiom-graphics/skills/metal-migration-ref.md",
-      "sha256": "8bd6456ff7950e0c3c49ecaedf05a5c0d78e7a914317579dbde896f5db3cd6b7",
+      "sha256": "98983b0ee4277ce1155f482cba785329c8dc45b2c5862ad3467e87ed5df8fdba",
       "bytes": 27208
     },
     {
@@ -1008,7 +1008,7 @@
     },
     {
       "path": "skills/axiom-integration/skills/push-notifications-diag.md",
-      "sha256": "fe931ec99357ae717ff55d428b935e086f17ce5b56415e34df567997df25f4df",
+      "sha256": "d9db8de95eb1c8c919a5713c43859d6984a3732351eb3323b1b4cd7bd6460a64",
       "bytes": 31174
     },
     {
@@ -1018,7 +1018,7 @@
     },
     {
       "path": "skills/axiom-integration/skills/push-notifications.md",
-      "sha256": "c23dc2edca20d68b715bde0d2cc75310f291c18946e6eee5594e091a6ad8c6dd",
+      "sha256": "ebf8438a97d53b1ed1255cb4c2a65c5247d4dec270cd6e360af6cf73135e63bc",
       "bytes": 31206
     },
     {
@@ -1108,7 +1108,7 @@
     },
     {
       "path": "skills/axiom-macos/skills/ios-apps-on-mac.md",
-      "sha256": "a2efb9a69a214b525dec5264fdb18687f0959b8f10dd58f13138faaed1d4027f",
+      "sha256": "f5cf951d682da652312b004e8da7b3ddae2ff745b0d307bfe1156b5738b11400",
       "bytes": 6364
     },
     {
@@ -1398,7 +1398,7 @@
     },
     {
       "path": "skills/axiom-performance/skills/metrickit-ref.md",
-      "sha256": "b429b0aaa184d63d68ef5aa7fec0b8f8493d29f2b5aa27b6815096fa4adce775",
+      "sha256": "146fd33022ea379121402858a0add9b9387f004c599be7d07a9cf545a09ca6c9",
       "bytes": 39191
     },
     {

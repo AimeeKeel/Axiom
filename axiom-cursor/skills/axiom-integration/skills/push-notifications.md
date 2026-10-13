@@ -909,7 +909,7 @@ Before shipping push notifications:
 **Testing**:
 - ☑ Tested with Push Notifications Console or curl
 - ☑ Tested both foreground and background delivery
-- ☑ Tested on a physical device (the Simulator registers against the APNs sandbox on Apple silicon, but only `simctl push` delivers app notifications)
+- ☑ Tested on a physical device (the Simulator registers against the APNs sandbox on Apple Silicon, but only `simctl push` delivers app notifications)
 
 ## Resources
 

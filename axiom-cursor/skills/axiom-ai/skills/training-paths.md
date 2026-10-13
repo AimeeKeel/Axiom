@@ -18,7 +18,7 @@ This is the disambiguation entry point. Once you know which path you're on, the 
 | **Core ML personalization** | An NN-spec model's last updatable layers | Updated `.mlmodelc` | `MLUpdateTask` (on device, runtime) | Per-user personalization of an existing **NN-spec** model | `coreml-training.md` |
 | **Create ML** | A new Core ML model from scratch / transfer learning | `.mlmodel` | Core ML | App-specific task model trained from scratch | `coreml-training.md` |
 | **coremltools convert** | Nothing (format conversion) | `.mlpackage` | Core ML | Bring an already-trained PyTorch/TF model to Apple platforms | `coreml-conversion.md` |
-| **MLX LM** (`mlx_lm.lora`) | Open-source LLMs on Apple silicon | `adapters.safetensors` — **NOT loadable by Foundation Models** | MLX runtime (Mac); not an iOS distribution path | Research, on-Mac inference, fine-tuning experimentation | External — adjacent tool, outside Axiom |
+| **MLX LM** (`mlx_lm.lora`) | Open-source LLMs on Apple Silicon | `adapters.safetensors` — **NOT loadable by Foundation Models** | MLX runtime (Mac); not an iOS distribution path | Research, on-Mac inference, fine-tuning experimentation | External — adjacent tool, outside Axiom |
 | **Server LLM fine-tune** | A cloud-hosted model | Cloud artifact | API call | Vendor-specific cloud LLM customization | `axiom-networking` for the API integration |
 
 ## The three disambiguations that cost weeks

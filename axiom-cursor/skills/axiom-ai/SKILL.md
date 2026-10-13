@@ -52,7 +52,7 @@ When developers say "I need to train / fine-tune / personalize a model," four di
 | **FM custom adapter** (26-cycle only — runtime obsoleted in 27.0) | Apple's frozen on-device 3B LLM (rank-32 LoRA) | `.fmadapter` package, ~160 MB | Build-time per OS version, delivered via Background Assets | `skills/foundation-models-adapters.md` (discipline) + `skills/foundation-models-adapters-ref.md` (toolkit + runtime) + `skills/foundation-models-adapters-diag.md` (failure modes); delivery via `axiom-integration (skills/background-assets.md)` |
 | **Core ML `MLUpdateTask`** | Your NN-spec model's fully-connected and convolutional layers | Updated `.mlmodelc` saved to disk | Runtime, per-user (on-device personalization) | `skills/coreml-training.md` |
 | **Create ML** | A new Core ML model from scratch / transfer learning | `.mlmodel` | Build-time, on Mac or iOS (per type) | `skills/coreml-training.md` |
-| **MLX LM** (`mlx_lm.lora`) | Open-source LLMs on Apple silicon | `adapters/adapters.safetensors` — NOT loadable by Foundation Models | Build-time; not an iOS distribution path | External — outside Axiom scope; treat as adjacent research tool |
+| **MLX LM** (`mlx_lm.lora`) | Open-source LLMs on Apple Silicon | `adapters/adapters.safetensors` — NOT loadable by Foundation Models | Build-time; not an iOS distribution path | External — outside Axiom scope; treat as adjacent research tool |
 | **Server LLM fine-tune** | Cloud-hosted model (e.g., vendor fine-tunes) | Cloud artifact, accessed via API | Build-time; runs in cloud | `/skill axiom-networking` for the API integration; the fine-tune workflow is the vendor's domain |
 
 **Critical distinctions**:
@@ -160,7 +160,7 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - HIG disclosure for adapter-enhanced features
 
 **Adapter toolkit & runtime API** → `skills/foundation-models-adapters-ref.md`
-- Python toolkit setup (3.11, 32 GB Apple silicon Mac or Linux GPU)
+- Python toolkit setup (3.11, 32 GB Apple Silicon Mac or Linux GPU)
 - Dataset JSONL schema (chat-turn + tool-calling extension)
 - `examples.train_adapter`, `examples.train_draft_model`, `examples.generate`, `export.export_fmadapter`
 - `SystemLanguageModel.Adapter` runtime API and `AssetError` cases

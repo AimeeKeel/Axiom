@@ -1088,7 +1088,7 @@ case .unavailable(let reason):
 Verify:
 - Apple Intelligence requires iPhone 15 Pro or later
 - Or iPad with M1+ chip
-- Or Mac with Apple silicon
+- Or Mac with Apple Silicon
 
 #### 20% of user base = older devices
 
