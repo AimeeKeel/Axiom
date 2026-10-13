@@ -24,6 +24,7 @@ export type AxiomTool = { name: string; blurb: string };
 /** Optional native helpers discovered on PATH at runtime. */
 export const AXIOM_TOOLS: readonly AxiomTool[] = [
   { name: "axbuild", blurb: "build/test diagnostics — probe `axbuild --help`, then prefix `xcodebuild` or `swift build/test`; inspect `command`, `collection`, `omissions`, and the saved report" },
+  { name: "xcproject", blurb: "read-only project inspection (`project.pbxproj` and JSON5 `project.xcproj`) — `xcproject inspect --root .`; declarations only, never effective settings" },
   { name: "xclog", blurb: "simulator console capture — `xclog list`, `xclog launch <bundle-id> --timeout 30s`" },
   { name: "xcsym", blurb: "crash symbolication — `xcsym crash <file>`, `xcsym verify <file>`" },
   { name: "xcui", blurb: "scriptable sim UI & accessibility — `xcui doctor`, `xcui assert`, `xcui voiceover`" },

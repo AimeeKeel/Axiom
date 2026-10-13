@@ -529,6 +529,14 @@ describe("project detection parity with project_detect.py", () => {
   }, 30_000);
 });
 
+describe("AXIOM_TOOLS", () => {
+  it("names exactly the helpers the plugin ships in tools/", () => {
+    const toolsDir = path.resolve(import.meta.dirname!, "..", "..", ".claude-plugin", "plugins", "axiom", "tools");
+    const shipped = fs.readdirSync(toolsDir).filter(name => !name.startsWith(".")).sort();
+    expect(AXIOM_TOOLS.map(tool => tool.name).sort()).toEqual(shipped);
+  });
+});
+
 describe("axbuild discovery", () => {
   it("lists only an executable axbuild discovered on PATH and provides a help probe", () => {
     const tool = AXIOM_TOOLS.find(tool => tool.name === "axbuild");
