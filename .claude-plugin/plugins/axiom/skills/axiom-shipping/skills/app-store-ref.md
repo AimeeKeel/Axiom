@@ -88,24 +88,28 @@ These fields are locked once set. Choose carefully:
 | Asset | Required | Localizable | Specification |
 |-------|----------|-------------|---------------|
 | App Icon | Yes | No | 1024x1024 PNG, no alpha, no rounded corners |
-| Screenshots | Yes | Yes | Per device size, 2-10 per locale per device |
+| Screenshots | Yes | Yes | Per device size, 1–10 per locale per device |
 | App Preview | No | Yes | Up to 3 videos per device size per locale |
 
 #### Screenshot Requirements
 
 Format: `.jpeg`, `.jpg`, `.png`. Min 1, max 10 per device size per locale.
 
-**Fallback**: Provide highest resolution only — App Store auto-scales to smaller sizes. Required: 6.9" or 6.5" for iPhone, 13" for iPad.
+**Fallback**: Provide highest resolution only — App Store auto-scales to smaller sizes.
+
+**Required — Apple's page contradicts itself**: "Required device sizes" = ≥1 iPhone Dynamic Island medium (6.3") + iPad 13" for iPad apps; per-row notes still call 6.9" (or 6.5") the required iPhone set → confirm in App Store Connect's media manager. iPhone Duo: required from April 2027 for apps using the iOS 27.1 SDK or later.
 
 | Device | Portrait | Landscape |
 |--------|----------|-----------|
-| iPhone 6.9" (Air, 17 Pro Max, 16 Pro Max) | 1260x2736 | 2736x1260 |
+| iPhone 6.9" (Air, 17 Pro Max, 16 Pro Max, 15 Pro Max) | 1260x2736, 1290x2796, or 1320x2868 | 2736x1260, 2796x1290, or 2868x1320 |
 | iPhone 6.5" (14 Plus, 13 Pro Max, XS Max) | 1284x2778 or 1242x2688 | 2778x1284 or 2688x1242 |
 | iPhone 6.3" (17 Pro, 16 Pro, 16, 15 Pro) | 1179x2556 or 1206x2622 | 2556x1179 or 2622x1206 |
 | iPhone 6.1" (17e, 16e, 14, 13, 12) | 1170x2532, 1125x2436, or 1080x2340 | 2532x1170, 2436x1125, or 2340x1080 |
 | iPhone 5.5" (8 Plus, 7 Plus) | 1242x2208 | 2208x1242 |
+| iPhone Duo inner display | 2007x2853 | 2853x2007 |
+| iPhone Duo outer display | 1398x2034 | 2034x1398 |
 | iPad 13" (Pro M5/M4, Air M4/M3) | 2064x2752 or 2048x2732 | 2752x2064 or 2732x2048 |
-| iPad 11" (Pro, Air, mini, 10th gen) | 1488x2266 or 1668x2420 | 2266x1488 or 2420x1668 |
+| iPad 11" (Pro, Air, mini, 10th gen) | 1488x2266, 1668x2420, 1668x2388, or 1640x2360 | 2266x1488, 2420x1668, 2388x1668, or 2360x1640 |
 | Mac | 1280x800, 1440x900, 2560x1600, or 2880x1800 | — |
 | Apple TV | 1920x1080 or 3840x2160 | — |
 | Apple Vision Pro | 3840x2160 | — |
@@ -180,7 +184,7 @@ When localizing, provide screenshots that match the localized UI. Reviewers chec
 | Primary Category | Secondary Category | Rules |
 |-----------------|-------------------|-------|
 | Required | Optional | Choose the category that best describes your app |
-| Must be accurate | Can complement primary | Inaccurate category is grounds for rejection (2.3.7) |
+| Must be accurate | Can complement primary | If the category is way off, Apple may change it for you (2.3.5) |
 | Games have subcategories | — | Games must also select up to 2 game subcategories |
 
 Available categories: Books, Business, Developer Tools, Education, Entertainment, Finance, Food & Drink, Games, Graphics & Design, Health & Fitness, Lifestyle, Magazines & Newspapers, Medical, Music, Navigation, News, Photo & Video, Productivity, Reference, Shopping, Social Networking, Sports, Travel, Utilities, Weather.

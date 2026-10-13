@@ -5,7 +5,7 @@ description: Use when preparing ANY app for App Store submission, responding to 
 
 # App Store Submission
 
-Systematic pre-flight checklist that catches 90% of App Store rejection causes before submission. A 30-minute pre-flight saves 3-7 days of rejection-fix-resubmit cycles.
+A systematic pre-flight checklist that catches 90% of App Store rejection causes before you submit. Thirty minutes of pre-flight saves 3–7 days of rejection-fix-resubmit cycles.
 
 ## When to Use
 
@@ -14,45 +14,45 @@ Use this skill when you're:
 - Submitting your first app as a new developer
 - Responding to an App Review rejection
 - Running a pre-submission audit before TestFlight or production
-- Updating an existing app after a long gap (new requirements may apply)
+- Updating an existing app after a long gap, when new requirements may apply
 - Wondering "is my app ready to submit?"
 
-**Core principle:** Ship once, ship right. Over 40% of rejections cite Guideline 2.1 (App Completeness), and another 30% are metadata and privacy issues. These are preventable.
+**Core principle** Ship once, ship right. Over 40% of rejections cite Guideline 2.1 (App Completeness), and another 30% are metadata and privacy issues. Both are preventable.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "Is my app ready to submit to the App Store?"
 - "What do I need before submitting my first iOS app?"
-- "I keep getting rejected, what am I missing?"
-- "What's the pre-submission checklist for App Store?"
+- "I keep getting rejected. What am I missing?"
+- "What's the pre-submission checklist for the App Store?"
 - "Do I need a privacy manifest?"
-- "Why was my upload rejected for a missing launch screen? (iOS 27 SDK)"
-- "My app update was rejected for metadata issues"
+- "I built with the iOS 27 SDK, and my upload was rejected for a missing launch screen. Why?"
+- "My app update was rejected for metadata issues."
 
 ## What This Skill Provides
 
-### Pre-Flight Checklist (8 Categories)
-Complete mandatory checklist covering build configuration, privacy requirements, metadata fields, account/authentication, App Review info, content completeness, regional compliance, and new 2025-2026 requirements.
+### Pre-Flight Checklist (9 Categories)
+A mandatory checklist covering build configuration, privacy, metadata, account and authentication, App Review information, content completeness, regional compliance, the 2025–2026 requirements, and the 27-release requirements (launch screen, scene lifecycle, Mac availability).
 
 ### Anti-Patterns with Time Costs
-8 common submission mistakes — submitting without device testing, missing privacy policy, placeholder content, ignoring privacy manifest, missing Sign in with Apple, no account deletion, wrong age rating, missing demo credentials — each with the days lost and prevention steps.
+Eight common submission mistakes — no device testing, a missing privacy policy, placeholder content, an ignored privacy manifest, missing Sign in with Apple, no account deletion, the wrong age rating, and missing demo credentials — each with the days it costs and how to prevent it.
 
 ### IAP Submission Checklist
-- Review screenshot required for each IAP product
-- IAP products must be attached to the version (checkbox in ASC, first submission only)
-- Terms of Use and Privacy Policy links on paywall (`SubscriptionStoreView` handles automatically; custom UI must add manually)
+- A review screenshot for each in-app purchase product
+- In-app purchase products attached to the version (a checkbox in App Store Connect, needed on the first submission only)
+- Terms of Use and Privacy Policy links on the paywall (`SubscriptionStoreView` adds them automatically; a custom paywall must add them by hand)
 - Subscription terms visible before purchase (price, period, auto-renewal)
 
 ### Decision Tree
-Step-by-step "Is my app ready?" walkthrough covering crashes, privacy manifest, privacy policy, screenshots, account deletion, SIWA, IAP, encryption, EU compliance, demo credentials, age rating, and placeholder content.
+A step-by-step "is my app ready?" walkthrough covering crashes, privacy manifest, privacy policy, screenshots, account deletion, Sign in with Apple, in-app purchases, encryption, EU compliance, demo credentials, age rating, and placeholder content.
 
 ### Pressure Scenarios
-Three scenarios that prevent rationalization under deadline pressure, repeated rejections, and false confidence from prior approval.
+Three scenarios that keep the checklist in place under deadline pressure, after repeated rejections, and when an update is "just a bug fix".
 
 ### Handling Rejections
-Reading rejection messages, response strategy, when to appeal, expedited review eligibility (critical bug fix, event-related), "Meet with App Review" scheduling, bug fix leniency, and metadata vs binary rejection differences.
+Reading rejection messages, choosing a response, deciding when to appeal, expedited review eligibility (critical bug fixes and event-related apps), "Meet with App Review" sessions, bug-fix leniency, and the difference between metadata and binary rejections.
 
 ## Key Pattern
 
@@ -61,39 +61,36 @@ Reading rejection messages, response strategy, when to appeal, expedited review 
 ```
 Before EVERY submission, run the complete checklist:
 
-1. Build Configuration  — Physical device, latest SDK, IPv6, release config
+1. Build Configuration  — Physical device, latest SDK, launch screen, IPv6, release config
 2. Privacy              — Manifest, policy (ASC + in-app), purpose strings, ATT
 3. Metadata             — Name, screenshots, keywords, "What's New"
-4. Account              — Deletion flow, SIWA, Restore Purchases
+4. Account              — Deletion flow, Sign in with Apple, Restore Purchases
 5. App Review Info      — Contact info, demo credentials, notes
 6. Content              — No placeholders, all links work, production assets
 7. Regional             — EU DSA trader status, age rating, export compliance
-8. New Requirements     — Updated age rating, accessibility labels, SDK minimum
+8. 2025–2026            — Updated age rating, accessibility labels, AI consent, SDK minimum
+9. 27 Releases          — Launch screen key, scene lifecycle, Mac availability
 ```
 
 **Before**: 11 days lost to three preventable rejections.
-**After**: 30-minute pre-flight catches all issues, approved on first submission.
+**After**: a 30-minute pre-flight catches all three issues, and the app is approved on its first submission.
 
 ## Documentation Scope
 
-This page documents the `axiom-shipping` skill — a discipline skill that Claude uses when helping you prepare for App Store submission. The skill contains the complete checklist, all 8 anti-patterns with code examples, pressure scenarios, and first-time developer guidance.
-
-**For specific field specs:** See [App Store Reference](/reference/app-store-ref) for metadata character limits, screenshot dimensions, privacy manifest schema, and guideline numbers.
-
-**For rejection troubleshooting:** See [App Store Diagnostics](/diagnostic/app-store-diag) for systematic diagnosis from rejection message to fix.
+This page documents the `app-store-submission` skill (in the `axiom-shipping` suite). The skill also covers screenshot requirements, encryption export compliance, and a first-time developer checklist.
 
 ## Related
 
-- [App Store Reference](/reference/app-store-ref) – Complete metadata field specs, guideline index, privacy manifest schema
-- [App Store Diagnostics](/diagnostic/app-store-diag) – Rejection diagnosis and remediation patterns
-- [StoreKit 2 Reference](/reference/storekit-ref) – IAP and subscription implementation
-- [Privacy UX Patterns](/skills/integration/privacy-ux) – Privacy manifest, ATT, and permission request patterns
-- [App Store Connect](/reference/app-store-connect-ref) – ASC navigation, crash data, and analytics
+- [App Review Guidelines](/skills/shipping/app-review-guidelines) – the guideline numbers behind each rejection category
+- [Expert Review Checklist](/skills/shipping/expert-review-checklist) – a flat nine-section list to run as the final pass
+- [App Store Reference](/reference/app-store-ref) – metadata field specs and the privacy manifest schema
+- [App Store Diagnostics](/diagnostic/app-store-diag) – rejection diagnosis and remediation patterns
+- [StoreKit 2 Reference](/reference/storekit-ref) – in-app purchase and subscription implementation
+- [Privacy UX Patterns](/skills/integration/privacy-ux) – privacy manifest, App Tracking Transparency, and permission request patterns
+- [App Store Connect](/reference/app-store-connect-ref) – App Store Connect navigation, crash data, and analytics
 
 ## Resources
 
 **WWDC**: 2022-10166, 2025-328, 2025-224, 2025-241
 
 **Docs**: /app-store/review/guidelines, /app-store/submitting, /app-store/app-privacy-details
-
-**Skills**: axiom-integration, axiom-shipping

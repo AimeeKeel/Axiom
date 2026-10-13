@@ -78,16 +78,18 @@ Systematic rejection diagnosis from message to fix:
 
 ### [App Store Connect MCP](./asc-mcp)
 
-Programmatic App Store Connect access via asc-mcp MCP server (~208 tools):
+Programmatic App Store Connect access via asc-mcp MCP server (502 tools):
 - **Release Pipeline** – Create versions, attach builds, submit for review, phased release
 - **TestFlight Distribution** – Create groups, add testers, distribute builds, send notifications
+- **TestFlight Feedback** – Tester crash reports, crash logs, and screenshot feedback
+- **Xcode Cloud** – Start builds, check issues and test results, find the resulting builds
 - **Review Management** – List reviews, filter by rating, respond to reviews
-- **Worker Filtering** – 3 presets to reduce context from 208 tools to 34-55
+- **Worker Filtering** – Presets that cut the tool list from 502 to 63–193
 - **Multi-Company** – Switch between App Store Connect accounts
 
-**When to use** Automating ASC workflows from Claude Code, bulk operations (respond to reviews, distribute to groups), programmatic submission
+**When to use** Automating ASC workflows from your assistant, bulk operations (respond to reviews, distribute to groups), programmatic submission
 
-**Requirements** macOS 14+, App Store Connect API key, Mint, asc-mcp 1.4.0+
+**Requirements** macOS 15.6+ recommended (14+ declared), Xcode 26 or Swift 6.2+, App Store Connect API key, Mint, asc-mcp 4.1.6
 
 ---
 
@@ -104,4 +106,3 @@ Programmatic App Store Connect access via asc-mcp MCP server (~208 tools):
 - [StoreKit 2 Reference](/reference/storekit-ref) – In-app purchase implementation
 - [Privacy UX Patterns](/skills/integration/privacy-ux) – Privacy manifest and ATT implementation
 - [App Store Connect](/reference/app-store-connect-ref) – ASC navigation, crash data, metrics
-- [App Store Connect MCP Reference](/reference/asc-mcp-ref) – asc-mcp tool parameters and API constraints

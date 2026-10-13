@@ -200,10 +200,10 @@ GET /v1/apps/{id}/perfPowerMetrics
 | Endpoint | Data |
 |----------|------|
 | `perfPowerMetrics` | Performance and power metrics |
-| `diagnosticSignatures` | Crash signature aggregates |
-| `diagnosticLogs` | Individual crash logs |
+| `diagnosticSignatures` | Hang, launch, disk-write signatures (App Store builds; not crashes) |
+| `diagnosticLogs` | Call stacks for one signature |
 | `betaTesters` | TestFlight tester info |
-| `betaFeedback` | TestFlight feedback entries |
+| `betaFeedbackCrashSubmissions`, `betaFeedbackScreenshotSubmissions` | TestFlight crash + screenshot feedback |
 
 ### MCP-Powered Access
 
@@ -211,8 +211,8 @@ If **asc-mcp** is configured, you can access ASC data programmatically from Clau
 
 | Manual ASC Action | asc-mcp Tool |
 |-------------------|-------------|
-| View crash metrics | `metrics_app_perf`, `metrics_build_diagnostics` |
-| Download crash logs | `metrics_get_diagnostic_logs` |
+| TestFlight crash reports + logs | `beta_feedback_list_crashes`, `beta_feedback_get_crash_log` |
+| App Store hang / launch / disk-write diagnostics (App Store builds only; not crashes) | `metrics_build_diagnostics`, `metrics_get_diagnostic_logs` |
 | List TestFlight testers | `builds_get_beta_testers` |
 | View app reviews | `reviews_list`, `reviews_stats` |
 | Respond to reviews | `reviews_create_response` |
