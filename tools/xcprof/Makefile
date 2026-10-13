@@ -1,5 +1,5 @@
 BINARY := xcprof
-OUTDIR := ../../.claude-plugin/plugins/axiom/bin
+OUTDIR := ../../.claude-plugin/plugins/axiom/tools
 BIN := $(OUTDIR)/$(BINARY)
 
 .PHONY: all build install test fuzz clean

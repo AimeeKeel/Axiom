@@ -8,9 +8,9 @@ describe('resolveXcprofPath', () => {
     expect(path).toBe('/custom/xcprof');
   });
 
-  it('resolves to the plugin bin in development mode', () => {
+  it('resolves to the plugin tools/ in development mode', () => {
     const path = resolveXcprofPath({ mode: 'development', devSourcePath: '/plug' }, {});
-    expect(path).toBe(join('/plug', 'bin', 'xcprof'));
+    expect(path).toBe(join('/plug', 'tools', 'xcprof'));
   });
 
   it('resolves to the packaged binary in production', () => {

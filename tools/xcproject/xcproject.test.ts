@@ -9,7 +9,7 @@ import { describe, it } from "node:test";
 const root = path.resolve(import.meta.dirname, "../..");
 const binary =
   process.env.AXIOM_XCPROJECT ??
-  path.join(root, ".claude-plugin/plugins/axiom/bin/xcproject");
+  path.join(root, ".claude-plugin/plugins/axiom/tools/xcproject");
 const fixtures = path.join(root, "scripts/fixtures/xcode-projects");
 function run(args: string[], cwd = root) {
   const result = spawnSync(binary, args, {

@@ -261,10 +261,10 @@ describe('copyToolBinaries', () => {
       const plugin = join(directory, 'plugin');
       const output = join(directory, 'dist');
       try {
-        await mkdir(join(plugin, 'bin'), { recursive: true });
+        await mkdir(join(plugin, 'tools'), { recursive: true });
         await mkdir(join(plugin, 'licenses'));
         for (const name of ['xcprof', 'xclog', 'xcsym', 'xcproject']) {
-          await writeFile(join(plugin, 'bin', name), `fixture binary ${name}`, { mode: 0o644 });
+          await writeFile(join(plugin, 'tools', name), `fixture binary ${name}`, { mode: 0o644 });
         }
         if (!missingLicense) await writeFile(join(plugin, 'licenses/xcproject.txt'), 'fixture Apple license');
         if (missingLicense) {

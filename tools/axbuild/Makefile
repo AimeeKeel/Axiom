@@ -1,5 +1,5 @@
 BINARY := axbuild
-OUTDIR := ../../.claude-plugin/plugins/axiom/bin
+OUTDIR := ../../.claude-plugin/plugins/axiom/tools
 
 .PHONY: build install test clean
 

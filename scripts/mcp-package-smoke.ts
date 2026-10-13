@@ -33,7 +33,7 @@ export function comparePackagedArtifacts(
 ): string[] {
   const problems: string[] = [];
   const pairs = [
-    ...binaries.map((name) => [`dist/bin/${name}`, `bin/${name}`]),
+    ...binaries.map((name) => [`dist/bin/${name}`, `tools/${name}`]),
     ["dist/licenses/xcproject.txt", "licenses/xcproject.txt"],
   ];
   for (const [shipped, canonical] of pairs) {

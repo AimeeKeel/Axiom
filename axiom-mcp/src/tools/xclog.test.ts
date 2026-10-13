@@ -8,9 +8,9 @@ describe('resolveXclogPath', () => {
     expect(path).toBe('/custom/xclog');
   });
 
-  it('resolves to the plugin bin in development mode', () => {
+  it('resolves to the plugin tools/ in development mode', () => {
     const path = resolveXclogPath({ mode: 'development', devSourcePath: '/plug' }, {});
-    expect(path).toBe(join('/plug', 'bin', 'xclog'));
+    expect(path).toBe(join('/plug', 'tools', 'xclog'));
   });
 
   it('resolves to the packaged binary in production', () => {

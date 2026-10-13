@@ -13,10 +13,10 @@ function fixture(t: TestContext) {
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const plugin = path.join(root, "plugin");
   const packageRoot = path.join(root, "package");
-  for (const directory of ["plugin/bin", "plugin/licenses", "package/dist/bin", "package/dist/licenses"])
+  for (const directory of ["plugin/tools", "plugin/licenses", "package/dist/bin", "package/dist/licenses"])
     fs.mkdirSync(path.join(root, directory), { recursive: true });
   for (const name of binaries) {
-    fs.writeFileSync(path.join(plugin, "bin", name), `binary ${name}`, { mode: 0o755 });
+    fs.writeFileSync(path.join(plugin, "tools", name), `binary ${name}`, { mode: 0o755 });
     fs.writeFileSync(path.join(packageRoot, "dist/bin", name), `binary ${name}`, { mode: 0o755 });
   }
   fs.writeFileSync(path.join(plugin, "licenses/xcproject.txt"), "license", { mode: 0o644 });
@@ -43,12 +43,12 @@ describe("comparePackagedArtifacts", () => {
     [
       "different binary bytes",
       (packageRoot: string) => fs.writeFileSync(path.join(packageRoot, "dist/bin/xcproject"), "stale"),
-      ["dist/bin/xcproject differs from canonical bin/xcproject"],
+      ["dist/bin/xcproject differs from canonical tools/xcproject"],
     ],
     [
       "a lost executable mode",
       (packageRoot: string) => fs.chmodSync(path.join(packageRoot, "dist/bin/xclog"), 0o644),
-      ["dist/bin/xclog mode 644 differs from canonical bin/xclog mode 755"],
+      ["dist/bin/xclog mode 644 differs from canonical tools/xclog mode 755"],
     ],
     [
       "a missing license",

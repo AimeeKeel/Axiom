@@ -1,6 +1,6 @@
 # Tools
 
-Axiom's native helpers capture build diagnostics, simulator logs, crash reports, Instruments traces, project structure and the live accessibility tree. Your assistant runs each helper from the installed plugin's `bin/` directory after checking that it works. Installing the plugin doesn't necessarily put the helpers on your `PATH`.
+Axiom's native helpers capture build diagnostics, simulator logs, crash reports, Instruments traces, project structure and the live accessibility tree. Your assistant runs each helper from the installed plugin's `tools/` folder after checking that it works. Installing the plugin doesn't necessarily put the helpers on your `PATH`.
 
 ## Bundled tools
 
@@ -20,10 +20,10 @@ xclog, xcprof, xcsym and xcui emit **compact JSON by default** (token-lean for L
 Use axbuild when a build or test might produce more output than your assistant can show, or when you need failure locations and test values afterward. Put axbuild in front of the command you'd normally run, keeping your scheme, destination and flags. Before starting an Xcode build, check whether another `xcodebuild` is already running and find out why.
 
 ```sh
-"<plugin-root>/bin/axbuild" --help
+"<plugin-root>/tools/axbuild" --help
 pgrep -lx xcodebuild; echo "pgrep exit=$?"
-"<plugin-root>/bin/axbuild" xcodebuild -scheme App -destination 'platform=macOS' build
-"<plugin-root>/bin/axbuild" swift test --package-path ./Package
+"<plugin-root>/tools/axbuild" xcodebuild -scheme App -destination 'platform=macOS' build
+"<plugin-root>/tools/axbuild" swift test --package-path ./Package
 ```
 
 By default axbuild prints compact JSON of at most 8,000 bytes; `--format json` indents it. Check `command` (did the build or test succeed?) and `collection` (did axbuild gather every detail?) separately, because a successful build can still have incomplete collection. `omissions` lists what the summary left out. The complete report is `artifacts.report` inside the `artifacts.run` directory, whose path axbuild prints when it starts. Commands that only print information, such as `xcodebuild -list` or `swift --version`, pass through unchanged.

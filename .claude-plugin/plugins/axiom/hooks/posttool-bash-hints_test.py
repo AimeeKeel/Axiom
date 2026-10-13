@@ -603,7 +603,7 @@ class TestTruncatedBuildRecovery(unittest.TestCase):
         refused = [
             'echo "xcodebuild build"',
             "axbuild xcodebuild build",
-            '"/plugin/bin/axbuild" swift test',
+            '"/plugin/tools/axbuild" swift test',
             "xcodebuild build; echo done",
             "xcodebuild build && echo done",
             "xcodebuild build || true",

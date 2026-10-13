@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const VERSION = /^\d+\.\d+\.\d+(?:-[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*)?$/;
-// One non-mutating help probe per helper in the plugin's bin/; a test keeps the
+// One non-mutating help probe per helper in the plugin's tools/; a test keeps the
 // keys equal to that directory, so a new helper cannot go unchecked.
 export const HELPERS = {
   axbuild: ["--help"],
@@ -162,7 +162,7 @@ function probe(file, args, cwd, timeoutMs) {
 }
 
 async function inspectHelper(root, name, { platform, arch, timeoutMs }) {
-  const result = await packageFile(root, `bin/${name}`);
+  const result = await packageFile(root, `tools/${name}`);
   if (!result.ok)
     return {
       status: result.error.status === "missing" ? "missing" : "invalid",

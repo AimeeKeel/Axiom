@@ -13,9 +13,9 @@ describe('resolveToolPath', () => {
       .toBe('/custom/xctool');
   });
 
-  it('resolves to the plugin bin in development mode', () => {
+  it('resolves to the plugin tools/ in development mode', () => {
     expect(resolveToolPath('xctool', 'AXIOM_XCTOOL_PATH', { mode: 'development', devSourcePath: '/plug' }, {}))
-      .toBe(join('/plug', 'bin', 'xctool'));
+      .toBe(join('/plug', 'tools', 'xctool'));
   });
 
   it('resolves to the packaged binary in production', () => {

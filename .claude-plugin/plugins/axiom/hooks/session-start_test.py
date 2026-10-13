@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import plistlib
+import shlex
 import shutil
 import subprocess
 import sys
@@ -38,6 +39,8 @@ def run_in(cwd: str, env_override: dict | None = None, plugin_root: str = PLUGIN
     env.pop("AXIOM_HARNESS", None)
     env.pop("AXIOM_XCODE_PATH", None)
     env.pop("DEVELOPER_DIR", None)
+    # Never let a test append to a live session's env file; tests set their own.
+    env.pop("CLAUDE_ENV_FILE", None)
     if env_override:
         env.update(env_override)
     # Not "python3": on PATH that can be /usr/bin/python3, an xcrun shim that
@@ -103,9 +106,9 @@ def fake_install(
     else:
         with open(os.path.join(skill_dir, "SKILL.md"), "w") as f:
             f.write(skill_text)
-    os.makedirs(os.path.join(plugin_root, "bin"))
+    os.makedirs(os.path.join(plugin_root, "tools"))
     for tool in ("xclog", "xcsym", "xcui", "xcprof", "axbuild", "xcproject"):
-        path = os.path.join(plugin_root, "bin", tool)
+        path = os.path.join(plugin_root, "tools", tool)
         with open(path, "wb") as f:
             # sparse; 1.1 MB clears the hook's 1 MB truncation floor
             f.truncate(10 if truncated and tool in TRUNCATION_CHECKED_TOOLS else 1_100_000)
@@ -182,11 +185,11 @@ class TestCodexStartup(unittest.TestCase):
         self.assertNotIn("Below is the full content", context)
 
     def test_codex_context_names_every_bundled_helper(self):
-        # The list comes from the installed bin/, so a new helper cannot be left out.
+        # The list comes from the installed tools/, so a new helper cannot be left out.
         with tempfile.TemporaryDirectory() as d:
             payload = run_in(d, {"AXIOM_SESSION_CONTEXT": "always", "AXIOM_HARNESS": "codex"})
         context = payload["hookSpecificOutput"]["additionalContext"]
-        helpers = sorted(n for n in os.listdir(os.path.join(PLUGIN_ROOT, "bin")) if not n.startswith("."))
+        helpers = sorted(n for n in os.listdir(os.path.join(PLUGIN_ROOT, "tools")) if not n.startswith("."))
         self.assertEqual([name for name in helpers if name not in context], [])
 
     def test_codex_respects_the_non_apple_project_gate(self):
@@ -466,7 +469,7 @@ class TestMissingVersionModules(_InApple):
 class TestBundledToolRoster(_InApple):
     def test_roster_names_every_binary_in_bin(self):
         plugin_root, fake_xcode = fake_install(self.root)
-        open(os.path.join(plugin_root, "bin", "axprobe"), "w").close()
+        open(os.path.join(plugin_root, "tools", "axprobe"), "w").close()
         c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode}, plugin_root))
         for name in ("axbuild", "xclog", "xcsym", "xcui", "xcprof", "xcproject", "axprobe"):
             self.assertIn(name, c)
@@ -482,10 +485,103 @@ class TestBundledToolRoster(_InApple):
 
     def test_roster_omitted_when_bin_is_empty(self):
         plugin_root, fake_xcode = fake_install(self.root)
-        for name in os.listdir(os.path.join(plugin_root, "bin")):
-            os.remove(os.path.join(plugin_root, "bin", name))
+        for name in os.listdir(os.path.join(plugin_root, "tools")):
+            os.remove(os.path.join(plugin_root, "tools", name))
         c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode}, plugin_root))
         self.assertNotIn("**Bundled tools**", c)
+
+
+def axiom_path_line(plugin_root: str) -> str:
+    """The PATH line the hook appends to CLAUDE_ENV_FILE (the Task 3 interface)."""
+    return 'export PATH="${PATH:+$PATH:}"' + shlex.quote(os.path.join(plugin_root, "tools"))
+
+
+def source_and_run(env_file: str, command: str) -> str:
+    """Source env_file in a clean bash, as Claude Code does before each Bash command."""
+    out = subprocess.run(
+        ["bash", "-c", f'source "$1" && {command}', "_", env_file],
+        env={"PATH": "/usr/bin:/bin", "HOME": os.environ.get("HOME", "/tmp")},
+        capture_output=True, text=True, timeout=10,
+    )
+    return out.stdout.strip()
+
+
+class TestToolPathEnvFile(_InApple):
+    """Without a top-level bin/, Claude Code no longer puts the tools on PATH.
+    The hook appends the plugin's tools/ folder through CLAUDE_ENV_FILE, which
+    Claude Code sources before every Bash command, so a bad line here would
+    break every command in the session."""
+
+    def run_hook(self, plugin_root: str, fake_xcode: str, env_file: str | None, cwd: str | None = None) -> dict:
+        env = {"AXIOM_XCODE_PATH": fake_xcode}
+        if env_file is not None:
+            env["CLAUDE_ENV_FILE"] = env_file
+        return run_in(cwd or self.project, env, plugin_root)
+
+    def test_env_file_puts_tools_on_path(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        env_file = os.path.join(self.root, "env.sh")
+        open(env_file, "w").close()
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        self.assertEqual(source_and_run(env_file, "command -v xclog"), os.path.join(plugin_root, "tools", "xclog"))
+
+    def test_env_line_survives_spaces_and_quotes(self):
+        plugin_root, fake_xcode = fake_install(os.path.join(self.root, "Axiom's plugin dir"))
+        env_file = os.path.join(self.root, "env.sh")
+        open(env_file, "w").close()
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        self.assertEqual(source_and_run(env_file, "command -v xclog"), os.path.join(plugin_root, "tools", "xclog"))
+
+    def test_env_line_does_not_glue_onto_an_unterminated_line(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        env_file = os.path.join(self.root, "env.sh")
+        with open(env_file, "w") as f:
+            f.write("export FOO=1")  # another writer's line, no trailing newline
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        self.assertEqual(
+            source_and_run(env_file, 'echo "$FOO"; command -v xclog').splitlines(),
+            ["1", os.path.join(plugin_root, "tools", "xclog")],
+        )
+
+    def test_rerun_does_not_duplicate_the_line(self):
+        # Resume and /compact rerun SessionStart against the same env file.
+        plugin_root, fake_xcode = fake_install(self.root)
+        line = axiom_path_line(plugin_root)
+        env_file = os.path.join(self.root, "env.sh")
+        with open(env_file, "w") as f:
+            f.write(line + "/elsewhere\n")  # a different line that contains Axiom's
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        with open(env_file) as f:
+            lines = f.read().splitlines()
+        self.assertEqual(lines.count(line), 1)
+
+    def test_non_apple_project_still_gets_path(self):
+        # bin/ was on PATH in every project; the project gate must not change that.
+        plugin_root, fake_xcode = fake_install(self.root)
+        plain = os.path.join(self.root, "plain")
+        os.makedirs(os.path.join(plain, ".git"))
+        open(os.path.join(plain, "index.js"), "w").close()
+        env_file = os.path.join(self.root, "env.sh")
+        open(env_file, "w").close()
+        payload = self.run_hook(plugin_root, fake_xcode, env_file, cwd=plain)
+        self.assertEqual((payload, source_and_run(env_file, "command -v xclog")), ({}, os.path.join(plugin_root, "tools", "xclog")))
+
+    def test_missing_env_file_or_tools_dir_is_harmless(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        self.run_hook(plugin_root, fake_xcode, None)  # run_in asserts exit 0
+        shutil.rmtree(os.path.join(plugin_root, "tools"))
+        env_file = os.path.join(self.root, "env.sh")
+        open(env_file, "w").close()
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        self.assertEqual(os.path.getsize(env_file), 0)
+
+    def test_roster_names_the_tools_folder(self):
+        # The fallback when CLAUDE_ENV_FILE is unavailable: the folder is in the context.
+        plugin_root, fake_xcode = fake_install(self.root)
+        c = context(self.run_hook(plugin_root, fake_xcode, None))
+        roster = next(line for line in c.splitlines() if line.startswith("**Bundled tools**"))
+        self.assertIn(os.path.join(plugin_root, "tools") + "/", roster)
 
 
 # What `sysctl -n hw.optional.arm64` does on each host: Intel Macs have no such oid.

@@ -8,7 +8,7 @@ import { describe, it } from "node:test";
 const binary = process.env.AXIOM_AXBUILD ??
   path.resolve(
     import.meta.dirname,
-    "../../.claude-plugin/plugins/axiom/bin/axbuild",
+    "../../.claude-plugin/plugins/axiom/tools/axbuild",
   );
 const fixture = path.join(import.meta.dirname, "fixtures/process-child.py");
 function temporary<T>(action: (root: string, env: NodeJS.ProcessEnv) => T): T {

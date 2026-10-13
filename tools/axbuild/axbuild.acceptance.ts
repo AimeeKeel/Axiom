@@ -208,7 +208,7 @@ async function acceptance(manifestPath: string): Promise<void> {
   );
   const binary = path.resolve(
     import.meta.dirname,
-    "../../.claude-plugin/plugins/axiom/bin/axbuild",
+    "../../.claude-plugin/plugins/axiom/tools/axbuild",
   );
   fs.accessSync(binary, fs.constants.X_OK);
   const help = spawnSync(binary, ["--help"], { encoding: "utf8" });

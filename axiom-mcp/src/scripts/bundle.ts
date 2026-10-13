@@ -189,12 +189,12 @@ export function computeBundleStats(bundle: BundleV2): BundleStats {
 }
 
 /**
- * Copy every MCP tool and workflow binary (see `MCP_PACKAGED_BINARIES`) from the plugin `bin/`
+ * Copy every MCP tool and workflow binary (see `MCP_PACKAGED_BINARIES`) from the plugin `tools/`
  * into `dist/bin` so the published npm package (which ships only `dist/`) can
  * run them for non-Claude-Code MCP clients.
  *
  * Hard-fails if a listed binary is missing: the binaries are committed in the
- * plugin `bin/`, so absence is a real defect that must block the bundle rather
+ * plugin `tools/`, so absence is a real defect that must block the bundle rather
  * than silently ship a package missing its tools. (Runtime platform support is
  * the resolver's job — each tool reports itself unavailable on unsupported
  * platforms; copying the committed file works on any build host.)
@@ -203,7 +203,7 @@ export async function copyToolBinaries(pluginPath: string, outputDir: string): P
   const destDir = join(outputDir, 'bin');
   await mkdir(destDir, { recursive: true });
   for (const name of MCP_PACKAGED_BINARIES) {
-    const src = join(pluginPath, 'bin', name);
+    const src = join(pluginPath, 'tools', name);
     const dest = join(destDir, name);
     let info;
     try {
@@ -211,7 +211,7 @@ export async function copyToolBinaries(pluginPath: string, outputDir: string): P
     } catch (err) {
       throw new Error(
         `MCP tool binary '${name}' is missing at ${src} (${(err as Error).message}). ` +
-        `It is listed in MCP_PACKAGED_BINARIES and committed in the plugin bin/, so it must be ` +
+        `It is listed in MCP_PACKAGED_BINARIES and committed in the plugin tools/, so it must be ` +
         `present before bundling — refusing to publish a package missing its helpers.`,
       );
     }

@@ -20,7 +20,7 @@ function fixture() {
     "tools/xcproject/Sources/xcproject/main.swift",
     "tools/xcproject/THIRD_PARTY_LICENSE.txt",
     "scripts/swift-tool.ts",
-    ".claude-plugin/plugins/axiom/bin/xcproject",
+    ".claude-plugin/plugins/axiom/tools/xcproject",
     ".claude-plugin/plugins/axiom/licenses/xcproject.txt",
   ];
   for (const file of files) {
@@ -34,7 +34,7 @@ function fixture() {
     );
   }
   fs.chmodSync(
-    path.join(root, ".claude-plugin/plugins/axiom/bin/xcproject"),
+    path.join(root, ".claude-plugin/plugins/axiom/tools/xcproject"),
     0o755,
   );
   return root;
@@ -89,7 +89,7 @@ describe("Swift tool build provenance", () => {
         }
         if (mutation === "binary-changed") {
           fs.writeFileSync(
-            path.join(root, ".claude-plugin/plugins/axiom/bin/xcproject"),
+            path.join(root, ".claude-plugin/plugins/axiom/tools/xcproject"),
             "changed binary",
           );
         }
@@ -158,13 +158,13 @@ describe("checkCodexToolArtifacts", () => {
   ) {
     it(`checks ${mutation} Codex artifact parity`, () => {
       const root = fixture();
-      const binary = "axiom-codex/bin/xcproject";
+      const binary = "axiom-codex/tools/xcproject";
       const license = "axiom-codex/licenses/xcproject.txt";
       try {
-        fs.mkdirSync(path.join(root, "axiom-codex/bin"), { recursive: true });
+        fs.mkdirSync(path.join(root, "axiom-codex/tools"), { recursive: true });
         fs.mkdirSync(path.join(root, "axiom-codex/licenses"));
         fs.copyFileSync(
-          path.join(root, ".claude-plugin/plugins/axiom/bin/xcproject"),
+          path.join(root, ".claude-plugin/plugins/axiom/tools/xcproject"),
           path.join(root, binary),
         );
         fs.copyFileSync(
@@ -199,7 +199,7 @@ describe("checkCodexToolArtifacts", () => {
             "update-index",
             "--chmod=-x",
             binary,
-            ".claude-plugin/plugins/axiom/bin/xcproject",
+            ".claude-plugin/plugins/axiom/tools/xcproject",
           ]);
         }
         if (mutation === "staged-license") {
@@ -216,7 +216,7 @@ describe("checkCodexToolArtifacts", () => {
         if (mutation === "finder-dotfile") {
           // Gitignored, so Finder can create it unseen; it is not a helper.
           fs.writeFileSync(
-            path.join(root, ".claude-plugin/plugins/axiom/bin/.DS_Store"),
+            path.join(root, ".claude-plugin/plugins/axiom/tools/.DS_Store"),
             "finder",
           );
         }
@@ -224,7 +224,7 @@ describe("checkCodexToolArtifacts", () => {
           fs.appendFileSync(path.join(root, binary), "changed");
           execFileSync("git", ["-C", root, "add", binary]);
           fs.copyFileSync(
-            path.join(root, ".claude-plugin/plugins/axiom/bin/xcproject"),
+            path.join(root, ".claude-plugin/plugins/axiom/tools/xcproject"),
             path.join(root, binary),
           );
         }
@@ -259,7 +259,7 @@ describe("checkSwiftToolBuild index", () => {
       try {
         if (mutation === "large-clean") {
           fs.writeFileSync(
-            path.join(root, ".claude-plugin/plugins/axiom/bin/xcproject"),
+            path.join(root, ".claude-plugin/plugins/axiom/tools/xcproject"),
             Buffer.alloc(2 * 1024 * 1024, 17),
           );
         }
@@ -269,7 +269,7 @@ describe("checkSwiftToolBuild index", () => {
         const file = {
           source: "tools/xcproject/Sources/xcproject/main.swift",
           "added-source": "tools/xcproject/Sources/xcproject/extra.swift",
-          binary: ".claude-plugin/plugins/axiom/bin/xcproject",
+          binary: ".claude-plugin/plugins/axiom/tools/xcproject",
           license: ".claude-plugin/plugins/axiom/licenses/xcproject.txt",
           record: ".claude-plugin/plugins/axiom/build-info/xcproject.json",
           clean: "",
@@ -293,11 +293,11 @@ describe("checkSwiftToolBuild index", () => {
             `${mutation} index must fail independently of working tree`,
           );}
         if (mutation === "large-clean") {
-          fs.mkdirSync(path.join(root, "axiom-codex/bin"), { recursive: true });
+          fs.mkdirSync(path.join(root, "axiom-codex/tools"), { recursive: true });
           fs.mkdirSync(path.join(root, "axiom-codex/licenses"));
           fs.copyFileSync(
-            path.join(root, ".claude-plugin/plugins/axiom/bin/xcproject"),
-            path.join(root, "axiom-codex/bin/xcproject"),
+            path.join(root, ".claude-plugin/plugins/axiom/tools/xcproject"),
+            path.join(root, "axiom-codex/tools/xcproject"),
           );
           fs.copyFileSync(
             path.join(
@@ -314,10 +314,10 @@ describe("checkSwiftToolBuild index", () => {
       }
     });
   }
-  it("reports a missing canonical bin directory as a validation problem", () => {
+  it("reports a missing canonical tools directory as a validation problem", () => {
     const root = fixture();
     try {
-      fs.rmSync(path.join(root, ".claude-plugin/plugins/axiom/bin"), {
+      fs.rmSync(path.join(root, ".claude-plugin/plugins/axiom/tools"), {
         recursive: true,
       });
       assert.ok(checkCodexToolArtifacts(root, false).length > 0);
@@ -348,7 +348,7 @@ function axbuildFixture() {
         : "axbuild fixture",
     );
   }
-  const binary = path.join(root, ".claude-plugin/plugins/axiom/bin/axbuild");
+  const binary = path.join(root, ".claude-plugin/plugins/axiom/tools/axbuild");
   fs.writeFileSync(binary, "axbuild binary");
   fs.chmodSync(binary, 0o755);
   return root;
@@ -428,13 +428,13 @@ describe("axbuild build provenance", () => {
         }
         if (mutation === "binary-changed") {
           fs.appendFileSync(
-            path.join(root, ".claude-plugin/plugins/axiom/bin/axbuild"),
+            path.join(root, ".claude-plugin/plugins/axiom/tools/axbuild"),
             "binary changed",
           );
         }
         if (mutation === "nonexecutable") {
           fs.chmodSync(
-            path.join(root, ".claude-plugin/plugins/axiom/bin/axbuild"),
+            path.join(root, ".claude-plugin/plugins/axiom/tools/axbuild"),
             0o644,
           );
         }
@@ -500,7 +500,7 @@ describe("axbuild build provenance", () => {
             root,
             "update-index",
             "--chmod=-x",
-            ".claude-plugin/plugins/axiom/bin/axbuild",
+            ".claude-plugin/plugins/axiom/tools/axbuild",
           ]);
         }
         const staged = checkSwiftToolBuild(root, true, "axbuild");
@@ -523,7 +523,7 @@ it("checks axbuild Codex bytes and executable mode alongside licensed xcproject"
   const root = axbuildFixture();
   try {
     for (
-      const file of ["bin/xcproject", "bin/axbuild", "licenses/xcproject.txt"]
+      const file of ["tools/xcproject", "tools/axbuild", "licenses/xcproject.txt"]
     ) {
       const output = path.join(root, "axiom-codex", file);
       fs.mkdirSync(path.dirname(output), { recursive: true });
@@ -533,17 +533,17 @@ it("checks axbuild Codex bytes and executable mode alongside licensed xcproject"
       );
     }
     assert.deepEqual(checkCodexToolArtifacts(root, false), []);
-    fs.appendFileSync(path.join(root, "axiom-codex/bin/axbuild"), "changed");
+    fs.appendFileSync(path.join(root, "axiom-codex/tools/axbuild"), "changed");
     assert.deepEqual(checkCodexToolArtifacts(root, false), [
-      "axiom-codex/bin/axbuild differs from its canonical bytes or executable mode",
+      "axiom-codex/tools/axbuild differs from its canonical bytes or executable mode",
     ]);
     fs.copyFileSync(
-      path.join(root, ".claude-plugin/plugins/axiom/bin/axbuild"),
-      path.join(root, "axiom-codex/bin/axbuild"),
+      path.join(root, ".claude-plugin/plugins/axiom/tools/axbuild"),
+      path.join(root, "axiom-codex/tools/axbuild"),
     );
-    fs.chmodSync(path.join(root, "axiom-codex/bin/axbuild"), 0o644);
+    fs.chmodSync(path.join(root, "axiom-codex/tools/axbuild"), 0o644);
     assert.deepEqual(checkCodexToolArtifacts(root, false), [
-      "axiom-codex/bin/axbuild differs from its canonical bytes or executable mode",
+      "axiom-codex/tools/axbuild differs from its canonical bytes or executable mode",
     ]);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

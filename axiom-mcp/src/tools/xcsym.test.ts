@@ -8,9 +8,9 @@ describe('resolveXcsymPath', () => {
     expect(path).toBe('/custom/xcsym');
   });
 
-  it('resolves to the plugin bin in development mode', () => {
+  it('resolves to the plugin tools/ in development mode', () => {
     const path = resolveXcsymPath({ mode: 'development', devSourcePath: '/plug' }, {});
-    expect(path).toBe(join('/plug', 'bin', 'xcsym'));
+    expect(path).toBe(join('/plug', 'tools', 'xcsym'));
   });
 
   it('resolves to the packaged binary in production', () => {

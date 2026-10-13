@@ -189,7 +189,7 @@ describe("resolveGoBinaryStaleness", () => {
   });
 
   it("is stale when source is dirty but the committed binary is not — the `touch` bypass", () => {
-    // mtime alone cannot see this: `touch bin/xcui` makes the binary the newest
+    // mtime alone cannot see this: `touch tools/xcui` makes the binary the newest
     // file, so the mtime clause reports ok on a binary nobody rebuilt. git content
     // can: a rebuilt binary has different bytes, so it would be dirty too.
     const verdicts = resolveGoBinaryStaleness(
@@ -214,7 +214,7 @@ describe("resolveGoBinaryStaleness", () => {
         binaryDirty: true,
         sources: [{ path: "tools/xcui/sim.go", mtimeMs: 100 }],
       }],
-      dirty("tools/xcui/sim.go", ".claude-plugin/plugins/axiom/bin/xcui"),
+      dirty("tools/xcui/sim.go", ".claude-plugin/plugins/axiom/tools/xcui"),
       true,
     );
     assert.equal(verdicts[0].state, "ok");
@@ -245,7 +245,7 @@ describe("resolveGoBinaryStaleness", () => {
         binaryDirty: true,
         sources: [{ path: "tools/xcui/sim.go", mtimeMs: 900 }],
       }],
-      dirty("tools/xcui/sim.go", ".claude-plugin/plugins/axiom/bin/xcui"),
+      dirty("tools/xcui/sim.go", ".claude-plugin/plugins/axiom/tools/xcui"),
       true,
     );
     assert.equal(verdicts[0].state, "stale");
@@ -297,7 +297,7 @@ describe("resolveGoBinaryStaleness", () => {
         stagedSources: ["tools/xcui/sim.go"],
         sources: [{ path: "tools/xcui/sim.go", mtimeMs: 100 }],
       }],
-      dirty("tools/xcui/sim.go", ".claude-plugin/plugins/axiom/bin/xcui"),
+      dirty("tools/xcui/sim.go", ".claude-plugin/plugins/axiom/tools/xcui"),
       true,
     );
     assert.equal(verdicts[0].state, "binary-not-staged");
@@ -313,7 +313,7 @@ describe("resolveGoBinaryStaleness", () => {
         stagedSources: ["tools/xcui/sim.go"],
         sources: [{ path: "tools/xcui/sim.go", mtimeMs: 100 }],
       }],
-      dirty("tools/xcui/sim.go", ".claude-plugin/plugins/axiom/bin/xcui"),
+      dirty("tools/xcui/sim.go", ".claude-plugin/plugins/axiom/tools/xcui"),
       true,
     );
     assert.equal(verdicts[0].state, "ok");

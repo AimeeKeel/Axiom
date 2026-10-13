@@ -18,7 +18,7 @@ async function fixture(t: TestContext) {
     ".codex-plugin",
     "skills/axiom-build",
     "hooks",
-    "bin",
+    "tools",
     "nested/cwd",
   ]) {
     await fs.mkdir(path.join(root, directory), { recursive: true });
@@ -73,7 +73,7 @@ async function fixture(t: TestContext) {
     }),
   );
   for (const helper of helpers)
-    await fs.writeFile(path.join(root, "bin", helper), healthyHelper, {
+    await fs.writeFile(path.join(root, "tools", helper), healthyHelper, {
       mode: 0o755,
     });
   return root;
@@ -83,7 +83,7 @@ describe("inspectInstallation", () => {
   it("should probe exactly the helpers the plugin ships", async () => {
     assert.deepEqual(
       Object.keys(HELPERS).sort(),
-      (await fs.readdir(".claude-plugin/plugins/axiom/bin")).filter((name) => !name.startsWith(".")).sort(),
+      (await fs.readdir(".claude-plugin/plugins/axiom/tools")).filter((name) => !name.startsWith(".")).sort(),
     );
   });
 
@@ -194,7 +194,7 @@ describe("inspectInstallation", () => {
   ]) {
     it(`should report ${name} without leaking helper output`, async (t) => {
       const root = await fixture(t);
-      const helperPath = path.join(root, "bin/xcui");
+      const helperPath = path.join(root, "tools/xcui");
       if (mode === "missing") await fs.unlink(helperPath);
       if (mode === "permissions") await fs.chmod(helperPath, 0o644);
       if (mode === "architecture" || mode === "platform") {

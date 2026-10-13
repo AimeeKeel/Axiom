@@ -251,6 +251,29 @@ try {
   error("directory-file-size", `could not list tracked plugin files: ${(e as Error).message}`);
 }
 
+// claude.ai and the Claude desktop app refuse to install a plugin that has a
+// top-level bin/ ("Plugin contains a top-level bin/ directory"), which is why
+// the bundled tools live in plugins/axiom/tools/. A bin/ on disk breaks a local
+// install and fails. One gone from disk but still in the index fails once
+// tools/ is staged too, because that commit would ship both folders; with only
+// bin/ indexed it warns, as in 1b, since preflight runs before anything is staged.
+heading("1c. claude.ai Installability");
+try {
+  const binRel = path.relative(root, path.join(pluginDir, "bin"));
+  const toolsRel = path.relative(root, path.join(pluginDir, "tools"));
+  const listed = (rel: string) => execFileSync("git", ["ls-files", "--", rel], { cwd: root, stdio: "pipe", encoding: "utf8" }).trim();
+  const trackedBin = listed(binRel);
+  if (fs.existsSync(path.join(pluginDir, "bin")))
+    error("plugin-bin-dir", `${binRel}/ exists; claude.ai and the Claude desktop app refuse to install a plugin with a top-level bin/. Keep executables in plugins/axiom/tools/`);
+  else if (trackedBin && listed(toolsRel))
+    error("plugin-bin-dir", `${binRel}/ is still in the git index alongside ${toolsRel}/, so this commit would ship both and claude.ai refuses the plugin; stage the deletion (git add -A ${binRel})`);
+  else if (trackedBin)
+    warn("plugin-bin-dir", `${binRel}/ is gone from disk but still in the git index; stage its deletion, or a commit made now still ships it and claude.ai refuses the plugin`);
+  else console.log("  ✓ no top-level bin/ in the plugin, so claude.ai can install it");
+} catch (e: unknown) {
+  error("plugin-bin-dir", `could not check for a top-level bin/: ${(e as Error).message}`);
+}
+
 heading("2. JSON Syntax");
 let claudeCode: PluginManifest | undefined;
 let marketplace: MarketplaceManifest | undefined;
@@ -1801,8 +1824,8 @@ const stagedPaths = (() => {
 
 heading("12t. Tool Binary Staleness");
 
-// The compiled binary in bin/ is what SHIPS — the plugin, the MCP bundle, and the
-// Codex/Cursor variants all carry bin/<tool>, never tools/<tool>/*.go. So a Go edit
+// The compiled binary in plugins/axiom/tools/ is what SHIPS — the plugin, the MCP bundle, and the
+// Codex/Cursor variants all carry the compiled <tool>, never tools/<tool>/*.go. So a Go edit
 // whose binary was never rebuilt ships the OLD tool while the repo and the skills
 // document the new behavior, and every other gate stays green: 12g compares args.go
 // copies, 12h confirms the binary is present and listed, and step 15 (Phase 2 only)
@@ -1812,7 +1835,7 @@ heading("12t. Tool Binary Staleness");
 // hand; nothing would have caught skipping that step. Same hybrid rule as 12b —
 // mtime pre-filters, git dirtiness confirms — so a fresh clone is not flagged.
 const goToolsRoot = path.join(root, "tools");
-const goBinDir = path.join(pluginDir, "bin");
+const goBinDir = path.join(pluginDir, "tools");
 if (fs.existsSync(goToolsRoot) && fs.statSync(goToolsRoot).isDirectory()) {
   // Files `go build` ignores, so an edit to one cannot make the binary stale and
   // flagging it would be unfixable: it is content, so no rebuild clears it.
@@ -1905,19 +1928,19 @@ if (fs.existsSync(goToolsRoot) && fs.statSync(goToolsRoot).isDirectory()) {
         goProblems++;
         error(
           "go-binary-staleness",
-          `bin/${verdict.tool} is stale — ${verdict.reason}. Run: cd tools/${verdict.tool} && make install`,
+          `plugins/axiom/tools/${verdict.tool} is stale — ${verdict.reason}. Run: cd tools/${verdict.tool} && make install`,
         );
       } else if (verdict.state === "binary-not-staged") {
         goProblems++;
         error(
           "go-binary-staleness",
-          `bin/${verdict.tool} — ${verdict.reason}. Stage it too: git add .claude-plugin/plugins/axiom/bin/${verdict.tool}`,
+          `plugins/axiom/tools/${verdict.tool} — ${verdict.reason}. Stage it too: git add .claude-plugin/plugins/axiom/tools/${verdict.tool}`,
         );
       } else if (verdict.state === "missing-binary") {
         goProblems++;
         error(
           "go-binary-staleness",
-          `tools/${verdict.tool} builds a command but has no committed bin/${verdict.tool} — build it with: cd tools/${verdict.tool} && make install`,
+          `tools/${verdict.tool} builds a command but has no committed plugins/axiom/tools/${verdict.tool} — build it with: cd tools/${verdict.tool} && make install`,
         );
       }
     }
@@ -1946,14 +1969,14 @@ heading("12h. MCP Tool Binary Coverage");
 // in MCP_TOOL_BINARIES. Independently of the bundle build (step 13) and the
 // vitest coverage test (step 12), verify (a) the list matches the bin/<name> the
 // MCP tools actually resolve, and (b) each listed binary is a committed file in
-// the plugin bin/. Imports the list directly and shares the scanner with the
+// plugins/axiom/tools/. Imports the list directly and shares the scanner with the
 // vitest test (src/scripts/binary-coverage.ts) so nothing can drift. axiom-gtqk.
 const mcpToolsDir = path.join(root, "axiom-mcp/src/tools");
 const mcpListed = new Set<string>(MCP_TOOL_BINARIES);
 const mcpReferenced = scanReferencedToolBinaries(mcpToolsDir);
 const mcpMissingFromList = [...mcpReferenced].filter((b) => !mcpListed.has(b));
 const mcpUnusedInList = [...mcpListed].filter((b) => !mcpReferenced.has(b));
-const mcpMissingBinaries = [...MCP_PACKAGED_BINARIES].filter((b) => !fs.existsSync(path.join(pluginDir, "bin", b)));
+const mcpMissingBinaries = [...MCP_PACKAGED_BINARIES].filter((b) => !fs.existsSync(path.join(pluginDir, "tools", b)));
 if (mcpMissingFromList.length) {
   error("mcp-binary-coverage", `tools resolve bin/<name> not in MCP_TOOL_BINARIES (bundler won't ship them): ${mcpMissingFromList.join(", ")}`);
 }
@@ -1961,10 +1984,10 @@ if (mcpUnusedInList.length) {
   error("mcp-binary-coverage", `MCP_TOOL_BINARIES lists binaries no tool references: ${mcpUnusedInList.join(", ")}`);
 }
 if (mcpMissingBinaries.length) {
-  error("mcp-binary-coverage", `MCP_PACKAGED_BINARIES entries missing from committed plugin bin/: ${mcpMissingBinaries.join(", ")}`);
+  error("mcp-binary-coverage", `MCP_PACKAGED_BINARIES entries missing from committed plugins/axiom/tools/: ${mcpMissingBinaries.join(", ")}`);
 }
 if (!mcpMissingFromList.length && !mcpUnusedInList.length && !mcpMissingBinaries.length) {
-  console.log(`  ✓ MCP tool binaries consistent (${[...mcpListed].join(", ") || "none"}) — list ↔ tool refs ↔ plugin bin/`);
+  console.log(`  ✓ MCP tool binaries consistent (${[...mcpListed].join(", ") || "none"}) — list ↔ tool refs ↔ plugins/axiom/tools/`);
 }
 
 // ── 12i. Docs Dash Convention ──
@@ -3315,7 +3338,7 @@ try {
 }
 
 // Step 15: bundled Go tools (every tools/*/ Go module — currently xclog,
-// xcsym, xcui, xcprof) ship as compiled binaries in bin/. Their source lives
+// xcsym, xcui, xcprof) ship as compiled binaries in plugins/axiom/tools/. Their source lives
 // in tools/<name>/ as independent Go modules, discovered dynamically below.
 // A regression that breaks tests but still compiles would land in the
 // shipped binary without any other Phase 2 step catching it. axiom-y4z.

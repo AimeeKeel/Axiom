@@ -71,10 +71,10 @@ if (OUTPUT_DIR === DEFAULT_OUTPUT && fs.existsSync(OUTPUT_DIR)) {
 fs.mkdirSync(OUTPUT_SKILLS, { recursive: true });
 fs.mkdirSync(OUTPUT_MANIFEST, { recursive: true });
 
-const outputBin = path.join(OUTPUT_DIR, 'bin');
+const outputBin = path.join(OUTPUT_DIR, 'tools');
 fs.mkdirSync(outputBin, { recursive: true });
 // Every helper the plugin ships; pre-deploy's codex-tool-distribution check reads the same directory.
-const pluginBin = path.join(root, '.claude-plugin/plugins/axiom/bin');
+const pluginBin = path.join(root, '.claude-plugin/plugins/axiom/tools');
 for (const helper of fs.readdirSync(pluginBin).filter((name) => !name.startsWith('.'))) {
   const source = path.join(pluginBin, helper);
   const destination = path.join(outputBin, helper);

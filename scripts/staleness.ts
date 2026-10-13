@@ -98,7 +98,7 @@ export function resolveStaleness(input: StalenessInput): StalenessVerdict {
 export interface GoToolInput {
   /** Module (and binary) name, e.g. "xcui". */
   tool: string;
-  /** mtime of the committed `bin/<tool>`, or null when it is absent. */
+  /** mtime of the committed `plugins/axiom/tools/<tool>`, or null when it is absent. */
   binaryMtimeMs: number | null;
   /** Whether git sees the committed binary's BYTES as changed (rebuilt but not yet committed). */
   binaryDirty: boolean;
@@ -126,7 +126,7 @@ export interface GoToolVerdict {
  * Decides, per Go tool, whether the committed binary still matches its source.
  *
  * The binary is what ships — the plugin, the MCP bundle, and the Codex/Cursor
- * variants all carry `bin/<tool>`, never the source. So a Go edit whose binary
+ * variants all carry the compiled `<tool>`, never the source. So a Go edit whose binary
  * was not rebuilt ships the OLD tool while the repo and the skills document the
  * new behavior, and every other gate stays green: the source compiles, its tests
  * pass, and the binary is present and correctly listed.
@@ -135,7 +135,7 @@ export interface GoToolVerdict {
  *
  *   1. CONTENT — a compiled source is dirty while the binary's bytes still match
  *      HEAD. A rebuild changes those bytes, so a clean binary beside edited source
- *      means the rebuild never happened. This is the clause `touch bin/<tool>`
+ *      means the rebuild never happened. This is the clause `touch plugins/axiom/tools/<tool>`
  *      cannot beat: touching a file changes its mtime, not what git sees.
  *      (With git unavailable this clause is skipped and only clause 2 applies.)
  *   1b. STAGED — the gate reads the working tree, but what ships is HEAD. Source
@@ -161,7 +161,7 @@ export function resolveGoBinaryStaleness(
       return {
         tool: tool.tool,
         state: "missing-binary" as const,
-        reason: "no committed bin/" + tool.tool + " — the module exists but nothing ships it",
+        reason: "no committed plugins/axiom/tools/" + tool.tool + " — the module exists but nothing ships it",
       };
     }
     const compiled = tool.sources.filter((s) => !s.path.endsWith("_test.go"));
@@ -172,7 +172,7 @@ export function resolveGoBinaryStaleness(
         tool: tool.tool,
         state: "stale" as const,
         reason:
-          `${changedCount} source file(s) changed but bin/${tool.tool} was not rebuilt ` +
+          `${changedCount} source file(s) changed but plugins/axiom/tools/${tool.tool} was not rebuilt ` +
           `(the committed binary still matches HEAD)`,
       };
     }
@@ -182,7 +182,7 @@ export function resolveGoBinaryStaleness(
         tool: tool.tool,
         state: "binary-not-staged" as const,
         reason:
-          `${stagedCompiled.length} source file(s) staged for commit without bin/${tool.tool} — ` +
+          `${stagedCompiled.length} source file(s) staged for commit without plugins/axiom/tools/${tool.tool} — ` +
           `the commit would ship the previous binary`,
       };
     }

@@ -33,7 +33,7 @@ function definition(tool: SwiftToolName) {
         : []),
     ],
     recordPath: `${plugin}/build-info/${tool}.json`,
-    binaryPath: `${plugin}/bin/${tool}`,
+    binaryPath: `${plugin}/tools/${tool}`,
     licensePath: tool === "xcproject"
       ? `${plugin}/licenses/xcproject.txt`
       : undefined,
@@ -203,9 +203,9 @@ export function checkCodexToolArtifacts(
   let files: string[];
   try {
     // Same filter as build-codex.ts and session-start.py: dotfiles are not helpers.
-    files = fs.readdirSync(path.join(root, plugin, "bin"))
+    files = fs.readdirSync(path.join(root, plugin, "tools"))
       .filter((name) => !name.startsWith("."))
-      .map((name) => `bin/${name}`);
+      .map((name) => `tools/${name}`);
   } catch (err) {
     return [
       `Cannot enumerate canonical helper binaries: ${(err as Error).message}`,
@@ -222,7 +222,7 @@ export function checkCodexToolArtifacts(
       const outputMode = fs.statSync(path.join(root, generated)).mode & 0o777;
       if (
         !source.equals(output) ||
-        (file.startsWith("bin/") &&
+        (file.startsWith("tools/") &&
           (sourceMode !== outputMode || !(outputMode & 0o111)))
       ) {
         problems.push(
@@ -239,7 +239,7 @@ export function checkCodexToolArtifacts(
         ], { cwd: root, encoding: "utf8" }).trim().split("\n");
         if (
           entries.length !== 2 ||
-          (file.startsWith("bin/") &&
+          (file.startsWith("tools/") &&
             entries.some((entry) => entry.split(" ")[0] !== "100755")) ||
           entries[0].split(" ")[0] !== entries[1].split(" ")[0] ||
           // Blob SHAs from the same ls-files call; equal SHAs mean equal bytes,

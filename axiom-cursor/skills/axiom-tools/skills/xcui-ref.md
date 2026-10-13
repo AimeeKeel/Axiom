@@ -11,7 +11,7 @@ xcui makes iOS-simulator UI and accessibility testing scriptable for coding harn
 In Cursor, `xcui` is external and is not placed on `PATH` by the plugin. Check `command -v xcui` before following an `xcui` workflow.
 
 If it is absent, you have two working options and should say which you took:
-- Put it on PATH — clone the repo and symlink `.claude-plugin/plugins/axiom/bin/xcui` (see the Pi install guide). This is the only way to get `resize sweep`, `wait`, `assert`, `a11y`, `dialog`, and `voiceover`, which have no AXe equivalent.
+- Put it on PATH — clone the repo and symlink `.claude-plugin/plugins/axiom/tools/xcui` (see the Pi install guide). This is the only way to get `resize sweep`, `wait`, `assert`, `a11y`, `dialog`, and `voiceover`, which have no AXe equivalent.
 - For **input only**, call AXe directly: `axe tap`/`type`/`swipe` take the same flags the `xcui` passthrough forwards — add `--tap-style physical` to every `axe tap` (see Tap styles) — and AXe installs with `brew install cameroncooke/axe/axe`. You then own the `DEVELOPER_DIR` handling yourself — rare, since AXe 1.8.0 loads SimulatorKit under Xcode 27 unaided.
 
 ## Prerequisite: run `xcui doctor`

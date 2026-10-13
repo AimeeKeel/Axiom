@@ -7,7 +7,7 @@ Check dependencies BEFORE blaming code. **Core principle** 80% of persistent bui
 
 ## Capture Build and Test Diagnostics
 
-Before the next necessary build or test, resolve `bin/axbuild` under the **actual loaded package** in Claude Code or Codex, or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.
+Before the next necessary build or test, resolve `tools/axbuild` under the **actual loaded package** in Claude Code (the folder in the session context's **Bundled tools** line; in a subagent, `command -v axbuild`) or Codex (`<plugin-root>/tools/`), or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.
 
 Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
 

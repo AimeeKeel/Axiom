@@ -90,7 +90,7 @@ Optional command-line helpers include `axbuild` (build/test diagnostics), `xcpro
 
 ```bash
 cd ~ && git clone https://github.com/CharlesWiltgen/Axiom.git
-ln -sf ~/Axiom/.claude-plugin/plugins/axiom/bin/* /usr/local/bin/
+ln -sf ~/Axiom/.claude-plugin/plugins/axiom/tools/* /usr/local/bin/
 ```
 
 Once `axbuild` is on your PATH, Axiom's Pi extension lists it at session start and Axiom runs builds and tests through it, so the full log and report are saved. Without it, the assistant saves build output to a log file instead. See [Tools](/tools/).

@@ -128,9 +128,9 @@ test("warns on UUID shapes without failing the gate", () => {
 });
 
 test("scans printable runs inside a binary, where a source path once shipped", () => {
-  const { root } = fixture(".claude-plugin/plugins/axiom/bin/tool", "");
+  const { root } = fixture(".claude-plugin/plugins/axiom/tools/tool", "");
   fs.writeFileSync(
-    path.join(root, ".claude-plugin/plugins/axiom/bin/tool"),
+    path.join(root, ".claude-plugin/plugins/axiom/tools/tool"),
     Buffer.concat([
       Buffer.from([0x00, 0x01, 0x02]),
       Buffer.from("/Users/nonplaceholder/Projects/Axiom/tools/tool/main.go", "utf8"),
@@ -139,7 +139,7 @@ test("scans printable runs inside a binary, where a source path once shipped", (
   );
   const findings = scan(root);
   assert.equal(findings.length, 1);
-  assert.equal(findings[0]!.path, ".claude-plugin/plugins/axiom/bin/tool");
+  assert.equal(findings[0]!.path, ".claude-plugin/plugins/axiom/tools/tool");
   assert.equal(findings[0]!.line, 0, "binaries report no line number");
 });
 

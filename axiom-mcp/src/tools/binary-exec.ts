@@ -35,7 +35,7 @@ export function resolveToolPath(
   const override = env[envKey]?.trim();
   if (override) return override;
   if (config.mode === 'development' && config.devSourcePath) {
-    return join(config.devSourcePath, 'bin', binaryName);
+    return join(config.devSourcePath, 'tools', binaryName);
   }
   return join(MODULE_DIR, '..', 'bin', binaryName);
 }

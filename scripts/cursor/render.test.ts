@@ -380,5 +380,5 @@ test("preserves axbuild saved-log fallback without inventing a Cursor MCP tool",
     assert.match(text, /command.*collection/s);
     assert.doesNotMatch(text, /axiom_axbuild/);
   }
-  assert.equal([...files.keys()].some(file => file === "bin/axbuild"), false);
+  assert.equal([...files.keys()].some(file => file === "tools/axbuild"), false);
 });

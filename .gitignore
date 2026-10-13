@@ -80,7 +80,7 @@ CHANGELOG.md
 *.db
 axiom-mcp/docs/
 
-# Local tool build artifacts (distributed binaries live in plugins/axiom/bin/)
+# Local tool build artifacts (distributed binaries live in plugins/axiom/tools/)
 tools/xclog/xclog
 tools/xcui/xcui
 tools/xcprof/xcprof

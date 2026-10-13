@@ -10,8 +10,8 @@ const helpers = Object.entries(HELPERS).map(([name, args]) => ({ name, args }));
 describe("generated Codex helpers", () => {
   it("ships executable canonical helpers and the xcproject license", () => {
     for (const { name } of helpers) {
-      const source = path.resolve(".claude-plugin/plugins/axiom/bin", name);
-      const shipped = path.resolve("axiom-codex/bin", name);
+      const source = path.resolve(".claude-plugin/plugins/axiom/tools", name);
+      const shipped = path.resolve("axiom-codex/tools", name);
       assert.equal(
         fs.existsSync(shipped),
         true,
@@ -33,7 +33,7 @@ describe("generated Codex helpers", () => {
     skip: process.platform !== "darwin",
   }, () => {
     for (const { name, args } of helpers) {
-      const shipped = path.resolve("axiom-codex/bin", name);
+      const shipped = path.resolve("axiom-codex/tools", name);
       const result = spawnSync(shipped, args, {
         cwd: "/private/tmp",
         encoding: "utf8",

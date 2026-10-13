@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import subprocess
 import sys
 import os
@@ -38,6 +39,26 @@ if len(sys.argv) < 2:
 
 plugin_root = sys.argv[1]
 
+# The bundled tools live in tools/, not a top-level bin/ (claude.ai refuses to
+# install a plugin that has one), so Claude Code no longer puts them on PATH.
+# CLAUDE_ENV_FILE is sourced before every later Bash command in the session,
+# subagents included. This runs before the project gate because bin/ was on PATH
+# in every project. Resume and /compact rerun this hook against the same file,
+# so an existing line is not repeated; Codex invokes the tools by full path.
+tools_dir = os.path.join(os.path.abspath(plugin_root), "tools")
+env_file = os.environ.get("CLAUDE_ENV_FILE")
+if env_file and os.environ.get("AXIOM_HARNESS") != "codex" and os.path.isdir(tools_dir):
+    path_line = 'export PATH="${PATH:+$PATH:}"' + shlex.quote(tools_dir)
+    try:
+        with open(env_file, "a+", encoding="utf-8", errors="surrogateescape") as f:
+            f.seek(0)
+            existing = f.read()
+            if path_line not in existing.splitlines():
+                separator = "\n" if existing and not existing.endswith("\n") else ""
+                f.write(separator + path_line + "\n")
+    except OSError as error:
+        hook_diagnostics.record_exception(error)
+
 # Project-type gate (GH #45): in non-Apple projects, skip the context injection
 # entirely (emit an empty SessionStart response). resolve_context_decision is
 # fail-open — it returns True (inject) on any detection error — so this can never
@@ -72,7 +93,7 @@ if os.environ.get("AXIOM_HARNESS") == "codex":
     # Name what this install actually ships, so a new helper is never left out.
     try:
         helpers = ", ".join(
-            sorted(n for n in os.listdir(os.path.join(plugin_root, "bin")) if not n.startswith("."))
+            sorted(n for n in os.listdir(os.path.join(plugin_root, "tools")) if not n.startswith("."))
         )
     except OSError:
         helpers = "none found"
@@ -92,7 +113,7 @@ all relevant routers. Preserve the checks and safeguards in the loaded procedure
 Use only capabilities exposed by this session. Load auditor procedures as skills;
 execute them sequentially when collaboration is unavailable. If collaboration tools
 are present, respect their documented concurrency limits and the requested model.
-Resolve helper paths under `{plugin_root}/bin/` ({helpers}), checking
+Resolve helper paths under `{plugin_root}/tools/` ({helpers}), checking
 existence, executable permission and a non-mutating help/version probe before use.
 Do not assume helpers are on PATH. Optional Xcode/MCP capabilities need detection.
 
@@ -159,7 +180,7 @@ if guide_count > 0 or diag_count > 0:
 # opaque "exec format error" / segfault on first call. xclog ships as a
 # ~3 MB arm64 binary; 1 MB is well below any plausible legitimate
 # size and well above what truncation produces.
-xclog_path = f"{plugin_root}/bin/xclog"
+xclog_path = f"{plugin_root}/tools/xclog"
 truncated_tools = set()  # flagged below; left out of the bundled-tool roster
 xclog_context = ""
 MIN_XCLOG_SIZE = 1_000_000
@@ -193,7 +214,7 @@ except OSError as error:
 # disk-full mid-write produces. Codesign failures aren't caught — that
 # would warrant a full subprocess probe; an Intel host is handled below,
 # before any tool is announced.
-xcsym_path = f"{plugin_root}/bin/xcsym"
+xcsym_path = f"{plugin_root}/tools/xcsym"
 xcsym_context = ""
 MIN_XCSYM_SIZE = 1_000_000
 # Wrap the probe in OSError handling — a filesystem error here would
@@ -223,7 +244,7 @@ except OSError as error:
 # Detect xcui binary. Same size-floor logic as xclog/xcsym (truncated
 # marketplace downloads keep the exec bit but fault on first call). xcui
 # ships as a multi-MB arm64 binary; 1 MB is well below legitimate size.
-xcui_path = f"{plugin_root}/bin/xcui"
+xcui_path = f"{plugin_root}/tools/xcui"
 xcui_context = ""
 MIN_XCUI_SIZE = 1_000_000
 try:
@@ -247,7 +268,7 @@ except OSError as error:
     pass
 
 # Detect xcprof binary. Same size-floor logic as the other bundled tools.
-xcprof_path = f"{plugin_root}/bin/xcprof"
+xcprof_path = f"{plugin_root}/tools/xcprof"
 xcprof_context = ""
 MIN_XCPROF_SIZE = 1_000_000
 try:
@@ -270,13 +291,13 @@ except OSError as error:
     hook_diagnostics.record_exception(error)
     pass
 
-# Bundled tool roster, derived from bin/ at run time so a new tool cannot be
+# Bundled tool roster, derived from tools/ at run time so a new tool cannot be
 # left out of the session facts. Names only — the lines above carry paths and
 # usage; the roster exists so the model knows every tool that ships. A tool
 # flagged as truncated above is left out: the roster says to run each with --help.
 try:
     bundled_tools = sorted(
-        n for n in os.listdir(os.path.join(plugin_root, "bin"))
+        n for n in os.listdir(os.path.join(plugin_root, "tools"))
         if not n.startswith(".") and n not in truncated_tools
     )
 except OSError:
@@ -288,7 +309,7 @@ if bundled_tools:
 
 ---
 
-**Bundled tools**: {", ".join(bundled_tools)} — run any with `--help`; see `axiom-tools` for usage."""
+**Bundled tools** (in `{tools_dir}/`): {", ".join(bundled_tools)} — run any with `--help`; see `axiom-tools` for usage."""
 
 # The bundled tools ship arm64-only. hw.optional.arm64 is 1 on Apple Silicon even
 # when this Python runs under Rosetta, where uname reports x86_64; Intel Macs have

@@ -14,7 +14,7 @@ Discovery skips dependency/cache directories and directory symlinks. Missing pro
 
 ## Packaged invocation
 
-Claude Code and Pi carry the inspector under the canonical plugin's `bin/xcproject`; Codex carries `bin/xcproject` inside its generated package. Invoke the absolute package path when `command -v xcproject` is empty. The MCP npm package exposes the same native executable as its `xcproject` CLI and includes Apple's license. It has no `axiom_xcproject_*` MCP wrapper. Cursor and other MCP clients without shell access must use the documented file-reading fallback.
+Claude Code and Pi carry the inspector under the canonical plugin's `tools/xcproject`; Codex carries `tools/xcproject` inside its generated package. Invoke the absolute package path when `command -v xcproject` is empty. The MCP npm package exposes the same native executable as its `xcproject` CLI and includes Apple's license. It has no `axiom_xcproject_*` MCP wrapper. Cursor and other MCP clients without shell access must use the documented file-reading fallback.
 
 `make install` records the pre-build source inputs and installed binary/license hashes in the canonical plugin's `build-info/xcproject.json`. The pre-deploy gate verifies those bytes in the working tree and Git index, plus Codex artifact parity. This build record checks artifact integrity; runtime compatibility requires execution on a supported OS.
 
