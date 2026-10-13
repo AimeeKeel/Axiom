@@ -1,10 +1,11 @@
 import { execFile } from 'node:child_process';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Config } from '../config.js';
 import type { ToolResponse } from './handler.js';
 
 const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
+const EBADARCH = 86;
 
 export interface BinaryExecResult {
   stdout: string;
@@ -46,7 +47,7 @@ export function resolveToolPath(
  */
 export function makeDefaultExec(timeoutMs: number, maxBuffer: number): BinaryExec {
   return (binaryPath, args) =>
-    new Promise((resolve) => {
+    new Promise<BinaryExecResult>((resolve) => {
       const child = execFile(binaryPath, args, { timeout: timeoutMs, maxBuffer }, (err, stdout, stderr) => {
         // execFile sets err.code to the numeric exit status on a clean non-zero
         // exit; a signal/timeout/overflow leaves it non-numeric. Either way we
@@ -72,6 +73,11 @@ export function makeDefaultExec(timeoutMs: number, maxBuffer: number): BinaryExe
       // Give any child that reads stdin (xcsym crash/anonymize accept "-") an
       // immediate EOF, so an MCP call can never block on input we never send.
       child.stdin?.end();
+    }).catch((err: NodeJS.ErrnoException) => {
+      // The tools ship arm64-only. An Intel Mac refuses them with EBADARCH, which
+      // execFile throws synchronously as the opaque "Unknown system error -86".
+      if (err.errno !== -EBADARCH) throw err;
+      return { stdout: '', stderr: `${basename(binaryPath)} is built for Apple Silicon (arm64); this Mac's CPU cannot run it.`, code: 1 };
     });
 }
 

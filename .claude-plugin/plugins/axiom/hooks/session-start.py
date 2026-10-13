@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import os
 from datetime import datetime
@@ -156,7 +157,7 @@ if guide_count > 0 or diag_count > 0:
 # (axiom-9w0, parallel to axiom-1kn): plugin marketplace downloads can
 # truncate, leaving an executable bit on a partial binary that produces
 # opaque "exec format error" / segfault on first call. xclog ships as a
-# ~4 MB universal binary; 1 MB is well below any plausible legitimate
+# ~3 MB arm64 binary; 1 MB is well below any plausible legitimate
 # size and well above what truncation produces.
 xclog_path = f"{plugin_root}/bin/xclog"
 truncated_tools = set()  # flagged below; left out of the bundled-tool roster
@@ -187,11 +188,11 @@ except OSError as error:
 # binary keeps the executable bit but produces "exec format error" /
 # segfault on first call, leaving the agent confused about why a tool
 # the hook just announced doesn't actually work. xcsym ships as a
-# ~8.5 MB universal binary; 1 MB is comfortably below any plausible
+# ~3.4 MB arm64 binary; 1 MB is comfortably below any plausible
 # legitimate size and well above what an interrupted download or
-# disk-full mid-write produces. Codesign failures and arch mismatches
-# aren't caught — both are vanishingly rare with build-signed universal
-# distribution and would warrant a full subprocess probe instead.
+# disk-full mid-write produces. Codesign failures aren't caught — that
+# would warrant a full subprocess probe; an Intel host is handled below,
+# before any tool is announced.
 xcsym_path = f"{plugin_root}/bin/xcsym"
 xcsym_context = ""
 MIN_XCSYM_SIZE = 1_000_000
@@ -221,7 +222,7 @@ except OSError as error:
 
 # Detect xcui binary. Same size-floor logic as xclog/xcsym (truncated
 # marketplace downloads keep the exec bit but fault on first call). xcui
-# ships as a multi-MB universal binary; 1 MB is well below legitimate size.
+# ships as a multi-MB arm64 binary; 1 MB is well below legitimate size.
 xcui_path = f"{plugin_root}/bin/xcui"
 xcui_context = ""
 MIN_XCUI_SIZE = 1_000_000
@@ -289,6 +290,28 @@ if bundled_tools:
 
 **Bundled tools**: {", ".join(bundled_tools)} — run any with `--help`; see `axiom-tools` for usage."""
 
+# The bundled tools ship arm64-only. hw.optional.arm64 is 1 on Apple Silicon even
+# when this Python runs under Rosetta, where uname reports x86_64; Intel Macs have
+# no such oid. Any other outcome, including a probe that fails, leaves the tools announced.
+apple_silicon = True
+if sys.platform == "darwin":
+    try:
+        probe = subprocess.run(["sysctl", "-n", "hw.optional.arm64"], capture_output=True, text=True, timeout=2)
+        apple_silicon = "unknown oid" not in probe.stderr
+    except (OSError, subprocess.SubprocessError) as error:
+        hook_diagnostics.record_exception(error)
+
+if apple_silicon:
+    tool_context = f"{xclog_context}{xcsym_context}{xcui_context}{xcprof_context}{tool_roster_context}"
+elif bundled_tools:
+    tool_context = f"""
+
+---
+
+**Axiom's bundled tools need an Apple Silicon Mac.** This Mac has an Intel CPU, so {", ".join(bundled_tools)} cannot run here ("bad CPU type in executable"). Do NOT call them, or any Axiom command or agent that runs them; fall back to `xcodebuild`, `xcrun simctl spawn booted log stream`, `atos` and `xcrun xctrace export`."""
+else:
+    tool_context = ""
+
 # Build the context message. The facts only this hook knows (the platform rules,
 # installed toolchain and tool paths) come first. If a future change pushes the
 # total past Claude Code's inline limit, the preview then starts with them, not
@@ -296,7 +319,7 @@ if bundled_tools:
 additional_context = f"""<EXTREMELY_IMPORTANT>
 You have Axiom iOS development skills.
 
-{platform_context}{apple_docs_context}{xclog_context}{xcsym_context}{xcui_context}{xcprof_context}{tool_roster_context}
+{platform_context}{apple_docs_context}{tool_context}
 
 ---
 

@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { makeDefaultExec, resolveToolPath } from './binary-exec.js';
 
@@ -61,5 +63,36 @@ describe('makeDefaultExec', () => {
     const r = await exec(NODE, ['-e', 'setTimeout(() => {}, 5000)']);
     expect(r.code).not.toBe(0);
     expect(r.stderr).toContain('timed out');
+  });
+
+  // An Intel Mac refuses the arm64-only tools with EBADARCH, which Node throws
+  // synchronously as "spawn Unknown system error -86". A PowerPC Mach-O header
+  // makes every Mac refuse the same way, Rosetta or not.
+  it.runIf(process.platform === 'darwin')('explains a binary built for a CPU this Mac cannot run', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'axiom-badarch-'));
+    try {
+      const header = Buffer.alloc(32);
+      header.writeUInt32LE(0xfeedfacf, 0); // MH_MAGIC_64
+      header.writeInt32LE(0x01000012, 4); // CPU_TYPE_POWERPC64
+      header.writeUInt32LE(2, 12); // MH_EXECUTE
+      const binary = join(dir, 'xctool');
+      writeFileSync(binary, header, { mode: 0o755 });
+      const r = await makeDefaultExec(5000, 64 * MB)(binary, []);
+      expect(r).toEqual({ stdout: '', stderr: "xctool is built for Apple Silicon (arm64); this Mac's CPU cannot run it.", code: 1 });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('still rejects on any other synchronous spawn failure', async () => {
+    // An empty executable fails with ENOEXEC, as a truncated download can.
+    const dir = mkdtempSync(join(tmpdir(), 'axiom-noexec-'));
+    try {
+      const binary = join(dir, 'xctool');
+      writeFileSync(binary, '', { mode: 0o755 });
+      await expect(makeDefaultExec(5000, 64 * MB)(binary, [])).rejects.toMatchObject({ code: 'ENOEXEC' });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

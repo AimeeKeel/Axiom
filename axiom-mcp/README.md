@@ -7,7 +7,7 @@ Model Context Protocol (MCP) server for Axiom's Apple-platform development skill
 - **Skills** — Apple-platform (iOS, iPadOS, macOS, watchOS, tvOS) development expertise as MCP Resources (on-demand loading)
 - **Commands** — Structured prompts as MCP Prompts
 - **Agents** — Autonomous auditors, retrievable as MCP Tools
-- **Profiling tools** — the bundled `xcprof` CLI exposed as MCP Tools (macOS + Xcode)
+- **Profiling tools** — the bundled `xcprof` CLI exposed as MCP Tools (Apple Silicon Mac + Xcode)
 - **Dual Distribution** — Works standalone or bundled with Claude Code plugin
 - **Hybrid Runtime** — Development mode (live files) or production mode (bundled)
 
@@ -188,9 +188,9 @@ Examples:
 
 ## MCP Tools
 
-Beyond the read-only skill-lookup tools (`axiom_get_catalog`, `axiom_search_skills`, `axiom_read_skill`, `axiom_get_agent`), the server wraps the bundled **`xcprof`** profiler so non-Claude-Code clients get the same Instruments workflow. These tools shell out to a macOS universal binary shipped inside the package (`dist/bin/xcprof`).
+Beyond the read-only skill-lookup tools (`axiom_get_catalog`, `axiom_search_skills`, `axiom_read_skill`, `axiom_get_agent`), the server wraps the bundled **`xcprof`** profiler so non-Claude-Code clients get the same Instruments workflow. These tools shell out to a macOS arm64 binary shipped inside the package (`dist/bin/xcprof`).
 
-**Requires macOS with Xcode installed.** `xcprof` drives `xctrace`, which is macOS-only — on other platforms the tools return an explanatory message instead of running.
+**Requires an Apple Silicon Mac with Xcode installed.** `xcprof` drives `xctrace`, which is macOS-only — on other platforms the tools return an explanatory message instead of running.
 
 | Tool | What it does | Read-only |
 |------|--------------|-----------|

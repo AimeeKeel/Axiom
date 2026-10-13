@@ -488,5 +488,41 @@ class TestBundledToolRoster(_InApple):
         self.assertNotIn("**Bundled tools**", c)
 
 
+# What `sysctl -n hw.optional.arm64` does on each host: Intel Macs have no such oid.
+APPLE_SILICON_SYSCTL = "echo 1"
+INTEL_SYSCTL = "echo \"sysctl: unknown oid 'hw.optional.arm64'\" >&2; exit 1"
+
+
+@unittest.skipUnless(sys.platform == "darwin", "the CPU probe runs only on macOS")
+class TestToolsNeedAppleSilicon(_InApple):
+    """The bundled tools ship arm64-only, so an Intel Mac must not be told they
+    are available — every call would fail with "bad CPU type in executable"."""
+
+    def announced(self, sysctl_script: str | None) -> tuple[bool, bool, bool]:
+        fake_bin = os.path.join(self.root, "fake-bin")
+        os.mkdir(fake_bin)
+        if sysctl_script is not None:
+            sysctl = os.path.join(fake_bin, "sysctl")
+            with open(sysctl, "w") as f:
+                f.write(f"#!/bin/sh\n{sysctl_script}\n")
+            os.chmod(sysctl, 0o755)
+        plugin_root, fake_xcode = fake_install(self.root)
+        c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode, "PATH": fake_bin}, plugin_root))
+        return ("Available at" in c, "**Bundled tools**" in c, "need an Apple Silicon Mac" in c)
+
+    def test_intel_mac_gets_the_apple_silicon_notice_instead_of_the_tools(self):
+        self.assertEqual(self.announced(INTEL_SYSCTL), (False, False, True))
+
+    def test_apple_silicon_mac_gets_the_tools(self):
+        self.assertEqual(self.announced(APPLE_SILICON_SYSCTL), (True, True, False))
+
+    def test_a_missing_probe_still_announces_the_tools(self):
+        self.assertEqual(self.announced(None), (True, True, False))
+
+    def test_a_sandbox_denied_probe_still_announces_the_tools(self):
+        # A denied read of the oid exits 0 with no output.
+        self.assertEqual(self.announced("exit 0"), (True, True, False))
+
+
 if __name__ == "__main__":
     unittest.main()
