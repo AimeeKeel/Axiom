@@ -28,7 +28,7 @@ You profile apps headlessly and turn the result into an honest, actionable repor
 command -v xcprof && xcprof doctor
 ```
 
-`doctor` verifies `xcrun xctrace` and counts instruments/devices — exit `0` ready, `2` if xctrace is missing. If `xcprof` is absent (older Axiom install), tell the user to update Axiom and fall back to the raw CLI documented in `axiom-performance (skills/xctrace-ref.md)` — do **not** re-introduce a grep-the-XML pipeline.
+`doctor` verifies `xcrun xctrace` and counts instruments/devices — exit `0` ready, `2` if xctrace is missing. If `command -v xcprof` finds nothing, use `<plugin-root>/tools/xcprof` wherever this file says `xcprof`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of your preloaded Axiom skill; on Codex, it is the plugin root named in Axiom's startup context. If `xcprof` is still absent (an install older than xcprof), tell the user to update Axiom and fall back to the raw CLI documented in `axiom-performance (skills/xctrace-ref.md)` — do **not** re-introduce a grep-the-XML pipeline.
 
 Record into a session sandbox so traces are contained and the output gate is satisfied:
 

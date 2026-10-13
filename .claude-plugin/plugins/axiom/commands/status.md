@@ -39,7 +39,7 @@ grep -r "Timer\|NotificationCenter\.default\.addObserver" --include="*.swift" | 
 
 ### Deployment Target Selection
 
-Check `command -v xcproject`. If unavailable, use Glob for `**/*.xcodeproj/project.pbxproj` and `**/*.xcodeproj/project.xcproj`, then Read the project and xcconfig declarations. Report the target/configuration and label the value "declared; effective value unverified". JSON5 has conditional keys and trailing commas; `jq` and `plutil` are not JSON5 readers. Do not substitute the first grep match for a deployment target.
+Check `command -v xcproject`. If that finds nothing, use `<plugin-root>/tools/xcproject` wherever this file says `xcproject`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of a loaded Axiom skill (load `axiom-tools` if none is); on Codex, it is the plugin root named in Axiom's startup context. If xcproject is unavailable, use Glob for `**/*.xcodeproj/project.pbxproj` and `**/*.xcodeproj/project.xcproj`, then Read the project and xcconfig declarations. Report the target/configuration and label the value "declared; effective value unverified". JSON5 has conditional keys and trailing commas; `jq` and `plutil` are not JSON5 readers. Do not substitute the first grep match for a deployment target.
 
 With `xcproject` available, inventory projects at any depth (dependency/cache directories are excluded):
 

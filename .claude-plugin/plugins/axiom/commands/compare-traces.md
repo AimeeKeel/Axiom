@@ -16,7 +16,7 @@ Diffs two Instruments `.trace` recordings with **xcprof compare** — function-l
 
 ## Steps
 
-1. **Verify the tool.** `command -v xcprof && xcprof doctor`. If `xcprof` is missing, the Axiom install is stale — tell the user to update Axiom.
+1. **Verify the tool.** `command -v xcprof && xcprof doctor`. If that finds nothing, use `<plugin-root>/tools/xcprof` wherever this file says `xcprof`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of a loaded Axiom skill (load `axiom-tools` if none is); on Codex, it is the plugin root named in Axiom's startup context. If `xcprof` is still absent, the Axiom install is stale — tell the user to update Axiom.
 
 2. **Get two traces.** Either the user already has `baseline.trace` + `current.trace`, or capture them. Both recordings MUST exercise the **same workload** (same UI flow / benchmark), or the deltas measure workload differences, not regressions:
    ```bash

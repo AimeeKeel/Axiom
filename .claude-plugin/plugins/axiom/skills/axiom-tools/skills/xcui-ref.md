@@ -4,11 +4,11 @@ xcui makes iOS-simulator UI and accessibility testing scriptable for coding harn
 
 ## Invocation
 
-On **Claude Code**, `xcui` is already on PATH — Axiom's session hook adds the plugin's `tools/` folder. Run `xcui <subcommand>`. If `command -v xcui` finds nothing, call it by its absolute path under the folder named in the session context's **Bundled tools** line; otherwise treat it as absent (below).
+On **Claude Code**, `xcui` is already on PATH — Axiom's session hook adds the plugin's `tools/` folder. Run `xcui <subcommand>`. If `command -v xcui` finds nothing (hooks off or `--bare`), substitute `<plugin-root>/tools/xcui` in the examples, where `<plugin-root>` is two levels above the `Base directory for this skill:` path Claude Code printed when it loaded an Axiom skill; if that file is missing, treat it as absent (below).
 
 On **Codex plugin installs**, use `<plugin-root>/tools/xcui`, where `<plugin-root>` is the directory containing `.codex-plugin/plugin.json` (also supplied in Axiom's startup context). The examples below use the bare command name; substitute this absolute path unless `command -v xcui` confirms PATH availability. Check the file is executable and run `--help` before using it; report missing files, permission errors, or unsupported architecture as unavailable capabilities.
 
-On **Pi and MCP-only installs there is no bundled binary**: those install skills only, and no install path puts Axiom's tools on `PATH`. Check with `command -v xcui` before using any `xcui` command in this file.
+On **Pi**, the binary is in the Axiom clone but not on `PATH` unless the user linked it; **MCP-only installs** have no binary at all. Check with `command -v xcui` before using any `xcui` command in this file.
 
 If it is absent, you have two working options and should say which you took:
 - Put it on PATH — clone the repo and symlink `.claude-plugin/plugins/axiom/tools/xcui` (see the Pi install guide). This is the only way to get `resize sweep`, `wait`, `assert`, `a11y`, `dialog`, and `voiceover`, which have no AXe equivalent.

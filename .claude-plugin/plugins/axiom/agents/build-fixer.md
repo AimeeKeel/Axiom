@@ -87,7 +87,7 @@ If user mentions ANY of these, it's definitely an environment issue:
 
 ## Capture Build and Test Diagnostics
 
-Before the next necessary build or test, resolve `tools/axbuild` under the **actual loaded package** in Claude Code (the folder in the session context's **Bundled tools** line; in a subagent, `command -v axbuild`) or Codex (`<plugin-root>/tools/`), or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.
+Before the next necessary build or test, resolve `tools/axbuild` under the **actual loaded package** in Claude Code (`command -v axbuild`; if that finds nothing, `tools/axbuild` two levels above the `Base directory for this skill:` path of a loaded Axiom skill) or Codex (`<plugin-root>/tools/`), or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.
 
 Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
 
@@ -216,7 +216,7 @@ The workflows below require evidence for the specific cause before cleanup. Scop
 
 ```bash
 # Remove only THIS project's DerivedData folder; other projects and running builds use the rest
-DD_SETTINGS=$(mktemp "${TMPDIR:-/tmp}/axiom-settings.XXXXXX")
+DD_SETTINGS=$(mktemp "${TMPDIR:-/tmp}/build-settings.XXXXXX")
 # Pass the same -workspace or -project as the build (a CocoaPods folder has both)
 xcodebuild -showBuildSettings <WORKSPACE_OR_PROJECT_ARGS> -scheme <ACTUAL_SCHEME_NAME> > "$DD_SETTINGS"
 PROJECT_DD=$(sed -n 's/^ *BUILD_DIR = \(.*\)\/Build\/Products$/\1/p' "$DD_SETTINGS" | head -1)

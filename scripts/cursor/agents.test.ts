@@ -208,7 +208,7 @@ test("routes agent binary workflows through Axiom MCP tools and gives xcui a deg
     assert.ok(content, agent);
     for (const tool of tools) assert.match(content, new RegExp(`\\b${tool}\\b`), `${agent}: ${tool}`);
     assert.match(content, /If a required MCP tool is unavailable, stop and report that the Axiom MCP integration is missing/);
-    assert.doesNotMatch(content, /fall back to (?:the )?(?:raw CLI|legacy manual parsing)|(?:xcsym|xcprof) not found|If (?:`xcprof`|xcsym) is (?:NOT )?(?:absent|present)/i, agent);
+    assert.doesNotMatch(content, /fall back to (?:the )?(?:raw CLI|legacy manual parsing)|(?:xcsym|xcprof) not found|If (?:`xcprof`|xcsym) is (?:NOT |still )?(?:absent|present)/i, agent);
     assert.doesNotMatch(content, /XCSYM_DSYM_PATHS=[^\n]*`axiom_(?:xclog|xcsym|xcprof)_/, agent);
   }
   for (const [agent, content] of transformed) {

@@ -241,7 +241,7 @@ xcrun simctl keychain booted add-root-cert /path/to/ca.pem
 
 **Drive input through `xcui` when it is available.** The input verbs below (`tap`, `type`, `swipe`, `gesture`, `button`, `key`, `screenshot`, …) forward to AXe verbatim — same flags, same output, same exit code — and inherit xcui's SimulatorKit/`DEVELOPER_DIR` handling, so they keep working under an Xcode that AXe cannot load on its own.
 
-**Check first: `command -v xcui`.** It is on PATH automatically only on Claude Code. On Codex, Pi, and MCP installs no binary ships, so if it is absent, drop the `xcui ` prefix and run the same command as `axe …` — identical flags — then handle `DEVELOPER_DIR` yourself only if bare AXe reports a SimulatorKit load failure.
+**Check first: `command -v xcui`.** If that finds nothing, use `<plugin-root>/tools/xcui` wherever this file says `xcui`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of your preloaded Axiom skill; on Codex, it is the plugin root named in Axiom's startup context. Pi and MCP installs have no bundled binary on PATH, so if neither works, drop the `xcui ` prefix and run the same command as `axe …` — identical flags — then handle `DEVELOPER_DIR` yourself only if bare AXe reports a SimulatorKit load failure.
 
 `axe describe-ui` (what xcui itself parses) and `axe stream-video` / `record-video` (long-running) are always called bare.
 

@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Uses **xcui** (+ AXe + simctl) to make simulator UI and accessibility testing scriptable: tap by accessibility id, wait on conditions, assert on the a11y tree, toggle accessibility settings, dismiss dialogs.
 
+Check `command -v xcui` first. If that finds nothing, use `<plugin-root>/tools/xcui` wherever this file says `xcui`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of a loaded Axiom skill (load `axiom-tools` if none is); on Codex, it is the plugin root named in Axiom's startup context.
+
 ## Steps
 
 1. Run `xcui doctor` — confirms AXe is installed (offer `xcui doctor --install` if missing) and a simulator is booted

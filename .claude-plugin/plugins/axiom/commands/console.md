@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Captures iOS simulator console output using **xclog**, combining print/debugPrint (stdout/stderr) with os_log/Logger into structured JSON.
 
+Check `command -v xclog` first. If that finds nothing, use `<plugin-root>/tools/xclog` wherever this file says `xclog`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of a loaded Axiom skill (load `axiom-tools` if none is); on Codex, it is the plugin root named in Axiom's startup context.
+
 ## Steps
 
 1. Read `.axiom/preferences.yaml` — if it exists and has a `simulator` section, use saved `device`, `deviceUDID`, and `bundleId`. If the file exists but is malformed, skip and fall back to discovery
