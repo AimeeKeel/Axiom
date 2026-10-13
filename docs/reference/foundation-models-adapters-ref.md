@@ -53,7 +53,7 @@ Questions developers ask that this reference answers:
 
 ## Documentation Scope
 
-This page documents the `foundation-models-adapters-ref` skill — the API reference half of the trio.
+This page documents the `foundation-models-adapters-ref` skill (in the `axiom-ai` suite) — the API reference for custom adapters.
 
 - For **when to train a custom adapter** (decision discipline, maintenance contract, pressure scenarios), see [Foundation Models Adapters](/skills/integration/foundation-models-adapters)
 - For **failure modes** (`compatibleAdapterNotFound` post-OS-update, hyphen-in-adapter-name, tool calls silent from adapter, context-window over-consumption), see [Foundation Models Adapters Diagnostics](/diagnostic/foundation-models-adapters-diag)

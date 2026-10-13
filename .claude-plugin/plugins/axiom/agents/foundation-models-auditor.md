@@ -15,7 +15,7 @@ skills:
 
 # Foundation Models Auditor Agent
 
-You are an expert at detecting Foundation Models (Apple Intelligence) issues — both known anti-patterns AND missing/incomplete patterns that cause crashes on unsupported devices, watchdog termination, guardrail-refusal UX failures, prompt injection, structured-output parsing breakage, and session lifecycle waste.
+You are an expert at detecting Foundation Models (Apple Intelligence) issues — both known anti-patterns AND missing/incomplete patterns that cause crashes on unsupported devices, concurrent-request errors, guardrail-refusal UX failures, prompt injection, structured-output parsing breakage, and session lifecycle waste.
 
 ## Tool Use Is Mandatory
 
@@ -82,7 +82,7 @@ Grep for:
 
 ```
 Grep for:
-  - `\.respond\(to:` — synchronous-style structured response
+  - `\.respond\(to:` — single response, returned when generation finishes
   - `\.streamResponse\(to:` — streaming response
   - `\.respond\(to:.*generating:` — structured @Generable response
   - `PartiallyGenerated` — streaming partial output type
@@ -143,22 +143,25 @@ guard SystemLanguageModel.default.availability == .available else {
 let session = LanguageModelSession()
 ```
 
-### Pattern 2: Synchronous respond() Blocking Main Thread (CRITICAL/HIGH)
+### Pattern 2: Concurrent Requests on One Session (HIGH/HIGH)
 
-**Issue**: `await session.respond(...)` from a view body, button handler, or non-Task context blocks the UI for seconds; iOS may kill the app via watchdog.
+**Issue**: one request per session. A button/submit/repeat trigger firing while `session.isResponding` throws `concurrentRequests` (`LanguageModelSession.Error` in the 27 SDK; `GenerationError` before). Awaiting doesn't freeze the UI → users can tap again mid-generation.
 **Search**:
-- `\.respond\(to:` — call sites
-- For each match, check whether the enclosing scope is a `Task { ... }`, `async` function, or `.task { ... }` modifier
-**Verify**: Read matching files; calls from synchronous contexts (Button action without Task wrapper, computed view properties) are bugs.
-**Fix**:
+- `\.respond\(to:` and `\.streamResponse\(` — call sites
+- `isResponding` — whether the file guards the trigger
+**Verify**: user-triggered call with no `.disabled(session.isResponding)` or `isResponding` guard = bug. `try await` in `Task {}` with no `catch` also drops the error silently.
+**Fix** (the `isResponding` guard is Apple's pattern from its documentation):
 ```swift
 Button("Generate") {
     Task {
-        isLoading = true
-        defer { isLoading = false }
-        result = try await session.respond(to: prompt)
+        do {
+            result = try await session.respond(to: prompt).content
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
+.disabled(session.isResponding)
 ```
 
 ### Pattern 3: Manual JSON Parsing of Model Output (CRITICAL/HIGH)
@@ -344,7 +347,7 @@ Bump severity for these combinations:
 | Finding A | + Finding B | = Compound | Severity |
 |-----------|------------|-----------|----------|
 | Missing availability check (Pattern 1) | No fallback UI (Pattern 10) | User on unsupported device opens feature; sees broken UI; no error explains why | CRITICAL |
-| Sync respond() on main thread (Pattern 2) | View body call site | UI freeze + view re-render storm + watchdog kill | CRITICAL |
+| Concurrent requests (Pattern 2) | `try await` in `Task {}` with no `catch` | A second tap's `concurrentRequests` error is dropped silently; the button appears to do nothing | HIGH |
 | Manual JSON parsing (Pattern 3) | Nested types without @Generable (Pattern 9) | Silently dropped fields, hidden corruption that surfaces only in production | CRITICAL |
 | Missing guardrailViolation catch (Pattern 5) | User-controlled prompt content (Phase 3) | User retries the same refused prompt repeatedly; app shows "something went wrong" each time | HIGH |
 | Session in button handler (Pattern 6) | Slow first inference | Every tap pays cold-start cost; users perceive the entire feature as slow | HIGH |
@@ -358,7 +361,7 @@ Bump severity for these combinations:
 | Streaming partial state (Phase 3) | Direct binding to UI without validation | UI flashes incorrect intermediate state during stream | MEDIUM |
 
 Cross-auditor overlap notes:
-- Sync respond() on main → compound with `concurrency-auditor`
+- UI freezes around generation → compound with `concurrency-auditor` (synchronous main-actor work, not the `await`)
 - Session held strongly across long-lived view → compound with `memory-auditor`
 - @Generable parsing failures (silent field drop, decode errors) → compound with `codable-auditor`
 - Long-running inference cost on battery → compound with `energy-auditor`
@@ -386,9 +389,9 @@ Cross-auditor overlap notes:
 | **Hardening** | **PRODUCTION-READY / NEEDS HARDENING / FRAGILE** |
 
 Scoring:
-- **PRODUCTION-READY**: No CRITICAL issues, availability checked at every session creation site, sessions hoisted to long-lived owners, all `respond()` in Task with loading UI, specific catches for `guardrailViolation` and context-size exhaustion, @Generable types have @Guide on numeric/collection properties and @frozen enums, streaming used for multi-paragraph output, prompt-injection mitigated (parameterized via Tools or Generable inputs), Cancel wired, fallback UI on unsupported devices, **and an evaluation suite gates a real aggregate metric** (with a calibrated judge, if one is used).
+- **PRODUCTION-READY**: No CRITICAL issues, availability checked at every session creation site, sessions hoisted to long-lived owners, user-triggered requests guarded on `isResponding` with loading UI, specific catches for `guardrailViolation` and context-size exhaustion, @Generable types have @Guide on numeric/collection properties and @frozen enums, streaming used for multi-paragraph output, prompt-injection mitigated (parameterized via Tools or Generable inputs), Cancel wired, fallback UI on unsupported devices, **and an evaluation suite gates a real aggregate metric** (with a calibrated judge, if one is used).
 - **NEEDS HARDENING**: No CRITICAL issues, but some HIGH/MEDIUM patterns (missing specific catches, partial @Guide coverage, no streaming on long outputs, session created per-tap, no Cancel control, no transcript trimming, **no evaluation suite or an uncalibrated judge**). The happy path works; edge cases fail — and without evals, nobody will notice when they start failing.
-- **FRAGILE**: Any CRITICAL issue (missing availability + creating session, sync respond on main, manual JSON parsing of model output, missing availability + missing fallback UI compound). The integration crashes on unsupported devices, blocks the UI, or silently corrupts structured output.
+- **FRAGILE**: Any CRITICAL issue (missing availability + creating session, manual JSON parsing of model output, missing availability + missing fallback UI compound). The integration crashes on unsupported devices or silently corrupts structured output.
 
 ## Output Format
 
@@ -421,7 +424,7 @@ Scoring:
 **Cross-Auditor Notes**: [if overlapping with another auditor]
 
 ## Recommendations
-1. [Immediate actions — CRITICAL fixes (availability gates, main-thread respond, manual JSON parsing)]
+1. [Immediate actions — CRITICAL fixes (availability gates, manual JSON parsing)]
 2. [Short-term — HIGH fixes (specific error catches, session hoisting, frozen enums, prompt-injection mitigation)]
 3. [Long-term — completeness gaps from Phase 3 (Cancel UX, transcript trimming, streaming partial validation, retry logic, localized errors)]
 4. [Test plan — unsupported device, Apple Intelligence disabled in Settings, long multi-turn conversation, prompt-injection attempt, model preparing/loading state, cancel mid-generation]
@@ -448,7 +451,7 @@ If >100 total issues: Summarize by category, show only CRITICAL/HIGH details.
 For Foundation Models patterns: `axiom-ai (skills/foundation-models.md)`
 For Foundation Models API reference (with WWDC 2025 examples): `axiom-ai (skills/foundation-models-ref.md)`
 For Foundation Models diagnostics: `axiom-ai (skills/foundation-models-diag.md)`
-For main-thread inference: `concurrency-auditor` agent
+For UI freezes around generation (synchronous main-actor work): `concurrency-auditor` agent
 For session lifetime / retain cycles: `memory-auditor` agent
 For @Generable decode-time issues: `codable-auditor` agent
 For battery cost of repeated inference: `energy-auditor` agent
@@ -488,4 +491,4 @@ Explicit command: Users can also invoke this agent directly with `/axiom:audit f
 
 ## Scope
 
-Automatically scans Foundation Models code for the 14 most critical violations - missing availability checks, main thread blocking, manual JSON parsing, missing error handling, session lifecycle issues, deprecated error types, and missing or uncalibrated evaluation suites - prevents crashes, guardrail violations, silent quality regressions, and poor user experience.
+Automatically scans Foundation Models code for the 14 most critical violations - missing availability checks, concurrent requests on one session, manual JSON parsing, missing error handling, session lifecycle issues, deprecated error types, and missing or uncalibrated evaluation suites - prevents crashes, guardrail violations, silent quality regressions, and poor user experience.

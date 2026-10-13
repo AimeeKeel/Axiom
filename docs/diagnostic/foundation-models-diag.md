@@ -1,126 +1,85 @@
 ---
 name: foundation-models-diag
-description: Context exceeded, guardrail violations, slow generation — Foundation Models diagnostics with production crisis defense
+description: Unavailable model, context exceeded, guardrail violations, slow generation — systematic Foundation Models diagnostics
 ---
 
 # Foundation Models Diagnostics
 
-Systematic troubleshooting for Apple's Foundation Models framework with production crisis defense patterns.
+Systematic troubleshooting for Apple's Foundation Models framework: an unavailable model, context and guardrail errors, wrong or inconsistent output, slow generation, and a frozen UI. Most problems come from asking a 3-billion-parameter, device-scale model for world knowledge, from its context limit, or from availability requirements, not from framework bugs.
 
-## Overview
+## Symptoms This Diagnoses
 
-Diagnostic workflows for Foundation Models issues covering context exceeded errors, guardrail violations, slow generation, availability problems, and unexpected output. Includes production crisis scenario defense.
+Use when you're experiencing:
+- `SystemLanguageModel.default.availability` reports `.unavailable`
+- Generation fails with `LanguageModelError.contextSizeExceeded`
+- Generation fails with `.guardrailViolation`, or the model declines with `.refusal`
+- Generation fails with `.unsupportedLanguageOrLocale`
+- The model makes up facts or gives wrong answers
+- Manually parsed JSON output fails to decode
+- `@Generable` won't resolve in Swift Playgrounds, a recursive `@Generable` type crashes, or a dynamic schema throws `SchemaError.undefinedReferences`
+- Output differs on every run when you need it to be consistent
+- The first request is slow, or users wait seconds before anything appears
+- The UI freezes while the model generates
+- Error alerts lost their recovery text after you moved to the 27 SDK's error types
+- A feature that worked in testing fails for a large share of users after launch
 
-## When to Use This Diagnostic
+## Example Prompts
 
-Use this diagnostic when:
-- Generation fails with context exceeded
-- Content triggers guardrail violations
-- Generation is slower than expected
-- Model reports unavailable
-- Output doesn't match expected format
-- @Generable parsing fails
-- Streaming stops mid-response
-- 20% of users see errors on AI feature launch
+- "Why does my LanguageModelSession fail with contextSizeExceeded?"
+- "Foundation Models says it's unavailable on my test device. Why?"
+- "How should I handle guardrail violations in my app?"
+- "The model makes up facts. How do I get accurate answers?"
+- "My UI freezes while the model is generating."
+- "20% of users see errors after we launched our AI feature. Where do I start?"
+- "My recursive @Generable type crashes. What's wrong?"
 
-## Diagnostic Decision Tree
+## Diagnostic Workflow
 
-### Model Won't Start
-1. Check device compatibility (A17+ or M-series)
-2. Verify iOS 26+ version
-3. Check available disk space
-4. Try after device restart
+Your assistant guides you through three steps.
 
-### Generation Fails
+### Step 1: Gather Evidence
 
-#### Context Exceeded
-- Reduce input size
-- Chunk large documents
-- Use summarization first
-- Implement sliding window
+Before changing code, your assistant checks:
+1. Availability, and the reason when the model is unavailable
+2. Whether the current language is in `supportedLanguages`
+3. How much of the context window the transcript uses, against the limit in `SystemLanguageModel.default.contextSize` (8,192 tokens for the 27 on-device model, 4,096 for 26)
+4. Load time, token counts, and generation time in the Instruments Foundation Models template
+5. The transcript itself, for unusual or repeated entries
 
-#### Guardrail Violation
-- Check content for prohibited topics
-- Avoid generating personal information
-- Review @Guide constraints
-- Consider content pre-filtering
+### Step 2: Identify the Problem Category
 
-### Output Wrong Format
+| Symptom | Likely cause |
+|---------|--------------|
+| `.unavailable(.deviceNotEligible)` | The device can't run Apple Intelligence |
+| `.unavailable(.appleIntelligenceNotEnabled)` | Apple Intelligence is turned off in Settings |
+| `.unavailable(.modelNotReady)` | The model is still downloading; retry later |
+| `contextSizeExceeded` | A long conversation or verbose prompts |
+| `guardrailViolation` or `refusal` | A safety guardrail tripped, or the model itself declined |
+| `unsupportedLanguageOrLocale` | A language the model doesn't support |
+| Made-up facts | Asking for world knowledge the model doesn't have |
+| Slow first request | The model loading on first use |
+| UI frozen | Synchronous work on the main actor around generation, not the `await` itself |
 
-#### @Generable Parsing Fails
-- Verify all properties have defaults or are Optional
-- Check @Guide descriptions are clear
-- Simplify nested types
-- Add explicit examples in prompt
+### Step 3: Apply the Targeted Pattern
 
-#### Missing Fields
-- Make fields Optional
-- Provide clearer @Guide descriptions
-- Use simpler types (String vs custom enum)
-
-### Too Slow
-- Profile with Instruments
-- Reduce output size limits
-- Use streaming for perceived performance
-- Consider chunking long responses
-
-### UI Frozen
-- Use async/await properly
-- Never block main thread
-- Show loading state
-- Implement timeout handling
-
-## Quick Reference Table
-
-| Symptom | Pattern | Fix |
-|---------|---------|-----|
-| Context exceeded | Input too large | Chunk/summarize input |
-| Guardrail violation | Prohibited content | Filter input/adjust prompt |
-| Parsing fails | Complex @Generable | Simplify type structure |
-| Slow generation | Large output | Streaming/chunking |
-| UI frozen | Main thread blocked | async/await on background |
-| Unavailable | Device/OS issue | Check compatibility |
-
-## Production Crisis Scenario
-
-**Scenario**: AI feature launches, 20% of users see errors
-
-### Immediate Triage (First 15 Minutes)
-1. Check device distribution — errors on older devices?
-2. Check error types — context exceeded vs guardrail?
-3. Check input sources — specific content triggering issues?
-
-### Quick Mitigations
-- Add fallback UI for errors
-- Implement retry with exponential backoff
-- Cache successful responses
-- Add input length validation
-
-### Root Cause Analysis
-- Review error logs by device type
-- Test with production-like inputs
-- Profile with Instruments on affected device class
-
-## Pressure Defense
-
-### When PM Demands "Just Ship It"
-- Document specific failure rates
-- Show user impact (crashes, bad UX)
-- Propose staged rollout with monitoring
-
-### When Tempted to Disable AI Feature
-- Consider graceful degradation instead
-- Add feature flags for problematic inputs
-- Implement client-side guardrails
-
-## Related Resources
-
-- [foundation-models](/skills/integration/foundation-models) – Discipline-enforcing patterns
-- [foundation-models-ref](/reference/foundation-models-ref) – Complete API reference
-- [WWDC 2025/286](https://developer.apple.com/videos/play/wwdc2025/286/) – Introduction
+- **Availability** – a fallback UI for each unavailable reason, a retry for `.modelNotReady`, and a link to Settings for `.appleIntelligenceNotEnabled`
+- **Errors** – condensing the transcript when the context fills, separate handling for guardrail violations and refusals, a language check, and catching every error case after the 27 SDK replaced `LanguageModelSession.GenerationError`
+- **Output quality** – tool calling for external data, `@Generable` instead of manual JSON parsing, and greedy sampling or a lower temperature for consistent output
+- **Performance** – prewarming the session, streaming partial results, `includeSchemaInPrompt: false` for repeat requests, and splitting a complex prompt into steps
+- **Frozen UI** – find the synchronous main-actor work with the Hangs instrument and move it off the main actor
+- **Schemas** – `DynamicGenerationSchema` for Swift Playgrounds and recursive types, and declaring every referenced schema in `dependencies`
 
 ## Documentation Scope
 
-This is a **diagnostic skill** — systematic troubleshooting with mandatory workflows and pressure scenario defense.
+This page documents the `foundation-models-diag` skill (in the `axiom-ai` suite), which your assistant loads when a Foundation Models feature fails, refuses, runs slowly, or returns wrong output. To scan your code for missing availability checks, concurrent requests on one session, and manual JSON parsing, run `/axiom:audit foundation-models`, which launches the foundation-models-auditor agent. When a guardrail blocks content you believe is legitimate, the skill hands off to the `foundation-models-guardrails` skill. The skill file also holds a quick-reference table with fix-time estimates and a worked launch incident: 20% of users see errors because their devices can't run Apple Intelligence, fixed with an availability check, a fallback UI, and Xcode's scheme override for testing each unavailable reason.
 
-**Vs Reference**: Diagnostic skills enforce workflows and handle pressure scenarios. Reference skills provide comprehensive API information.
+## Related
+
+- [foundation-models](/skills/integration/foundation-models) – Patterns that prevent these problems, such as availability checks, streaming, `@Generable`, and tool calling
+- [foundation-models-ref](/reference/foundation-models-ref) – Complete API reference, including the error types and token sizing
+- [foundation-models-auditor](/agents/foundation-models-auditor) – Scans your code for missing availability checks, concurrent requests on one session, and manual JSON parsing
+- [audit-foundation-models](/commands/integration/audit-foundation-models) – The command that runs the Foundation Models auditor
+
+## Resources
+
+**WWDC**: 2025-286, 2025-301

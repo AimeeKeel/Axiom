@@ -177,8 +177,8 @@
       "area": "foundation-models",
       "agent": "foundation-models-auditor",
       "group": "Integration",
-      "detects": "Missing availability checks, main thread blocking, manual JSON parsing, guardrail handling",
-      "docsDetects": "Availability checks, main-thread blocking, guardrail handling",
+      "detects": "Missing availability checks, concurrent requests on one session, manual JSON parsing, guardrail handling",
+      "docsDetects": "Availability checks, concurrent requests, guardrail handling",
       "docPath": "/commands/integration/audit-foundation-models"
     },
     {

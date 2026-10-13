@@ -1,6 +1,6 @@
 ---
 name: foundation-models
-description: On-device AI with Apple's Foundation Models framework (iOS 26+) — prevents context overflow, blocking UI, wrong model use cases
+description: On-device AI with Apple's Foundation Models framework (iOS 26+) — prevents context overflow, concurrent requests, wrong model use cases
 ---
 
 # Foundation Models
@@ -9,9 +9,9 @@ Discipline-enforcing skill for Apple's Foundation Models framework covering Lang
 
 ## Overview
 
-On-device AI patterns for iOS 26+ that prevent context overflow, UI blocking, wrong model use cases, and manual JSON parsing when @Generable should be used.
+On-device AI patterns for iOS 26+ that prevent context overflow, concurrent requests, wrong model use cases, and manual JSON parsing when @Generable should be used.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when:
 - Implementing on-device AI features
@@ -42,16 +42,22 @@ let result: MyType = try await session.respond(
 )
 ```
 
-### Blocking Main Thread
+### Starting a Second Request While One Is Running
 ```swift
-// ❌ WRONG: Blocking UI
-let response = try await session.respond(to: longPrompt)
-label.text = response.content  // UI frozen during generation
-
-// ✅ CORRECT: Streaming
-for try await snapshot in session.streamResponse(to: prompt) {
-    await MainActor.run { label.text = snapshot.content }
+// ❌ WRONG: a second tap starts a second request on the same session,
+// which throws concurrentRequests
+Button("Generate") {
+    Task { result = try await session.respond(to: prompt).content }
 }
+
+// ✅ CORRECT: no second request while the first is running
+Button("Generate") {
+    Task {
+        do { result = try await session.respond(to: prompt).content }
+        catch { errorMessage = error.localizedDescription }
+    }
+}
+.disabled(session.isResponding)
 ```
 
 ### One Giant Prompt
