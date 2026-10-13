@@ -6,7 +6,7 @@ import { execSync } from 'node:child_process';
 import { VERSION_RE, VERSION_CORE } from './version-regex.js';
 import { isCursorGeneratedPath } from './cursor-output.js';
 import { isCodexGeneratedPath } from './codex-output.js';
-import { DOC_STAT_FILES, docStatValues, applyDocStats, checkMarkerSpec } from './doc-stats.js';
+import { DOC_STAT_FILES, docStatValues, foldDocStats } from './doc-stats.js';
 import { isGeneratedSubSkill } from './inline-auditors.ts';
 import { manifestUpdates } from './manifest.ts';
 
@@ -302,31 +302,31 @@ try {
   //    hit under axiom-wz9k, generalized. Each maintained number is wrapped in an
   //    invisible <!--ax:KEY-->N<!--/ax--> marker; rewrite it from the live walk.
   //    Parity is enforced by pre-deploy.ts (12j). Config: scripts/doc-stats.js.
-  const docValues = docStatValues(statsData);
-  for (const { file: relPath, markers: spec } of DOC_STAT_FILES) {
-    const docPath = path.join(root, relPath);
+  foldDocStats(updates, DOC_STAT_FILES, root, docStatValues(statsData), (docPath, relPath) => {
     if (!fs.existsSync(docPath)) {
       throw new Error(
         `Doc-stat file not found: ${relPath} — fix the path in scripts/doc-stats.js (DOC_STAT_FILES).`
       );
     }
-    const original = fs.readFileSync(docPath, 'utf8');
-    const problems = checkMarkerSpec(original, spec);
-    if (problems.length) {
-      throw new Error(
-        `${relPath} doc-stat markers don't match their spec — ${problems.join('; ')}. ` +
-        `Restore the markers around its counts, or update its entry in scripts/doc-stats.js.`
-      );
-    }
-    const { content: rewritten } = applyDocStats(original, docValues);
-    if (rewritten !== original) {
-      updates.push({ path: docPath, content: rewritten, label: relPath });
-    }
+    return fs.readFileSync(docPath, 'utf8');
+  });
+
+  // Every path once: a second update for the same file fails the second rename and loses
+  // one rewrite. Checked before --tag's preflight so a refusal there can't hide it.
+  const duplicates = updates.map((u) => u.path).filter((p, i, all) => all.indexOf(p) !== i);
+  if (duplicates.length) {
+    throw new Error(`set-version would write ${[...new Set(duplicates)].map((p) => path.relative(root, p)).join(', ')} more than once; merge those updates`);
   }
 
   // --tag preflight: refuse on dirty tree (other than expected files) or existing tag
   if (tagFlag) {
-    const expectedRelative = new Set(updates.map(u => path.relative(root, u.path)));
+    // Only files this run will actually change may be dirty. Every update is queued even when
+    // its content already matches disk (package.json, config.ts, marketplace.json…), so trusting
+    // the whole queue let an uncommitted version bump, or a hand edit to any always-queued file,
+    // pass this check and tag a HEAD that lacks it.
+    const expectedRelative = new Set(updates
+      .filter((u) => !fs.existsSync(u.path) || fs.readFileSync(u.path, 'utf8') !== u.content)
+      .map((u) => path.relative(root, u.path)));
     let status;
     try {
       status = execSync('git status --porcelain', { cwd: root, encoding: 'utf8' });

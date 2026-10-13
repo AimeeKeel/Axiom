@@ -19,6 +19,7 @@ import {
   docStatValues,
   DOC_STAT_FILES,
   DOC_STAT_KEYS,
+  foldDocStats,
 } from "./doc-stats.js";
 
 // Canonical stats shape (mirrors docs/.vitepress/theme/stats.json) used to keep
@@ -181,7 +182,7 @@ describe("module config", () => {
     // Asserting the files EXIST beats asserting a path prefix: the registry now
     // includes README.md (outside docs/), and a registered-but-deleted page
     // would otherwise fail only at release time inside pre-deploy.
-    assert.equal(DOC_STAT_FILES.length, 10);
+    assert.equal(DOC_STAT_FILES.length, 12);
     for (const { file, markers } of DOC_STAT_FILES) {
       assert.ok(file.endsWith(".md"), `${file} should be markdown`);
       assert.ok(
@@ -204,5 +205,33 @@ describe("module config", () => {
         assert.equal(found, expected, `${file}: spec says ${expected} '${key}' marker(s), file has ${found}`);
       }
     }
+  });
+});
+
+describe("foldDocStats", () => {
+  const files = [{ file: "README.md", markers: { agents: 1 } }];
+  it("counts on top of an update already queued for the same path, instead of re-reading the disk", () => {
+    const updates = [{ path: "/r/README.md", content: "<!--ax:agents-->1<!--/ax--> fresh-table", label: "README.md" }];
+    foldDocStats(updates, files, "/r", VALUES, () => "<!--ax:agents-->1<!--/ax--> stale-table");
+    assert.deepEqual(updates, [{ path: "/r/README.md", content: `<!--ax:agents-->${VALUES.agents}<!--/ax--> fresh-table`, label: "README.md" }]);
+  });
+  it("leaves a file whose counts are already current out of the write set", () => {
+    const updates: Array<{ path: string; content: string; label: string }> = [];
+    foldDocStats(updates, files, "/r", VALUES, () => `<!--ax:agents-->${VALUES.agents}<!--/ax-->`);
+    assert.deepEqual(updates, []);
+  });
+  it("refuses a file whose markers don't match its spec", () => {
+    assert.throws(() => foldDocStats([], files, "/r", VALUES, () => "no markers here"), /README\.md doc-stat markers don't match/);
+  });
+  it("queues a file read from disk when nothing is pending for it", () => {
+    const updates: Array<{ path: string; content: string; label: string }> = [];
+    foldDocStats(updates, files, "/r", VALUES, () => "<!--ax:agents-->1<!--/ax-->");
+    assert.deepEqual(updates, [{ path: "/r/README.md", content: `<!--ax:agents-->${VALUES.agents}<!--/ax-->`, label: "README.md" }]);
+  });
+});
+
+describe("DOC_STAT_FILES", () => {
+  it("names each file once, so one file never gets two competing updates", () => {
+    assert.equal(new Set(DOC_STAT_FILES.map((f) => f.file)).size, DOC_STAT_FILES.length);
   });
 });

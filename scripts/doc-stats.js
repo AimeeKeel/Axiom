@@ -16,7 +16,10 @@
 //
 // Consumed by both set-version.js (ESM .js) and pre-deploy.ts (TS, via
 // `from './doc-stats.js'`), mirroring scripts/version-regex.js. I/O free:
-// callers read/write files; these functions take and return strings.
+// callers read/write files; these functions take strings (or, for foldDocStats,
+// an injected reader) and never touch the filesystem.
+
+import path from 'node:path';
 
 /**
  * Resolve a stats.json object to the integer each marker key should hold.
@@ -53,7 +56,11 @@ export const DOC_STAT_KEYS = Object.keys(docStatValues({}));
  */
 export const DOC_STAT_FILES = [
   { file: "docs/start/install.md", markers: { skills: 1 } },
-  { file: "docs/start/codex-install.md", markers: { skills: 1, agents: 1, commands: 1 } },
+  { file: "docs/start/claude-app-install.md", markers: { routers: 1, skills: 1, commands: 1, agents: 1 } },
+  // Ships inside every installed copy of the plugin.
+  { file: ".claude-plugin/plugins/axiom/README.md", markers: { routers: 1, skills: 1, agents: 2, commands: 1 } },
+  // The "Differences from Claude Code" table restates agents twice and commands once.
+  { file: "docs/start/codex-install.md", markers: { skills: 1, agents: 3, commands: 2 } },
   { file: "docs/start/skill-map.md", markers: { routers: 3, skills: 2, agents: 2, commands: 2 } },
   // index.md states commands + agents twice (category bullets + a Total line).
   { file: "docs/start/index.md", markers: { discipline: 1, reference: 1, diagnostic: 1, agents: 2, commands: 2, skills: 1 } },
@@ -140,4 +147,36 @@ export function checkMarkerSpec(content, spec) {
     }
   }
   return problems;
+}
+
+/**
+ * Queue each DOC_STAT_FILES rewrite onto `updates` (set-version.js's atomic write set).
+ * A file another step already queued (the root README's stats block, the plugin README's
+ * generated tables) is counted on top of that queued content, not re-read: two updates
+ * for one path lose one rewrite and fail the second rename. `read(absPath, relPath)`
+ * supplies the on-disk content, keeping this module I/O free. Mutates and returns `updates`.
+ */
+export function foldDocStats(updates, files, root, values, read) {
+  const pending = new Map(updates.map((u) => [u.path, u]));
+  for (const { file: relPath, markers: spec } of files) {
+    const docPath = path.join(root, relPath);
+    const prior = pending.get(docPath);
+    const original = prior ? prior.content : read(docPath, relPath);
+    const problems = checkMarkerSpec(original, spec);
+    if (problems.length) {
+      throw new Error(
+        `${relPath} doc-stat markers don't match their spec — ${problems.join('; ')}. ` +
+        `Restore the markers around its counts, or update its entry in scripts/doc-stats.js.`
+      );
+    }
+    const { content: rewritten } = applyDocStats(original, values);
+    if (rewritten === original) continue;
+    if (prior) prior.content = rewritten;
+    else {
+      const entry = { path: docPath, content: rewritten, label: relPath };
+      updates.push(entry);
+      pending.set(docPath, entry);
+    }
+  }
+  return updates;
 }
