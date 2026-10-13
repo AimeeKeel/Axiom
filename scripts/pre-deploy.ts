@@ -12,7 +12,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { MIN_PLAUSIBLE_FILES, scanRepo, shippedFiles } from "./leak-scan.ts";
 import { execSyncFailureOutput, isExecSyncTimeout, runHookSuites } from "./hook-suites.ts";
 import { VERSION_CORE } from "./version-regex.js";
@@ -204,6 +204,51 @@ try {
   const err = e as Error & { status?: number; stderr?: string; stdout?: string; code?: string };
   const detail = err.stderr || err.stdout || err.message || `exit code ${err.status}`;
   error("plugin-validate", `claude plugin validate failed:\n${detail}`);
+}
+
+// Anthropic's plugin directory refuses a submission when any file in the plugin
+// folder, or a .gitattributes or package-manager file in a folder above it, is
+// over 5 MiB — and it re-scans every new commit on the tracked branch. The copy
+// on disk is the release being prepared, so oversize there fails; a staged copy
+// that is still oversize only warns, because preflight runs before anything is
+// staged, but a commit made without restaging would ship it.
+heading("1b. Plugin Directory File Size");
+try {
+  const limit = 5 * 1024 * 1024;
+  const pluginRel = path.relative(root, pluginDir);
+  const above: string[] = [];
+  for (let dir = path.dirname(pluginRel); ; dir = path.dirname(dir)) {
+    for (const name of [".gitattributes", "package.json", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "yarn.lock", "bun.lock", "bun.lockb"])
+      above.push(path.join(dir, name));
+    if (dir === ".") break;
+  }
+  const listing = execFileSync("git", ["ls-files", "-z", "--format=%(objectsize)%x09%(path)", "--", pluginRel, ...above], {
+    cwd: root,
+    stdio: "pipe",
+    encoding: "utf8",
+  });
+  const sizes = listing
+    .split("\0")
+    .filter(Boolean)
+    .map((entry) => {
+      const rel = entry.slice(entry.indexOf("\t") + 1);
+      const staged = Number(entry.slice(0, entry.indexOf("\t")));
+      return { rel, staged, bytes: fs.statSync(path.join(root, rel), { throwIfNoEntry: false })?.size ?? 0 };
+    });
+  const mib = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
+  const oversized = sizes.filter(({ bytes }) => bytes > limit);
+  for (const { rel, bytes } of oversized)
+    error("directory-file-size", `${rel} is ${mib(bytes)}; Anthropic's plugin directory rejects any file over 5 MiB`);
+  for (const { rel, bytes, staged } of sizes)
+    if (bytes <= limit && staged > limit)
+      warn("directory-file-size", `${rel} is ${mib(staged)} staged but ${mib(bytes)} on disk; stage it, or a commit made now ships the oversized copy`);
+  if (sizes.length === 0) error("directory-file-size", `no tracked files under ${pluginRel}; the scan found nothing to check`);
+  else if (oversized.length === 0) {
+    const largest = sizes.reduce((a, b) => (b.bytes > a.bytes ? b : a));
+    console.log(`  ✓ ${sizes.length} tracked files ≤ 5 MiB (largest: ${largest.rel}, ${mib(largest.bytes)})`);
+  }
+} catch (e: unknown) {
+  error("directory-file-size", `could not list tracked plugin files: ${(e as Error).message}`);
 }
 
 heading("2. JSON Syntax");
@@ -1824,7 +1869,7 @@ if (fs.existsSync(goToolsRoot) && fs.statSync(goToolsRoot).isDirectory()) {
       walkModule(moduleDir);
 
       // A library module under tools/ ships no binary, so requiring one would block
-      // every commit until someone committed a 6 MB file that should not exist.
+      // every commit until someone committed a multi-MB file that should not exist.
       if (!isCommand && !fs.existsSync(binaryPath)) continue;
 
       const modulePrefix = path.relative(root, moduleDir) + path.sep;
