@@ -204,8 +204,6 @@ Apple has two motion-telemetry stacks and they do not bridge:
 
 **Rule of thumb:** do not reimplement HealthKit mobility metrics from raw Core Motion data. The system-generated metrics encode Apple's validated thresholds (waist-carry detection, flat-ground gating, walking-steadily detection) that a custom pipeline cannot easily replicate.
 
-Axiom does not yet cover Core Motion as its own suite — it's parked in `future-suites-parking-lot` memory for a future Core Motion suite.
-
 ## Common Mistakes
 
 | Mistake | Fix |
@@ -223,7 +221,7 @@ Axiom does not yet cover Core Motion as its own suite — it's parked in `future
 
 ## Resources
 
-**WWDC**: 2018-229, 2021-10287
+**WWDC**: 2018-706, 2021-10287
 
 **Docs**: /healthkit/accessing-health-records, /healthkit/hkclinicaltype, /healthkit/hkclinicaltypeidentifier, /healthkit/hkclinicalrecord, /healthkit/hkfhirresource, /healthkit/hkfhirresourcetype, /healthkit/creating-a-mobility-health-app, /healthkit/hkquantitytypeidentifier/walkingspeed, /healthkit/hkquantitytypeidentifier/applewalkingsteadiness, /healthkit/hkquantitytypeidentifier/sixminutewalktestdistance, /healthkit/hkapplewalkingsteadinessclassification, /healthkit/hkhealthstore/recalibrateestimates(sampletype:date:completion:)
 

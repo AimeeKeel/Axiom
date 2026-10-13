@@ -41,10 +41,10 @@ App performance problem?
 ├─ Memory grows over time (Xcode shows increasing memory)
 │  └─ → Use Allocations (measure object creation)
 ├─ Data loading is slow (parsing, database queries, API calls)
-│  └─ → Use Core Data instrument (if using Core Data)
+│  └─ → Use the Data Persistence template (Core Data or SwiftData)
 │  └─ → Use Time Profiler (if it's computation)
 └─ Battery drains fast (device gets hot, depletes in hours)
-   └─ → Use Energy Impact (measure power consumption)
+   └─ → Use Power Profiler (measure power use; iOS and iPadOS devices)
 ```
 
 ### Step 2: Can You Reproduce It?
@@ -60,8 +60,8 @@ App performance problem?
 
 **Time Profiler** – Slowness, UI lag, CPU spikes (Top Functions mode for scattered overhead, `OS27`)
 **Allocations** – Memory growth, memory pressure, object counts
-**Core Data** – Query performance, fetch times, fault fires
-**Energy Impact** – Battery drain, sustained power draw
+**Data Persistence** – Core Data and SwiftData fetches, saves, and faults
+**Power Profiler** – Battery drain and power use, recorded on an iPhone or iPad
 **Network Link Conditioner** – Connection-related slowness
 **System Trace** – Thread blocking, main thread blocking, scheduling
 **Swift executors** – Tasks congesting the main actor (`OS27`)
@@ -322,7 +322,7 @@ Under "Statistics":
 
 ## Core Data Deep Dive
 
-Use Core Data instrument when your app uses Core Data and data loading is slow.
+Use the Data Persistence template when your app uses Core Data or SwiftData and data loading is slow.
 
 ### Workflow: Enable SQL Debugging and Profile
 
@@ -362,27 +362,24 @@ LEFT JOIN albums ON tracks.albumId = albums.id
 Total: 0.050s
 ```
 
-#### Step 3: Profile with Core Data Instrument
+#### Step 3: Profile with the Data Persistence Template
 
 ```bash
 open -a Instruments
 ```
 
-Select "Core Data" template.
+Select the "Data Persistence" template.
 
 Record while performing slow action:
 
 ```
-Core Data Results
-
-Fetch Requests: 102
-Average Fetch Time: 12ms
-Slow Fetch: "SELECT * FROM tracks" (180ms)
-
-Fault Fires: 5000
-  → Object accessed, requires fetch from database
-  → Should use prefetching
+Data Fetches   102 fetches, one taking 180ms
+Data Faults    5,000 faults while scrolling the list
+               → each object access fetches from the store; prefetch relationships
+Data Saves     3 saves
 ```
+
+The template's instruments are Data Fetches, Data Saves and Data Faults. They don't show SQL; to see the statements, launch with `-com.apple.CoreData.SQLDebug 1` and read the console.
 
 ### Common Mistakes & Fixes
 
@@ -485,23 +482,19 @@ Redesigning the schema is the LAST thing to try.
 
 ## Quick Reference: Other Tools
 
-### Energy Impact (Battery Drain)
+### Power Profiler (Battery Drain)
 
 **When to use**: App drains battery fast, device gets hot
 
 **Workflow**:
-1. Launch Instruments → Energy Impact template
+1. Launch Instruments → Power Profiler template, recording on a physical iPhone or iPad (it supports only iOS and iPadOS devices)
 2. Run app normally for 5+ minutes
-3. Look for red/orange sustained usage (bad)
+3. Look for sustained high power use, not brief peaks
 4. Drill down to see which subsystems drain battery
 
 **Key metrics**:
-- **Sustained Power** – Ongoing energy use (should be minimal)
-- **Peaks** – Brief high usage (acceptable)
-- **CPU** – Process CPU time
-- **GPU** – Graphics rendering
-- **Network** – Cellular/WiFi radio
-- **Location** – GPS usage
+- **System Power Usage** – Overall power draw
+- **CPU, GPU, Display, and Networking power impact** – Which subsystem is drawing it
 
 **Common issues**:
 - Continuous location updates with 1m accuracy (should be 100m)
@@ -815,11 +808,11 @@ Instruments → Allocations → Statistics → sort "Persistent"
 // Memory warning: Simulate pressure
 Xcode → Debug → Simulate Memory Warning
 
-// Energy Impact: Profile battery drain
-Instruments → Energy Impact template
+// Power Profiler: Profile battery drain (physical iPhone or iPad)
+Instruments → Power Profiler template
 
 // Network Link Conditioner: Simulate 3G
-System Preferences → Network Link Conditioner → 3G profile
+System Settings → Network Link Conditioner → 3G profile
 ```
 
 ### Decision Tree Summary
@@ -831,10 +824,10 @@ Performance problem?
 ├─ Memory grows over time?
 │  └─ → Allocations (find object growth)
 ├─ Data loading is slow?
-│  └─ → Core Data instrument (if using Core Data)
+│  └─ → Data Persistence template (Core Data or SwiftData)
 │  └─ → Time Profiler (if computation slow)
 └─ Battery drains fast?
-   └─ → Energy Impact (measure power)
+   └─ → Power Profiler (measure power)
 ```
 
 ---

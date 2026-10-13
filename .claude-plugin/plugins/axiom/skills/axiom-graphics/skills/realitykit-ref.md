@@ -654,7 +654,7 @@ Everything in this part requires the 27 releases (macOS/iOS/iPadOS/tvOS/visionOS
 | `LightmapComponent` / `LightmapResource` | Baked lighting textures (see below) |
 | `SpotLightComponent.ProjectiveTexture` | Project a texture from a spotlight (see below) |
 | `SpotLightComponent.SurroundingsLight` / `PointLightComponent.SurroundingsLight` | Light the real surroundings (visionOS27/macOS27, see below) |
-| `GaussianSplatComponent` / `GaussianSplatResource` | Render 3D Gaussian splats (visionOS27, see below) |
+| `GaussianSplatComponent` / `GaussianSplatResource` | Render 3D Gaussian splats (OS27, not watchOS/tvOS; see below) |
 | `ReverbMeshResource` | Geometry for raytraced acoustic simulation (see below) |
 | `AudioPlaybackGroupController` | Coordinated, synchronized playback across multiple entities |
 | `BloomComponent` / `BloomOptionsComponent` / `BloomSettingsComponent` | HDR bloom post-processing |

@@ -533,6 +533,6 @@ When SwiftUI content needs to accept drops from AppKit views using legacy pasteb
 
 **WWDC**: 2022-10075, 2026-272
 
-**Docs**: /swiftui/nsviewrepresentable, /swiftui/nsviewcontrollerrepresentable, /swiftui/nshostingcontroller, /swiftui/nshostingview, /swiftui/nshostingmenu, /swiftui/nsgesturerecognizerrepresentable, /swiftui/nshostingscenerepresentation, /appkit/nstoolbar, /appkit/nsopenpanel, /appkit/updating-views-automatically-with-observation-tracking
+**Docs**: /swiftui/nsviewrepresentable, /swiftui/nsviewcontrollerrepresentable, /swiftui/nshostingcontroller, /swiftui/nshostingview, /swiftui/nshostingmenu, /swiftui/nsgesturerecognizerrepresentable, /swiftui/nshostingscenerepresentation, /appkit/nstoolbar, /appkit/nsopenpanel, /appkit/updating-views-automatically-with-observation-tracking-in-appkit
 
 **Skills**: skills/appkit-modernization.md, axiom-uikit, axiom-swiftui

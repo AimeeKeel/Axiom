@@ -1,7 +1,7 @@
 
 # TextKit 2 Reference
 
-Complete reference for TextKit 2 covering architecture, migration from TextKit 1, Writing Tools integration, and SwiftUI TextEditor with AttributedString through iOS 26.
+Complete reference for TextKit 2 covering architecture, migration from TextKit 1, Writing Tools integration, SwiftUI TextEditor with AttributedString, and the 27-cycle additions (per-edge block borders, hit-testing transformed text, grammar checking, viewport rendering surfaces).
 
 ## Architecture
 

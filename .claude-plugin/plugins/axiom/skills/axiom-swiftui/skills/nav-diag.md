@@ -216,7 +216,7 @@ Before proceeding to a pattern:
 
 #### Symptom
 - Tapping NavigationLink does nothing
-- No navigation occurs, no errors
+- No navigation occurs and nothing crashes. Check the console: SwiftUI logs "…no matching navigationDestination declaration visible from the location of the link. The link cannot be activated." when a value-based link can't find a destination
 - onChange(of: path) never fires
 
 #### Diagnosis
@@ -272,7 +272,7 @@ struct ContentView: View {
 #### Symptom
 - NavigationLink tap does nothing OR works intermittently
 - onChange fires (path updated) but view doesn't push
-- No console output — the failure is silent
+- SwiftUI logs a runtime warning naming the modifier and type ("There's a misplaced `navigationDestination(for:destination:)` modifier for type …") and explaining that lazy containers like `List` and `LazyVStack` create child views only when needed. Search the console for "misplaced"
 
 #### Diagnosis
 ```swift
@@ -858,8 +858,8 @@ Avoid these inside a `Tab(role: .search)` TabView's subtree until Apple confirms
 **Time cost** 10-15 minutes
 
 #### Symptom
-- Pushes a blank screen — no crash, no console message
-- Or navigation silently fails
+- `path.append` of an unregistered type pushes a blank screen, with no crash
+- A `NavigationLink(value:)` for an unregistered type does nothing, and SwiftUI logs "A NavigationLink is presenting a value of type … but there is no matching navigationDestination declaration visible from the location of the link. The link cannot be activated."
 - Happens when pushing certain types
 
 #### Diagnosis

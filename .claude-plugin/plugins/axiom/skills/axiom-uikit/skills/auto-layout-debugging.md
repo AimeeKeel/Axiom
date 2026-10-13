@@ -83,7 +83,7 @@ Will attempt to recover by breaking constraint
 **Purpose**: Break when constraint conflict occurs, before system breaks constraint.
 
 **Setup**:
-1. Open Breakpoint Navigator (⌘+7 or ⌘+8)
+1. Open the Breakpoint navigator (⌘8)
 2. Click `+` → "Symbolic Breakpoint"
 3. **Symbol**: `UIViewAlertForUnsatisfiableConstraints`
 4. (Optional) Add **Action** → "Sound" → select sound

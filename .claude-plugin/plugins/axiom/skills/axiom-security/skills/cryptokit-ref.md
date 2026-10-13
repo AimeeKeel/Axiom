@@ -331,8 +331,8 @@ Key Encapsulation Mechanism based on Module-Lattice (FIPS 203). iOS 26+.
 
 | Type | Security Level | Public Key | Ciphertext | Shared Secret |
 |------|---------------|------------|------------|---------------|
-| MLKEM768 | 128-bit (AES-128 equivalent) | 1,184 bytes | 1,088 bytes | 32 bytes |
-| MLKEM1024 | 256-bit (AES-256 equivalent) | 1,568 bytes | 1,568 bytes | 32 bytes |
+| MLKEM768 | NIST category 3 (≈ AES-192) | 1,184 bytes | 1,088 bytes | 32 bytes |
+| MLKEM1024 | NIST category 5 (≈ AES-256) | 1,568 bytes | 1,568 bytes | 32 bytes |
 
 ### Key Generation
 
@@ -398,8 +398,8 @@ Digital Signature Algorithm based on Module-Lattice (FIPS 204). iOS 26+.
 
 | Type | Security Level | Public Key | Signature |
 |------|---------------|------------|-----------|
-| MLDSA65 | 128-bit | 1,952 bytes | 3,309 bytes |
-| MLDSA87 | 256-bit | 2,592 bytes | 4,627 bytes |
+| MLDSA65 | NIST category 3 (≈ AES-192) | 1,952 bytes | 3,309 bytes |
+| MLDSA87 | NIST category 5 (≈ AES-256) | 2,592 bytes | 4,627 bytes |
 
 ### Key Generation
 

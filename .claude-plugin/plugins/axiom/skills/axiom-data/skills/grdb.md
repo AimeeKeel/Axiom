@@ -80,12 +80,12 @@ let testQueue = try DatabaseQueue()
 ### DatabasePool (Connection Pool)
 
 ```swift
-// For apps with heavy concurrent access
+// Parallel reads alongside one serialized writer (WAL)
 let dbPool = try DatabasePool(path: dbPath)
 ```
 
 **Use Queue for** Most apps (simpler, sufficient)
-**Use Pool for** Heavy concurrent writes from multiple threads
+**Use Pool for** Concurrent reads during writes (UI reads keep flowing while a slow background write runs). Writes are still serialized one at a time, so a pool does not speed up write-heavy workloads.
 
 ## Record Types
 
