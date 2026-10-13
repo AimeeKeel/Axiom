@@ -582,8 +582,8 @@ Pair audio signals with:
 ### Mobility Accessibility
 
 **Touch targets:**
-- Minimum: **44x44 points**
-- Spacing: 12-24 points padding around controls
+- Hit region: at least **44x44 points** (60x60 on visionOS), per the HIG's Buttons page; a control may be drawn as small as 28x28 if its hit region stays that size
+- Spacing: about 12 points around controls with a bezel, about 24 around controls without one
 
 **Gestures:**
 - Use simple gestures
@@ -752,12 +752,15 @@ Basic gestures supported across all platforms (though precise movements vary by 
 
 **Minimum touch target sizes:**
 
-| Platform | Minimum Size | Spacing |
+| Platform | Control size, default / minimum | Spacing |
 |----------|-------------|---------|
-| iOS/iPadOS | 44x44 points | 12-24pt padding |
-| macOS | Varies by control | System spacing |
-| watchOS | System controls | Optimized for small screen |
-| tvOS | Large (focus model) | 60pt+ spacing |
+| iOS/iPadOS | 44x44 / 28x28 points | ~12pt (bezel) to ~24pt (no bezel) |
+| macOS | 28x28 / 20x20 points | System spacing |
+| watchOS | 44x44 / 28x28 points | Prefer system controls |
+| visionOS | 60x60 / 28x28 points | Button centers at least 60pt apart |
+| tvOS | 66x66 / 56x56 points | Room to grow when focused |
+
+Whatever the drawn size, keep each button's hit region at least 44x44 points (60x60 on visionOS).
 
 ```swift
 // ✅ Adequate touch target
@@ -1012,7 +1015,7 @@ Apple trademarks cannot appear in your app name or images—consult Apple's offi
 
 ### Color Contrast Failures
 
-**Symptom:** App Store rejection for accessibility violations, or colors don't meet WCAG standards.
+**Symptom:** Colors don't meet WCAG contrast standards, so Sufficient Contrast can't be declared in Accessibility Nutrition Labels.
 
 **Diagnosis:** Test with Accessibility Inspector, contrast calculators, both Light/Dark modes, and Increase Contrast enabled. See Accessibility > Vision section above for contrast ratio requirements.
 
@@ -1030,7 +1033,7 @@ Text("Label").foregroundStyle(Color(red: 0.25, green: 0.25, blue: 0.25))
 
 ### Touch Targets Too Small
 
-**Symptom:** Users report difficult tapping, App Store accessibility rejection.
+**Symptom:** Users report difficult tapping, or buttons have hit regions smaller than the HIG's 44x44pt.
 
 **Diagnosis:**
 ```swift
@@ -1041,7 +1044,7 @@ Button("Tap") { }
 
 **Solution:**
 ```swift
-// ✅ Expand touch target to minimum 44x44
+// ✅ Expand the hit region to the HIG's 44x44
 Button("Tap") { }
     .frame(minWidth: 44, minHeight: 44)
 

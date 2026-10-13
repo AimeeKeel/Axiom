@@ -8,71 +8,69 @@ apple_platforms: iOS, iPadOS, macOS, watchOS, tvOS, visionOS
 
 # Human Interface Guidelines
 
-Quick reference for Apple HIG decisions. Covers background colors, typography, colors, icons, and defending design choices.
+Quick decision frameworks and checklists for Apple's Human Interface Guidelines (HIG), Apple's design rules for its platforms. Covers backgrounds, color, typography, touch targets, spacing, and how to defend a design decision when a stakeholder pushes back.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Making visual design decisions (colors, backgrounds, typography)
 - Reviewing UI for HIG compliance
-- Answering "Should I use a dark background?"
+- Asking "Should I use a dark background?"
 - Choosing between design options
 - Defending design decisions to stakeholders
-- Quick lookups for common design questions
-
-**For comprehensive details:** See [hig-ref](/reference/hig-ref) for complete API coverage and code examples.
-
-**For Liquid Glass:** See [liquid-glass](/skills/ui-design/liquid-glass) for iOS 26 material design.
+- Looking up the answer to a common design question
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "Should I use a dark background for my media app?"
 - "What semantic colors should I use for labels?"
 - "Which font weights are recommended for body text?"
-- "How do I create colors that adapt to light/dark mode?"
+- "How do I create colors that adapt to light and dark mode?"
+- "What contrast ratio does my text need?"
 - "Is my touch target too small?"
-- "What's the minimum tappable area for buttons?"
 - "What spacing should I use between these views?"
-- "How much padding should this card have?"
 - "Should this list have an A–Z index strip down the side?"
 - "Why does my section index overlap the row chevrons?"
+- "Our designer wants an Ultralight font and a custom dark mode toggle. How do I push back?"
 
 ## What This Skill Provides
 
-### Background Colors
-- When to use permanent dark appearance (media-focused apps)
-- System backgrounds (systemBackground, systemGroupedBackground)
-- Respecting user preference vs enforcing appearance
+### Backgrounds and Color
+- When a permanent dark appearance fits (media-focused apps), and when to respect the user's choice
+- System backgrounds (`systemBackground`, `systemGroupedBackground`) and semantic label colors (`label`, `secondaryLabel`)
+- Color Sets for custom colors, with light, dark, and high-contrast variants
+- Contrast ratios (4.5:1 minimum, 7:1 recommended for small text)
+- Why apps shouldn't offer their own appearance setting
 
-### Colors
-- Semantic colors (label, secondaryLabel, etc.)
-- System backgrounds hierarchy
-- Color Set creation for custom colors
-- Light/dark/high contrast variants
-
-### Typography
-- Font weight recommendations (avoid Ultralight/Thin/Light)
-- Preferred weights: Regular, Medium, Semibold, Bold
+### Typography and Icons
+- Font weights to avoid (Ultralight, Thin, Light) and to prefer (Regular, Medium, Semibold, Bold)
 - Dynamic Type support
+- When to use SF Symbols and when a custom icon is justified
 
 ### Touch Targets
-- Minimum 44x44pt tappable area
+- Minimum sizes per platform (44×44 points on iOS and iPadOS, 20×20 on macOS)
 - Spacing between targets
 
-### Spacing, Padding and Margins
+### Spacing, Padding, and Margins
 - Why Apple publishes no iOS spacing scale, and what to do instead
-- Which modifiers hand you the system value, and which require an explicit `nil`
-- The three cases where a hardcoded literal is legitimate
-- UIKit equivalents – layout margins guide, directional layout margins, readable content guide
+- Which modifiers supply the system value when you omit the length, and which need an explicit `nil`
+- The three cases where a hardcoded value is legitimate
+- UIKit equivalents: the layout margins guide, directional layout margins, and the readable content guide
 
 ### Section Index
 - When an A–Z index strip earns its place on a list
 - The hard rule against pairing an index with trailing row controls
-- Platform differences – watchOS presents it during crown scrolling; macOS and tvOS have none
+- Platform differences: watchOS shows the index only during crown scrolling, and macOS and tvOS have none
 
-## Key Pattern
+### Reviews and Pushback
+- A pre-ship checklist for appearance, typography, accessibility, motion, and localization
+- A design review checklist
+- A four-step way to push back on requests that violate the HIG, and when to accept the decision
+- The three core HIG principles (clarity, consistency, deference) and quick tips for each platform
+
+## Key Patterns
 
 ### Background Color Decision Tree
 
@@ -124,18 +122,21 @@ flowchart TD
 
 ## Documentation Scope
 
-This page documents the `axiom-design` skill — quick HIG decision frameworks Claude uses when you're making design decisions or reviewing UI for compliance.
+This page documents the `hig` skill (in the `axiom-design` suite), which your assistant draws on when you make design decisions or review UI for HIG compliance.
 
-**For comprehensive reference:** See [hig-ref](/reference/hig-ref) for complete API coverage, code examples, and detailed guidelines.
+- For payment design rules, see [apple-pay](/skills/integration/apple-pay) (the Apple Pay button and mark), [wallet-passes](/skills/integration/wallet-passes), and [tap-to-pay](/skills/integration/tap-to-pay)
 
 ## Related
 
-- [hig-ref](/reference/hig-ref) – Comprehensive HIG API reference
-- [liquid-glass](/skills/ui-design/liquid-glass) – iOS 26 Liquid Glass material design
-- [swiftui-layout](/skills/ui-design/swiftui-layout) – Adaptive layout patterns
+- [hig-ref](/reference/hig-ref) – The comprehensive HIG reference, with code examples
+- [liquid-glass](/skills/ui-design/liquid-glass) – The iOS 26 Liquid Glass material, and supporting both the old and new designs in one app
+- [typography-ref](/reference/typography-ref) – Text styles, Dynamic Type, and font details beyond the weight rules here
+- [sf-symbols](/skills/ui-design/sf-symbols) – Rendering modes and effects once you've chosen SF Symbols over custom icons
+- [accessibility-diag](/diagnostic/accessibility-diag) – Fixing the contrast, touch-target, and VoiceOver problems the checklists catch
+- [swiftui-layout](/skills/ui-design/swiftui-layout) – Adaptive layout patterns that build on the spacing rules
 
 ## Resources
 
-**WWDC**: 2023-10148 (Design for spatial computing), 2024-10154 (Design tips)
+**WWDC**: 2019-808, 2025-356
 
-**Docs**: developer.apple.com/design/human-interface-guidelines
+**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/lists-and-tables

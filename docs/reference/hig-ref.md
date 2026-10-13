@@ -1,6 +1,6 @@
 ---
 name: hig-ref
-description: Comprehensive Human Interface Guidelines reference with code examples
+description: Human Interface Guidelines reference with code examples
 skill_type: reference
 version: 1.0.0
 apple_platforms: iOS, iPadOS, macOS, watchOS, tvOS, visionOS
@@ -8,89 +8,88 @@ apple_platforms: iOS, iPadOS, macOS, watchOS, tvOS, visionOS
 
 # Human Interface Guidelines Reference
 
-Comprehensive reference for Apple's Human Interface Guidelines. Covers semantic colors, typography, spacing, icons, accessibility, and platform-specific patterns with code examples.
+Reference for Apple's Human Interface Guidelines: semantic colors, typography, shapes, materials, layout, icons, input, accessibility, and platform-specific patterns, with SwiftUI code examples. Use it when you need a specific design value or rule rather than a quick decision.
 
 ## When to Use This Reference
 
 Use this reference when you need:
-- Complete semantic color names and their purposes
-- Typography scale and Dynamic Type sizes
-- Exact spacing values and layout guidelines
-- Icon design specifications
-- Accessibility implementation details
+- Semantic color names and their purposes
+- Text styles, font weights, and Dynamic Type requirements
+- Shape, material, and layout guidance, including Liquid Glass
+- Touch target sizes and gesture conventions
+- Accessibility requirements for vision, hearing, mobility, and cognition
 - Platform-specific design requirements
-
-**For quick decisions:** See [hig](/skills/ui-design/hig) for decision trees and checklists.
+- A fix for a common HIG problem, such as failing contrast or a launch screen rejected for branding
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
-- "What are all the semantic label colors and when should I use each?"
+- "What are all the semantic label colors, and when should I use each?"
 - "What's the difference between grouped and ungrouped background colors?"
-- "What are the SF Symbol weight recommendations for different contexts?"
+- "Which font weights should I avoid, and why?"
 - "What's the minimum touch target size for accessibility?"
-- "What are the exact Dynamic Type sizes at each text style?"
+- "How much text scaling does my app need to support?"
 - "How do tint colors work in iOS?"
+- "Where do Cancel and Done go on a sheet?"
 
 ## What's Covered
 
+### Design Principles
+- Clarity, consistency, and deference
+- Designing as a system
+
 ### Color System
-- Label hierarchy (label, secondaryLabel, tertiaryLabel, quaternaryLabel)
-- Background colors (ungrouped vs grouped)
-- System colors (systemRed, systemBlue, etc.)
-- Separator colors
-- Fill colors
-- Tint colors and accent colors
+- Label hierarchy (`label`, `secondaryLabel`, `tertiaryLabel`, `quaternaryLabel`)
+- Background colors (ungrouped vs. grouped), base vs. elevated backgrounds
+- Tint colors
+- Fill colors and separator colors
+- When to use a permanently dark appearance
+- Creating custom colors
 
 ### Typography
-- Text styles (largeTitle through caption2)
-- Font weights and when to use them
-- Dynamic Type support
-- Font scaling behavior
-- Minimum readable sizes
+- System fonts: San Francisco and New York
+- Font weight recommendations
+- Text styles (`largeTitle` through `caption2`)
+- Dynamic Type requirements (200% scaling on iOS and iPadOS, 140% on watchOS)
+- Custom fonts and leading
 
 ### Shapes & Geometry
 - The three shape types (fixed, capsule, concentric) in iOS 26
 - Concentricity principle for nested containers
-- Optical centering
 - Platform-specific corner radius guidance
+- Optical centering
 
 ### Materials & Depth
-- Standard materials (ultraThin, thin, regular, thick, ultraThick)
+- Standard materials (ultraThin, thin, regular, thick)
 - Vibrancy with materials
-- Liquid Glass (iOS 26+): regular vs clear variants
-- Modals & Sheets: automatic Liquid Glass adoption, semantic backgrounds
-- Sheet button placement (HIG 2026-03-24): Cancel/Done pairing rules, platform-specific placements
+- Liquid Glass (iOS 26+): regular vs. clear variants
+- Modals and sheets: automatic Liquid Glass adoption, semantic backgrounds
+- Sheet button placement: Cancel/Done pairing rules, platform-specific placements
 
 ### Layout Principles
-- Standard spacing values (4, 8, 12, 16, 20, 24pt)
-- Content margins and grid systems
-- Visual hierarchy and grouping
+- Visual hierarchy, grouping, and alignment
 - Content extension to display edges
-- Safe areas and layout guides
+- Safe areas, layout guides, and margins
 - Adaptability across size classes
 
-### Icons & SF Symbols
-- Symbol weights and scales
-- Symbol configurations
-- Rendering modes
-- Variable color
-- Accessibility considerations
+### Icons & Symbols
+- SF Symbols overview: weights, scales, rendering modes
+- Custom interface icons
+- When to use icons vs. text
+- Accessibility labels
 
-### Touch & Interaction
-- Minimum 44×44pt touch targets
-- Gesture patterns
-- Feedback expectations
-- Interactive states
+### Gestures & Input
+- Standard gestures and custom gesture guidelines
+- Minimum touch targets by platform (44×44 pt on iOS and iPadOS)
+- Gesture accessibility
 
 ### Accessibility
-- VoiceOver labels and hints
-- Dynamic Type requirements
-- Color contrast ratios
-- Reduce Motion support
-- Button shapes
-- Vision, hearing, mobility, and cognitive accessibility guidance
+- Vision: text legibility, color contrast, color alone, screen readers
+- Hearing: media alternatives and audio cues
+- Mobility
+- Cognitive: interaction design, Reduce Motion, game accommodations
+- visionOS-specific accessibility
 
 ### Motion & Animation
 - Core principles for purposeful motion
@@ -98,12 +97,25 @@ Questions you can ask Claude that will draw from this reference:
 - Best practices for feedback animations
 - Platform-specific motion guidance
 
+### Launch & Onboarding
+- Launch screens
+- Onboarding
+
 ### Platform Specifics
-- iOS vs iPadOS patterns
+- iOS and iPadOS patterns
 - macOS considerations
 - watchOS constraints
-- visionOS spatial design
 - tvOS focus model
+- visionOS spatial design
+
+### Inclusive Design and Branding
+- Language, visual representation, gender identity, disability, and localization
+- Branding restraint and appropriate placement
+
+### Troubleshooting
+- Contrast failures, small touch targets, Dark Mode issues, light font weights
+- Dynamic Type not working, Reduce Motion ignored, missing VoiceOver labels
+- Information conveyed only by color, launch screen branding rejections, custom appearance toggles
 
 ## Key Pattern
 
@@ -130,34 +142,31 @@ Color(.systemBlue)
 Color(.systemGreen)
 ```
 
-### Dynamic Type Scale
+### Dynamic Type
 
 ```swift
-// Automatic scaling with text styles
-Text("Large Title").font(.largeTitle)  // 34pt at default
-Text("Title").font(.title)              // 28pt
-Text("Headline").font(.headline)        // 17pt semibold
-Text("Body").font(.body)                // 17pt
-Text("Footnote").font(.footnote)        // 13pt
-Text("Caption").font(.caption)          // 12pt
+// ✅ Scales automatically with Dynamic Type
+Text("Hello")
+    .font(.body)
+
+// ❌ Fixed size, doesn't scale
+Text("Hello")
+    .font(.system(size: 17))
 ```
 
 ## Documentation Scope
 
-This page documents the `axiom-design` reference skill — comprehensive HIG coverage Claude uses when you need specific design values, color names, or implementation details.
-
-**For quick decisions:** See [hig](/skills/ui-design/hig) for decision frameworks and quick lookups.
-
-**For Liquid Glass:** See [liquid-glass](/skills/ui-design/liquid-glass) for iOS 26 material design.
+This page documents the `hig-ref` skill (in the `axiom-design` suite), the HIG detail your assistant uses when you need specific design values, color names, or implementation details. SF Symbols rendering modes, symbol effects, and custom symbols are covered in depth in [sf-symbols-ref](/reference/sf-symbols-ref).
 
 ## Related
 
-- [hig](/skills/ui-design/hig) – Quick decision frameworks
-- [liquid-glass](/skills/ui-design/liquid-glass) – iOS 26 Liquid Glass material design
-- [accessibility-auditor](/agents/accessibility-auditor) – Automated accessibility scanning
+- [hig](/skills/ui-design/hig) – Quick decision trees and checklists built on this reference
+- [liquid-glass](/skills/ui-design/liquid-glass) – Implementing the iOS 26 Liquid Glass material
+- [liquid-glass-ref](/reference/liquid-glass-ref) – App-wide Liquid Glass adoption, including sheets and popovers
+- [accessibility-auditor](/agents/accessibility-auditor) – Scans your code for the accessibility issues this reference describes
 
 ## Resources
 
-**WWDC**: 2023-10148, 2024-10154, 2019-214 (Dark Mode)
+**WWDC**: 2025-356, 2019-808
 
-**Docs**: developer.apple.com/design/human-interface-guidelines
+**Docs**: /design/human-interface-guidelines, /design/human-interface-guidelines/color, /design/human-interface-guidelines/dark-mode, /design/human-interface-guidelines/materials, /design/human-interface-guidelines/typography, /design/human-interface-guidelines/layout, /design/human-interface-guidelines/accessibility, /design/human-interface-guidelines/icons

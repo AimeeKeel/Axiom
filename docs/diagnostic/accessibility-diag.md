@@ -1,198 +1,85 @@
 ---
 name: accessibility-diag
-description: VoiceOver, Dynamic Type, color contrast, touch targets — WCAG compliance with App Store rejection defense
+description: VoiceOver, Dynamic Type, color contrast, touch targets — systematic accessibility diagnosis for WCAG compliance and Accessibility Nutrition Labels
 ---
 
 # Accessibility Diagnostics
 
-Systematic accessibility troubleshooting with App Store rejection defense and design review push-back frameworks.
+Systematic diagnosis and repair for the accessibility issues users hit most often, from missing VoiceOver labels to text that doesn't scale. It also covers custom controls, long-form reading, video captions, resizable windows, and Assistive Access.
 
-## Overview
+## Symptoms This Diagnoses
 
-Diagnostic workflows for VoiceOver testing, Dynamic Type support, color contrast validation, and touch target compliance. Includes mandatory steps for App Store review preparation and handling accessibility-related rejections.
-
-## What This Diagnostic Covers
-
-### Mandatory Accessibility Checks
-
-#### VoiceOver Testing
-- Missing accessibility labels
-- Poor label quality (technical vs user-friendly)
-- Button vs image traits
-- Custom control announcements
-- Navigation order
-
-#### Dynamic Type Support
-- Fixed font sizes blocking text scaling
-- Layout breaking at larger sizes
-- Missing `.minimumScaleFactor`
-- Text truncation issues
-- Horizontal scrolling required
-- tvOS Large Text adoption (system-wide Dynamic Type arrives in tvOS 27)
-
-#### Color Contrast
-- WCAG AA compliance (4.5:1 for text)
-- WCAG AAA targets (7:1 for text)
-- Insufficient contrast in dark mode
-- Rely on color alone for information
-
-#### Touch Targets
-- Minimum 44×44pt hit areas (Apple HIG)
-- WCAG 2.5.5 Target Size (24×24pt minimum)
-- Spacing between tappable elements
-- Gesture conflicts
-
-#### Custom Controls
-- Choosing the right interaction technique (adjustable actions, passthrough gestures, direct touch, custom actions)
-- Announcement throttling and priority
-
-#### Continuous Reading (Long-Form Reading Apps)
-- VoiceOver text navigation across paragraph and page boundaries
-- Automatic page turns for read-all (Speak Screen, VoiceOver)
-- Custom text views via UITextInput
-
-#### Captions & Subtitle Styling (Video Playback)
-- Generated subtitles (iOS/macOS 27) — automatic on-device transcription/translation; your job is the subtitle-selection UI
-- Live subtitle style preview (iOS 26.4+) — `AVPlayerLayer`/`AVLegibleMediaOptionsMenuController`, `MACaptionAppearance` profiles
-
-#### Resizable Windows & Desktop-Class
-- VoiceOver reading order surviving layout changes (column collapse, resize)
-- Table and grid navigation semantics (SwiftUI `Table`, `UIAccessibilityContainerDataTable`)
-- Toolbar-overflow accessible names
-- Button Shapes support in custom controls
-- Large Content Viewer adoption for custom bars
-- Full Keyboard Access and Switch Control depth testing
-
-#### Assistive Access
-- Assistive Access support (iOS 17+, cognitive disabilities)
-
-#### App Store Connect
-- Accessibility Nutrition Labels (including Larger Text for tvOS apps)
-
-### App Store Rejection Defense
-
-#### Guideline 2.5.2 - Accessibility
-
-Common rejection scenarios:
-- "App is not accessible to users with disabilities"
-- "VoiceOver cannot access key features"
-- "Text does not scale with Dynamic Type"
-- "Insufficient color contrast in UI"
-
-#### 48-Hour Resubmit Pressure
-- Systematic issue identification
-- Priority triage (blockers vs enhancements)
-- Compliance verification workflow
-- Resubmission checklist
-
-## When to Use This Diagnostic
-
-Use this diagnostic when:
-- App Store rejected for accessibility (Guideline 2.5.2)
-- Preparing for App Store submission or declaring Accessibility Nutrition Labels
-- Accessibility audit requested by legal/compliance
-- Users report VoiceOver issues
-- Adding new UI components or screens
-- Preparing a tvOS app for Large Text (tvOS 27)
-- Building a reading app (books, articles) that VoiceOver or Speak Screen stumbles through
-- Adding captions or subtitle styling to a video player (generated subtitles, live style preview)
-- Before major releases
+Use when you're experiencing:
+- Complaints from VoiceOver users, or features you can't yet declare in your Accessibility Nutrition Labels
+- VoiceOver reads "Button" or a symbol name instead of what a control does, or moves through the screen in the wrong order
+- Text that doesn't grow with Dynamic Type, or that clips or truncates at large sizes
+- Text that is hard to read against its background in light or dark mode, or status shown by color alone
+- Touch targets smaller than 44×44 points, or crowded too close together
+- Custom controls, such as sliders or drag surfaces, that VoiceOver, Switch Control, or Voice Control users can't operate
+- New content that VoiceOver announces but can't reach, or announcements that stutter during a drag
+- Features that need touch and can't be reached with a keyboard, Full Keyboard Access, or Switch Control
+- Animations that ignore Reduce Motion
+- An app missing from Assistive Access, or showing its full interface there
+- VoiceOver or Speak Screen stopping at every paragraph or page in a reading app
+- Generated subtitles that never appear in your video player, or no way to restyle captions
+- Reading order, table navigation, or toolbar labels that break when a window resizes
+- Custom controls that ignore Button Shapes, or custom tab bars and toolbars without the Large Content Viewer
+- Text that doesn't scale on Apple TV, now that tvOS 27 adds Large Text
 
 ## Example Prompts
 
-- "My app was rejected under Guideline 2.5.2 for accessibility — how do I fix it before resubmitting?"
-- "How do I test my app with VoiceOver before I submit to the App Store?"
-- "My layout breaks at the largest Dynamic Type size — how do I make it scale?"
-- "What contrast ratio do I need to pass WCAG AA and App Store review?"
-- "How do I add generated subtitles and subtitle styling to my video player accessibly?"
+- "Can we claim VoiceOver support in our Accessibility Nutrition Labels? What has to work first?"
+- "How do I test my app with VoiceOver before I submit it?"
+- "My layout breaks at the largest Dynamic Type size. How do I make it adapt?"
+- "What contrast ratio do I need to pass WCAG AA?"
+- "How do I make my custom slider work with VoiceOver?"
+- "How do I add generated subtitles and subtitle styling to my video player?"
 - "What goes in the Accessibility Nutrition Labels, and how do I declare them?"
 
 ## Diagnostic Workflow
 
-```
-1. VoiceOver Sweep (30-60 min)
-   ├─ Close eyes, navigate entire app
-   ├─ Document unintelligible or missing labels
-   ├─ Test all interactive elements
-   └─ Verify forms and error states
+Your assistant guides you through three steps.
 
-2. Dynamic Type Test (15-30 min)
-   ├─ Settings → Accessibility → Larger Text
-   ├─ Max size (AX5 / 310%)
-   ├─ Navigate all screens
-   └─ Document truncation and breaking layouts
+### Step 1: Fix the Critical Issues
 
-3. Color Contrast Scan (15-30 min)
-   ├─ Use Accessibility Inspector
-   ├─ Check all text against backgrounds
-   ├─ Test in light mode and dark mode
-   └─ Verify WCAG AA compliance (4.5:1)
+The skill rates seven core issues by severity, with missing VoiceOver labels the most severe:
+- **VoiceOver labels and hints** – descriptive labels, hints only where the action isn't obvious, and hidden decorative images (WCAG 4.1.2)
+- **Dynamic Type** – semantic text styles, `Font.custom(_:size:relativeTo:)` or `@ScaledMetric` for custom sizes, and layouts that reflow instead of clipping (WCAG 1.4.4)
+- **Color contrast** – 4.5:1 for normal text and 3:1 for large text at Level AA, 7:1 at Level AAA, measured rather than judged by eye, and status that doesn't rely on color alone (WCAG 1.4.3 and 1.4.6)
+- **Touch targets** – hit regions of at least 44×44 points, as Apple's guidelines and WCAG 2.5.5 ask, with room between targets
+- **Keyboard navigation** – focus support and keyboard shortcuts on iPadOS and macOS (WCAG 2.1.1)
+- **Reduce Motion** – simpler animation, or none, when the setting is on (WCAG 2.3.3)
+- **Common violations** – unlabeled images, custom buttons without the button trait, custom controls VoiceOver can't adjust, and state changes VoiceOver never announces
 
-4. Touch Target Validation (15-30 min)
-   ├─ Measure all interactive elements
-   ├─ Verify 44×44pt minimum
-   ├─ Check spacing between targets
-   └─ Test with large hands on smallest device
-```
+### Step 2: Cover the Areas Your App Uses
 
-## Design Review Push-Back
+- **Custom controls** – choosing among adjustable actions, passthrough gestures, direct touch, and custom actions, with custom actions as the fallback for Switch Control and Voice Control
+- **Announcements** – when to post `.announcement`, `.layoutChanged`, or `.screenChanged`, how to throttle announcements during a drag, and how to set priority for a message that must not be interrupted
+- **Assistive Access** – the Info.plist opt-in (iOS 17+), runtime detection (iOS 18+), and a dedicated `AssistiveAccess` scene (iOS 26+)
+- **Continuous reading** – linking text elements so VoiceOver keeps going across paragraphs, automatic page turns for read-all, and `UITextInput` for custom-rendered text
+- **Captions and subtitles** – a subtitle-selection UI so generated subtitles (new in the 27 releases) reach users, and live subtitle style preview (iOS 26.4+)
+- **Resizable windows** – reading order after layout changes, table and grid navigation, labels for items in the toolbar overflow menu, Button Shapes, the Large Content Viewer, and testing with Full Keyboard Access and Switch Control
+- **tvOS Large Text** – tvOS 27 brings system-wide text scaling to Apple TV, including shelf layouts that show fewer items at accessibility sizes
 
-**Scenario**: Designer insists on 12pt font that breaks Dynamic Type
+### Step 3: Verify with Tools
 
-**Framework**:
-1. **Cite Apple HIG**: "All text must support Dynamic Type"
-2. **Show compliance**: "App Store Review Guideline 2.5.2"
-3. **Demonstrate issue**: Record VoiceOver navigation breaking
-4. **Offer alternatives**: Suggest scalable alternatives
-5. **Escalate if needed**: "This is a rejection risk"
-
-**Scenario**: Design requires color-only information (red/green status)
-
-**Framework**:
-1. **Cite WCAG**: "Success Criterion 1.4.1 - Use of Color"
-2. **Show impact**: "8% of males are colorblind"
-3. **Demonstrate issue**: Screenshot in grayscale
-4. **Offer alternatives**: Icons, text labels, patterns
-5. **Document risk**: "Potential rejection under 2.5.2"
-
-## Tools and Resources
-
-### Xcode Accessibility Inspector
-- VoiceOver preview
-- Contrast ratio calculator
-- Audit scans
-- Element hierarchy
-
-### System Settings
-- VoiceOver (Settings → Accessibility → VoiceOver)
-- Display & Text Size (larger text, bold text)
-- Reduce Motion
-- Increase Contrast
-
-### Third-Party Tools
-- Sim Daltonism (colorblindness simulator)
-- Contrast (contrast checker app)
-- WAVE (web accessibility checker)
-
-## Related Resources
-
-- [audit-accessibility](/commands/accessibility/audit-accessibility) – Quick automated scan
-- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
-- [Apple HIG - Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)
+- **Accessibility Inspector** – inspect each element's label, value, traits, and hierarchy, then run an audit for contrast, hit region, clipped text, element description, and trait issues
+- **VoiceOver checklist** – navigation, interaction, and content checks with VoiceOver on, which needs a physical device because VoiceOver isn't available in Simulator
+- **System settings** – Larger Text, Increase Contrast, and Reduce Motion, checked in both light and dark mode
+- **Digital Color Meter** – sample exact colors when adjusting brand colors to meet a contrast ratio
 
 ## Documentation Scope
 
-This is a **diagnostic skill** — mandatory workflows with pressure defense scenarios.
+This page documents the `accessibility-diag` skill (in the `axiom-accessibility` suite), which your assistant loads when you fix accessibility issues or prepare your Accessibility Nutrition Labels. To scan your code for these issues, run `/axiom:audit accessibility`, which launches the accessibility-auditor agent; to check computed VoiceOver announcements (derived from the accessibility tree) and Dynamic Type in a running app, use the simulator-tester agent. The skill file also explains Accessibility Nutrition Labels (what each claim requires, and why no App Store guideline requires accessibility) and summarizes WCAG levels A, AA, and AAA. When a design request would remove labels, lock font sizes, lower contrast, or shrink touch targets, it suggests how to respond: show the stakes, demonstrate the problem, offer an alternative that keeps the look, and record the decision.
 
-#### Diagnostic includes
-- Step-by-step troubleshooting
-- App Store rejection defense
-- Design review push-back frameworks
-- Compliance verification checklists
-- Production crisis scenarios
+## Related
 
-**Vs Reference**: Diagnostic skills enforce specific workflows and handle pressure scenarios. Reference skills provide comprehensive information without mandatory steps.
+- [accessibility-auditor](/agents/accessibility-auditor) – Scans your code for missing labels, fixed font sizes, contrast failures, and small touch targets
+- [audit-accessibility](/commands/accessibility/audit-accessibility) – The command that runs the accessibility auditor
+- [simulator-tester](/agents/simulator-tester) – Checks the VoiceOver announcements computed from the accessibility tree, and Dynamic Type, in a running Simulator
+- [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/) – The success criteria the skill cites
+- [Human Interface Guidelines: Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility) – Apple's accessibility design guidance, including minimum target sizes
 
-## Size
+## Resources
 
-44 KB - Diagnostic workflows with rejection defense
+**WWDC**: 2026-219, 2026-220, 2026-221, 2026-256

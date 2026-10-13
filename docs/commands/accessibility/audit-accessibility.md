@@ -6,7 +6,7 @@ allowed-tools: Glob(*.swift), Grep(*)
 
 # Accessibility Audit
 
-I'll perform a comprehensive accessibility audit of your iOS/macOS codebase, checking for the most critical issues that affect users with disabilities and cause App Store rejections.
+I'll perform a comprehensive accessibility audit of your iOS/macOS codebase, checking for the most critical issues that affect users with disabilities and decide which Accessibility Nutrition Labels your app can truthfully claim.
 
 ## What I'll Check
 
@@ -61,7 +61,7 @@ I'll perform a comprehensive accessibility audit of your iOS/macOS codebase, che
 ```
 === ACCESSIBILITY AUDIT RESULTS ===
 
-CRITICAL Issues (App Store Rejection Risk):
+CRITICAL Issues (users can't complete a task):
 - src/Views/ProductCard.swift:42 - Missing accessibilityLabel on Button
   WCAG 4.1.2 (Level A)
   Fix: Add .accessibilityLabel("Add to cart")
@@ -131,7 +131,7 @@ Text("Warning")
 // BAD - Too small
 Button("X") {}.frame(width: 24, height: 24)
 
-// GOOD - 44x44pt minimum
+// GOOD - 44x44pt hit region, per the HIG
 Button("X") {}.frame(minWidth: 44, minHeight: 44)
 ```
 
@@ -165,7 +165,7 @@ if !UIAccessibility.isReduceMotionEnabled {
 
 After fixing issues:
 1. Run Accessibility Inspector (Xcode → Open Developer Tool)
-2. Test with VoiceOver (Cmd+F5 on simulator)
+2. Test with VoiceOver on a physical device (it isn't available in Simulator)
 3. Test with Dynamic Type (Settings → Accessibility → Display & Text Size)
 4. Test with Reduce Motion (Settings → Accessibility → Motion → Reduce Motion)
 
