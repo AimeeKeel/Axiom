@@ -1,11 +1,11 @@
 /**
  * Owns the artifacts derived from SKILL.md frontmatter.
  *
- * Two committed files are generated from the router frontmatter rather than
- * hand-written:
+ * Three committed files are generated from frontmatter rather than hand-written:
  *
- *   - the `skills[]` array in `claude-code.json`, and
- *   - `commands/ask.md`, built from that array plus the agents on disk.
+ *   - the `skills[]` array in `claude-code.json`,
+ *   - `commands/ask.md`, built from that array plus the agents on disk, and
+ *   - the router and command tables in the plugin README (between markers).
  *
  * Both used to live inline in `set-version.js`, which meant the only way to
  * regenerate a *content* derivation was to run a *version* script — and that
@@ -21,7 +21,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { manifestSkillsFromDisk } from "./skill-listing.ts";
+import { manifestSkillsFromDisk, readShippedListing } from "./skill-listing.ts";
 
 export interface ListingSkill {
   name: string;
@@ -268,8 +268,40 @@ export function generateAskMd(claudeCode: { skills?: ListingSkill[] }, agentsDir
     .replace("{{agentsSection}}", agentsSection);
 }
 
+const frontmatterField = (file: string, field: string): string =>
+  new RegExp(`^${field}:\\s*(.*)$`, "m").exec(fs.readFileSync(file, "utf8"))?.[1]?.trim() ?? "";
+const cell = (text: string) => text.replace(/\|/g, "\\|");
+
 /**
- * Regenerate both frontmatter-derived artifacts.
+ * The plugin README ships inside every install, and it sat at 0.9.35 for months while
+ * the routers and commands changed under it (found 2026-10-13). Its router and command
+ * tables are generated from frontmatter between markers; everything else is hand-written.
+ */
+export function renderPluginReadmeTables(readme: string, pluginDir: string): string {
+  // readShippedListing reads only the frontmatter and refuses a block-scalar description,
+  // which a whole-file regex would render as ">".
+  const routers = readShippedListing(pluginDir).map(({ name, description }) => {
+    const text = description.replace(/^Use when\s+/, "");
+    return `| \`${name}\` | ${cell(text.charAt(0).toUpperCase() + text.slice(1))} |`;
+  });
+  const commandsDir = path.join(pluginDir, "commands");
+  const commands = fs.readdirSync(commandsDir)
+    .filter((f) => f.endsWith(".md"))
+    .sort()
+    .map((f) => `| \`/axiom:${f.slice(0, -3)}\` | ${cell(frontmatterField(path.join(commandsDir, f), "description"))} |`);
+  const tables: Record<string, string> = {
+    ROUTERS: ["| Router | Use it when |", "|--------|-------------|", ...routers].join("\n"),
+    COMMANDS: ["| Command | What it does |", "|---------|--------------|", ...commands].join("\n"),
+  };
+  return readme.replace(
+    /(<!-- AXIOM_README_(ROUTERS|COMMANDS)_BEGIN -->\n)[\s\S]*?(\n<!-- AXIOM_README_\2_END -->)/g,
+    (_m, begin: string, key: string, end: string) => `${begin}${tables[key]}${end}`,
+  );
+}
+
+/**
+ * Regenerate the three frontmatter-derived artifacts: `claude-code.json`'s `skills[]`,
+ * `commands/ask.md`, and the plugin README's router and command tables.
  *
  * Mutates `claudeCode.skills` in place (preserving the committed ordering) and
  * returns the write set, so callers can fold it into their own atomic-write pass
@@ -286,6 +318,12 @@ export function manifestUpdates(
     (claudeCode.skills ?? []).map((s) => s.name),
   );
 
+  // Queue the README only when its tables changed: --tag treats every queued path as an
+  // expected dirty file, and the README's prose is hand-written.
+  const readmePath = path.join(pluginDir, "README.md");
+  const readme = fs.readFileSync(readmePath, "utf8");
+  const renderedReadme = renderPluginReadmeTables(readme, pluginDir);
+
   return [
     {
       path: path.join(pluginDir, "claude-code.json"),
@@ -297,5 +335,8 @@ export function manifestUpdates(
       content: generateAskMd(claudeCode, path.join(pluginDir, "agents")),
       label: ".claude-plugin/plugins/axiom/commands/ask.md",
     },
+    ...(renderedReadme === readme
+      ? []
+      : [{ path: readmePath, content: renderedReadme, label: ".claude-plugin/plugins/axiom/README.md" }]),
   ];
 }

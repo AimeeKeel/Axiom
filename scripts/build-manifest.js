@@ -4,9 +4,10 @@
  *
  *   npm run build:manifest
  *
- * Two committed files are generated rather than hand-written: the `skills[]`
- * array in `claude-code.json`, and the `/axiom:ask` built from that array plus
- * the agents on disk. Editing any router's description invalidates both.
+ * Three committed files are generated rather than hand-written: the `skills[]`
+ * array in `claude-code.json`, the `/axiom:ask` built from that array plus the
+ * agents on disk, and the plugin README's router and command tables. Editing any
+ * router's description invalidates all three.
  *
  * Versions are deliberately not touched here — stamping is `set-version.js`'s
  * job, and it calls the same `manifestUpdates()` this does, so a content-only
@@ -96,7 +97,7 @@ function main() {
 
   console.log(
     pending.length === 0
-      ? "  (manifest and ask.md already match the frontmatter)"
+      ? "  (manifest, ask.md and the plugin README tables already match the frontmatter)"
       : `  regenerated ${pending.length} file(s)`,
   );
 

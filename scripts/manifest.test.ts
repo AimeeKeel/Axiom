@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { generateAskMd, manifestUpdates, readAgentsFromDisk } from "./manifest.ts";
+import { generateAskMd, manifestUpdates, readAgentsFromDisk, renderPluginReadmeTables } from "./manifest.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -14,7 +15,7 @@ function committedManifest() {
   return JSON.parse(fs.readFileSync(claudeCodePath, "utf8"));
 }
 
-// The generator is what turns frontmatter into two committed files, and it had
+// The generator is what turns frontmatter into three committed files, and it had
 // no test: the drift that took four CI runs to surface on 2026-09-17 was caught
 // by a different test's assertion, not by anything covering this code.
 test("ask.md lists the agents on disk rather than the empty manifest array", () => {
@@ -88,4 +89,38 @@ test("manifestUpdates regenerates the description from frontmatter, not the comm
     entry.description,
     committedManifest().skills.find((s: { name: string }) => s.name === first).description,
   );
+});
+
+test("the committed plugin README's router and command tables match what frontmatter generates", () => {
+  const readmePath = path.join(pluginDir, "README.md");
+  const committed = fs.readFileSync(readmePath, "utf8");
+  assert.equal(renderPluginReadmeTables(committed, pluginDir), committed, "plugin README tables are stale: run npm run build:manifest");
+});
+
+test("renderPluginReadmeTables rewrites only the marked tables, from frontmatter", () => {
+  const stale = "intro\n<!-- AXIOM_README_ROUTERS_BEGIN -->\n| `axiom-gone` | old |\n<!-- AXIOM_README_ROUTERS_END -->\noutro\n";
+  const out = renderPluginReadmeTables(stale, pluginDir);
+  assert.ok(out.startsWith("intro\n") && out.endsWith("outro\n"), "text outside the markers changed");
+  assert.ok(!out.includes("axiom-gone"), "a retired router survived");
+  assert.ok(out.includes("| `axiom-build` | Any iOS or macOS build fails") || out.includes("| `axiom-build` | ANY iOS or macOS build fails"), "router row not generated from frontmatter");
+});
+
+test("manifestUpdates queues the plugin README only when its generated tables changed", (t) => {
+  // --tag treats every queued path as expected to be dirty, so an unchanged README must not be
+  // queued; a stale one must be, or build:manifest and set-version stop regenerating its tables.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "manifest-readme-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(dir, "skills/axiom-x"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "skills/axiom-x/SKILL.md"), "---\nname: axiom-x\ndescription: Use when testing.\n---\n");
+  fs.mkdirSync(path.join(dir, "commands"));
+  fs.writeFileSync(path.join(dir, "commands/go.md"), "---\ndescription: Goes.\n---\n");
+  fs.mkdirSync(path.join(dir, "agents"));
+  const readmePath = path.join(dir, "README.md");
+  const current = "<!-- AXIOM_README_ROUTERS_BEGIN -->\n| Router | Use it when |\n|--------|-------------|\n| `axiom-x` | Testing. |\n<!-- AXIOM_README_ROUTERS_END -->\n";
+  const readmeUpdates = () => manifestUpdates({ skills: [] }, dir).filter((u) => u.path === readmePath).map((u) => u.content);
+
+  fs.writeFileSync(readmePath, current);
+  assert.deepEqual(readmeUpdates(), []);
+  fs.writeFileSync(readmePath, current.replace("Testing.", "stale"));
+  assert.deepEqual(readmeUpdates(), [current]);
 });

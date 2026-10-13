@@ -1,606 +1,117 @@
-# Axiom Plugin
+# Axiom
 
-Comprehensive iOS development skills for Claude Code with the latest WWDC 2025 guidance — Apple Intelligence (Foundation Models), Liquid Glass, Widgets & Extensions, SwiftUI Performance, Recording UI Automation, systematic debugging, Swift concurrency, and safe persistence patterns.
+Apple-platform development expertise for your coding assistant: <!--ax:routers-->27<!--/ax--> skill routers over <!--ax:skills-->280<!--/ax--> skills, <!--ax:agents-->42<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> commands, and its command-line tools. It works in Claude Code and the Claude app, and in Codex, Cursor, Pi and any MCP client.
 
-**Version**: 0.9.35
-**Status**: Preview Release
-**Skills**: 50 | **Commands**: 15 | **Agents**: 13 | **Hooks**: 4
+## Install
 
-## Installation
+**Claude Code**
 
-In Claude Code, run:
-
-```bash
+```
 /plugin marketplace add CharlesWiltgen/Axiom
 ```
 
-Then search for "axiom" in the `/plugin` menu and install.
+Then open `/plugin`, search for "axiom", and install it.
 
-## Hooks
+**Claude app** – In your browser at claude.ai or in the Claude desktop app, open **Customize > Plugins**, select **Add > Add marketplace**, enter `CharlesWiltgen/Axiom`, and add the **axiom** plugin.
 
-Axiom includes **4 automatic hooks** that trigger on specific events to enhance your workflow:
-
-### 1. Build Failure Auto-Trigger
-**Event**: After Bash command execution
-**Trigger**: When `xcodebuild` fails with non-zero exit
-**Action**: Suggests running `/axiom-fix-build` for automatic diagnostics
-
-### 2. Session Environment Check
-**Event**: Session start
-**Action**: Checks for common environment issues:
-- Zombie xcodebuild processes (warns if >5)
-- Large Derived Data (warns if >10GB)
-
-**Output**: Silent if no issues detected
-
-### 3. Core Data Model Protection
-**Event**: Before Edit/Write operations
-**Trigger**: Editing `.xcdatamodeld` files
-**Action**: Warns about migration planning risks, suggests running `/axiom-audit-core-data`
-
-### 4. Swift Auto-Format
-**Event**: After Write/Edit operations
-**Trigger**: Swift files modified
-**Action**: Runs `swiftformat` to ensure consistent code style
-**Requirement**: [swiftformat](https://github.com/nicklockwood/SwiftFormat) must be installed (`brew install swiftformat`)
+**Codex, Cursor, Pi, Xcode and MCP clients** – See the [install guides](https://charleswiltgen.github.io/Axiom/start/).
 
 ## Skills
 
-### 🆕 WWDC 2025 Skills
-
-#### `axiom-liquid-glass`
-Apple's new material design system (iOS 26+) with expert review checklist for validating implementations.
-
-**Use when**: Implementing Liquid Glass effects, reviewing UI for adoption, debugging visual artifacts, requesting expert review
-
-**Key features**:
-- Expert Review Checklist (7 sections)
-- Regular vs Clear variant decision criteria
-- Layered system architecture
-- Troubleshooting and migration patterns
-
-**Requirements**: iOS 26+, Xcode 26+
-
----
-
-#### `axiom-swiftui`
-Comprehensive SwiftUI suite covering views, navigation, layout, animations, performance, architecture, gestures, debugging, and iOS 26 features.
-
-**Use when**: App feels sluggish, animations stutter, scrolling performance issues, SwiftUI bottlenecks
-
-**Key features**:
-- New SwiftUI Instrument walkthrough
-- Cause & Effect Graph for data flow visualization
-- Long view body updates diagnosis
-- Unnecessary updates elimination
-- Performance optimization checklist
-
-**Requirements**: Xcode 26+, iOS 26+ SDK
-
----
-
-#### `axiom-testing`
-Recording UI Automation (Xcode 26) with condition-based waiting patterns.
-
-**Use when**: Writing UI tests, recording interactions, flaky tests, race conditions
-
-**Key features**:
-- Recording UI Automation (Record → Replay → Review)
-- Condition-based waiting (eliminates sleep() timeouts)
-- Accessibility-first testing
-- Real-world impact: 15 min → 5 min test suite
-
-**Requirements**: Xcode 26+ for Recording UI Automation
-
----
-
-#### `axiom-apple-docs-research`
-Research methodology for Apple frameworks using Chrome browser WWDC transcript capture and sosumi.ai documentation.
-
-**Use when**: Researching Apple frameworks, retrieving WWDC transcripts, looking up API documentation, creating skills from Apple sources
-
-**Key features**:
-- Chrome auto-capture of full WWDC transcripts with timestamps
-- sosumi.ai URL patterns for clean markdown documentation
-- Complete workflows for feature research
-- Time saved: 30-40 min per WWDC session vs manual watching
-
-**Impact**: 3-4 hours saved per comprehensive research task
-
----
-
-### 📱 Widgets & Extensions
-
-#### `axiom-extensions-widgets`
-Discipline-enforcing skill for widgets, Live Activities, and Control Center controls with anti-patterns and pressure scenarios.
-
-**Use when**: Implementing widgets, debugging refresh issues, sharing data between app and extension, Live Activity issues
-
-**Key features**:
-- 7 anti-patterns with time costs (2-4 hours debugging prevented)
-- Decision tree for symptom-based debugging
-- 3 pressure scenarios with phased strategies
-- Mandatory checklists (pre-release + post-release)
-- 80% rationalization prevention rate
-
-**TDD Tested**: Grade A+ from pressure testing
-
----
-
-#### `axiom-extensions-widgets-ref` (Reference)
-Comprehensive API reference for WidgetKit, ActivityKit, Control Center widgets, and extension lifecycle (iOS 14+).
-
-**Use when**: API lookups, understanding widget families, timeline system details, Live Activities implementation, Control Center widgets
-
-**Key features**:
-- 11 parts covering all widget types (2250+ lines)
-- Troubleshooting section (10 common scenarios)
-- "Building Your First Widget" workflow (10 steps)
-- Expert review checklist (50+ items)
-- Complete testing guidance
-- Performance implications and optimization strategies
-
-**Platforms**: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 2+
-
----
-
-### 🔧 Debugging & Troubleshooting
-
-#### `axiom-xcode-debugging`
-Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes.
-
-**Use when**: BUILD FAILED, simulator hangs, zombie processes, "No such module" errors, mysterious test failures
-
-**Key features**:
-- Mandatory environment checks
-- Quick fix workflows
-- Decision tree for diagnosing problems
-- Time cost transparency
-
-**TDD Tested**: 6 refinements from pressure testing
-
----
-
-#### `axiom-memory-debugging`
-Systematic memory leak diagnosis with 5 patterns covering 90% of real-world issues.
-
-**Use when**: App memory grows over time, multiple instances of same class, retain cycles
-
-**Key features**:
-- 5 comprehensive leak patterns
-- Instruments workflow (Leaks + Allocations)
-- Reduces debugging from 2-3 hours to 15-30 min
-
----
-
-#### `axiom-build-debugging`
-Dependency resolution for CocoaPods and Swift Package Manager conflicts.
-
-**Use when**: Dependency conflicts, "Multiple commands produce" errors, framework version mismatches
-
----
-
-#### `axiom-build-performance`
-Comprehensive build performance optimization with Build Timeline analysis, type checking improvements, and parallelization workflows.
-
-**Use when**: Build times are slow, investigating build performance, analyzing Build Timeline, identifying type checking bottlenecks, optimizing incremental builds
-
-**Key features**:
-- Build Timeline analysis and critical path optimization
-- Type checking performance improvements
-- Build phase script optimization
-- Compilation mode settings (incremental vs whole module)
-- Build parallelization patterns
-- Measurement and verification workflows
-
-**Based on**: WWDC 2018-408, WWDC 2022-110364
-
-**Quick win**: Use `/axiom-optimize-build` to scan for common issues automatically
-
-**Expected impact**: 30-50% faster incremental debug builds, 5-10 seconds saved per build from conditional scripts
-
----
-
-#### `axiom-deep-link-debugging`
-Add debug-only deep links for automated testing and closed-loop debugging with visual verification.
-
-**Use when**: Need to navigate to specific screens for testing, integrating with simulator automation, enabling visual debugging workflows
-
-**Key features**:
-- Debug-only URL scheme patterns for SwiftUI
-- NavigationPath integration for iOS 16+
-- Stripped from release builds automatically
-- Enables closed-loop debugging (60-75% faster iteration)
-
-**Requirements**: iOS 13+
-
----
-
-### ⚡ Swift & Concurrency
-
-#### `axiom-concurrency`
-Swift 6 strict concurrency patterns - async/await, MainActor, Sendable, actor isolation.
-
-**Use when**: Actor isolation errors, data race warnings, converting delegate callbacks to async-safe patterns
-
-**Key features**:
-- Copy-paste templates for common patterns
-- Decision tree for concurrency errors
-- Anti-patterns to avoid
-- Code review checklist
-
-**TDD Tested**: Critical checklist contradiction found and fixed
-
----
-
-### 💾 Persistence
-
-#### `axiom-database-migration`
-Safe database schema evolution for SQLite/GRDB/SwiftData. Prevents data loss.
-
-**Use when**: Adding/modifying database columns, "FOREIGN KEY constraint failed", "no such column" errors
-
-**Key features**:
-- Safe migration patterns (additive, idempotent, transactional)
-- Testing checklist (fresh install + migration paths)
-- Multi-layered prevention for 100k+ user apps
-
-**TDD Tested**: Validated under pressure
-
----
-
-#### `axiom-sqlitedata`
-SQLiteData (Point-Free) patterns, batch performance, CloudKit sync.
-
-**Use when**: Working with SQLiteData @Table models, @FetchAll/@FetchOne queries, batch imports
-
----
-
-#### `axiom-grdb`
-Raw GRDB for complex queries, ValueObservation, DatabaseMigrator patterns.
-
-**Use when**: Writing raw SQL queries, complex joins, reactive queries, dropping down from SQLiteData
-
----
-
-#### `axiom-swiftdata`
-SwiftData with iOS 26+ features, @Model definitions, Swift 6 concurrency.
-
-**Use when**: Working with SwiftData, @Query in SwiftUI, @Relationship macros, CloudKit integration
-
----
-
-#### `axiom-swiftdata-migration`
-Custom SwiftData schema migrations with VersionedSchema and SchemaMigrationPlan for property type changes and relationship preservation.
-
-**Use when**: Creating SwiftData migrations, changing property types, preserving one-to-many/many-to-many relationships, two-stage migration patterns
-
-**Key features**:
-- willMigrate/didMigrate limitation explained
-- Two-stage migration pattern for type changes (String → AttributedString)
-- Relationship prefetching during migration
-- Many-to-many migration patterns
-- Real device testing requirements
-
----
-
-#### `axiom-swiftdata-migration-diag` (Diagnostic)
-Systematic diagnostics for failed SwiftData migrations with relationship errors and schema version mismatches.
-
-**Use when**: "Expected only Arrays for Relationships" error, app crashes after schema change, migration works in simulator but fails on device
-
-**Key features**:
-- Error → Fix mapping for common migration failures
-- Debugging checklist with SwiftData debug logging
-- willMigrate/didMigrate troubleshooting
-- Real device testing workflow
-
----
-
-### 🌐 Networking
-
-#### `axiom-networking`
-Network.framework patterns for UDP/TCP with NWConnection (iOS 12-18) and NetworkConnection (iOS 26+) with structured concurrency.
-
-**Use when**: Implementing network connections, migrating from sockets/URLSession streams, debugging connection failures
-
-**Key features**:
-- 8 patterns covering both iOS 12-18 and iOS 26+ APIs
-- TLV framing and Coder protocol for iOS 26+
-- Prevents deprecated API usage (SCNetworkReachability, CFSocket)
-- Migration guides from BSD sockets
-
----
-
-#### `axiom-networking` (Diagnostic)
-Systematic Network.framework troubleshooting for connection timeouts, TLS failures, data arrival issues.
-
-**Use when**: Connection times out, TLS handshake fails, data not arriving, WiFi/cellular transitions
-
-**Key features**:
-- 8+ diagnostic patterns with symptom/diagnosis/fix
-- Production crisis scenario defense
-- Quick reference table for common errors
-- Network logging interpretation guide
-
----
-
-#### `axiom-networking` (Reference)
-Comprehensive Network.framework API reference covering all iOS 12-26+ networking APIs.
-
-**Use when**: Planning network implementation, understanding API differences, migrating between versions
-
-**Key features**:
-- All 12 WWDC 2025 code examples
-- Complete NWConnection and NetworkConnection coverage
-- Migration strategies and testing checklist
-
----
-
-### 🤖 Apple Intelligence
-
-#### `axiom-foundation-models`
-On-device AI with Apple's Foundation Models framework (iOS 26+) — @Generable structured output, streaming, tool calling.
-
-**Use when**: Implementing on-device AI features, text summarization, classification, extraction, creating structured output from LLM
-
-**Key features**:
-- 6 comprehensive patterns covering all key APIs
-- Anti-patterns preventing context overflow, blocking UI, manual JSON parsing
-- Tool calling for external data integration
-- Streaming with PartiallyGenerated for better UX
-- 3 pressure scenarios defending against wrong approaches
-
-**Requirements**: iOS 26+, macOS 26+, iPadOS 26+, visionOS 26+
-
----
-
-#### `axiom-foundation-models-diag` (Diagnostic)
-Systematic Foundation Models troubleshooting for context exceeded, guardrail violations, slow generation, availability issues.
-
-**Use when**: Generation fails, output wrong/hallucinated, too slow, UI frozen, context window exceeded
-
-**Key features**:
-- 12 diagnostic patterns with symptom/diagnosis/fix
-- Production crisis scenario defense
-- Decision tree covering 5 failure categories
-- Quick reference table for common errors
-
----
-
-#### `axiom-foundation-models-ref` (Reference)
-Complete Foundation Models framework API reference with all WWDC 2025 code examples (26 total).
-
-**Use when**: Planning AI implementation, understanding API patterns, need complete code examples
-
-**Key features**:
-- All WWDC 2025 code examples (sessions 286, 259, 301)
-- Complete LanguageModelSession, @Generable, Tool protocol coverage
-- Dynamic schemas and generation options
-- Performance profiling with Instruments
-
----
-
-### 💰 In-App Purchases
-
-#### `axiom-in-app-purchases`
-Testing-first workflow for implementing in-app purchases with StoreKit 2 (iOS 15+). Prevents common IAP mistakes through .storekit configuration before code.
-
-**Use when**: Implementing consumables, subscriptions, non-consumables, or troubleshooting purchase flows
-
-**Key features**:
-- Testing-first workflow with .storekit configuration
-- Options A/B/C framework for pragmatic decision-making
-- Transaction verification and listener patterns
-- 6 comprehensive implementation patterns
-- Fresh start and sunk cost guidance
-
-**TDD Tested**: A-quality validated through pressure scenarios
-
----
-
-#### `axiom-storekit-ref` (Reference)
-Complete StoreKit 2 API reference with iOS 18.4 latest features and all WWDC 2021-2025 patterns.
-
-**Use when**: API lookups, understanding Product/Transaction types, implementing purchase flows, subscription management
-
-**Key features**:
-- Complete Product, Transaction, AppTransaction, RenewalInfo coverage
-- iOS 18.4 new fields (appTransactionID, offerPeriod)
-- StoreKit Views for pre-built UI
-- App Store Server API integration
-- Testing with .storekit configuration
-- Migration from StoreKit 1 patterns
-
-**Platforms**: iOS 15+, macOS 12+, tvOS 15+, watchOS 8+, visionOS 1+
-
----
-
-#### `iap-auditor` and `iap-implementation` Agents
-
-**Natural language triggers**:
-- "Audit my in-app purchase code"
-- "Implement StoreKit 2 subscriptions"
-- "Review IAP implementation"
-- "Add consumable purchases to my app"
-
-**iap-auditor**: Scans existing IAP code for missing transaction.finish() calls, weak verification, missing restore functionality
-
-**iap-implementation**: Implements IAP from scratch following testing-first workflow with StoreManager pattern
-
----
-
-### 📋 Audit Commands
-
-#### `/axiom-audit-networking`
-Scan codebase for deprecated networking APIs and anti-patterns with file:line references.
-
-**Detects**: SCNetworkReachability, CFSocket, NSStream, hardcoded IPs, missing error handling
-
----
-
-#### `/axiom-audit-concurrency`
-Scan for Swift concurrency violations and unsafe patterns.
-
----
-
-#### `/axiom-audit-accessibility`
-Comprehensive accessibility audit for WCAG compliance.
-
----
-
-#### `/axiom-audit-liquid-glass`
-Scan for Liquid Glass adoption opportunities in SwiftUI codebase.
-
----
-
-#### `/axiom-audit-core-data`
-Quick Core Data safety audit for schema migrations, thread violations, N+1 queries.
-
----
-
-#### `/axiom-audit-memory`
-Scan for memory leak patterns across timer leaks, observer leaks, closure captures.
-
----
-
-### 🎯 Simulator Testing
-
-#### `simulator-tester` Agent
-
-Automated simulator testing with visual verification for closed-loop debugging.
-
-**Natural language triggers**:
-- "Can you test my app with location simulation?"
-- "Take a screenshot to verify the fix"
-- "Check if the push notification handling works"
-- "Navigate to Settings and take a screenshot"
-
-**Explicit command**: `/axiom-test-simulator`
-
-**Capabilities**:
-- Screenshot capture for visual verification
-- Video recording for complex workflows
-- Location simulation for GPS-based features
-- Push notification testing without a server
-- Permission management without manual tapping
-- Deep link navigation to specific screens
-- Status bar override for clean screenshots
-- Log analysis for crash detection
-
-**Use when**: Visual debugging, automated testing, test scenario setup, verifying fixes with screenshots
-
----
-
-#### `/axiom-screenshot`
-
-Quick screenshot capture from booted iOS Simulator.
-
-**What it does**: Captures screenshot, displays it (Claude is multimodal!), returns file path
-
-**Usage**: Simply run `/axiom-screenshot` and Claude will capture and analyze the current simulator state
-
-**Use when**: Quick visual verification, checking UI state, documenting bugs, verifying layout fixes
-
----
-
-## Usage
-
-Skills are automatically suggested by Claude Code based on context, or invoke them directly:
-
-```bash
-# WWDC 2025 skills
-/skill axiom-design
-/skill axiom-swiftui
-/skill axiom-testing
-
-# Debugging
-/skill axiom-build
-/skill axiom-performance
-
-# Swift & Concurrency
-/skill axiom-concurrency
-
-# Persistence
-/skill axiom-database-migration
-/skill axiom-sqlitedata
-/skill axiom-grdb
-/skill axiom-swiftdata
-
-# Networking
-/skill axiom-networking
-/skill axiom-networking
-/skill axiom-networking
-
-# Apple Intelligence
-/skill axiom-foundation-models
-/skill axiom-foundation-models-diag
-/skill axiom-foundation-models-ref
-
-# In-App Purchases
-/skill axiom-in-app-purchases
-/skill axiom-storekit-ref
-
-# Audit commands
-/axiom-audit-networking
-/axiom-audit-concurrency
-/axiom-audit-accessibility
-/axiom-audit-liquid-glass
-/axiom-audit-core-data
-/axiom-audit-memory
-
-# Simulator Testing
-/axiom-screenshot               # Quick screenshot capture
-/axiom-test-simulator           # Full simulator testing with scenarios
-
-# Build & Performance
-/axiom-optimize-build
-```
-
-## Philosophy
-
-Skills follow core principles:
-
-1. **Examples first** — Working code before theory
-2. **WWDC guidance** — Latest official Apple recommendations
-3. **Expert review** — Built-in validation checklists
-4. **Environment-first debugging** — Check build environment before code
-5. **Safety by default** — Prevent data loss with tested patterns
-6. **Compile-time safety** — Catch bugs at compile time with Swift 6
-7. **Copy-paste ready** — Working templates, not just theory
-
-## Quality Standards
-
-- **TDD Tested**: Core debugging/concurrency skills tested with Superpowers framework
-- **Reference Quality**: WWDC 2025 and persistence skills reviewed for accuracy, completeness, clarity, and practical value
-- **Real-world Impact**: All skills include measurable improvements and troubleshooting workflows
+Ask your question; your assistant loads the router that matches it, and the router loads the specific skill. Each router covers one area:
+
+<!-- AXIOM_README_ROUTERS_BEGIN -->
+| Router | Use it when |
+|--------|-------------|
+| `axiom-accessibility` | Fixing or auditing ANY accessibility issue — VoiceOver, Dynamic Type, color contrast, touch targets, WCAG compliance, App Store accessibility review. |
+| `axiom-ai` | Implementing, testing, or evaluating ANY Apple Intelligence, on-device AI, or speech-to-text feature. Covers Foundation Models, @Generable, LanguageModelSession, Tool protocol, eval suites, model-as-judge scoring, SpeechTranscriber, CoreML. |
+| `axiom-apple-docs` | You need Apple's own documentation or a Swift compiler diagnostic explained rather than recalled. |
+| `axiom-build` | ANY iOS or macOS build fails, a crash log needs diagnosing, a test run crashes, Xcode misbehaves, or an environment issue blocks work before code is the suspect. Covers build failures, dependency conflicts, simulator diagnostics. |
+| `axiom-concurrency` | Writing ANY async code, actors, or threads in an Apple-platform app, or seeing ANY concurrency error. Covers Swift 6 concurrency, @MainActor, Sendable, data races, async/await patterns. |
+| `axiom-data` | Working with ANY data persistence, database, storage, CloudKit, migration, or serialization in an Apple app. Covers SwiftData, Core Data, GRDB, SQLite, Realm, CloudKit sync, file storage, Codable, migrations. |
+| `axiom-design` | Making visual or interaction design decisions for an Apple app — HIG patterns, Liquid Glass, SF Symbols, typography, app entry-point and auth-flow structure. |
+| `axiom-games` | Building ANY 2D or 3D game with SpriteKit, SceneKit, or RealityKit, or adding touch controls or game controller support. Covers scene graphs, ECS, physics, actions, game loops, rendering, TouchController, GCController. |
+| `axiom-graphics` | Working with ANY GPU rendering, Metal, OpenGL migration, shaders, 3D content, RealityKit, AR, USD/USDZ files, or display performance. Covers Metal migration, shader conversion, RealityKit ECS, RealityView, USDKit, ProMotion. |
+| `axiom-health` | Working with HealthKit, WorkoutKit, health data, workouts, or fitness features on iOS or watchOS. Covers permissions, queries, background delivery, custom workouts, multidevice coordination. |
+| `axiom-integration` | Work crosses into Apple's system surfaces rather than your own UI or data — Siri and Shortcuts, widgets, Live Activities, in-app purchase, localization, privacy prompts, alarms, timers, calendar, reminders, contacts, SharePlay, VoIP and CallKit, accessory pairing, weather, Spotlight indexing, background tasks, Background Assets, push, or push on networks with no internet. |
+| `axiom-location` | Implementing location services, maps, geofencing, or debugging location/MapKit issues. Covers Core Location, CLMonitor, MapKit, annotations, directions. |
+| `axiom-macos` | Building ANY macOS app — windows, menus, sandboxing, distribution, AppKit bridging or modernization (control events, state restoration, concentric corners), or macOS-specific SwiftUI patterns. |
+| `axiom-media` | Working with camera, photos, audio, haptics, ShazamKit, on-device music analysis, face grouping and video highlights, screen recording, casting to non-AirPlay routes, SharePlay playback, the user's Apple Music library, lock-screen metadata, or CarPlay app design, templates, and navigation. Covers AVCaptureSession, AVFoundation, Core Haptics, MediaPlayer, MusicKit, NowPlaying, ScreenCaptureKit, DockKit. |
+| `axiom-networking` | Implementing or debugging ANY network connection, API call, or socket in an Apple app. Covers URLSession, Network.framework, NetworkConnection, connection diagnostics. |
+| `axiom-payments` | Accepting ANY real-world payment — Apple Pay, Wallet passes, Tap to Pay, Orders in Wallet. NOT in-app purchase / digital content (use axiom-integration). Covers entitlements, certs, signing, App Review payment rules. |
+| `axiom-performance` | An Apple-platform app feels slow, memory grows, battery drains, or ANY performance issue needs diagnosing. Covers memory leaks, profiling, Instruments workflows, retain cycles, optimization. |
+| `axiom-security` | Storing credentials securely, encrypting data, implementing passkeys, securing AI/agentic features against prompt injection, code signing, or managing certificates and provisioning profiles. |
+| `axiom-shipping` | Preparing an app for App Store submission, handling rejections or appeals, managing App Store Connect and Xcode Cloud, or triaging TestFlight/Sentry crash corpora. Covers checklists, metadata, privacy manifests, age ratings, export compliance. |
+| `axiom-swift` | The question is about Swift or its toolchain rather than a framework — modern idioms, noncopyable types, drag and drop, debug deep links, tvOS targets. |
+| `axiom-swiftui` | Building, fixing, or improving ANY SwiftUI UI — views, navigation, layout, animations, gestures, debugging, iOS 26 features, iPhone Duo, view-level performance, feature architecture. |
+| `axiom-testing` | Writing ANY test, debugging flaky tests, making tests faster, or choosing Swift Testing vs XCTest. Covers unit tests, UI tests, async testing, test architecture. |
+| `axiom-tools` | Asking about Axiom skills or axbuild build/test capture, xclog console, xcsym .ips/MetricKit/.crash symbolication, xcui simulator UI/accessibility, or xcprof xctrace/CPU profiles. |
+| `axiom-uikit` | Bridging UIKit and SwiftUI, modernizing UIKit apps (scene lifecycle, resizability), debugging Auto Layout, Combine, TextKit, PencilKit, or UIKit animations. |
+| `axiom-vision` | Implementing ANY computer vision feature — image analysis, pose detection, person segmentation, subject lifting, text recognition, barcode scanning. |
+| `axiom-watchos` | Building ANY watchOS app — app structure, independent apps, Watch Connectivity, Smart Stack widgets, complications, controls, RelevanceKit, background tasks, ClockKit migration. |
+| `axiom-xcode-mcp` | Connecting to Xcode via MCP, using xcrun mcpbridge or the headless mcp-server, or working with ANY Xcode MCP tool (XcodeRead, BuildProject, RunSomeTests, RenderPreview). Covers setup, tool reference, workflows, troubleshooting. |
+<!-- AXIOM_README_ROUTERS_END -->
+
+## Commands
+
+<!-- AXIOM_README_COMMANDS_BEGIN -->
+| Command | What it does |
+|---------|--------------|
+| `/axiom:analyze-crash` | Parse and analyze iOS/macOS crash logs (.ips, .crash, or pasted text) to identify root cause |
+| `/axiom:ask` | Ask a question about iOS/Swift development - routes to the right Axiom skill or agent |
+| `/axiom:audit` | Smart audit selector - analyzes your project and suggests relevant audits |
+| `/axiom:compare-traces` | Diff two performance traces for regressions with xcprof compare |
+| `/axiom:console` | Capture iOS simulator console output (print + os_log) with xclog |
+| `/axiom:fix-build` | Diagnose and fix Xcode build failures (launches build-fixer agent) |
+| `/axiom:health-check` | Run a comprehensive health check — auto-detects relevant auditors, runs them in parallel, produces a unified report |
+| `/axiom:modernize` | Migrate legacy iOS patterns to modern equivalents (launches modernization-helper agent) |
+| `/axiom:optimize-build` | Scan Xcode project for build performance optimizations (launches build-optimizer agent) |
+| `/axiom:profile` | Run automated performance profiling via xcprof (launches performance-profiler agent) |
+| `/axiom:resolve-deps` | Diagnose and resolve Swift Package Manager dependency conflicts (launches spm-conflict-resolver agent) |
+| `/axiom:run-tests` | Run XCUITests and parse results using the test-runner agent |
+| `/axiom:screenshot` | Capture screenshot from booted iOS Simulator |
+| `/axiom:status` | Project health dashboard - shows environment status and suggests improvements |
+| `/axiom:test-simulator` | Launch simulator testing agent for test scenarios and visual verification |
+| `/axiom:triage` | Triage a corpus of production crashes/hangs from Sentry or App Store Connect — classify, cluster into families, and flag suspension/idle-runloop false-positives |
+| `/axiom:ui` | Drive and validate the iOS simulator UI and accessibility with xcui |
+<!-- AXIOM_README_COMMANDS_END -->
+
+## Agents
+
+<!--ax:agents-->42<!--/ax--> agents run audits and fixes in their own context: memory leaks, concurrency, accessibility, build failures, crash analysis and more. The commands above launch the common ones, and you can ask for any of them by describing the task. See the [agent list](https://charleswiltgen.github.io/Axiom/agents/).
+
+## Hooks
+
+| When | What Axiom does |
+|------|-----------------|
+| A session starts | Adds Apple-platform context (the Xcode and SDK you've switched to, and how to find Axiom's skills) in Apple projects, and puts the bundled tools on your `PATH` |
+| You send a prompt | Suggests the Axiom skill that matches it |
+| A subagent starts | Gives it the same skill routing and version facts |
+| Your assistant reads a crash file | Routes `.ips` and `.crash` files to `xcsym` |
+| A shell command finishes | Points to the relevant skill after build or test output |
+| Your assistant writes Swift | Flags risky patterns as they're written, such as a `@State` property without an access level |
+
+Outside Apple projects, the hooks stay silent apart from the `PATH` change. Set `AXIOM_SESSION_CONTEXT=always` or `never` to override the detection.
+
+## Tools
+
+| Tool | What it does |
+|------|--------------|
+| `axbuild` | Runs `xcodebuild`, `swift build` or `swift test` and returns a short JSON summary of errors and failed tests, saving the full log and report |
+| `xcproject` | Inspects Xcode project structure and captured build settings without modifying the project |
+| `xclog` | Captures simulator and device console output (`print`, `os_log`, `Logger`) as structured JSON |
+| `xcprof` | Records and analyzes Instruments traces, attributing CPU work to your code |
+| `xcsym` | Symbolicates and triages crash reports (`.ips`, MetricKit, `.crash`, `.xccrashpoint`) with automatic dSYM discovery |
+| `xcui` | Drives and checks the simulator UI and accessibility tree: waits, assertions, accessibility settings, system dialogs, VoiceOver |
+
+The tools are macOS programs for Apple Silicon. See [Tools](https://charleswiltgen.github.io/Axiom/tools/).
 
 ## Documentation
 
-Full documentation available at [https://charleswiltgen.github.io/Axiom](https://charleswiltgen.github.io/Axiom)
-
-## Contributing
-
-This is a preview release. Feedback welcome!
-
-- **Issues**: [Report bugs or request features](https://github.com/CharlesWiltgen/Axiom/issues)
-- **Discussions**: [Share usage patterns and ask questions](https://github.com/CharlesWiltgen/Axiom/discussions)
-
-Skill contributions should follow these standards:
-- YAML frontmatter with `name` and `description`
-- Examples before theory throughout
-- Clear "When to Use" section
-- Decision trees for quick problem-solving
-- Working code examples with ✅/❌ comparisons
-- Troubleshooting sections
-- Testing patterns where applicable
-
-## Related Resources
-
-- [WWDC 2025 Sessions](https://developer.apple.com/videos/wwdc2025)
-- [Claude Code Documentation](https://docs.claude.ai/code)
-- [Superpowers TDD Framework](https://github.com/superpowers-marketplace/superpowers)
+- [Documentation site](https://charleswiltgen.github.io/Axiom/)
+- [Report an issue](https://github.com/CharlesWiltgen/Axiom/issues)
+- [Discussions](https://github.com/CharlesWiltgen/Axiom/discussions)
 
 ## License
 
-MIT - see [LICENSE](https://github.com/CharlesWiltgen/Axiom/blob/main/LICENSE) for details
+MIT
