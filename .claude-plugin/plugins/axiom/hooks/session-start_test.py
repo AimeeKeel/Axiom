@@ -493,7 +493,7 @@ class TestBundledToolRoster(_InApple):
 
 def axiom_path_line(plugin_root: str) -> str:
     """The PATH line the hook appends to CLAUDE_ENV_FILE (the Task 3 interface)."""
-    return 'export PATH="${PATH:+$PATH:}"' + shlex.quote(os.path.join(plugin_root, "tools"))
+    return "export PATH=" + shlex.quote(os.path.join(plugin_root, "tools")) + '"${PATH:+:$PATH}" # axiom-tools-path'
 
 
 def source_and_run(env_file: str, command: str) -> str:
@@ -524,6 +524,20 @@ class TestToolPathEnvFile(_InApple):
         open(env_file, "w").close()
         self.run_hook(plugin_root, fake_xcode, env_file)
         self.assertEqual(source_and_run(env_file, "command -v xclog"), os.path.join(plugin_root, "tools", "xclog"))
+
+    @unittest.skipUnless(shutil.which("zsh"), "zsh not installed")
+    def test_env_file_works_when_zsh_sources_it(self):
+        # Claude Code sources the env file in the user's shell, zsh by default on macOS.
+        plugin_root, fake_xcode = fake_install(os.path.join(self.root, "Axiom's $HOME `dir`"))
+        env_file = os.path.join(self.root, "env.sh")
+        open(env_file, "w").close()
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        out = subprocess.run(
+            ["zsh", "-f", "-c", 'source "$1" && command -v xclog', "_", env_file],
+            env={"PATH": "/usr/bin:/bin", "HOME": os.environ.get("HOME", "/tmp")},
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(out.stdout.strip(), os.path.join(plugin_root, "tools", "xclog"))
 
     def test_env_line_survives_spaces_and_quotes(self):
         plugin_root, fake_xcode = fake_install(os.path.join(self.root, "Axiom's plugin dir"))
@@ -566,6 +580,74 @@ class TestToolPathEnvFile(_InApple):
         open(env_file, "w").close()
         payload = self.run_hook(plugin_root, fake_xcode, env_file, cwd=plain)
         self.assertEqual((payload, source_and_run(env_file, "command -v xclog")), ({}, os.path.join(plugin_root, "tools", "xclog")))
+
+    def test_newest_install_wins_over_an_earlier_line(self):
+        # Resume after a plugin update reruns the hook against the same env file,
+        # which still holds the previous version's line.
+        old_root, _ = fake_install(os.path.join(self.root, "old"))
+        plugin_root, fake_xcode = fake_install(os.path.join(self.root, "new"))
+        env_file = os.path.join(self.root, "env.sh")
+        with open(env_file, "w") as f:
+            f.write(axiom_path_line(old_root) + "\n")
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        self.assertEqual(source_and_run(env_file, "command -v xclog"), os.path.join(plugin_root, "tools", "xclog"))
+
+    def test_switching_back_to_an_earlier_install_wins(self):
+        # A rollback, or resuming alternately under --plugin-dir and the marketplace
+        # install: the line already exists, but an older one now follows it.
+        a_root, _ = fake_install(os.path.join(self.root, "a"))
+        b_root, fake_xcode = fake_install(os.path.join(self.root, "b"))
+        env_file = os.path.join(self.root, "env.sh")
+        open(env_file, "w").close()
+        for root in (a_root, b_root, a_root):
+            self.run_hook(root, fake_xcode, env_file)
+        self.assertEqual(source_and_run(env_file, "command -v xclog"), os.path.join(a_root, "tools", "xclog"))
+
+    def test_bundled_tool_wins_over_an_older_copy_on_path(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        stale = os.path.join(self.root, "stale-bin")
+        os.mkdir(stale)
+        shutil.copy(os.path.join(plugin_root, "tools", "xcproject"), stale)
+        env_file = os.path.join(self.root, "env.sh")
+        with open(env_file, "w") as f:
+            f.write(f"export PATH={shlex.quote(stale)}:\"$PATH\"\n")
+        self.run_hook(plugin_root, fake_xcode, env_file)
+        self.assertEqual(source_and_run(env_file, "command -v xcproject"), os.path.join(plugin_root, "tools", "xcproject"))
+
+    def test_codex_writes_no_path_line(self):
+        # Codex calls the tools by full path and does not source a Claude env file.
+        plugin_root, fake_xcode = fake_install(self.root)
+        env_file = os.path.join(self.root, "env.sh")
+        open(env_file, "w").close()
+        run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode, "CLAUDE_ENV_FILE": env_file, "AXIOM_HARNESS": "codex"}, plugin_root)
+        self.assertEqual(os.path.getsize(env_file), 0)
+
+    def test_env_file_in_a_missing_directory_keeps_the_context(self):
+        plugin_root, fake_xcode = fake_install(self.root)
+        env_file = os.path.join(self.root, "missing", "env.sh")
+        c = context(self.run_hook(plugin_root, fake_xcode, env_file))
+        self.assertEqual(
+            (os.path.exists(os.path.dirname(env_file)), "**Bundled tools**" in c),
+            (False, True),
+        )
+
+    def test_path_is_written_before_a_failing_project_detect_import(self):
+        # A partial install that cannot import project_detect still crashes the
+        # hook, but the tools must already be on PATH by then.
+        plugin_root, _ = fake_install(self.root)
+        hooks = os.path.join(self.root, "partial-hooks")
+        os.mkdir(hooks)
+        for name in ("session-start.py", "hook_diagnostics.py"):
+            shutil.copy(os.path.join(HOOKS_DIR, name), hooks)
+        env_file = os.path.join(self.root, "env.sh")
+        open(env_file, "w").close()
+        env = {k: v for k, v in os.environ.items() if k not in ("AXIOM_SESSION_CONTEXT", "AXIOM_HARNESS")}
+        env["CLAUDE_ENV_FILE"] = env_file
+        subprocess.run(
+            [sys.executable, os.path.join(hooks, "session-start.py"), plugin_root],
+            cwd=self.project, env=env, capture_output=True, text=True, timeout=15,
+        )
+        self.assertEqual(source_and_run(env_file, "command -v xclog"), os.path.join(plugin_root, "tools", "xclog"))
 
     def test_missing_env_file_or_tools_dir_is_harmless(self):
         plugin_root, fake_xcode = fake_install(self.root)
