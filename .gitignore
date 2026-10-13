@@ -1,15 +1,18 @@
-# Local development and scratch files
-scratch/
-notes/
-temp/
-local/
-IDEAS.md
-CONTINUE.md
+# Local development and scratch files, at the repo root only. Every root-only rule is
+# anchored with a leading /: git matches ignore patterns case-insensitively on macOS, so an
+# unanchored name also hides a docs page or plugin file of the same name anywhere (check 1d).
+/scratch/
+/notes/
+/temp/
+/local/
+/IDEAS.md
+/CONTINUE.md
 
 # Local agent context — private dev state, never distributed
 # CLAUDE.md is canonical; AGENTS.md is a symlink to it (import-blind harnesses read it verbatim)
 .claude/
-CLAUDE*.md
+# Unanchored, CLAUDE*.md hid docs/start/claude-app-install.md from every commit.
+/CLAUDE*.md
 /AGENTS.md
 .omp/
 
@@ -73,7 +76,7 @@ yarn-error.log*
 
 # OS files
 Thumbs.db
-CHANGELOG.md
+/CHANGELOG.md
 
 # Dolt database files (added by bd init)
 .dolt/

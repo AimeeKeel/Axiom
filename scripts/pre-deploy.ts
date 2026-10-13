@@ -99,6 +99,8 @@ import {
 import { parsePorcelain, resolveGoBinaryStaleness, resolveStaleness } from "./staleness.ts";
 import { classifyNpmFailure, npmErrorCode, npmInstallEnvironment, runNpmDryRun } from "./npm-resolution.ts";
 import { findDashViolations } from "./docs-dashes.ts";
+import { findMissingSidebarTargets, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, sidebarLinkTargets } from "./docs-lint.ts";
+import { findIgnoredAuthoredFiles, resolvePluginBin } from "./plugin-layout.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
 import { validateCursorInventory } from "./cursor/inventory.ts";
@@ -252,26 +254,49 @@ try {
 }
 
 // claude.ai and the Claude desktop app refuse to install a plugin that has a
-// top-level bin/ ("Plugin contains a top-level bin/ directory"), which is why
-// the bundled tools live in plugins/axiom/tools/. A bin/ on disk breaks a local
-// install and fails. One gone from disk but still in the index fails once
-// tools/ is staged too, because that commit would ship both folders; with only
-// bin/ indexed it warns, as in 1b, since preflight runs before anything is staged.
+// top-level bin/; the verdict and its cases live in plugin-layout.ts.
 heading("1c. claude.ai Installability");
 try {
   const binRel = path.relative(root, path.join(pluginDir, "bin"));
-  const toolsRel = path.relative(root, path.join(pluginDir, "tools"));
-  const listed = (rel: string) => execFileSync("git", ["ls-files", "--", rel], { cwd: root, stdio: "pipe", encoding: "utf8" }).trim();
-  const trackedBin = listed(binRel);
-  if (fs.existsSync(path.join(pluginDir, "bin")))
-    error("plugin-bin-dir", `${binRel}/ exists; claude.ai and the Claude desktop app refuse to install a plugin with a top-level bin/. Keep executables in plugins/axiom/tools/`);
-  else if (trackedBin && listed(toolsRel))
-    error("plugin-bin-dir", `${binRel}/ is still in the git index alongside ${toolsRel}/, so this commit would ship both and claude.ai refuses the plugin; stage the deletion (git add -A ${binRel})`);
-  else if (trackedBin)
-    warn("plugin-bin-dir", `${binRel}/ is gone from disk but still in the git index; stage its deletion, or a commit made now still ships it and claude.ai refuses the plugin`);
-  else console.log("  ✓ no top-level bin/ in the plugin, so claude.ai can install it");
+  const stat = fs.lstatSync(path.join(pluginDir, "bin"), { throwIfNoEntry: false });
+  const onDisk = !stat ? "absent" : stat.isSymbolicLink() ? "symlink" : stat.isDirectory() ? "directory" : "file";
+  let tracked: boolean | null = null;
+  let gitError: string | undefined;
+  try {
+    tracked = execFileSync("git", ["ls-files", "--", binRel], { cwd: root, stdio: "pipe", encoding: "utf8" }).trim() !== "";
+  } catch (e: unknown) {
+    gitError = (e as Error).message;
+  }
+  const verdict = resolvePluginBin({ binRel, onDisk, tracked, gitError });
+  if (verdict.level === "error") error("plugin-bin-dir", verdict.message);
+  else console.log(`  ✓ ${verdict.message}`);
 } catch (e: unknown) {
   error("plugin-bin-dir", `could not check for a top-level bin/: ${(e as Error).message}`);
+}
+
+heading("1d. Ignored Authored Files");
+try {
+  // -z keeps non-ASCII paths unquoted; check-ignore -v names the rule that hid each one.
+  // --directory lists a wholly ignored directory once (dist/, caches) instead of every file in it.
+  const roots = ["docs/", `${path.relative(root, pluginDir)}/`];
+  const ignoredPaths = execFileSync("git", ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory", "--", ...roots], { cwd: root, stdio: "pipe", encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const ignored: { path: string; rule: string; source: string }[] = [];
+  if (ignoredPaths) {
+    const fields = execFileSync("git", ["check-ignore", "-z", "-v", "--stdin"], { cwd: root, input: ignoredPaths, stdio: ["pipe", "pipe", "pipe"], encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }).split("\0");
+    for (let i = 0; i + 3 < fields.length; i += 4) ignored.push({ source: `${fields[i]}:${fields[i + 1]}`, rule: fields[i + 2], path: fields[i + 3] });
+  }
+  const hidden = findIgnoredAuthoredFiles(ignored, roots);
+  const bySource = new Map(ignored.map((entry) => [entry.path, entry]));
+  for (const file of hidden) {
+    const { source, rule } = bySource.get(file)!;
+    // A rule from the repo's own ignore files is fixed here; a machine-wide one (core.excludesFile)
+    // hides the file only on this machine, but a commit made here would still leave it out.
+    const fix = path.isAbsolute(source) ? "that is a machine-wide rule, so narrow it or `git add -f` the file" : "fix that rule";
+    error("ignored-authored-file", `${file} is hidden by ${source} \`${rule}\`, so it can never be committed or ship; ${fix}`);
+  }
+  if (hidden.length === 0) console.log("  ✓ no authored docs or plugin file is hidden by an ignore rule");
+} catch (e: unknown) {
+  error("ignored-authored-file", `could not list ignored files: ${(e as Error).message}`);
 }
 
 heading("2. JSON Syntax");
@@ -1990,8 +2015,6 @@ if (!mcpMissingFromList.length && !mcpUnusedInList.length && !mcpMissingBinaries
   console.log(`  ✓ MCP tool binaries consistent (${[...mcpListed].join(", ") || "none"}) — list ↔ tool refs ↔ plugins/axiom/tools/`);
 }
 
-// ── 12i. Docs Dash Convention ──
-
 // ── 12s. Private Data in Shipped Content ──
 
 heading("12s. Private Data in Shipped Content");
@@ -2083,6 +2106,87 @@ if (dashViolations.length === 0) {
   if (dashViolations.length > CAP) {
     error("docs-dash", `…and ${dashViolations.length - CAP} more (${dashViolations.length} total) — see documentation-style.md §Dashes`);
   }
+}
+
+heading("12u. Docs Page Hygiene");
+
+// "Claude" for the assistant, a Documentation Scope line naming a different skill,
+// links repeated between Documentation Scope and Related, and " -- " as a dash.
+// Each shipped on dozens of pages through every review, so the rules and their
+// tests live in scripts/docs-lint.ts and this check fails on any of them.
+{
+  const hygiene: string[] = [];
+  const skillsDir = path.join(pluginDir, "skills");
+  const routers = new Set(
+    fs.readdirSync(skillsDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && fs.existsSync(path.join(skillsDir, d.name, "SKILL.md")))
+      .map((d) => d.name),
+  );
+  const subSkills = new Map<string, string[]>();
+  for (const suite of routers) {
+    const dir = path.join(skillsDir, suite, "skills");
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) if (f.endsWith(".md")) subSkills.set(f.slice(0, -3), [...(subSkills.get(f.slice(0, -3)) ?? []), suite]);
+  }
+  const walk = (dir: string): void => {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === ".vitepress") continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".md"))
+        for (const f of lintDocPage(fs.readFileSync(full, "utf8"), routers, path.relative(root, full), subSkills))
+          hygiene.push(`${path.relative(root, full)}:${f.line} [${f.rule}] ${f.message}`);
+    }
+  };
+  walk(path.join(root, "docs"));
+  // The two READMEs that ship in packages get the prose rules too; they have no scope section.
+  for (const readme of [".claude-plugin/plugins/axiom/README.md", "axiom-mcp/README.md"])
+    for (const f of lintDocPage(fs.readFileSync(path.join(root, readme), "utf8")))
+      hygiene.push(`${readme}:${f.line} [${f.rule}] ${f.message}`);
+  if (hygiene.length === 0) console.log("  ✓ Docs pages and package READMEs pass the hygiene rules (assistant naming, scope line, link ownership, dashes)");
+  else {
+    const CAP = 25;
+    for (const v of hygiene.slice(0, CAP)) error("docs-hygiene", v);
+    if (hygiene.length > CAP) error("docs-hygiene", `…and ${hygiene.length - CAP} more (${hygiene.length} total); see documentation-standards.md §Editorial Standards`);
+  }
+}
+
+heading("12w. Plugin README Accuracy");
+{
+  const skillsDir = path.join(pluginDir, "skills");
+  const routers = new Set(fs.readdirSync(skillsDir).filter((d) => fs.existsSync(path.join(skillsDir, d, "SKILL.md"))));
+  const commands = new Set(fs.readdirSync(path.join(pluginDir, "commands")).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)));
+  const tools = new Set(fs.readdirSync(path.join(pluginDir, "tools")).filter((f) => !f.startsWith(".")));
+  // Package directories and marketplace names are axiom-* tokens that are not skills.
+  const otherNames = new Set([
+    ...fs.readdirSync(root).filter((d) => d.startsWith("axiom-")),
+    ...[".claude-plugin/marketplace.json", ".cursor-plugin/marketplace.json", ".agents/plugins/marketplace.json"]
+      .filter((f) => fs.existsSync(path.join(root, f)))
+      .map((f) => JSON.parse(fs.readFileSync(path.join(root, f), "utf8")).name as string),
+  ]);
+  const drift = findPluginReadmeDrift(fs.readFileSync(path.join(pluginDir, "README.md"), "utf8"), routers, commands, { tools, otherNames });
+  for (const d of drift) error("plugin-readme", `.claude-plugin/plugins/axiom/README.md: ${d}`);
+  if (drift.length === 0) console.log(`  ✓ plugin README names all ${routers.size} routers, ${commands.size} commands and ${tools.size} tools, and nothing retired`);
+}
+
+heading("12v. Docs Sidebar Targets");
+{
+  const configFile = path.join(root, "docs/.vitepress/config.ts");
+  const configText = fs.readFileSync(configFile, "utf8");
+  // Pages git will ship, tracked or new, matched with exact case: existsSync ignores case on
+  // macOS and finds ignored files, so /Start/Install or an ignored page would pass here and 404.
+  const pages = new Set(
+    execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "docs"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+      .split("\0")
+      .filter(Boolean),
+  );
+  if (sidebarLinkTargets(configText).length === 0) error("docs-sidebar", "docs/.vitepress/config.ts: found no sidebar or nav links, so nothing was checked");
+  const missing = findMissingSidebarTargets(configText, (p) => pages.has(p));
+  for (const link of missing) error("docs-sidebar", `docs/.vitepress/config.ts links ${link}, but git ships no page for it (exact case)`);
+  const nonLiteral = findNonLiteralSidebarLinks(configText);
+  for (const link of nonLiteral) error("docs-sidebar", `docs/.vitepress/config.ts has \`${link}\`; write sidebar links as quoted absolute paths ('/start/install') so this check can resolve them`);
+  if (missing.length + nonLiteral.length === 0) console.log("  ✓ every sidebar and nav link in docs/.vitepress/config.ts has a page git ships");
 }
 
 // ── 12j. Doc Count-Marker Parity ──
