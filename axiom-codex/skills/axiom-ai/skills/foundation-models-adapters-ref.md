@@ -9,7 +9,7 @@ This reference documents the Foundation Models Adapter Training Toolkit (Python)
 
 ### Two halves of the workflow
 
-- **Build-time (Python toolkit)**: dataset preparation, training, evaluation, export. Runs on a developer Mac (Apple silicon, ≥32 GB) or Linux GPU machine. Produces `.fmadapter` packages.
+- **Build-time (Python toolkit)**: dataset preparation, training, evaluation, export. Runs on a developer Mac (Apple Silicon, ≥32 GB) or Linux GPU machine. Produces `.fmadapter` packages.
 - **Runtime (Swift framework)**: adapter loading, compatibility checking, asset pack lookup, session creation. Runs on the user's device under `FoundationModels`.
 
 ### Toolkit version
@@ -43,7 +43,7 @@ Use this reference when:
 
 ### Hardware requirements
 
-- **Mac**: Apple silicon (M1 or later) with **≥32 GB unified memory**. Mac Studio and Mac Pro recommended for longer training runs.
+- **Mac**: Apple Silicon (M1 or later) with **≥32 GB unified memory**. Mac Studio and Mac Pro recommended for longer training runs.
 - **Linux GPU**: CUDA-capable machine; specific GPU memory requirements depend on adapter rank and batch size. Apple's docs do not pin a minimum.
 - **Storage**: ≥100 GB free for toolkit assets, dataset, checkpoints, and exported adapter packs.
 
@@ -688,4 +688,4 @@ For server-hosted delivery (`BADownloaderExtension`), see `axiom-integration (sk
 ---
 
 **Toolkit Version**: 26.0.0
-**Platforms**: iOS / iPadOS / macOS / visionOS **26.0–26.x only** (runtime deprecated 26.4, obsoleted 27.0; never watchOS/tvOS); macOS 14+ Apple silicon ≥32 GB or Linux GPU (training)
+**Platforms**: iOS / iPadOS / macOS / visionOS **26.0–26.x only** (runtime deprecated 26.4, obsoleted 27.0; never watchOS/tvOS); macOS 14+ Apple Silicon ≥32 GB or Linux GPU (training)

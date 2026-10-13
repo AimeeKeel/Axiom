@@ -73,7 +73,7 @@ If the year-2 column is unfunded, the adapter ships and decays. Plan around rung
 
 | Requirement | Value |
 |-------------|-------|
-| Training Mac | Apple silicon, ≥32 GB unified memory |
+| Training Mac | Apple Silicon, ≥32 GB unified memory |
 | Alternative | Linux GPU machine |
 | Python | **3.11 exactly** — 3.12/3.13 break the `coremltools` pin in `export/` |
 | Toolkit access | Apple Developer Program membership |
@@ -108,7 +108,7 @@ digraph adapter_decision {
     budget [shape=diamond label="Year-2 retrain budget committed?"];
     no_budget [shape=box label="Plan around rungs 1-4\nor accept feature decay"];
 
-    hardware [shape=diamond label="32GB Apple silicon Mac\nor Linux GPU + Python 3.11?"];
+    hardware [shape=diamond label="32GB Apple Silicon Mac\nor Linux GPU + Python 3.11?"];
     no_hw [shape=box label="Provision first"];
 
     coverage [shape=diamond label="Per-OS coverage strategy?"];
@@ -354,7 +354,7 @@ Without per-locale eval, none of these are measurable until App Store reviews su
 
 - [ ] Approach Triage rungs 1-4 attempted with documented failure for each
 - [ ] Year-2 retrain budget committed
-- [ ] Hardware confirmed (32 GB Apple silicon Mac or Linux GPU)
+- [ ] Hardware confirmed (32 GB Apple Silicon Mac or Linux GPU)
 - [ ] Python 3.11 environment ready
 - [ ] Apple Developer Program membership confirmed
 - [ ] Per-OS coverage strategy decided (not "single adapter, no plan")
@@ -435,4 +435,4 @@ Without per-locale eval, none of these are measurable until App Store reviews su
 
 ---
 
-**Platforms**: iOS / iPadOS / macOS / visionOS **26.0–26.x only** (runtime deprecated 26.4, obsoleted 27.0; never watchOS/tvOS); macOS 14+ Apple silicon ≥32 GB or Linux GPU (training)
+**Platforms**: iOS / iPadOS / macOS / visionOS **26.0–26.x only** (runtime deprecated 26.4, obsoleted 27.0; never watchOS/tvOS); macOS 14+ Apple Silicon ≥32 GB or Linux GPU (training)

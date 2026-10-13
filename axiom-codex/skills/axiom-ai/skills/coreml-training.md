@@ -43,7 +43,7 @@ try model.write(to: URL(filePath: "Classifier.mlmodel"))   // exports a .mlmodel
 - Training data: **directory-of-label-folders** for image classifiers; `MLDataTable(contentsOf:)` from CSV/JSON for tabular.
 - The throwing `init(trainingData:parameters:)` is **synchronous and blocking**. For UI apps use `makeTrainingSession(...)` / the async `train(...)` API and report progress; resume from a checkpoint with `init(checkpoint:)`.
 - Export produces a **`.mlmodel`** (attach `MLModelMetadata` for author/version/description).
-- Training is GPU-accelerated on Apple silicon (Metal).
+- Training is GPU-accelerated on Apple Silicon (Metal).
 
 ---
 

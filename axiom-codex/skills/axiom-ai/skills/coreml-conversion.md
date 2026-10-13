@@ -77,7 +77,7 @@ Conversion can succeed and still produce a subtly different model. Before you tr
 |---------|---------|
 | "Conversion succeeded, so the model is correct" | A successful convert only means the graph lowered. Outputs can still diverge — validate parity on representative inputs before shipping. |
 | "I'll just convert my ONNX model directly" | The ONNX path is removed. Go ONNX → PyTorch/TF first; don't waste time on `onnx-coreml`. |
-| "FP32 to be safe" | FP16 is the default and usually fine on Apple silicon; FP32 doubles size and memory. Measure accuracy before defaulting to FP32. |
+| "FP32 to be safe" | FP16 is the default and usually fine on Apple Silicon; FP32 doubles size and memory. Measure accuracy before defaulting to FP32. |
 | "I'll target the latest OS so I get all the features" | `minimum_deployment_target` gates your install base. Pin it to what you actually ship, not the newest SDK. |
 | "Trace and export are interchangeable" | Trace is stable; `torch.export` is still beta in coremltools. For production, trace unless you've verified export parity. |
 

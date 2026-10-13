@@ -1077,7 +1077,7 @@ func canAccept(_ instructions: Instructions, session: LanguageModelSession, next
 - Apple Intelligence-enabled device
 - iPhone 15 Pro or later
 - iPad with M1+ chip
-- Mac with Apple silicon
+- Mac with Apple Silicon
 
 **Apple Intelligence enabled** (when not, surfaces as `.appleIntelligenceNotEnabled`):
 - User opted in to Apple Intelligence in Settings
