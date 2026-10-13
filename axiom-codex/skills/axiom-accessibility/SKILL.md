@@ -36,7 +36,6 @@ license: MIT
 | Reduce Motion support | See `skills/accessibility-diag.md` |
 | Assistive Access (cognitive, iOS 17+) | See `skills/accessibility-diag.md` |
 | Accessibility Inspector workflows | See `skills/accessibility-diag.md` |
-| App Store Review preparation | See `skills/accessibility-diag.md` |
 | UX dead ends, dismiss traps | See `skills/ux-flow-audit.md` |
 | Buried CTAs, missing empty states | See `skills/ux-flow-audit.md` |
 | Missing loading/error states | See `skills/ux-flow-audit.md` |
@@ -79,7 +78,7 @@ digraph accessibility {
 
 1. ANY VoiceOver, Dynamic Type (including tvOS Large Text), contrast, touch target, or WCAG issue → `skills/accessibility-diag.md`
 2. Assistive Access (cognitive disabilities, iOS 17+) → `skills/accessibility-diag.md`
-3. App Store accessibility rejection or Nutrition Labels → `skills/accessibility-diag.md`
+3. Accessibility Nutrition Labels, or an App Review note about accessibility → `skills/accessibility-diag.md`
 4. Reading app: VoiceOver stops at paragraphs/pages, Speak Screen halts → `skills/accessibility-diag.md`
 5. UX dead ends, dismiss traps, buried CTAs, missing states → `skills/ux-flow-audit.md`
 6. watchOS-specific accessibility (rotor on Digital Crown, AssistiveTouch, Double Tap) → `skills/watchos-a11y.md`
@@ -110,8 +109,8 @@ digraph accessibility {
 
 | Thought | Reality |
 |---------|---------|
-| "I'll add VoiceOver labels when I'm done building" | Accessibility is foundational, not polish. accessibility-diag prevents App Store rejection. |
-| "My app doesn't need accessibility" | All apps need accessibility. It's required by App Store guidelines and benefits all users. |
+| "I'll add VoiceOver labels when I'm done building" | Accessibility is foundational, not polish. Retrofitting labels across a finished app takes far longer, and until they're done VoiceOver support can't be declared. |
+| "My app doesn't need accessibility" | All apps need accessibility. It isn't an App Store rule, but people who rely on VoiceOver or Larger Text can't use the app without it, and its Accessibility Nutrition Labels show that before they download. |
 | "Dynamic Type just needs .scaledFont" | Dynamic Type has 7 common violations. accessibility-diag catches them all. |
 | "Color contrast looks fine to me" | Visual assessment is unreliable. WCAG ratios require measurement. accessibility-diag validates. |
 | "UX issues are just polish" | UX dead ends cause 1-star reviews. They're defects, not enhancements. |

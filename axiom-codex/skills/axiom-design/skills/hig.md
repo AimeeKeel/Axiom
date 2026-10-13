@@ -213,13 +213,14 @@ Text("Disabled").foregroundStyle(.quaternary)
 
 ### Q: What's the minimum touch target size?
 
-**A:** 44x44 points on iOS/iPadOS, with spacing between targets.
+**A:** Hit region ≥44x44pt (60x60 visionOS) — HIG Buttons. The drawn control may be smaller, down to the minimum control size, if the hit region stays that large.
 
-**Platform-specific:**
-- iOS/iPadOS: 44x44 points minimum
-- macOS: 20x20 points minimum; larger for primary actions
-- watchOS: Use system controls (optimized for small screen)
-- tvOS: give focusable elements room to grow when focused; HIG's published tvOS figure is a safe-area content inset (60pt top/bottom, 80pt sides), not a focus-spacing minimum
+**Control size, HIG default / minimum (Accessibility page):**
+- iOS/iPadOS: 44x44 / 28x28 points
+- macOS: 28x28 / 20x20 points; larger for primary actions
+- watchOS: 44x44 / 28x28 points; prefer system controls
+- visionOS: 60x60 / 28x28 points; place button centers at least 60 points apart
+- tvOS: 66x66 / 56x56 points; give focusable elements room to grow when focused (the HIG's 60/80pt tvOS figures are safe-area insets, not spacing)
 
 ### Q: What spacing, padding, or margin value should I use?
 
@@ -361,7 +362,7 @@ Apple explicitly recommends against this because..."
 **For contrast issues:**
 - Show the design at 4.5:1 contrast (passing)
 - Show their proposal (failing)
-- Explain App Store rejection risk
+- Explain that it fails WCAG AA, so Sufficient Contrast can't be declared in Accessibility Nutrition Labels
 
 **For appearance toggles:**
 - Show iOS Settings → Display & Brightness
@@ -402,7 +403,7 @@ we'll need an expedited follow-up."
 Sometimes designers have valid reasons to override HIG. Accept if:
 
 - [ ] They understand the HIG guidance
-- [ ] They're willing to accept rejection/accessibility risks
+- [ ] They accept the accessibility cost: users who can't complete tasks, and Accessibility Nutrition Label claims the app can't make
 - [ ] You document the decision in writing
 - [ ] They commit to monitoring post-launch feedback
 

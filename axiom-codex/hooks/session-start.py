@@ -30,8 +30,6 @@ except ImportError:  # Diagnostics are optional; a missing module must not break
 
 hook_diagnostics.begin("session-start")
 
-from project_detect import resolve_context_decision
-
 if len(sys.argv) < 2:
     print(json.dumps({"error": "Usage: session-start.py <plugin_root>"}), file=sys.stderr)
     hook_diagnostics.record_exit(1)
@@ -43,21 +41,31 @@ plugin_root = sys.argv[1]
 # install a plugin that has one), so Claude Code no longer puts them on PATH.
 # CLAUDE_ENV_FILE is sourced before every later Bash command in the session,
 # subagents included. This runs before the project gate because bin/ was on PATH
-# in every project. Resume and /compact rerun this hook against the same file,
-# so an existing line is not repeated; Codex invokes the tools by full path.
+# in every project, and before any import that can fail. The folder goes first,
+# so the line sourced last wins: resume and /compact rerun this hook against the
+# same file, and the tagged line is appended unless it is already the last Axiom
+# line, so the install that ran most recently wins after an update or a rollback,
+# and the bundled tools beat older copies elsewhere on PATH. The file is shared
+# with other plugins' hooks, which run in parallel, so it is only appended to.
+# Codex invokes the tools by full path.
+PATH_MARKER = "# axiom-tools-path"
 tools_dir = os.path.join(os.path.abspath(plugin_root), "tools")
 env_file = os.environ.get("CLAUDE_ENV_FILE")
 if env_file and os.environ.get("AXIOM_HARNESS") != "codex" and os.path.isdir(tools_dir):
-    path_line = 'export PATH="${PATH:+$PATH:}"' + shlex.quote(tools_dir)
+    path_line = "export PATH=" + shlex.quote(tools_dir) + '"${PATH:+:$PATH}" ' + PATH_MARKER
     try:
         with open(env_file, "a+", encoding="utf-8", errors="surrogateescape") as f:
             f.seek(0)
             existing = f.read()
-            if path_line not in existing.splitlines():
-                separator = "\n" if existing and not existing.endswith("\n") else ""
-                f.write(separator + path_line + "\n")
+            axiom_lines = [line for line in existing.splitlines() if line.endswith(" " + PATH_MARKER)]
+            if axiom_lines[-1:] != [path_line]:
+                # Always start on a fresh line: a parallel hook may have appended a line
+                # without its newline after the read above. A blank line is harmless.
+                f.write("\n" + path_line + "\n")
     except OSError as error:
         hook_diagnostics.record_exception(error)
+
+from project_detect import resolve_context_decision
 
 # Project-type gate (GH #45): in non-Apple projects, skip the context injection
 # entirely (emit an empty SessionStart response). resolve_context_decision is

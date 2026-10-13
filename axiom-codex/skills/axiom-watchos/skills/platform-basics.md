@@ -6,7 +6,7 @@ Use when:
 - Starting a new watchOS app and need the project template, target structure, and `Info.plist` keys
 - Deciding between a watch-only app, a companion iOS app, or an independent app that ships in both forms
 - Setting up the app entry point — `@main`, `App`, `WindowGroup`, `NavigationStack`, delegate adoption
-- Preparing for the April 2026 watchOS 26 SDK and ARM64 submission deadlines
+- Meeting the watchOS 26 SDK and ARM64 submission requirements (in effect since April 2026)
 - Adding a `WKApplicationDelegate` to handle workouts, Now Playing, extended runtime, or remote notifications
 - Wiring a custom notification long-look with `WKUserNotificationHostingController`
 - Debugging types that behave differently on arm64 (`Float`, `Int`, pointer math)
@@ -26,16 +26,16 @@ Use when:
 
 ## Core Principle
 
-**Ship a SwiftUI-first, independent, 64-bit app built with the watchOS 26 SDK.** That is the supported path as of watchOS 26 (April 2026 submission rule). Every other path — WatchKit storyboards, 32-bit builds, companion-only apps — is either deprecated or blocked at submission.
+**Ship a SwiftUI-first, independent, 64-bit app built with the watchOS 26 SDK.** That is the supported path as of watchOS 26 (App Store submission rule since April 2026). Every other path — WatchKit storyboards, 32-bit builds, companion-only apps — is either deprecated or blocked at submission.
 
-## Submission Requirements (watchOS 26, April 2026)
+## Submission Requirements (in effect since April 2026)
 
-Both rules are already announced by Apple:
+Both rules are in effect:
 
 | Rule | Effective | Details |
 |---|---|---|
-| 64-bit / ARM64 support required | April 2026 | Apple news, July 22, 2025. Use Xcode's default `Standard Architectures` build setting. |
-| Built with watchOS 26 SDK or later | April 28, 2026 | Apple news, February 3, 2026. Same rule applies across iOS/iPadOS/tvOS/visionOS 26 SDKs. |
+| 64-bit / ARM64 support required | Since April 2026 | Apple news, July 22, 2025. Use Xcode's default `Standard Architectures` build setting. |
+| Built with watchOS 26 SDK or later | Since April 28, 2026 | Apple news, February 3, 2026. Same rule applies across iOS/iPadOS/tvOS/visionOS 26 SDKs. |
 
 > "Apple Watch Series 9 and later, and Apple Watch Ultra 2 now use the arm64 architecture on watchOS 26." — Apple, What's new in watchOS 26
 
@@ -238,7 +238,7 @@ Full Foundation Models guidance (sessions, `@Generable`, tools, PCC depth) lives
 
 | Mistake | Symptom | Fix |
 |---|---|---|
-| Leaving the target on `armv7k` after enabling `Standard Architectures` via project-level settings | App Store submission rejected starting April 2026; crashes on device because the build links the wrong binary | Confirm `Standard Architectures` is set on every Watch target individually, not just at project level; rebuild |
+| Leaving the target on `armv7k` after enabling `Standard Architectures` via project-level settings | App Store submission rejected since April 2026; crashes on device because the build links the wrong binary | Confirm `Standard Architectures` is set on every Watch target individually, not just at project level; rebuild |
 | Treating the simulator as sufficient arm64 testing | Device crashes that never reproduce in the simulator — the simulator always uses arm64 on Apple Silicon and masks armv7k-only defects in legacy code | Test on a physical Apple Watch Series 9 / 10 / Ultra 2 running watchOS 26 before submission |
 | Forcing pointer arithmetic through `Int` casts | Misaligned reads, intermittent crashes on device | Audit `Float`, `Int`, and pointer-based math per Apple's arm64 guidance; use typed pointer APIs |
 | Starting a new app as "Watch App with Companion iOS App" without checking "Supports Running Without iOS App Installation" | App fails Family Setup; won't install on a watch whose paired iPhone lacks the iPhone app | Check the box at project creation — independent+companion is the safe default |

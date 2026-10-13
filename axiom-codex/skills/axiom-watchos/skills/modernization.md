@@ -17,7 +17,7 @@ Use when:
 - Use `controls-and-live-activities.md` for watchOS 26 control surfaces that didn't exist in legacy projects
 - Use `design-for-watchos.md` for the watchOS 10 navigation model to aim at after UIKit bridging
 - Use `axiom-swiftui` for general SwiftUI patterns
-- Use `axiom-shipping` for the April 2026 submission gate
+- Use `axiom-shipping` for the submission gate in effect since April 2026
 
 ## Core Principle
 
@@ -40,7 +40,7 @@ TN3157's framing helps set expectations:
 | 2020 | watchOS 7 ships; WatchKit storyboards deprecated; SwiftUI is new baseline |
 | 2022 | Xcode 14 removes storyboard template creation; introduces single-target watchOS apps |
 | 2023 | watchOS 10 ships; ClockKit complications deprecated; WidgetKit replaces them; redesigned UI |
-| 2026 | watchOS 26 SDK + 64-bit/ARM64 required for App Store submission (April 2026) |
+| 2026 | watchOS 26 SDK + 64-bit/ARM64 required for App Store submission (since April 2026) |
 
 > "If you have an existing watchOS app, now is the time to get rid of the deprecated WatchKit storyboards and ClockKit complications, and adopt the modern features." — Apple, TN3157
 
@@ -276,7 +276,7 @@ The Axiom `modernization-helper` agent (see `/agents/modernization-helper.md`) s
 | iOS companion bundle ID not a prefix of watchOS bundle ID | Watch app won't install from the iOS app | Rename so iOS is `com.yourco.app` and watchOS is `com.yourco.app.watchkitapp` |
 | Keeping `WKHostingController` wrappers after every scene is SwiftUI | Storyboard infrastructure lingers and blocks full single-target consolidation | Once all scenes are SwiftUI, delete the storyboard, the hosting controllers, and the WatchKit extension target |
 | Relying on `NavigationView` after migration | Deprecation warnings; broken deep-link / state-restore paths | Use `NavigationStack` with `path: Binding<[T]>` — see `design-for-watchos.md` |
-| Submitting a build on an older watchOS SDK after April 2026 | Rejection at App Store Connect | Audit `WATCHOS_DEPLOYMENT_TARGET` and SDK version; see `axiom-shipping` for the submission rules |
+| Submitting a build made with a pre-26 SDK | Rejection at upload | Build with Xcode 26+ and the watchOS 26 SDK; the rule concerns the build SDK, not `WATCHOS_DEPLOYMENT_TARGET`. See `axiom-shipping` for the submission rules |
 | Forgetting to remove the `WKWatchOnly = YES` flag when adding an iOS companion | iOS app is built but watchOS target still claims watch-only distribution | Flip `WKWatchOnly` to `NO` on the Watch App target after adding an iOS companion |
 
 ## Resources

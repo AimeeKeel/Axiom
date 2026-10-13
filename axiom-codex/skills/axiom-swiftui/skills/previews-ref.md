@@ -583,7 +583,7 @@ Migration is safe in either direction during the same Xcode session — `Preview
 
 ## Resources
 
-**WWDC**: 2023-10252, 2024-10144, 2020-10185
+**WWDC**: 2023-10252, 2024-10144, 2020-10149
 
 **Docs**: /xcode/previewing-your-apps-interface-in-xcode, /swiftui/preview(_:body:), /swiftui/preview(_:traits:_:body:), /swiftui/previewable(), /swiftui/previewmodifier, /swiftui/previewmodifier/makesharedcontext(), /developertoolssupport/previewtrait
 

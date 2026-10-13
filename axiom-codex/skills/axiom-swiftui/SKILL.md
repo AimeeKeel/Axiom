@@ -8,6 +8,8 @@ license: MIT
 
 **You MUST use this skill for ANY SwiftUI work including views, state, navigation, layout, animations, architecture, gestures, and debugging.**
 
+**Bundled tools on Claude Code:** if `command -v <tool>` finds nothing (hooks off or `--bare`), use `<plugin-root>/tools/<tool>` in place of the bare name; `<plugin-root>` is two levels above this skill's `Base directory for this skill:` path.
+
 <!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
 > **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
 > matching Codex skill instead — same procedure, no Claude Code agent required.

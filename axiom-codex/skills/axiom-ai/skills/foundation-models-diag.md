@@ -112,7 +112,7 @@ for entry in session.transcript {
 - **Language error** → Proceed to Pattern 2c (unsupported language)
 - **Wrong output** → Proceed to Pattern 3a/3b/3c (output quality)
 - **Slow generation** → Proceed to Pattern 4a/4b/4c/4d (performance)
-- **UI frozen** → Proceed to Pattern 5a (main thread blocking)
+- **UI frozen** → Proceed to Pattern 5a (main-actor work around generation)
 
 #### MANDATORY INTERPRETATION
 
@@ -124,7 +124,7 @@ Before changing ANY code, identify ONE of these:
 4. If error is `unsupportedLanguageOrLocale` → Language not supported (check supported list)
 5. If output is hallucinated → Wrong use case (world knowledge vs extraction)
 6. If generation >5 seconds → Not streaming or need optimization
-7. If UI frozen → Calling on main thread (use Task {})
+7. If UI frozen → Synchronous work on the main actor around generation; awaiting `respond()` suspends, it doesn't block
 
 #### If diagnostics are contradictory or unclear
 - STOP. Do NOT proceed to patterns yet
@@ -183,8 +183,8 @@ Foundation Models problem?
 │     └─ Massive prompt or task? → Pattern 4d (break down)
 │
 └─ UI frozen?
-   └─ Main thread blocked → Async issue
-      └─ App unresponsive during generation? → Pattern 5a (Task {})
+   └─ Main thread blocked by synchronous work
+      └─ App unresponsive during generation? → Pattern 5a (main-actor work)
 ```
 
 ## Diagnostic Patterns
@@ -308,7 +308,7 @@ Error: LanguageModelError.contextSizeExceeded
 ```
 
 **Diagnosis**:
-- Token limit is `SystemLanguageModel.default.contextSize` (currently 4096 on the on-device base; input + output combined)
+- Token limit is `SystemLanguageModel.default.contextSize` (8,192 on the 27 on-device model, 4,096 on 26; input + output combined)
 - Long conversations accumulate tokens
 - Verbose prompts eat into limit
 - On iOS 26.4+, use `try await SystemLanguageModel.default.tokenCount(for: instructions)` to verify the instructions budget *before* composing a session; for prompt and transcript sizing, fall back to the ~3 chars/token heuristic (see `axiom-ai (skills/foundation-models-ref.md)` "Token Sizing and Context Size")
@@ -831,36 +831,52 @@ for day in 1...7 {
 
 ---
 
-### Pattern 5a: UI Frozen (Main Thread Blocking)
+### Pattern 5a: UI Frozen (Main-Actor Work Around Generation)
 
 **Symptom**:
 - App unresponsive during generation
 - UI freezes for seconds
 
-**Diagnosis**:
-Calling `respond()` on main thread synchronously
+**Diagnosis**: awaiting `respond()` / iterating `streamResponse()` suspends the task and frees the main actor → the call isn't the cause; another `Task {}` changes nothing (a view's `Task` inherits the main actor). Cause = synchronous main-actor work during generation:
+- heavy work before/after the `await` in the same task (prompt building, result parsing)
+- an expensive view re-rendered per streamed snapshot
+
+Confirm: Hangs instrument / Time Profiler — the main-thread stack names the work.
 
 **Fix**:
 ```swift
-// ❌ BAD - Blocking main thread
-Button("Generate") {
-    let response = try await session.respond(to: prompt)
-    // UI frozen for 2-5 seconds!
-}
-
-// ✅ GOOD - Async task
+// ❌ BAD - the await doesn't block, but the parsing after it runs on the main actor
 Button("Generate") {
     Task {
         do {
             let response = try await session.respond(to: prompt)
-            // Update UI on main thread
-            await MainActor.run {
-                self.result = response.content
-            }
+            result = Self.expensiveParse(response.content)
         } catch {
-            print("Error: \(error)")
+            errorMessage = error.localizedDescription
         }
     }
+}
+
+// ✅ GOOD - heavy work moves off the main actor
+Button("Generate") {
+    Task {
+        do {
+            let response = try await session.respond(to: prompt)
+            result = await Self.parseOffMain(response.content)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+@concurrent
+nonisolated static func parseOffMain(_ text: String) async -> String {
+    expensiveParse(text)
+}
+
+// nonisolated so parseOffMain can call it off the main actor
+nonisolated static func expensiveParse(_ text: String) -> String {
+    text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: "\n")
 }
 ```
 
@@ -1212,7 +1228,7 @@ Post-mortem items:
 | Long wait | No streaming | >1s generation? | 4b | 20 min |
 | Schema overhead | Re-inserting schema | Subsequent requests? | 4c | 2 min |
 | Complex prompt | Too much at once | >5s generation? | 4d | 30 min |
-| UI frozen | Main thread | Thread check | 5a | 5 min |
+| UI frozen | Main-actor work around generation | Hangs instrument | 5a | 5 min |
 | `@Generable` macro not found | Swift Playgrounds runtime | Xcode vs Playgrounds? | 6a | 15 min |
 | `SchemaAugmentor.swift:209` crash | Recursive `@Generable` types | Self-referencing struct? | 6b | 30 min |
 | `SchemaError.undefinedReferences` | Missing schema in `dependencies:` | All `referenceTo:` names declared? | 6c | 10 min |

@@ -22,7 +22,7 @@ You are an expert at interpreting iOS/macOS crash reports. You lean on `xcsym` f
 command -v xcsym
 ```
 
-If present, run:
+If that finds nothing, use `<plugin-root>/tools/xcsym` wherever this file says `xcsym`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of your preloaded `axiom-tools` skill; on Codex, it is the plugin root named in Axiom's startup context. If present, run:
 ```bash
 xcsym crash <file> --format=standard
 ```
@@ -40,13 +40,11 @@ The exit code narrows the triage path:
 | 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
 
-**Flag placement.** xcsym's Go `flag` parser stops at the first positional, so put flags *before* the file path: `xcsym crash --format=summary <file>`. The reverse order exits 1 with a usage error.
-
 **Stdin.** Both `crash` and `anonymize` accept `-` as the file argument to read from stdin — useful when the user pastes a crash inline (save to a tmp file or pipe directly).
 
 **Hang rejection.** `crash` exits 1 and writes `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}` to stdout when the input is a hang (`bug_type=298`). Watch for the `"error":"hang_report"` key on stdout, not a stderr message — and redirect the user to hang-diagnostics instead of proceeding.
 
-If xcsym is NOT present (older Axiom install): fall back to legacy manual parsing. Note to user: "xcsym not found — using legacy parsing." Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.
+If xcsym is still absent (older Axiom install): fall back to legacy manual parsing. Note to user: "xcsym not found — using legacy parsing." Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.
 
 ## Pattern Tag → Fix Guidance
 

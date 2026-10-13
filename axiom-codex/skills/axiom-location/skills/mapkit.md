@@ -30,7 +30,7 @@ MapKit patterns and anti-patterns for iOS apps. Prevents common mistakes: using 
 | No annotation view reuse (MKMapView) | Memory spikes, scroll lag with 500+ annotations | `dequeueReusableAnnotationView(withIdentifier:for:)` |
 | `setRegion` in `updateUIView` without guard | Infinite loop — region change triggers update, update sets region | Guard with `mapView.region != region` or use flag |
 | Ignoring MapCameraPosition (SwiftUI) | Can't programmatically control camera, broken "center on user" | Bind `position` parameter to `@State var cameraPosition` |
-| Synchronous geocoding on main thread | UI freeze for 1-3 seconds per geocode | Use `CLGeocoder().geocodeAddressString` with async/await |
+| Synchronous geocoding on main thread | UI freeze for 1-3 seconds per geocode | Use `MKGeocodingRequest(addressString:)` and `try await request.mapItems` (iOS 26+); `CLGeocoder` is deprecated from iOS 26, so use it only below that |
 | Not filtering annotations to visible region | Loading all 10K annotations at once | Use `mapView.annotations(in:)` or fetch by visible region |
 | Ignoring `resultTypes` in MKLocalSearch | Irrelevant results, slow search | Set `.resultTypes = [.pointOfInterest]` or `.address` to filter |
 

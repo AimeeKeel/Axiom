@@ -275,7 +275,7 @@ Independent apps ship without an iPhone companion in some configurations — or 
 | Paired watch, iPhone asleep / Bluetooth range exceeded | `isReachable = false`; queued transfers deliver on reconnection |
 | LTE watch, iPhone off | `isReachable = false`; app should still fetch from the network directly |
 
-**Concrete pattern.** Fetch primary data over URLSession or CloudKit. When `WCSession.activationState == .activated` and `isReachable == true`, opportunistically cache or refresh via Watch Connectivity. Never wait for a transfer to render core content.
+**Concrete pattern.** Fetch primary data over URLSession or CloudKit. Once `WCSession.activationState == .activated`, push durable updates with `updateApplicationContext` (latest state) or `transferUserInfo` (every event) regardless of `isReachable`; the system queues and delivers them later. Check `isReachable` only before a `sendMessage` whose UI waits on a reply. Never wait for a transfer to render core content.
 
 ## Common Mistakes
 

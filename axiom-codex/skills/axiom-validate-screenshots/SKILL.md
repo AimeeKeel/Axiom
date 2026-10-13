@@ -51,18 +51,27 @@ for f in "<file1>" "<file2>" "<file3>"; do
 done
 ```
 
-Match each screenshot against required App Store sizes:
+Match each screenshot against the sizes App Store Connect accepts:
 
-### Required Device Screenshots
+### Accepted Screenshot Sizes
 
-| Device | Portrait | Landscape |
-|--------|----------|-----------|
-| iPhone 6.9" (16 Pro Max) | 1320 × 2868 | 2868 × 1320 |
-| iPhone 6.7" (15 Plus/Pro Max) | 1290 × 2796 | 2796 × 1290 |
-| iPhone 6.5" (11 Pro Max/Xs Max) | 1242 × 2688 | 2688 × 1242 |
-| iPhone 5.5" (8 Plus) | 1242 × 2208 | 2208 × 1242 |
-| iPad 13" (Pro M4) | 2064 × 2752 | 2752 × 2064 |
-| iPad 12.9" (Pro 6th gen) | 2048 × 2732 | 2732 × 2048 |
+| Display class (App Store Connect) | Portrait | Landscape |
+|---------|----------|-----------|
+| iPhone with Dynamic Island, large (6.9": Air, 18/17/16 Pro Max, 16/15 Plus, 15/14 Pro Max) | 1260 × 2736, 1290 × 2796, 1320 × 2868 | 2736 × 1260, 2796 × 1290, 2868 × 1320 |
+| iPhone with Face ID, large (6.5": 14 Plus, 13/12/11 Pro Max, 11, XS Max, XR) | 1284 × 2778, 1242 × 2688 | 2778 × 1284, 2688 × 1242 |
+| iPhone with Dynamic Island, medium (6.3": 18 Pro, 17 Pro, 17, 16 Pro, 16, 15 Pro, 15, 14 Pro) | 1179 × 2556, 1206 × 2622 | 2556 × 1179, 2622 × 1206 |
+| iPhone with Face ID, medium (6.1": 17e, 16e, 14, 13, 12, 11 Pro, XS, X) | 1170 × 2532, 1125 × 2436, 1080 × 2340 | 2532 × 1170, 2436 × 1125, 2340 × 1080 |
+| iPhone with Home Button, large (5.5": 8 Plus) | 1242 × 2208 | 2208 × 1242 |
+| iPhone with Home Button, medium (4.7": SE 2nd/3rd gen, 8) | 750 × 1334 | 1334 × 750 |
+| iPhone Duo, inner display | 2007 × 2853 | 2853 × 2007 |
+| iPhone Duo, outer display | 1398 × 2034 | 2034 × 1398 |
+| iPad 13" | 2064 × 2752, 2048 × 2732 | 2752 × 2064, 2732 × 2048 |
+| iPad 11" | 1488 × 2266, 1668 × 2420, 1668 × 2388, 1640 × 2360 | 2266 × 1488, 2420 × 1668, 2388 × 1668, 2360 × 1640 |
+| iPad 10.5" | 1668 × 2224 | 2224 × 1668 |
+
+Older 4", 3.5" and 9.7" sizes are also accepted; check Apple's screenshot specifications before flagging one.
+
+**Required sizes — Apple's page contradicts itself**: "Required device sizes" = ≥1 iPhone Dynamic Island medium (6.3") + iPad 13" if the app runs on iPad; per-row notes still call 6.9" (or 6.5" without it) required and scale down from it. Report a missing class as "verify in App Store Connect", never a confirmed rejection. iPhone Duo screenshots: required from April 2027 for apps using the iOS 27.1 SDK or later.
 
 **Note**: App Store Connect accepts exact matches only. Even 1px off will be rejected.
 
@@ -73,14 +82,15 @@ Analyze each screenshot one at a time using the Read tool. For each image, check
 ### CRITICAL Issues (App Store rejection risk)
 
 - **Placeholder/test text**: "Lorem ipsum", "Test", "TODO", "Sample", "Hello World", "John Doe", sample phone numbers, example@email.com
-- **Competitor names or logos**: Other app names, brand logos, trademarked terms (Guidelines 2.3.1)
+- **Competitor names or logos**: Other app names, brand logos, trademarked terms (Guidelines 2.3.7, 5.2.1)
+- **Other platforms**: Names, icons, or imagery of other mobile platforms or alternative app marketplaces, such as an Android phone frame (Guideline 2.3.10)
 - **Debug indicators**: "STAGING", "DEBUG", "DEV", FPS overlay, console output, Xcode debug bars, purple memory warnings
 - **Wrong device in frame**: iPad screenshot in iPhone frame or vice versa
 
 ### HIGH Issues (likely rejection or poor conversion)
 
 - **Status bar problems**: Missing status bar, status bar showing carrier "Carrier" (any realistic time is acceptable — 9:41 is Apple's iPhone marketing convention, not a requirement). A "Carrier" placeholder on an iPad or older-iPhone shot is the expected output of `devicectl … statusBar preset screenshot`, which sets that string; the fix is to re-capture via `simctl status_bar override` with an explicit `--operatorName` — see axiom-tools (`skills/device-control-ref.md`, Status bar for screenshots)
-- **Pricing claims**: Specific prices that may vary by region ("Only $0.99!") — violates Guidelines 2.3.7
+- **Pricing claims**: Specific prices that may vary by region ("Only $0.99!") — violates Guideline 2.3.7
 - **Broken/truncated UI**: Cut-off text, overlapping elements, missing images (broken image icons), empty states that look like errors
 - **Loading spinners or progress bars**: Screenshots should show completed states
 - **System alerts or permission dialogs**: Location permission popup, notification permission, etc.
@@ -118,13 +128,14 @@ These are NOT issues:
 
 | File | Dimensions | Matches Device | Status |
 |------|-----------|----------------|--------|
-| home-screen.png | 1290 × 2796 | iPhone 6.7" Portrait | ✅ |
+| home-screen.png | 1290 × 2796 | iPhone 6.9" Portrait | ✅ |
 | settings.png | 1280 × 2796 | No match (10px short) | ❌ |
 
 ### Device Coverage
-- ✅ iPhone 6.7" — [N] screenshots
-- ❌ iPhone 6.5" — MISSING (required for older devices)
-- ✅ iPad 12.9" — [N] screenshots
+- ✅ iPhone 6.9" — [N] screenshots
+- ✅ iPad 13" — [N] screenshots
+- ⚠️ iPhone Duo — none (required from April 2027 for apps using the iOS 27.1 SDK or later)
+- ⚠️ iPhone 6.3" — none (Apple's required-sizes list names this class; verify in App Store Connect)
 
 ## Issues Found
 
@@ -150,14 +161,14 @@ These are NOT issues:
 
 ## Device Coverage Summary
 
-| Required Device | Screenshots Found | Status |
-|----------------|-------------------|--------|
-| iPhone 6.9" | 0 | ❌ Missing |
-| iPhone 6.7" | 5 | ✅ Complete |
-| iPhone 6.5" | 5 | ✅ Complete |
+| Display | Screenshots Found | Status |
+|---------|-------------------|--------|
+| iPhone 6.9" | 5 | ✅ Complete |
+| iPhone 6.5" | 0 | ⚠️ Optional (a 6.9" set is provided) |
 | iPhone 5.5" | 0 | ⚠️ Optional |
-| iPad 13" | 0 | ❌ Missing (if iPad app) |
-| iPad 12.9" | 3 | ✅ Complete |
+| iPhone 6.3" | 0 | ⚠️ Verify in App Store Connect (named in Apple's required-sizes list) |
+| iPhone Duo | 0 | ⚠️ Required from April 2027 for apps using the iOS 27.1 SDK or later |
+| iPad 13" | 3 | ✅ Complete |
 
 ## Next Steps
 
@@ -175,10 +186,12 @@ These are NOT issues:
 - If image quality makes it hard to read text, note that as a finding
 
 ### App Store Guidelines Referenced
-- **2.1** — App Completeness (no placeholder content)
-- **2.3.1** — Accurate Screenshots (must reflect actual app experience)
-- **2.3.3** — Screenshots must not include images that mislead
-- **2.3.7** — Accurate pricing and availability
+- **2.1** — App completeness: no placeholder text or temporary content
+- **2.3.1** — No hidden features, and no marketing of content or services the app doesn't offer
+- **2.3.3** — Screenshots should show the app in use, not merely title art, a login page or a splash screen
+- **2.3.7** — No trademarked terms, popular app names, prices or irrelevant phrases in metadata, screenshots included
+- **2.3.10** — No names, icons, or imagery of other mobile platforms or alternative app marketplaces
+- **5.2.1** — No protected third-party material, such as trademarks, without permission
 
 ### Image Reading
 - Use the Read tool to view each screenshot — it supports PNG and JPG
@@ -194,7 +207,7 @@ These are NOT issues:
 All [N] screenshots passed validation.
 
 ## Verified
-- ✅ All dimensions match required App Store sizes
+- ✅ All dimensions match accepted App Store sizes
 - ✅ No placeholder or test content detected
 - ✅ No debug indicators or development artifacts
 - ✅ No competitor references

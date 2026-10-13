@@ -28,7 +28,7 @@ The build-optimizer agent scans for common issues and provides immediate fixes. 
 
 ## Project selection and effective settings
 
-The `.xcodeproj` container holds `project.pbxproj` or JSON5 `project.xcproj`. Use Glob for both filenames at any depth and exclude dependency/cache folders. With `command -v xcproject` available:
+The `.xcodeproj` container holds `project.pbxproj` or JSON5 `project.xcproj`. Use Glob for both filenames at any depth and exclude dependency/cache folders. Check `command -v xcproject`. If that finds nothing, use `<plugin-root>/tools/xcproject` wherever this file says `xcproject`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of a loaded Axiom skill (load `axiom-tools` if none is); on Codex, it is the plugin root named in Axiom's startup context. With `xcproject` available:
 
 ```bash
 xcproject inspect --root .

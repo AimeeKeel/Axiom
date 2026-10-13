@@ -973,7 +973,7 @@ Testing: Verified with 10 track changes, zero flicker.
 - [ ] Added `com.apple.developer.carplay-audio` entitlement
 - [ ] CPNowPlayingTemplate configured at `templateApplicationScene(_:didConnect:)`
 - [ ] Custom buttons (if any) configured with CPNowPlayingButton
-- [ ] Tested on CarPlay simulator (I/O → External Displays → CarPlay)
+- [ ] Tested in a CarPlay simulator: Xcode Simulator's I/O → External Displays → CarPlay (Xcode 26 and earlier), or CarPlay Simulator with an iPhone (Xcode 27)
 - [ ] Tested in real vehicle (if available)
 - [ ] Tested both with and without debugger attached
 

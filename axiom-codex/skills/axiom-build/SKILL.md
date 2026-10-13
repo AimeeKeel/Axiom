@@ -8,6 +8,8 @@ license: MIT
 
 **You MUST use this skill for ANY build, environment, or Xcode-related issue before debugging application code.**
 
+**Bundled tools on Claude Code:** if `command -v <tool>` finds nothing (hooks off or `--bare`), use `<plugin-root>/tools/<tool>` in place of the bare name; `<plugin-root>` is two levels above this skill's `Base directory for this skill:` path.
+
 <!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
 > **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
 > matching Codex skill instead — same procedure, no Claude Code agent required.
@@ -19,7 +21,7 @@ license: MIT
 
 ## Capture Build and Test Diagnostics
 
-Before the next necessary build or test, resolve `tools/axbuild` under the **actual loaded package** in Claude Code (the folder in the session context's **Bundled tools** line; in a subagent, `command -v axbuild`) or Codex (`<plugin-root>/tools/`), or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.
+Before the next necessary build or test, resolve `tools/axbuild` under the **actual loaded package** in Claude Code (`command -v axbuild`; if that finds nothing, `tools/axbuild` two levels above the `Base directory for this skill:` path of a loaded Axiom skill) or Codex (`<plugin-root>/tools/`), or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.
 
 Cursor and MCP distributions do not bundle axbuild and expose no axbuild MCP wrapper. Use the **saved-log fallback** below when a verified shell helper is unavailable.
 

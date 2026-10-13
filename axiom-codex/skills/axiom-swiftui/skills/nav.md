@@ -74,7 +74,7 @@ LazyVGrid(columns: columns) {
     }
 }
 ```
-**Why this fails** Lazy containers don't load all views immediately. navigationDestination may not be visible to NavigationStack, causing navigation to silently fail.
+**Why this fails** Lazy containers don't load all views immediately. navigationDestination may not be visible to NavigationStack, so navigation fails, and SwiftUI logs a warning about a "misplaced `navigationDestination`" inside a lazy container.
 
 #### 4. Storing full model objects in NavigationPath for restoration
 ```swift

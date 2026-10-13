@@ -52,7 +52,7 @@ license: MIT
 | MusicKit Now Playing, ApplicationMusicPlayer playback, subscription/authorization | See `skills/now-playing-musickit.md` |
 | Enumerate the user's Apple Music **library** — MusicLibraryRequest vs MPMediaQuery, reconciling the two, playlist entries, sync, library identity, per-device `Song.id`, missing `PlayParameters`, MusicKit stops responding after a scan | See `skills/music-library.md` |
 | DockKit motorized stands / gimbals, subject tracking, custom motor control | See `skills/dockkit.md` |
-| Speech-to-text / transcription (SpeechAnalyzer, mic → transcript) | **Invoke axiom-ai** (`skills/ios-ml.md`) |
+| Speech-to-text / transcription (SpeechAnalyzer, mic → transcript) | **Invoke axiom-ai** (`skills/speech.md`) |
 
 ## Decision Tree
 
@@ -112,9 +112,9 @@ digraph media {
 - Background audio mode / BGTaskScheduler → **invoke axiom-integration** (background-processing reference)
 
 **Speech-to-text + audio capture** (transcribing mic or asset audio):
-- `SpeechAnalyzer` / `SpeechTranscriber`, the ~2-simultaneous-analyzer cap, the `OS27` input providers → **invoke axiom-ai** (`skills/ios-ml.md`)
+- `SpeechAnalyzer` / `SpeechTranscriber`, the `OS27` input providers, the ~2-analyzer cap on iOS/visionOS; none on macOS → **invoke axiom-ai** (`skills/speech.md`)
 - Audio session category/mode, `AVCaptureSession` wiring → **stay here** (avfoundation-ref, camera-capture)
-- **The trap**: `CaptureInputSequenceProvider.providerWithSession(...)` (`OS27`) automatically reconfigures your app's default `AVAudioSession`. If this suite's audio-session setup "randomly breaks" after transcription is added, that's the cause — use `provider(from:in:)` and add its `captureAudioDataOutput` to your own session.
+- **The trap**: `CaptureInputSequenceProvider.providerWithSession(...)` (`OS27`) automatically reconfigures your app's default `AVAudioSession`. If this suite's audio-session setup "randomly breaks" after transcription is added, that's the cause — join your own session via `provider(from:in:)`, or `init(session:analyzerFormat:priority:)` from the actor that owns it, and add its `captureAudioDataOutput`.
 
 **Apple Music library + playback + persistence**:
 - Enumerating the library, library identity, `PlayParameters` availability, Sync Library hazards → **stay here** (music-library)

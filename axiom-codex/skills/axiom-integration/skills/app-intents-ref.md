@@ -1026,7 +1026,7 @@ struct TripEntity: AppEntity, IndexedEntity {
 
 ### Overview
 
-**Spotlight on Mac** (macOS Sequoia+) allows users to run your app's intents directly from system search. Intents that work in Shortcuts automatically work in Spotlight with proper configuration.
+**Spotlight on Mac** (macOS Tahoe 26+) allows users to run your app's intents directly from system search. Intents that work in Shortcuts automatically work in Spotlight with proper configuration.
 
 **Key principle** Spotlight is all about running things quickly. To do that, people need to be able to provide all the information your intent needs to run directly in Spotlight.
 
@@ -1262,7 +1262,7 @@ Spotlight learns when/how user runs this intent and surfaces suggestions proacti
 
 ### Overview
 
-**Personal Automations** arrive on macOS (macOS Sequoia+) with Mac-specific triggers:
+**Personal Automations** arrive on macOS (macOS Tahoe 26+) with Mac-specific triggers:
 
 #### New Mac Automation Types
 - **Folder Automation** — Trigger when files added/removed from folder

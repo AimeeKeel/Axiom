@@ -34,18 +34,19 @@ Use this router when:
 | Developer Intent | Route To |
 |-----------------|----------|
 | On-device text generation (Apple Intelligence) | **Stay here** → Foundation Models skills |
-| Custom ML model deployment (PyTorch, TensorFlow) — classic Core ML | **See skills/ios-ml.md** (hub) → conversion / compression / training files |
+| Custom ML model deployment (PyTorch, TensorFlow) — classic Core ML | **See skills/ios-ml.md** (hub) → conversion / compression / training / deployment / ref / diag files |
+| Core ML model fails to load, is slow, grows memory, or loses accuracy after compression | **See skills/coreml-diag.md** |
 | Custom **LLM-scale / transformer** model on-device (27-cycle) | **See skills/core-ai.md** → Core AI conversion, runtime, specialization |
 | Computer vision (image analysis, OCR, segmentation) | **/skill axiom-vision** → Vision framework |
 | Cloud API integration (OpenAI, generic HTTP) | **/skill axiom-networking** → URLSession patterns |
 | Cloud Claude integration (Anthropic SDK, Messages API, Claude Agent SDK) | **See `claude-api` skill** (external) → includes automated Opus 4.6 → 4.7 migration |
-| Speech-to-text / transcription (SpeechAnalyzer, SpeechTranscriber, mic → transcript) | **See skills/ios-ml.md** → Speech-to-Text section (the ~2-analyzer cap, `OS27` input providers) |
+| Speech-to-text / transcription (SpeechAnalyzer, SpeechTranscriber, DictationTranscriber, mic → transcript) | **See skills/speech.md** (`OS27` input providers, Swift 6 mic-tap isolation, the ~2-analyzer cap on iOS/visionOS; none on macOS) |
 | Turnkey Apple Intelligence UI — suggested actions for a messaging conversation (`OS27`) | **See skills/suggested-actions.md** → drop-in `SuggestedActionsView`, entitlement-gated |
 | System AI features (Writing Tools, Genmoji) | No custom code needed — these are system-provided |
 
 **Key boundary: Foundation Models vs ML (custom models)**
 - Foundation Models = Apple's on-device LLM framework (LanguageModelSession, @Generable)
-- ML = Custom model deployment (CoreML conversion, quantization, MLTensor, speech-to-text)
+- ML = Custom model deployment (CoreML conversion, quantization, MLTensor) and speech-to-text
 - If developer says "run my own model" → skills/ios-ml.md. If "use Apple Intelligence" → stay here.
 
 ## Training Path Boundaries
@@ -69,9 +70,9 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 
 ## Cross-Domain Routing
 
-**Foundation Models + concurrency** (session blocking main thread, UI freezes):
-- Foundation Models sessions are async — blocking likely means missing `await` or running on @MainActor
-- **Fix here first** using async session patterns in foundation-models skill
+**Foundation Models + concurrency** (UI freezes during generation, concurrent-request errors):
+- Awaiting a session suspends rather than blocks — a freeze is synchronous main-actor work around generation (foundation-models-diag Pattern 5a), and `concurrentRequests` means a second request started while `isResponding` was true
+- **Fix here first** using foundation-models (one request at a time) and foundation-models-diag Pattern 5a (freezes)
 - If concurrency issue is broader than Foundation Models → **also invoke axiom-concurrency**
 
 **Foundation Models + data** (@Generable decoding errors, structured output issues):
@@ -84,18 +85,21 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 - Stay here for the API surface itself (DynamicProfile, tools, sessions)
 
 **Speech-to-text + audio capture** (transcription that fights your audio session):
-- `SpeechAnalyzer` / `SpeechTranscriber`, the ~2-analyzer cap, the `OS27` input providers → **stay here** (`skills/ios-ml.md`)
-- **The trap**: `CaptureInputSequenceProvider.providerWithSession(...)` (`OS27`) reconfigures your app's default `AVAudioSession`. If the app also records or plays back, the capture/session half of the fix lives in **axiom-media** (`avfoundation-ref`, `camera-capture`) — use `provider(from:in:)` and add its `captureAudioDataOutput` to your own session.
+- `SpeechAnalyzer` / `SpeechTranscriber`, the `OS27` input providers, the ~2-analyzer cap on iOS/visionOS; none on macOS → **stay here** (`skills/speech.md`)
+- **The trap**: `CaptureInputSequenceProvider.providerWithSession(...)` (`OS27`) reconfigures your app's default `AVAudioSession`. If the app also records or plays back, the capture/session half of the fix lives in **axiom-media** (`avfoundation-ref`, `camera-capture`) — join your own session via `provider(from:in:)`, or `init(session:analyzerFormat:priority:)` from the actor that owns it, and add its `captureAudioDataOutput`.
 
 ## Routing Logic
 
 ### Custom Core ML Work (your own models, not Apple's LLM)
 
-`skills/ios-ml.md` is the hub (deployment, runtime, speech-to-text). The lifecycle stages have dedicated files:
+`skills/ios-ml.md` is the hub. Each stage has a dedicated file:
 
-- **Convert** a trained PyTorch/TF/Keras model → `skills/coreml-conversion.md` (`coremltools.convert`, ML Program vs NN-spec, parity validation)
+- **Convert** a trained PyTorch/TF/Keras model → `skills/coreml-conversion.md` (`coremltools.convert`, ML Program vs NN-spec, parity validation, stateful conversion)
 - **Compress** it → `skills/coreml-compression.md` (the PTQ-vs-QAT decision, palettization/quantization/pruning)
 - **Train from scratch / personalize on-device** → `skills/coreml-training.md` (Create ML; `MLUpdateTask` and its NN-spec-only limitation)
+- **Deploy and run** → `skills/coreml-deployment.md` (load/cache/pre-warm, Swift 6-safe prediction — `MLModel` isn't Sendable, stateful KV-cache, multifunction adapters, `MLTensor`)
+- **API lookup** → `skills/coreml-ref.md` (`MLModel`, configuration, compute devices, prediction overloads, `MLState`, `MLTensor` ops, `MLComputePlan`, coremltools index)
+- **Something's wrong** → `skills/coreml-diag.md` (load errors, slowness, memory, device/Simulator differences, accuracy loss after compression)
 
 ### Core AI — the 27-cycle path for LLM-scale on-device models (`OS27`)
 
@@ -182,7 +186,7 @@ For the full "which path applies to me?" disambiguation (decision tree, the thre
 **Automated scanning** → `axiom-audit-foundation-models`
 
 Detects anti-patterns AND architectural gaps:
-- Missing availability checks, main-thread `respond()`, manual JSON parsing, missing specific error catches (guardrail / context size), session created per-tap, no streaming for long output, missing `@Guide` constraints, nested non-`@Generable` types, no fallback UI
+- Missing availability checks, concurrent requests on one session, manual JSON parsing, missing specific error catches (guardrail / context size), session created per-tap, no streaming for long output, missing `@Guide` constraints, nested non-`@Generable` types, no fallback UI
 - Prompt-injection risk from direct user-text interpolation, `@Generable` enums without `@frozen` (future-case crash), missing Cancel UX, missing transcript trimming, stale availability cache after Settings toggle, partial-output validation gaps, Tool errors indistinguishable from session errors, no retry on transient errors
 - **Quality (`OS27`)**: an AI feature shipping with **no evaluation suite** at all; a model judge used **without calibration**; an evaluation that runs but **asserts nothing**
 - **Migration (`OS27`)**: deprecated `GenerationError` on a 27 target; a rename-only migration that **drops** `assetsUnavailable` / `concurrentRequests` / `decodingFailure` (they left the enum); error UI reading `recoverySuggestion`, which `LanguageModelError` **no longer implements** and which now silently renders nil
@@ -191,19 +195,20 @@ Scores: PRODUCTION-READY / NEEDS HARDENING / FRAGILE
 
 ## Decision Tree
 
-1. Custom ML model / CoreML? → **skills/ios-ml.md** hub → convert (`coreml-conversion.md`), compress (`coreml-compression.md`), or train/personalize (`coreml-training.md`). LLM-scale / transformer / 27-cycle custom model? → **skills/core-ai.md** (Core AI)
+1. Custom ML model / CoreML? → **skills/ios-ml.md** hub → convert (`coreml-conversion.md`), compress (`coreml-compression.md`), train/personalize (`coreml-training.md`), deploy (`coreml-deployment.md`), API (`coreml-ref.md`), failures (`coreml-diag.md`). LLM-scale / transformer / 27-cycle custom model? → **skills/core-ai.md** (Core AI)
 2. Computer vision / image analysis / OCR? → **/skill axiom-vision**
 3. Cloud AI API integration? → **/skill axiom-networking**
 4. Implementing Foundation Models / @Generable / Tool protocol? → foundation-models
 5. Need API reference / code examples? → foundation-models-ref
 6. Debugging AI issues (blocked, slow, guardrails)? → foundation-models-diag
-7. Foundation Models + UI freezing? → foundation-models (async patterns) + also invoke axiom-concurrency if needed
+7. Foundation Models + UI freezing? → foundation-models-diag (Pattern 5a, main-actor work) + also invoke axiom-concurrency if needed
 8. Considering training a custom adapter? → **foundation-models** Approach Triage (rungs 1-4) FIRST; only after documented rung-1-4 failures → foundation-models-adapters
 9. Implementing adapter loading, training pipeline, or runtime selection? → foundation-models-adapters + foundation-models-adapters-ref + axiom-integration (skills/background-assets.md) for delivery
 10. Debugging adapter-specific failures (compatibleAdapterNotFound, tool calls don't fire from adapter, accuracy regression after OS update)? → foundation-models-adapters-diag
 11. Want automated Foundation Models code scan? → foundation-models-auditor (Agent — detects 14 anti-patterns AND completeness gaps including prompt injection, frozen-enum discipline, transcript trimming, Cancel UX, missing/uncalibrated eval suites; scores PRODUCTION-READY / NEEDS HARDENING / FRAGILE)
 12. Measuring whether an AI feature improved/regressed, designing an eval dataset, calibrating a model judge, or about to ship on eyeballed outputs? → **foundation-models-evaluations** (discipline) + **foundation-models-evaluations-ref** (API) — `OS27` Evaluations framework
 13. Adding Apple's built-in suggested actions to a messaging/chat/email app (`SuggestedActionsView`, suggested-actions entitlement)? → **skills/suggested-actions.md** (`OS27` — turnkey, system-provided; NOT Foundation Models)
+14. Speech-to-text, live captions, or transcribing a file (`SpeechAnalyzer`, `SpeechTranscriber`, `DictationTranscriber`, `SFSpeechRecognizer`, mic → transcript)? → **skills/speech.md**
 
 ## Anti-Rationalization
 
@@ -260,13 +265,16 @@ User: "I want to add AI to my app"
 → First ask: Apple Intelligence (Foundation Models) or custom ML model? Route accordingly.
 
 User: "My Foundation Models session is blocking the UI"
-→ Read: `skills/foundation-models.md` (async patterns) + also invoke `axiom-concurrency` if needed
+→ Read: `skills/foundation-models-diag.md` (Pattern 5a: the freeze is main-actor work, not the `await`) + also invoke `axiom-concurrency` if needed
 
 User: "Review my Foundation Models code for issues"
 → Invoke: `foundation-models-auditor` agent
 
 User: "I want to run my PyTorch model on device"
-→ Read: `skills/ios-ml.md` (classic Core ML conversion, not Foundation Models)
+→ Read: `skills/ios-ml.md` (classic Core ML hub, not Foundation Models) → `skills/coreml-conversion.md` then `skills/coreml-deployment.md`
+
+User: "My Core ML model takes seconds to load the first time" / "prediction is slow on iPhone but fast on my Mac"
+→ Read: `skills/coreml-diag.md`
 
 User: "I want to run my own LLM / SAM segmentation model on device" / "convert a PyTorch transformer with Core AI" / "my Core AI model stalls on first launch"
 → Read: `skills/core-ai.md` (Core AI conversion, runtime, specialization & caching)
@@ -291,6 +299,9 @@ User: "My model judge is giving weird scores" / "How do I know I can trust the j
 
 User: "My eval metric returns -1" / "Our pass rate went up when we added harder test cases" / "The eval suite passes but I don't think it measured anything"
 → Read: `skills/foundation-models-evaluations-diag.md` (the framework fails silently — a green suite is not evidence a run happened)
+
+User: "Add live transcription with SpeechAnalyzer"
+→ Read: `skills/speech.md`
 
 User: "Add Apple's suggested actions to my messaging app" / "Show smart/on-device suggested replies for a message thread" / "What's the com.apple.developer.suggested-actions entitlement for?"
 → Read: `skills/suggested-actions.md` (turnkey `SuggestedActionsView`, system-provided — not Foundation Models)

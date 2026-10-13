@@ -8,6 +8,8 @@ license: MIT
 
 This suite covers Axiom itself — how to use it, what's available, and the tools that ship with it.
 
+**Bundled tools on Claude Code:** if `command -v <tool>` finds nothing (hooks off or `--bare`), use `<plugin-root>/tools/<tool>` in place of the bare name; `<plugin-root>` is two levels above this skill's `Base directory for this skill:` path.
+
 <!-- AXIOM_AUDITOR_INLINE_BEGIN — rewritten for Codex by scripts/build-codex.ts; do not hand-edit -->
 > **Auditors are skills here.** Where this router says "Launch `some-auditor` agent", invoke the
 > matching Codex skill instead — same procedure, no Claude Code agent required.
