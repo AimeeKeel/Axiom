@@ -87,6 +87,8 @@ test("renders deterministic, safe, non-Claude Cursor bytes", () => {
     assert.equal(path.posix.isAbsolute(file.path), false, file.path);
     assert.equal(file.path.split("/").includes(".."), false, file.path);
     assert.doesNotMatch(file.content, /CLAUDE_PLUGIN_ROOT|\$ARGUMENTS|\{\{args\.|\/axiom:|TaskOutput|AskUserQuestion/);
+    // Cursor ships no binaries, so the bundled-tools fallback must never reach it.
+    assert.doesNotMatch(file.content, /finds nothing, use `<plugin-root>\/tools\/|\*\*Bundled tools on Claude Code:\*\*|Base directory for this skill/, file.path);
     if (/^(?:agents|commands)\//.test(file.path)) {
       assert.doesNotMatch(
         file.content,
@@ -381,4 +383,14 @@ test("preserves axbuild saved-log fallback without inventing a Cursor MCP tool",
     assert.doesNotMatch(text, /axiom_axbuild/);
   }
   assert.equal([...files.keys()].some(file => file === "tools/axbuild"), false);
+});
+
+test("every Cursor file that runs \"$AXBUILD\" sets it or points to the section that does", () => {
+  const files = filesByPath(renderCursorDistribution(root, { profile: "full" }));
+  const users = [...files].filter(([, file]) => file.content.includes('"$AXBUILD"'));
+  const carriers = users.filter(([, file]) => file.content.includes("## Capture Build and Test Diagnostics"));
+  assert.notEqual(carriers.length, 0);
+  // The Cursor sentence specifically: the unrewritten Claude Code paragraph also assigns AXBUILD.
+  for (const [relative, file] of carriers) assert.match(file.content, /run `command -v axbuild`[^\n]*assign [^\n]* to `AXBUILD`/, relative);
+  for (const [relative, file] of users) assert.match(file.content, /Capture Build and Test Diagnostics/, relative);
 });

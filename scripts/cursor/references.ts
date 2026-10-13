@@ -101,9 +101,23 @@ const HOST_CLAIM_REWRITES: ReadonlyArray<HostClaimRewrite> = [
     pattern: new RegExp(`${tool} has two front-ends over the same engine — the CLI and MCP tools; use whichever your harness provides:\\n\\n(?:- \\*\\*(?:Claude Code|Codex|Pi)\\*\\*[^\\n]*\\n)*- \\*\\*MCP clients\\*\\*[^\\n]*`, "g"),
     replacement: `In Cursor, use the \`axiom_${tool}_*\` MCP tools. The plugin does not provide a bare \`${tool}\` executable on \`PATH\`.`,
   })),
-  { id: "xcui-on-path", pattern: /On \*\*Claude Code\*\*, `xcui` is already on PATH[^\n]*\n\nOn \*\*Pi and MCP-only installs there is no bundled binary\*\*:[^\n]*/g, replacement: "In Cursor, `xcui` is external and is not placed on `PATH` by the plugin. Check `command -v xcui` before following an `xcui` workflow." },
-  { id: "xcui-check-first", pattern: /\*\*Check first: `command -v xcui`\.\*\* It is on PATH automatically only on Claude Code\.[^\n]*/g, replacement: "**Check first: `command -v xcui`.** In Cursor it is external. If absent, use AXe only for compatible input verbs; do not substitute AXe for xcui-only test-harness workflows." },
+  { id: "xcui-on-path", pattern: /On \*\*Claude Code\*\*, `xcui` is already on PATH[^\n]*\n\nOn \*\*Pi\*\*, the binary is in the Axiom clone[^\n]*/g, replacement: "In Cursor, `xcui` is external and is not placed on `PATH` by the plugin. Check `command -v xcui` before following an `xcui` workflow." },
+  { id: "xcui-check-first", pattern: /\*\*Check first: `command -v xcui`\.\*\* If that finds nothing, use `<plugin-root>\/tools\/xcui`[^\n]*/g, replacement: "**Check first: `command -v xcui`.** In Cursor it is external. If absent, use AXe only for compatible input verbs; do not substitute AXe for xcui-only test-harness workflows." },
   { id: "xcui-bundled-semantics", pattern: /`xcui` \(bundled\) adds the test-harness semantics AXe lacks\./g, replacement: "When installed externally, `xcui` adds the test-harness semantics AXe lacks." },
+  // Cursor ships no binaries, so the Claude Code bundled-tools fallback has nothing to point at.
+  { id: "claude-code-tools-fallback", pattern: /If (?:that|`command -v [a-z]+`) finds nothing, use `<plugin-root>\/tools\/[a-z]+` wherever this file says `[a-z]+`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of [^;\n]*; on Codex, it is the plugin root named in Axiom's startup context\.(?: |$)/gm, replacement: "" },
+  // The shared axbuild section resolves the helper inside the Claude Code, Codex or Pi package.
+  // Cursor ships no axbuild, but one may be on PATH; every "$AXBUILD" example needs that
+  // assignment, and the section's next paragraph gives the fallback when there is none.
+  {
+    id: "axbuild-helper-resolution",
+    pattern: /Before the next necessary build or test, resolve `tools\/axbuild` under the \*\*actual loaded package\*\*[^\n]*\n\n/g,
+    replacement:
+      "Before the next necessary build or test, run `command -v axbuild`. If it finds an executable, run that absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.\n\n",
+  },
+  { id: "claude-code-bundled-tools-line", pattern: /\*\*Bundled tools on Claude Code:\*\*[^\n]*\n\n/g, replacement: "" },
+  { id: "xcprof-missing", pattern: /If `xcprof` is (?:still )?absent[^\n]*/g, replacement: CURSOR_MCP_MISSING_TOOL_BOUNDARY },
+  { id: "xcsym-missing", pattern: /If xcsym is (?:NOT present|still absent)[^\n]*/g, replacement: CURSOR_MCP_MISSING_TOOL_BOUNDARY },
   { id: "xcui-bundled-bullet", pattern: /- \*\*xcui\*\*: bundled —/g, replacement: "- **xcui**: external —" },
 ];
 
@@ -149,8 +163,6 @@ export function rewriteCursorMcpWorkflows(content: string): string {
     .replace(/`XCSYM_DSYM_PATHS=\/path\/to\/downloads xcsym crash <file>`/g, "the `axiom_xcsym_crash` MCP tool with `file: \"<file>\"` and `dsymPaths: \"/path/to/downloads\"`")
     .replace(/command -v xcprof\s*&&\s*xcprof doctor/g, "call the `axiom_xcprof_doctor` MCP tool")
     .replace(/command -v (?:xclog|xcsym|xcprof)\b/g, "confirm the required Axiom MCP tool is available")
-    .replace(/If `xcprof` is absent[^\n]*/g, CURSOR_MCP_MISSING_TOOL_BOUNDARY)
-    .replace(/If xcsym is NOT present[^\n]*/g, CURSOR_MCP_MISSING_TOOL_BOUNDARY)
     .replace(/Do not hand-parse `\.ips` JSON unless xcsym is unavailable\./g, CURSOR_MCP_MISSING_TOOL_BOUNDARY)
     .replace(/^1\. Check for xcsym:$/gm, "1. Use the `axiom_xcsym_crash` MCP tool:")
     .replace(/^export XCPROF_TRACE_ROOT="\$\(mktemp -d\)"$/gm, "Use the MCP server's default trace sandbox, or pass a reviewed path in `output`.")
