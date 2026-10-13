@@ -85,6 +85,37 @@
       "axiom-ai"
     ]
   },
+  "axiom-ai--coreml-deployment": {
+    "category": "ai",
+    "tags": [
+      "kv"
+    ],
+    "related": [
+      "axiom-ai"
+    ]
+  },
+  "axiom-ai--coreml-diag": {
+    "category": "ai",
+    "tags": [
+      "ptq",
+      "qat"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-ai--coreml-ref"
+    ]
+  },
+  "axiom-ai--coreml-ref": {
+    "category": "ai",
+    "tags": [
+      "llm",
+      "pytorch"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-ai--coreml-diag"
+    ]
+  },
   "axiom-ai--coreml-training": {
     "category": "ai",
     "tags": [
@@ -229,6 +260,19 @@
     ],
     "related": [
       "axiom-ai"
+    ]
+  },
+  "axiom-ai--speech": {
+    "category": "ai",
+    "tags": [
+      "analyzerinput",
+      "analyzerinputconverter",
+      "captureinputsequenceprovider",
+      "speechanalyzer"
+    ],
+    "related": [
+      "axiom-ai",
+      "axiom-media"
     ]
   },
   "axiom-ai--suggested-actions": {

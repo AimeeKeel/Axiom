@@ -1,40 +1,40 @@
 ---
 name: ios-ml
-description: Router for on-device machine learning and speech-to-text work — CoreML conversion and deployment, model compression, stateful models for LLMs, MLTensor pipeline stitching, and SpeechAnalyzer transcription
+description: Hub for on-device machine learning and speech-to-text — routes Core ML conversion, compression, training, deployment, API lookup, and diagnostics, and SpeechAnalyzer transcription, to dedicated skills
 ---
 
 # iOS Machine Learning
 
-Navigation hub for on-device machine learning and speech-to-text work. Routes to the right specialized skill based on whether you're converting models, optimizing inference, debugging, or transcribing audio.
+The hub for running your own machine learning models on Apple devices with Core ML, and for on-device speech-to-text. It sends each question to a dedicated skill for conversion, compression, training, deployment, diagnostics, or speech.
 
 ## When to Use
 
 Use this skill when you're:
-- Converting a PyTorch or TensorFlow model to CoreML
+- Converting a PyTorch or TensorFlow model to Core ML
 - Deploying a custom ML model on iOS, iPadOS, macOS, watchOS, or tvOS
 - Compressing a model with quantization, palettization, or pruning
-- Implementing KV-cache for a custom large language model
-- Stitching multiple models together with MLTensor
+- Implementing a KV cache for a custom large language model
+- Stitching multiple models together with `MLTensor`
 - Adding live or file-based speech transcription
 - Debugging slow inference, load failures, or accuracy drops after compression
 
 ## Boundary with Foundation Models
 
-ML and AI sound interchangeable but route to different skills:
+ML and AI sound interchangeable, but they lead to different skills:
 
 | What you're doing | Skill |
 |---|---|
-| Running your own model on-device | This skill (CoreML) |
-| Using Apple's built-in on-device LLM | [Foundation Models](/skills/integration/foundation-models) |
-| Specializing the built-in LLM with a custom adapter | [Foundation Models Adapters](/skills/integration/foundation-models-adapters) |
-| Bringing an LLM-scale or transformer model on-device (iOS 27) | [Core AI](/skills/machine-learning/core-ai) |
-| Image analysis, pose detection, text recognition | axiom-vision skills |
+| Running your own model on-device | This skill (Core ML) |
+| Using Apple's built-in on-device LLM | [foundation-models](/skills/integration/foundation-models) |
+| Specializing the built-in LLM with a custom adapter | [foundation-models-adapters](/skills/integration/foundation-models-adapters) |
+| Bringing an LLM-scale or transformer model on-device (iOS 27) | [core-ai](/skills/machine-learning/core-ai) |
+| Image analysis, pose detection, text recognition | [vision](/skills/computer-vision/vision) |
 
-**Rule of thumb** — if you're converting, compressing, or deploying your own model, you want CoreML. If you're calling Apple's `LanguageModelSession`, you want Foundation Models. If you're bringing an LLM-scale or transformer model, use Core AI (iOS 27).
+**Rule of thumb** If you're converting, compressing, or deploying your own model, you want Core ML. If you're calling Apple's `LanguageModelSession`, you want Foundation Models. If you're bringing an LLM-scale or transformer model, use Core AI (iOS 27).
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I convert my PyTorch model to CoreML?"
 - "My model is 5 GB. How do I compress it to fit on iPhone?"
@@ -48,25 +48,27 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-This skill routes to four specialized resources depending on your task:
+- **Routing** – Sends each question to the skill for its stage: conversion, compression, training, deployment, API lookup, diagnostics, or speech
+- **The boundaries** – When a task belongs to Core ML, Core AI (iOS 27), Foundation Models, or Vision
+- **Core AI pointer** – When a language-model-scale model belongs in Core AI instead of Core ML
 
-- **CoreML implementation patterns** – model conversion, compression strategies, stateful models with KV-cache, multi-function models (LoRA adapters), MLTensor pipeline stitching, async concurrent prediction, compute unit selection
-- **CoreML API reference** – CoreML Tools Python API, MLModel lifecycle, MLTensor operations, MLComputeDevice availability, state management APIs, performance reports
-- **CoreML diagnostics** – load failures, slow inference, memory pressure, accuracy degradation after compression, compute unit problems
-- **Speech transcription** – SpeechAnalyzer setup (iOS 26+), SpeechTranscriber configuration, live vs file transcription, volatile vs finalized results, AssetInventory model management
+## Documentation Scope
+
+This page documents the `ios-ml` skill (in the `axiom-ai` suite), the hub your assistant starts from for on-device machine learning and speech-to-text. The work itself lives in the skills listed below.
 
 ## Related
 
-- [coreml](/skills/machine-learning/coreml) – implementation patterns for model conversion, compression, and deployment
-- [coreml-ref](/reference/coreml-ref) – comprehensive CoreML API reference with method signatures
-- [coreml-diag](/diagnostic/coreml-diag) – troubleshooting when models fail to load, predict slowly, or lose accuracy after compression
-- [speech](/skills/machine-learning/speech) – SpeechAnalyzer and SpeechTranscriber patterns for live and file transcription
-- [foundation-models](/skills/integration/foundation-models) – use Apple's built-in on-device LLM instead of a custom model when the task fits
-- [foundation-models-adapters](/skills/integration/foundation-models-adapters) – train a custom adapter on Apple's base model instead of deploying a separate CoreML LLM
-- [core-ai](/skills/machine-learning/core-ai) – the 27-cycle path for LLM-scale and transformer models; Core ML is for classic models
+- [coreml-conversion](/skills/machine-learning/coreml-conversion) – Converting a trained model with `coremltools`
+- [coreml-compression](/skills/machine-learning/coreml-compression) – Shrinking a model with quantization, palettization, or pruning
+- [coreml-training](/skills/machine-learning/coreml-training) – Create ML training and on-device personalization
+- [coreml-deployment](/skills/machine-learning/coreml) – Running a model in your app under Swift 6
+- [coreml-ref](/reference/coreml-ref) – Core ML API reference
+- [coreml-diag](/diagnostic/coreml-diag) – Troubleshooting load failures, slowness, memory, and accuracy loss
+- [speech](/skills/machine-learning/speech) – `SpeechAnalyzer` and `SpeechTranscriber` for live and file transcription
+- [training-paths](/skills/machine-learning/training-paths) – Choosing among Create ML, `MLUpdateTask`, adapters, and the other training toolchains before you build
 
 ## Resources
 
-**WWDC**: 2023-10047, 2023-10049, 2024-10159, 2024-10161, 2025-256
+**WWDC**: 2023-10047, 2023-10049, 2024-10159, 2024-10161, 2025-277
 
 **Docs**: /coreml, /coreml/mlmodel, /coreml/mltensor, /speech, /speech/speechanalyzer

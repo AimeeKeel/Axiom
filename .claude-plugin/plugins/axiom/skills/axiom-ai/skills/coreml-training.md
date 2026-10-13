@@ -34,10 +34,14 @@ Image (`MLImageClassifier`, `MLObjectDetector`), sound (`MLSoundClassifier`), te
 
 ```swift
 import CreateML
+import Foundation
 
-let data = try MLImageClassifier.DataSource.labeledDirectories(at: trainingURL)
-let model = try MLImageClassifier(trainingData: data)      // synchronous — BLOCKS the calling thread
-try model.write(to: URL(filePath: "Classifier.mlmodel"))   // exports a .mlmodel
+@concurrent
+func trainImageClassifier(labeledImagesAt trainingURL: URL, exportTo modelURL: URL) async throws {
+    let data = MLImageClassifier.DataSource.labeledDirectories(at: trainingURL)
+    let classifier = try MLImageClassifier(trainingData: data)  // synchronous — blocks this thread until training ends
+    try classifier.write(to: modelURL)                          // exports a .mlmodel
+}
 ```
 
 - Training data: **directory-of-label-folders** for image classifiers; `MLDataTable(contentsOf:)` from CSV/JSON for tabular.
@@ -52,17 +56,26 @@ try model.write(to: URL(filePath: "Classifier.mlmodel"))   // exports a .mlmodel
 `MLUpdateTask` retrains the **last few updatable layers** of an already-deployed model on user-specific data, then saves an updated `.mlmodelc` to disk. This is per-user personalization at runtime — not training from scratch.
 
 ```swift
-let task = try MLUpdateTask(
-    forModelAt: compiledModelURL,
-    trainingData: userBatchProvider,
-    configuration: config,
-    completionHandler: { context in
-        try? context.model.write(to: updatedModelURL)   // persist the personalized model
-    }
-)
-task.resume()
+import CoreML
+
+nonisolated func personalize(modelAt compiledModelURL: URL, with userData: any MLBatchProvider, savingTo updatedModelURL: URL) throws {
+    let task = try MLUpdateTask(
+        forModelAt: compiledModelURL,
+        trainingData: userData,
+        configuration: MLModelConfiguration(),
+        completionHandler: { context in
+            do {
+                try context.model.write(to: updatedModelURL)   // persist the personalized model
+            } catch {
+                print("MLUpdateTask: saving \(updatedModelURL.lastPathComponent) failed: \(error)")
+            }
+        }
+    )
+    task.resume()
+}
 ```
 
+- `nonisolated` matters under `-default-isolation MainActor`: unannotated, the non-`Sendable` completion closure becomes main-actor-isolated and carries a runtime executor check (SIL) → traps if Core ML calls it off the main actor.
 - Initializers come in `completionHandler:` and `progressHandlers:` variants (with/without `configuration:`); `MLUpdateContext` carries the updated model.
 - Loss functions: **categorical cross-entropy, MSE**. Optimizers: **SGD, Adam**.
 - Available since iOS 13.
@@ -111,4 +124,4 @@ If you need richer adaptation than last-layer updates, `MLUpdateTask` is the wro
 
 **Docs**: /createml, /createml/mlimageclassifier, /coreml/mlupdatetask, /coreml/mlupdatecontext — plus coremltools `NeuralNetworkBuilder.make_updatable` (apple.github.io/coremltools)
 
-**Skills**: coreml-conversion (NN-spec vs ML Program), coreml-compression (shrink trained models), `skills/ios-ml.md` (deploy), foundation-models-adapters (fine-tune Apple's LLM, not a Core ML model), axiom-concurrency (off-main-thread training)
+**Skills**: coreml-conversion (NN-spec vs ML Program), coreml-compression (shrink trained models), `skills/coreml-deployment.md` (deploy), foundation-models-adapters (fine-tune Apple's LLM, not a Core ML model), axiom-concurrency (off-main-thread training)

@@ -1,168 +1,56 @@
-# SpeechAnalyzer Speech-to-Text
+---
+name: speech
+description: On-device speech-to-text with SpeechAnalyzer — file and live transcription, model assets, the limit on simultaneous analyses, the iOS 27 audio input providers, and when SFSpeechRecognizer still applies
+---
 
-Implement speech-to-text with Apple's new SpeechAnalyzer API (iOS 26+). Powers Notes, Voice Memos, Journal, and Call Summarization.
+# Speech-to-Text
 
-## Overview
+How to add on-device speech-to-text with Apple's `SpeechAnalyzer` (iOS 26 and later), the framework behind transcription in Notes and Voice Memos, from choosing a module to showing live results and stopping cleanly.
 
-SpeechAnalyzer is Apple's next-generation speech-to-text API:
-- **On-device processing** – Private, no server required
-- **Long-form audio** – Optimized for meetings, lectures, conversations
-- **Distant audio** – Works well with speakers across the room
-- **Volatile results** – Real-time approximate results while processing
-- **Timing metadata** – Sync text with audio playback
-- **Model management** – System handles model downloads and updates
+## When to Use
 
-## When to Use This Skill
-
-Use when you need to:
-- ☑ Transcribe live audio (microphone)
-- ☑ Transcribe audio files
-- ☑ Build Notes-like or Voice Memos-like features
-- ☑ Show real-time transcription feedback
-- ☑ Sync transcription with audio playback
-- ☑ Choose between SpeechAnalyzer and SFSpeechRecognizer
+Use this skill when you're:
+- Transcribing an audio or video file
+- Showing a live transcript from the microphone
+- Choosing between `SpeechTranscriber`, `DictationTranscriber`, and the older `SFSpeechRecognizer`
+- Downloading and managing the speech models your locales need
+- Running more than one transcription at once, or seeing an `insufficientResources` error
+- Feeding microphone or capture audio to the analyzer under Swift 6
 
 ## Example Prompts
 
-- "How do I add speech-to-text to my iOS app?"
-- "What's the difference between SpeechAnalyzer and SFSpeechRecognizer?"
-- "How do I show real-time transcription while recording?"
-- "How do I handle volatile vs finalized transcription results?"
-- "How do I sync transcript text with audio playback?"
+Questions you can ask your assistant that will draw from this skill:
+
+- "How do I add live transcription to my iOS app?"
+- "Should I use SpeechTranscriber, DictationTranscriber, or SFSpeechRecognizer?"
+- "Why does my transcript drop its last few words when I stop recording?"
 - "Why am I getting `insufficientResources` from SpeechAnalyzer?"
-- "How many transcribers can I run at once?"
-- "Why does transcription work on my Mac but fail on a real iPhone?"
-- "Why did my audio session break after I added transcription?"
-- "How do I transcribe straight from the mic or a video's audio track on iOS 27?"
+- "My app crashes inside the audio tap closure since I moved to Swift 6. Why?"
+- "How do I transcribe a video's audio track on iOS 27?"
+- "How do I sync transcript text with audio playback?"
 
-## Key Decision Trees
+## What This Skill Provides
 
-### SpeechAnalyzer vs SFSpeechRecognizer
+- **Choosing a module** – `SpeechTranscriber` for general use, `DictationTranscriber` for custom vocabulary and the same locales as on-device `SFSpeechRecognizer`, `SpeechDetector` to skip silence, and platform availability for each
+- **File and live transcription** – Complete patterns for transcribing a file and for a live session that merges in-progress and final results by audio time
+- **Feeding audio** – The iOS 27 capture, asset, and converter providers, the iOS 26 microphone path written so its audio callback is safe under Swift 6, and why the analyzer never converts audio formats
+- **Stopping without losing words** – Ending a session so final results still arrive
+- **Model assets** – Reserving and releasing locales with `AssetInventory`, and why the audio format isn't known until the model is installed
+- **Limits and errors** – The cap of about two simultaneous analyses on iOS and visionOS, the error-matching syntax that compiles, and the iOS 27 option that stops the counting, though analyzers can still fail beyond the hardware's real capacity
+- **Reference tables** – Every transcriber preset and option, with what each one turns on
+- **SFSpeechRecognizer** – When the older API still applies: deployment targets before iOS 26, and locales that only server recognition supports
 
-```
-Need speech-to-text?
-├─ iOS 26+ only?
-│   └─ Yes → SpeechAnalyzer (preferred)
-├─ Need iOS 10-25 support?
-│   └─ Yes → SFSpeechRecognizer (or DictationTranscriber)
-├─ Long-form audio (meetings, lectures)?
-│   └─ Yes → SpeechAnalyzer
-└─ Distant audio (across room)?
-    └─ Yes → SpeechAnalyzer
-```
+## Documentation Scope
 
-## Common Use Cases
-
-### File Transcription (Simplest)
-
-```swift
-import AVFoundation
-import Speech
-
-func transcribe(fileURL: URL, locale: Locale) async throws -> AttributedString {
-    let transcriber = SpeechTranscriber(locale: locale, preset: .transcription)
-
-    async let result = try transcriber.results
-        .reduce(AttributedString()) { $0 + $1.text }
-
-    let analyzer = SpeechAnalyzer(modules: [transcriber])
-
-    // analyzeSequence(from:) takes an AVAudioFile — not a URL.
-    let file = try AVAudioFile(forReading: fileURL)
-
-    if let lastSample = try await analyzer.analyzeSequence(from: file) {
-        try await analyzer.finalizeAndFinish(through: lastSample)
-    } else {
-        await analyzer.cancelAndFinishNow()
-    }
-
-    return try await result
-}
-```
-
-`SpeechTranscriber`'s presets are `.transcription`, `.transcriptionWithAlternatives`, `.timeIndexedTranscriptionWithAlternatives`, `.progressiveTranscription`, `.timeIndexedProgressiveTranscription`. There is no `.offlineTranscription`.
-
-### Live Transcription Setup
-
-```swift
-// 1. Configure transcriber with volatile results
-let transcriber = SpeechTranscriber(
-    locale: Locale.current,
-    transcriptionOptions: [],          // required — this init has no defaults
-    reportingOptions: [.volatileResults],
-    attributeOptions: [.audioTimeRange]
-)
-
-// 2. Create analyzer
-let analyzer = SpeechAnalyzer(modules: [transcriber])
-
-// 3. Get required audio format
-let format = await SpeechAnalyzer.bestAvailableAudioFormat(
-    compatibleWith: [transcriber]
-)
-
-// 4. Ensure model is available
-if let downloader = try await AssetInventory.assetInstallationRequest(
-    supporting: [transcriber]
-) {
-    try await downloader.downloadAndInstall()
-}
-
-// 5. Start analyzer
-let (stream, builder) = AsyncStream<AnalyzerInput>.makeStream()
-try await analyzer.start(inputSequence: stream)
-```
-
-### Handle Results
-
-```swift
-for try await result in transcriber.results {
-    if result.isFinal {
-        // Finalized - won't change
-        finalTranscript += result.text
-        volatileTranscript = AttributedString()
-    } else {
-        // Volatile - will be replaced
-        volatileTranscript = result.text
-    }
-}
-```
-
-## Common Pitfalls
-
-- ❌ Forgetting to call `finalizeAndFinishThroughEndOfInput()` (loses volatile results)
-- ❌ Not converting audio to `bestAvailableAudioFormat`
-- ❌ Skipping model availability check before use
-- ❌ Not clearing volatile results when finalized arrives
-- ❌ Assuming `insufficientResources` can be caught as `catch SFSpeechError.insufficientResources` — it can't; that shorthand doesn't compile. Spell the `Code` type: `catch SFSpeechError.Code.insufficientResources`
-- ❌ Using `providerWithSession(...)` (iOS 27) when your app owns its audio session — it reconfigures your default `AVAudioSession`. Use `provider(from:in:)` and add its `captureAudioDataOutput` to your own session. (On visionOS that escape hatch does not exist — `providerWithSession` is the only option there.)
-- ❌ Reading `AnalyzerInput.buffer` (deprecated iOS 27) for duration or format — each access copies the audio. Read `bufferDuration` / `bufferFormat`
-
-## Simultaneous Analyses
-
-`SpeechAnalyzer` caps how many backing engines and models it will allocate at once. Apple puts it at roughly **two** ongoing recognition instances on **iOS and visionOS**, with **currently no limit on macOS** — so the same code can pass on a Mac and fail on a real iPhone. Exceeding the cap throws `SFSpeechError.Code.insufficientResources`.
-
-The cap counts *incompatible* work: transcribers configured similarly (same locale, same settings) **can share** backing engines, so making your analyzers alike is the cheap first fix. `SpeechAnalyzer.Options.ignoresResourceLimits` (iOS 27) opts out of the counting — but it does not raise the hardware ceiling, so you trade a clean, early, catchable error for an unpredictable one later. This dates from iOS 26; it is not new in 27.
-
-## Platform Support
-
-| Feature | Availability |
-|---------|--------------|
-| SpeechTranscriber | iOS 26+, macOS 26+ (not watchOS) |
-| DictationTranscriber | iOS 26+, macOS 26+ (**not** watchOS, **not** tvOS) |
-| SpeechAnalyzer | iOS 26+, macOS 26+ (not watchOS) |
-| `CaptureInputSequenceProvider` / `AssetInputSequenceProvider` / `AnalyzerInputConverter` | iOS 27+ (not watchOS) |
-| SFSpeechRecognizer | iOS 10+ (legacy) |
+This page documents the `speech` skill (in the `axiom-ai` suite), which your assistant loads when you add speech-to-text. Configuring your app's audio session for recording or playback alongside transcription is covered by the [AVFoundation reference](/reference/avfoundation-ref).
 
 ## Related
 
-- [CoreML](/skills/machine-learning/coreml) – deploy custom speech/audio ML models when SpeechAnalyzer doesn't meet your needs
-- [Foundation Models](/skills/integration/foundation-models) – generate summaries or titles from transcribed text using Apple Intelligence
+- [ios-ml](/skills/machine-learning/ios-ml) – The hub that routes on-device machine learning and speech work
+- [foundation-models](/skills/integration/foundation-models) – Summarizing or titling a transcript with Apple's on-device language model
 
-### WWDC Sessions
+## Resources
 
-- [WWDC25-277: Bring advanced speech-to-text with SpeechAnalyzer](https://developer.apple.com/videos/play/wwdc2025/277/)
+**WWDC**: 2025-277
 
-### Apple Documentation
-
-- [Speech Framework](https://developer.apple.com/documentation/speech)
+**Docs**: /speech, /speech/speechanalyzer, /speech/speechtranscriber, /speech/dictationtranscriber, /speech/assetinventory, /speech/captureinputsequenceprovider, /speech/sfspeechrecognizer

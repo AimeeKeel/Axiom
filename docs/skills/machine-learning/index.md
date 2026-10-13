@@ -12,7 +12,11 @@ flowchart LR
     axiom_ai["axiom-ai router"]:::router
 
     subgraph skills_d["Skills"]
-        coreml["coreml"]:::discipline
+        ios_ml["ios-ml (hub)"]:::discipline
+        conversion["coreml-conversion"]:::discipline
+        compression["coreml-compression"]:::discipline
+        training["coreml-training"]:::discipline
+        deployment["coreml-deployment"]:::discipline
         speech["speech"]:::discipline
     end
     axiom_ai --> skills_d
@@ -30,17 +34,29 @@ flowchart LR
 
 ## Available Skills
 
-### [CoreML](/skills/machine-learning/coreml)
+### [iOS ML](/skills/machine-learning/ios-ml)
 
-Deploy custom ML models on-device — model conversion with coremltools, compression (quantization, palettization), stateful models with KV-cache, MLTensor operations, and LLM inference patterns.
+The hub for on-device machine learning and speech-to-text. It routes your question to the right skill for each stage of a Core ML model's life, to Core AI for language-model-scale models, or to speech.
+
+### [Core ML Conversion](/skills/machine-learning/coreml-conversion)
+
+Convert a trained PyTorch, TensorFlow, or Keras model with `coremltools`, choose a deployment target, convert stateful models, and check that the converted model matches the original.
+
+### [Core ML Compression](/skills/machine-learning/coreml-compression)
+
+Shrink a model with quantization, palettization, or pruning, decide between post-training and training-time compression, and re-measure accuracy at each step.
+
+### [Core ML Training](/skills/machine-learning/coreml-training)
+
+Train a new model with Create ML, or personalize a deployed model on the user's device with `MLUpdateTask`, and know its format limitation before you build.
+
+### [Core ML Deployment](/skills/machine-learning/coreml)
+
+Run a converted model in your app: loading and pre-warming, compute units, Swift 6-safe prediction, stateful KV-cache models, multifunction adapters, and `MLTensor` pipelines.
 
 ### [ML Training Paths](/skills/machine-learning/training-paths)
 
 Pick the right training toolchain before you build — disambiguates Foundation Models adapters, Create ML, `MLUpdateTask` personalization, coremltools conversion, and MLX, and flags the format and toolchain traps that make a trained artifact fail to load.
-
-### [iOS ML (deployment overview)](/skills/machine-learning/ios-ml)
-
-Navigation hub for on-device ML and speech-to-text — routes you to the right skill for model conversion, inference optimization, debugging, or SpeechAnalyzer transcription.
 
 ### [Core AI](/skills/machine-learning/core-ai)
 
@@ -48,15 +64,15 @@ Core AI (iOS 27) — the on-device inference framework behind Apple Intelligence
 
 ### [Speech](/skills/machine-learning/speech)
 
-Speech-to-text with SpeechAnalyzer (iOS 26+) — live transcription from microphone, file transcription, custom vocabulary, and language detection.
+On-device speech-to-text with `SpeechAnalyzer` (iOS 26 and later): file and live transcription, model assets, the limit on simultaneous analyses, and the iOS 27 audio input providers.
 
 ## Available References
 
-- [CoreML API Reference](/reference/coreml-ref) – CoreML API reference, MLTensor, coremltools, state management
+- [Core ML Reference](/reference/coreml-ref) – `MLModel`, configuration, compute devices, prediction and Sendability, `MLState`, `MLTensor`, `MLComputePlan`, and the `coremltools` index
 
 ## Available Diagnostics
 
-- [CoreML Diagnostics](/diagnostic/coreml-diag) – Model load failures, slow inference, compression accuracy loss
+- [Core ML Diagnostics](/diagnostic/coreml-diag) – Load errors, slow first load or predictions, memory growth, device and Simulator differences, and accuracy loss after compression
 
 ## Example Prompts
 
