@@ -359,3 +359,14 @@ export class DevLoader implements Loader {
     this.onChangeCallback?.(kind);
   }
 }
+
+/**
+ * The SDK's stdio transport ignores the end of its input, and the watcher keeps the process
+ * alive, so a client that exits without killing the server would leak it. A pipe ends with
+ * 'end'; a reset socket emits only 'close'. Only the watcher stops: exiting here would drop
+ * responses still in flight. stopWatching is idempotent.
+ */
+export function stopWatchingWhenInputCloses(input: NodeJS.EventEmitter, loader: { stopWatching(): void }): void {
+  input.on('end', () => loader.stopWatching());
+  input.on('close', () => loader.stopWatching());
+}

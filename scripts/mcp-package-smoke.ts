@@ -169,6 +169,36 @@ async function checkServer(install: string, pkg: string, version: string, work: 
   }
 }
 
+// An MCP client that exits without killing its server only closes the server's stdin.
+// The SDK's stdio transport ignores stdin's end, so a mode that keeps the event loop
+// alive (development mode's file watcher) would outlive every client that launched it.
+// The request is answered before the exit, or a shutdown that drops in-flight
+// responses would pass too.
+function checkExitsOnStdinClose(install: string, work: string, problems: string[]) {
+  const modes: Record<string, Record<string, string>> = {
+    production: { AXIOM_MCP_MODE: "production" },
+    development: { AXIOM_MCP_MODE: "development", AXIOM_DEV_PATH: pluginDir },
+  };
+  const exits: Record<string, number | null> = {};
+  for (const [label, env] of Object.entries(modes)) {
+    const result = spawnSync(path.join(install, "node_modules/.bin/axiom-mcp"), [], {
+      cwd: work,
+      input: '{"jsonrpc":"2.0","id":1,"method":"resources/list"}\n',
+      encoding: "utf8",
+      timeout: 15_000,
+      env: { PATH: process.env.PATH ?? "", AXIOM_LOG_LEVEL: "error", AXIOM_APPLE_DOCS: "false", TMPDIR: work, ...env },
+    });
+    // On timeout spawnSync sends SIGTERM, which development mode handles by exiting 0,
+    // so the status alone cannot tell a clean exit from a kill.
+    exits[label] = result.error ? null : result.status;
+    if (result.error) problems.push(`${label}-mode server kept running after stdin closed (${result.error.message})`);
+    else if (result.status !== 0) problems.push(`${label}-mode server exited ${result.status}`);
+    else if (!/"id":1\b/.test(result.stdout) || !result.stdout.includes("axiom://skill/"))
+      problems.push(`${label}-mode server exited without answering the request it was sent`);
+  }
+  return exits;
+}
+
 async function main() {
   const keep = process.argv.includes("--keep");
   const work = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-mcp-package-smoke-"));
@@ -204,6 +234,7 @@ async function main() {
     report.helpers = helpers;
     report.inspect = inspectFixtures(path.join(install, "node_modules/.bin/xcproject"), work, problems);
     report.mcp = await checkServer(install, pkg, version, work, problems);
+    report.stdinClose = checkExitsOnStdinClose(install, work, problems);
   } catch (error) {
     problems.push((error as Error).message);
   } finally {

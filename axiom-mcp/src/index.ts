@@ -12,7 +12,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { loadConfig, Config, Logger } from './config.js';
-import { DevLoader } from './loader/dev-loader.js';
+import { DevLoader, stopWatchingWhenInputCloses } from './loader/dev-loader.js';
 import { ProdLoader } from './loader/prod-loader.js';
 import { Loader } from './loader/types.js';
 import { ResourcesHandler } from './resources/handler.js';
@@ -171,6 +171,7 @@ async function main() {
     };
     process.on('SIGINT', cleanup);
     process.on('SIGTERM', cleanup);
+    stopWatchingWhenInputCloses(process.stdin, devLoader);
   }
 
   // SDK ≥1.30 routes transport errors to onerror then closes; unhandled, the

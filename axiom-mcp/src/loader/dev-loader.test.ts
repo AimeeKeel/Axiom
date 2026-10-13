@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { EventEmitter } from 'events';
 import { mkdtemp, mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { classifyChange, DevLoader } from './dev-loader.js';
+import { classifyChange, DevLoader, stopWatchingWhenInputCloses } from './dev-loader.js';
 
 describe('classifyChange', () => {
   it('classifies skill paths', () => {
@@ -135,5 +136,18 @@ Generated auditor procedure.
     const names = results.map(r => r.name);
 
     expect(names).toContain('axiom-test-suite--patterns');
+  });
+});
+
+describe('stopWatchingWhenInputCloses', () => {
+  it.each(['end', 'close'])('stops the watcher on %s, and stopping twice is harmless', (event) => {
+    const input = new EventEmitter();
+    const loader = { stopWatching: vi.fn() };
+
+    stopWatchingWhenInputCloses(input, loader);
+    input.emit(event);
+    input.emit(event === 'end' ? 'close' : 'end');
+
+    expect(loader.stopWatching.mock.calls.length).toBe(2);
   });
 });
