@@ -8,7 +8,7 @@ Use this skill when you have a **corpus** of grouped production issues from an a
 
 - **Single crash file** (.ips, MetricKit, .crash) → `axiom-shipping (skills/testflight-triage.md)` or `/axiom-analyze-crash`
 - **TestFlight triage via Xcode Organizer** → `axiom-shipping (skills/testflight-triage.md)`
-- **This skill** → Sentry unresolved issues list, ASC aggregated crash signatures, dozens-to-hundreds of grouped issues
+- **This skill** → Sentry unresolved issues list, ASC TestFlight crash submissions and App Store hang/launch/disk-write signatures, dozens-to-hundreds of grouped issues
 
 ## The pipeline
 
@@ -152,14 +152,16 @@ Use `asc-mcp` tools when available:
 
 | Task | asc-mcp tool |
 |---|---|
-| List crash signatures for a build | `metrics_build_diagnostics` |
-| Download crash log detail | `metrics_get_diagnostic_logs` |
+| TestFlight crash reports for a build | `beta_feedback_list_crashes` → `beta_feedback_get_crash_log` |
+| App Store hang / launch / disk-write signatures (App Store builds only; not crashes) | `metrics_build_diagnostics` → `metrics_get_diagnostic_logs` |
 
-ASC crash aggregates sometimes lack individual-event frame data. When frames are unavailable, emit a **minimal NormalizedReport** with `frames_unavailable: true`:
+App Store crash reports aren't in the API → Xcode Organizer export.
+
+ASC has no crash aggregates. A TestFlight submission is one event from one user; when `beta_feedback_get_crash_log` returns no log, emit a **minimal NormalizedReport** with `frames_unavailable: true`:
 
 ```json
 { "provider": "asc", "issue_id": "...", "title": "...", "kind": "crash",
-  "impact": { "users": 12, "events": 30 }, "frames_unavailable": true,
+  "impact": { "users": 1, "events": 1 }, "frames_unavailable": true,
   "exception": { "mach_exception": "0x8badf00d" }, "threads": [] }
 ```
 
@@ -275,7 +277,7 @@ Hang events do not carry an `exception` or `termination` block — those fields 
 | `cluster_confidence` | `high` = top app frames; `low` = system-frame fallback (treat as a bag, not a cluster) |
 | `noise_flags` | Array of `{class, rule_id, deprioritize_safety, reason}` — empty means real-bug candidate |
 | `enrichment` | Cross-skill pointers (e.g., axiom-data for 0xdead10cc + DB frames). **Omitted** when no enrichment applies — i.e. on most issues |
-| `top_frames` | Top 5 frames of the crashed thread, as `"image symbol"` strings. **Omitted** when the crashed thread has no frames — e.g. an ASC aggregate emitted with `frames_unavailable: true` and no `threads[]`. Don't expect it on every issue |
+| `top_frames` | Top 5 frames of the crashed thread, as `"image symbol"` strings. **Omitted** when the crashed thread has no frames — e.g. a TestFlight submission with no crash log, emitted with `frames_unavailable: true` and no `threads[]`. Don't expect it on every issue |
 
 `pattern_rule_id` and `noise_flags[].rule_id` are two separate fields at different nesting levels. `pattern_rule_id` (top-level on each issue) names the classification rule that matched the crash/hang pattern. Each element of `noise_flags[]` carries its own `rule_id` naming the noise rule that fired (e.g., `noise.anr_suspension.v1`). Do not conflate them.
 

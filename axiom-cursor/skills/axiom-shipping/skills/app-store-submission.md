@@ -443,7 +443,7 @@ Run this entire checklist before every submission. Check every item, not just th
 - [ ] Description (accurate, no misleading claims)
 - [ ] Keywords (100 character limit, comma-separated)
 - [ ] Category and secondary category set
-- [ ] Screenshots for all required device sizes (6.9", 6.7", 6.5", 5.5" for iPhone; 13" for iPad if universal)
+- [ ] Screenshots for every size App Store Connect requires: Apple's list names iPhone 6.3" (Dynamic Island, medium display) and, for iPad apps, 13"; its per-size notes also treat 6.9" (or 6.5") as required, so confirm in App Store Connect
 - [ ] Screenshots reflect current app UI (not outdated)
 - [ ] App Preview videos current (if using)
 - [ ] Support URL valid and accessible

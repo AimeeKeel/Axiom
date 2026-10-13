@@ -36,28 +36,32 @@ let response = try await session.respond(to: "What's the capital of France?")
 
 ---
 
-### ❌ Blocking Main Thread
-**Why it fails**: `session.respond()` is `async` but if called synchronously on main thread, freezes UI for seconds.
+### ❌ Starting a Second Request While One Is Running
+**Why it fails**: one request per session. A respond call while `session.isResponding` throws `concurrentRequests` (`LanguageModelSession.Error` in the 27 SDK; `GenerationError` before). Awaiting suspends — UI stays live → nothing stops a second tap during 1-5 s of generation.
 
 **Example of wrong use**:
 ```swift
-// ❌ BAD - Blocking main thread
+// ❌ BAD - a second tap starts a second request on the same session
 Button("Generate") {
-    let response = try await session.respond(to: prompt) // UI frozen!
+    Task {
+        result = try await session.respond(to: prompt).content
+    }
 }
 ```
 
-**Why**: Generation takes 1-5 seconds. User sees frozen app, bad reviews follow.
-
-**Correct approach**:
+**Correct approach** (the `isResponding` guard is Apple's pattern from its documentation):
 ```swift
-// ✅ GOOD - Async on background
+// ✅ GOOD - no second request while the first is running, and errors surface
 Button("Generate") {
     Task {
-        let response = try await session.respond(to: prompt)
-        // Update UI with response
+        do {
+            result = try await session.respond(to: prompt).content
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
+.disabled(session.isResponding)
 ```
 
 ---
@@ -619,7 +623,7 @@ let response = try await session.respond(to: prompt, generating: Itinerary.self)
 // Then entire result appears at once
 ```
 
-**User experience**: Feels slow, frozen UI.
+**User experience**: Feels slow: nothing appears for seconds.
 
 ### The Solution: Streaming
 
@@ -753,6 +757,7 @@ Let model **autonomously call your code** to fetch external data.
 import FoundationModels
 import WeatherKit
 import CoreLocation
+import MapKit
 
 struct GetWeatherTool: Tool {
     let name = "getWeather"
@@ -765,8 +770,10 @@ struct GetWeatherTool: Tool {
     }
 
     func call(arguments: Arguments) async throws -> String {
-        let places = try await CLGeocoder().geocodeAddressString(arguments.city)
-        let weather = try await WeatherService.shared.weather(for: places.first!.location!)
+        guard let location = try await MKGeocodingRequest(addressString: arguments.city)?.mapItems.first?.location else {
+            throw CLError(.geocodeFoundNoResult)
+        }
+        let weather = try await WeatherService.shared.weather(for: location)
         let temp = weather.currentWeather.temperature.value
 
         return "\(arguments.city)'s temperature is \(temp) degrees."
@@ -1303,7 +1310,7 @@ Before shipping Foundation Models features:
 - [ ] **Using @Generable** for structured output (not manual JSON)
 - [ ] **Handling the error cases your app can hit** — at minimum `LanguageModelError.contextSizeExceeded`, `.guardrailViolation`, `.refusal`, and `.unsupportedLanguageOrLocale`; plus `.rateLimited`, `.timeout`, `SystemLanguageModel.Error.assetsUnavailable`, `LanguageModelSession.Error.concurrentRequests`, and `GeneratedContent.ParsingError` where applicable. On `OS27` these live in THREE types — a single `catch` on the deprecated `GenerationError` no longer covers the surface
 - [ ] **Streaming for long generations** (>1 second)
-- [ ] **Not blocking UI** (using `Task {}` for async)
+- [ ] **One request at a time** (`.disabled(session.isResponding)`), and no heavy synchronous work on the main actor around generation
 - [ ] **Tools for external data** (not prompting for weather/locations)
 - [ ] **Prewarmed session** if latency-sensitive
 

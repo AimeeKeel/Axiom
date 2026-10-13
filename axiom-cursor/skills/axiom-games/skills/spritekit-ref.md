@@ -440,8 +440,8 @@ skView.presentScene(scene, transition: .fade(withDuration: 0.5))
 |------|-------------|---------|----------|
 | `.aspectFill` | Preserved | Fills view, crops edges | Most games |
 | `.aspectFit` | Preserved | Fits in view, letterboxes | Exact layout needed |
-| `.resizeFill` | Distorted | Stretches to fill | Almost never |
-| `.fill` | Varies | Scene resizes to match view | Adaptive scenes |
+| `.fill` | Distorted | Scales x and y independently to fill | Almost never |
+| `.resizeFill` | Preserved (no scaling) | Scene `size` changes to match view | Resizable scenes (relayout in `didChangeSize(_:)`) |
 
 ### SKTransition Types
 

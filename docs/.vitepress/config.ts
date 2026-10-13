@@ -86,6 +86,7 @@ export default withMermaid(defineConfig({
               collapsed: false,
               items: [
                 { text: 'Claude Code', link: '/start/install' },
+                { text: 'Claude App', link: '/start/claude-app-install' },
                 { text: 'Cursor Plugin', link: '/start/cursor-install' },
                 { text: 'MCP Server', link: '/start/mcp-install' },
                 { text: 'Codex Plugin', link: '/start/codex-install' },
@@ -439,6 +440,7 @@ export default withMermaid(defineConfig({
             { text: 'Extensions & Widgets', link: '/skills/integration/extensions-widgets' },
             { text: 'Foundation Models (Apple Intelligence)', link: '/skills/integration/foundation-models' },
             { text: 'Foundation Models Custom Adapters', link: '/skills/integration/foundation-models-adapters' },
+            { text: 'Foundation Models Guardrails', link: '/skills/integration/foundation-models-guardrails' },
             { text: 'Evaluation-Driven Development', link: '/skills/integration/foundation-models-evaluations' },
             { text: 'In-App Purchases (StoreKit 2)', link: '/skills/integration/in-app-purchases' },
             { text: 'Live Activities (ActivityKit)', link: '/skills/integration/live-activities' },
@@ -516,9 +518,12 @@ export default withMermaid(defineConfig({
           text: 'Machine Learning',
           items: [
             { text: 'Overview', link: '/skills/machine-learning/' },
-            { text: 'CoreML', link: '/skills/machine-learning/coreml' },
+            { text: 'iOS ML (hub)', link: '/skills/machine-learning/ios-ml' },
+            { text: 'Core ML Conversion', link: '/skills/machine-learning/coreml-conversion' },
+            { text: 'Core ML Compression', link: '/skills/machine-learning/coreml-compression' },
+            { text: 'Core ML Training', link: '/skills/machine-learning/coreml-training' },
+            { text: 'Core ML Deployment', link: '/skills/machine-learning/coreml' },
             { text: 'ML Training Paths', link: '/skills/machine-learning/training-paths' },
-            { text: 'iOS ML (deployment overview)', link: '/skills/machine-learning/ios-ml' },
             { text: 'Core AI', link: '/skills/machine-learning/core-ai' },
             { text: 'Speech', link: '/skills/machine-learning/speech' }
           ]
@@ -613,7 +618,6 @@ export default withMermaid(defineConfig({
         {
           text: 'Persistence & Storage',
           items: [
-            { text: 'Storage', link: '/reference/storage' },
             { text: 'CloudKit', link: '/reference/cloudkit-ref' },
             { text: 'iCloud Drive', link: '/reference/icloud-drive-ref' },
             { text: 'File Protection', link: '/reference/file-protection-ref' },
@@ -697,7 +701,6 @@ export default withMermaid(defineConfig({
           text: 'Tools & Profiling',
           items: [
             { text: 'App Store Connect', link: '/reference/app-store-connect-ref' },
-            { text: 'App Store Connect MCP', link: '/reference/asc-mcp-ref' },
             { text: 'App Store Submission', link: '/reference/app-store-ref' },
             { text: 'AXe (Simulator Automation)', link: '/reference/axe-ref' },
             { text: 'Code Signing', link: '/reference/code-signing-ref' },
@@ -762,7 +765,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: 'Released under the MIT License',
-      copyright: 'Copyright © 2026 Charles Wiltgen • v27.4.1'
+      copyright: 'Copyright © 2026 Charles Wiltgen • v27.5.0'
     }
   }
 }))

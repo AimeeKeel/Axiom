@@ -157,7 +157,7 @@ Using the Networking Architecture Map from Phase 1 and your domain knowledge, ch
 
 | Question | What it detects | Why it matters |
 |----------|----------------|----------------|
-| Are network transitions handled (viabilityUpdateHandler, betterPathUpdateHandler, or connection.states)? | Missing transition support | 40% of connection failures happen during WiFi-to-cellular transitions — users walking between rooms or buildings |
+| Are network transitions handled (`viabilityUpdateHandler`/`betterPathUpdateHandler` on NWConnection, or `onViabilityUpdate`/`onBetterPathUpdate` on NetworkConnection)? | Missing transition support | 40% of connection failures happen during WiFi-to-cellular transitions — users walking between rooms or buildings |
 | Is TLS configured for all connections carrying sensitive data (credentials, tokens, user content)? | Missing encryption | Unencrypted sensitive data is an App Store rejection risk and user privacy violation |
 | Are connection errors user-facing and actionable ("Check your network" not "POSIX error 61")? | Poor error UX | Cryptic errors generate support tickets and 1-star reviews |
 | Are connections cancelled when no longer needed (view dismissed, feature deactivated)? | Resource leaks | Uncancelled connections consume memory and battery, may send data after context is gone |

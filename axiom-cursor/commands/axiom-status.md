@@ -40,7 +40,7 @@ grep -r "Timer\|NotificationCenter\.default\.addObserver" --include="*.swift" | 
 
 ### Deployment Target Selection
 
-Check `command -v xcproject`. If unavailable, use Glob for `**/*.xcodeproj/project.pbxproj` and `**/*.xcodeproj/project.xcproj`, then Read the project and xcconfig declarations. Report the target/configuration and label the value "declared; effective value unverified". JSON5 has conditional keys and trailing commas; `jq` and `plutil` are not JSON5 readers. Do not substitute the first grep match for a deployment target.
+Check `command -v xcproject`. If xcproject is unavailable, use Glob for `**/*.xcodeproj/project.pbxproj` and `**/*.xcodeproj/project.xcproj`, then Read the project and xcconfig declarations. Report the target/configuration and label the value "declared; effective value unverified". JSON5 has conditional keys and trailing commas; `jq` and `plutil` are not JSON5 readers. Do not substitute the first grep match for a deployment target.
 
 With `xcproject` available, inventory projects at any depth (dependency/cache directories are excluded):
 

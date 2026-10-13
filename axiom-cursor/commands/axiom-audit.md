@@ -38,7 +38,7 @@ If no area specified → analyze project and suggest relevant audits
 | textkit | textkit-auditor | TextKit issues, text rendering problems |
 | ux-flow | ux-flow-auditor | Dead-end views, dismiss traps, buried CTAs, missing empty/loading/error states, accessibility dead ends |
 | camera | camera-auditor | Deprecated camera APIs, missing interruption handlers, threading violations |
-| foundation-models | foundation-models-auditor | Missing availability checks, main thread blocking, manual JSON parsing, guardrail handling |
+| foundation-models | foundation-models-auditor | Missing availability checks, concurrent requests on one session, manual JSON parsing, guardrail handling |
 | iap | iap-auditor | Missing transaction.finish(), weak receipt validation, missing restore, subscription status tracking, StoreKit test config gaps |
 | networking | networking-auditor | Deprecated APIs (SCNetworkReachability), anti-patterns |
 | database-schema | database-schema-auditor | Unsafe ALTER TABLE, DROP operations, missing idempotency, FK misuse, transaction safety |

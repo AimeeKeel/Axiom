@@ -4,7 +4,7 @@ The `xclog`, `xcsym`, and `xcprof` examples below are reference syntax, not exec
 
 # TestFlight Crash & Feedback Triage
 
-> **Sentry or App Store Connect corpus triage?** This skill covers the Xcode Organizer workflow — a single crash file, a TestFlight feedback session, or the **local on-disk Organizer corpus** (`.xccrashpoint` bundles on your Mac; see "The On-Disk Organizer Corpus" below). For triage of grouped production issues from Sentry or ASC aggregates (dozens of issues, aggregator-level), use `axiom-shipping (skills/production-triage.md)` and the `triage-analyzer` agent (`/axiom-triage`).
+> **Sentry or App Store Connect corpus triage?** This skill covers the Xcode Organizer workflow — a single crash file, a TestFlight feedback session, or the **local on-disk Organizer corpus** (`.xccrashpoint` bundles on your Mac; see "The On-Disk Organizer Corpus" below). For triage of grouped production issues from Sentry or App Store Connect (dozens of issues, aggregator-level), use `axiom-shipping (skills/production-triage.md)` and the `triage-analyzer` agent (`/axiom-triage`).
 
 ## First Step: Run xcsym
 
@@ -650,18 +650,20 @@ My Apps → [App] → TestFlight → Feedback
 
 ### MCP-Powered Feedback Access
 
-If **asc-mcp** is configured, you can access crash diagnostics and tester data programmatically:
+If **asc-mcp** (4.x) is configured, TestFlight crashes, crash logs, tester comments and screenshots are all reachable programmatically:
 
 | Task | asc-mcp Tool | Worker |
 |------|-------------|--------|
 | List recent builds | `builds_list` | builds |
-| See who tested a build | `builds_get_beta_testers` | build_beta |
-| Get crash signatures for a build | `metrics_build_diagnostics` | metrics |
-| Download crash logs | `metrics_get_diagnostic_logs` | metrics |
+| See who has access to a build | `builds_get_beta_testers` | build_beta |
+| List tester crash reports for a build | `beta_feedback_list_crashes` | beta_feedback |
+| Download a crash log | `beta_feedback_get_crash_log` | beta_feedback |
+| Screenshots + tester comments | `beta_feedback_list_screenshots` (`include_pii: true`, or the comment is hidden) | beta_feedback |
+| Crash / session / feedback counts | `metrics_build_beta_usage` | metrics |
 | Distribute fix to testers | `beta_groups_add_builds` | beta_groups |
 | Notify testers of new build | `builds_send_beta_notification` | build_beta |
 
-**Limitation**: TestFlight text feedback and screenshots are NOT available via the App Store Connect API. Use Xcode Organizer or the ASC web dashboard for feedback content.
+`metrics_build_diagnostics` is NOT a crash source: App Store builds only (TestFlight builds 404), signature types `HANGS`/`LAUNCHES`/`DISK_WRITES`.
 
 **Setup**: See axiom-shipping (skills/asc-mcp.md)
 

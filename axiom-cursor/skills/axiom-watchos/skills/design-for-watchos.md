@@ -12,7 +12,7 @@ Use when:
 
 #### Related Skills
 
-- Use `platform-basics.md` for app structure, `@main`, delegate adoption, and `WKSupportsAlwaysOnDisplay` Info.plist key
+- Use `platform-basics.md` for app structure, `@main`, and delegate adoption (the `WKSupportsAlwaysOnDisplay` opt-out is under Always On, below)
 - Use `smart-stack-and-complications.md` for widget layouts on the watch face and Smart Stack
 - Use `axiom-accessibility` for general VoiceOver / Dynamic Type guidance; watchOS-specific a11y (rotor, AssistiveTouch, Double Tap) lives in `axiom-accessibility/skills/watchos-a11y.md`
 - Use `axiom-swiftui` for cross-platform SwiftUI state, layout, and animation primitives
@@ -294,7 +294,7 @@ Xcode previews do not auto-dim. To see the actual dim effect, run on a device or
 
 ### Opt-out — rare and usually wrong
 
-Set `WKSupportsAlwaysOnDisplay = false` in the Watch target's `Info.plist` only when the app has a legal or contractual reason to never display in the Always On state. This excludes Apple Watch SE and Series 4 and earlier by default — they never show Always On regardless.
+Set `WKSupportsAlwaysOnDisplay = false` in the Watch target's `Info.plist` only when the app has a legal or contractual reason to never display in the Always On state. The key defaults to on for apps built with the watchOS 8 SDK or later, and users can still turn Always On off per app in Settings > Display & Brightness. Watches without an Always On display never enter the state.
 
 ## Common Mistakes
 

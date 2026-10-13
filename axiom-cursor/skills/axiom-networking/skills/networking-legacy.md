@@ -75,7 +75,7 @@ func receiveData() {
 
 ### Key differences from NetworkConnection
 - Must use `[weak self]` in all completion handlers to prevent retain cycles
-- stateUpdateHandler receives state, not async sequence
+- `stateUpdateHandler` is a settable property; `NetworkConnection` uses the chainable `onStateUpdate { }` closure
 - send/receive use completion callbacks, not async/await
 
 ### When to use
@@ -84,7 +84,7 @@ func receiveData() {
 - Libraries needing backward compatibility
 
 ### Migration to NetworkConnection (iOS 26+)
-- stateUpdateHandler -> connection.states async sequence
+- `stateUpdateHandler` -> `connection.onStateUpdate { connection, state in }` (a chainable closure; there is no `states` async sequence)
 - Completion handlers -> try await calls
 - [weak self] -> No longer needed (async/await handles cancellation)
 

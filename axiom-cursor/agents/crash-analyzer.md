@@ -49,8 +49,6 @@ The exit code narrows the triage path:
 | 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
 
-**Flag placement.** xcsym's Go `flag` parser stops at the first positional, so put flags *before* the file path: the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--format=summary <file>`. The reverse order exits 1 with a usage error.
-
 **Stdin.** Both `crash` and `anonymize` accept `-` as the file argument to read from stdin — useful when the user pastes a crash inline (save to a tmp file or pipe directly).
 
 **Hang rejection.** `crash` exits 1 and writes `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}` to stdout when the input is a hang (`bug_type=298`). Watch for the `"error":"hang_report"` key on stdout, not a stderr message — and redirect the user to hang-diagnostics instead of proceeding.

@@ -634,5 +634,5 @@ For complete API reference including `glassEffect()`, `GlassEffectContainer`, `g
 
 ---
 
-**Platforms**: OS26, not visionOS (`glassEffect` is unavailable there; only `backgroundExtensionEffect` is offered)
+**Platforms**: OS26, not visionOS (`glassEffect`, `GlassEffectContainer` and `.buttonStyle(.glass)` are unavailable there; visionOS uses its own `glassBackgroundEffect`; `backgroundExtensionEffect` is available on every platform)
 **Xcode**: 26+

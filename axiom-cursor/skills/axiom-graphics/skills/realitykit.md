@@ -824,7 +824,7 @@ The 27 releases are a major RealityKit cycle. Full API detail lives in axiom-gra
 | Soft shadows (`SpotLightComponent.Shadow.lightSize` + `quality`) | Area-light penumbras on spotlight shadows |
 | Projective textures, physical space lighting | Light patterns; lighting the real room (surroundings light is visionOS/macOS only) |
 | Lightmaps (`LightmapComponent`) | Baked indirect lighting / AO — bake in Reality Composer Pro 3 |
-| Gaussian splats (visionOS) | Render real-world volumetric captures |
+| Gaussian splats (OS27, not watchOS/tvOS) | Render real-world volumetric captures |
 | Custom reverb meshes | Raytraced acoustics in immersive spaces |
 | Decals, occlusion culling, bloom, tone mapping, clipping, render layers | Rendering control without custom Metal |
 | Mesh deformers, skeleton retargeting, animation graphs, behavior trees | Character pipelines — author graphs in Reality Composer Pro 3 |

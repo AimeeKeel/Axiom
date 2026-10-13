@@ -81,7 +81,7 @@ xcodebuild -list
 # Clean this project
 xcodebuild clean -scheme YourScheme
 # Remove only THIS project's DerivedData folder; other projects and running builds use the rest
-DD_SETTINGS=$(mktemp "${TMPDIR:-/tmp}/axiom-settings.XXXXXX")
+DD_SETTINGS=$(mktemp "${TMPDIR:-/tmp}/build-settings.XXXXXX")
 # Pass the same -workspace or -project as the build (a CocoaPods folder has both)
 xcodebuild -showBuildSettings -workspace YourApp.xcworkspace -scheme YourScheme > "$DD_SETTINGS"
 PROJECT_DD=$(sed -n 's/^ *BUILD_DIR = \(.*\)\/Build\/Products$/\1/p' "$DD_SETTINGS" | head -1)

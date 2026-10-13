@@ -3,9 +3,9 @@
 
 ## Overview
 
-Systematic accessibility diagnosis and remediation for Apple platform apps. Covers the most common accessibility issues that cause App Store rejections and user complaints.
+Systematic accessibility diagnosis and remediation for Apple platform apps. Covers the most common accessibility issues users hit, and what must work before you declare support in Accessibility Nutrition Labels.
 
-**Core principle** Accessibility is not optional. iOS apps must support VoiceOver, Dynamic Type, and sufficient color contrast to pass App Store Review. Users with disabilities depend on these features.
+**Core principle** Accessibility is not optional. No App Store guideline requires it, but people who depend on VoiceOver, Dynamic Type, and sufficient contrast can't use an app without them, Accessibility Nutrition Labels put your support on the product page, and accessibility laws apply to many apps.
 
 ## When to Use This Skill
 
@@ -18,12 +18,12 @@ Systematic accessibility diagnosis and remediation for Apple platform apps. Cove
 - Supporting Assistive Access (cognitive disabilities)
 - Making long-form reading apps work with VoiceOver continuous reading and Speak Screen
 - Adding captions to a video player — generated subtitles (new in the 27 releases) and live subtitle style preview (iOS 26.4+)
-- Preparing for App Store Review accessibility requirements and Accessibility Nutrition Labels
+- Preparing Accessibility Nutrition Labels for App Store Connect
 - Responding to user complaints about accessibility
 
 ## The 7 Critical Accessibility Issues
 
-### 1. VoiceOver Labels & Hints (CRITICAL - App Store Rejection)
+### 1. VoiceOver Labels & Hints (CRITICAL)
 
 **Problem** Missing or generic accessibility labels prevent VoiceOver users from understanding UI purpose.
 
@@ -48,15 +48,15 @@ Button(action: addToCart) {
 }
 .accessibilityLabel("Add to cart")
 
-// ✅ CORRECT - With hint for complex actions
-.accessibilityLabel("Add to cart")
-.accessibilityHint("Double-tap to add this item to your shopping cart")
+// ✅ CORRECT - Hint when the result isn't obvious from the label
+.accessibilityLabel("Archive")
+.accessibilityHint("Moves the conversation to the Archive folder")
 ```
 
 #### When to use hints
-- Action is not obvious from label ("Add to cart" is obvious, no hint needed)
-- Multi-step interaction ("Swipe right to confirm, left to cancel")
-- State change ("Double-tap to toggle notifications on or off")
+- The result is not obvious from the label ("Add to cart" is obvious, no hint needed)
+- Write the result, not the gesture: Apple's examples are "Purchases the item." and "Downloads the attachment.", never "Double-tap to…"
+- For a custom gesture, add an accessibility action (`.accessibilityAction(named:)`) rather than a hint that describes the gesture
 
 #### Decorative elements
 ```swift
@@ -75,7 +75,7 @@ HStack {
 ```
 
 #### Testing
-- Enable VoiceOver: Cmd+F5 (simulator) or triple-click side button (device)
+- Enable VoiceOver on a physical device: Settings → Accessibility → VoiceOver, or triple-click the side button (Home button on older devices) once the Accessibility Shortcut is set to VoiceOver. VoiceOver isn't available in Simulator; use Accessibility Inspector there
 - Navigate: Swipe right/left to move between elements
 - Listen: Does VoiceOver announce purpose clearly?
 - Check order: Does navigation order match visual layout?
@@ -193,7 +193,7 @@ Text("Long product description...")
   .fixedSize(horizontal: false, vertical: true)
 ```
 
-At accessibility sizes a horizontal row of label + control overflows. Reflow to vertical instead of capping the type size — capping defeats the user's setting and risks rejection.
+At accessibility sizes a horizontal row of label + control overflows. Reflow to vertical instead of capping the type size — capping defeats the user's setting, and a cap below AX3, the first iOS size past 200%, also rules out declaring Larger Text.
 
 ```swift
 // ❌ WRONG - capping the size hides text the user asked for
@@ -351,9 +351,9 @@ Light gray on white is the classic failure — it looks "subtle" to a designer b
 | Dark gray `#595959` | ~7:1 | AAA normal text |
 | Medium gray `#767676` | ~4.5:1 | AA floor — normal text |
 | Gray `#8E8E8E` | ~3:1 | Large text / UI components only |
-| Light gray `#959595` | ~2.8:1 | FAILS all text |
+| Light gray `#9A9A9A` | ~2.8:1 | FAILS all text |
 
-`#767676` is the darkest gray that still passes AA for body text — anything lighter needs to be ≥18pt (or ≥14pt bold) to qualify as "large text" at 3:1.
+`#767676` is the lightest gray that still passes AA for body text — anything lighter needs to be ≥18pt (or ≥14pt bold) to qualify as "large text" at 3:1.
 
 #### Testing
 1. Accessibility Inspector → Audit tab → Run Audit — surfaces every contrast failure with the measured ratio
@@ -367,9 +367,9 @@ Light gray on white is the classic failure — it looks "subtle" to a designer b
 
 **Problem** Small tap targets are difficult or impossible for users with motor disabilities.
 
-**WCAG** 2.5.5 Target Size (Level AAA - 44x44pt minimum)
+**WCAG** 2.5.5 Target Size (Level AAA - 44x44 CSS px); 2.5.8 Target Size Minimum (Level AA in WCAG 2.2 - 24x24)
 
-**Apple HIG** 44x44pt minimum for all tappable elements
+**Apple HIG** a button's hit region should be at least 44x44pt (60x60pt on visionOS); a control may be drawn as small as 28x28pt only if its hit region stays 44x44
 
 #### Common violations
 ```swift
@@ -384,7 +384,7 @@ Image(systemName: "heart")
   .font(.system(size: 16))
   .onTapGesture { }
 
-// ✅ CORRECT - Minimum 44x44pt
+// ✅ CORRECT - 44x44pt hit region
 Button("×") {
   dismiss()
 }
@@ -555,7 +555,7 @@ if UIAccessibility.isReduceMotionEnabled {
 
 ---
 
-### 7. Common Violations (HIGH - App Store Review)
+### 7. Common Violations (HIGH)
 
 #### Images Without Labels
 
@@ -1104,8 +1104,8 @@ Xcode → Open Developer Tool → Accessibility Inspector
 ## VoiceOver Testing Checklist
 
 ### Enable VoiceOver
-- **Simulator** Cmd+F5 or Settings → Accessibility → VoiceOver
-- **Device** Triple-click side button (if enabled in Settings)
+- **Device** Settings → Accessibility → VoiceOver, or triple-click the side button once the Accessibility Shortcut is set to VoiceOver
+- **Simulator** VoiceOver isn't available; use Accessibility Inspector to check labels, traits and order
 
 ### Navigation Testing
 1. ☐ Swipe right/left - moves logically through UI elements
@@ -1128,253 +1128,88 @@ Xcode → Open Developer Tool → Accessibility Inspector
 4. ☐ Modal sheets announce role
 5. ☐ Alerts announce automatically
 
-## App Store Review Preparation
+## App Store & Accessibility Nutrition Labels
 
-### Required Accessibility Features (iOS)
+- NO App Review Guideline requires VoiceOver, Dynamic Type, a contrast ratio, or any a11y support. Never cite one (2.5.1 = public APIs).
+- Apple's lever: **Accessibility Nutrition Labels** (App Store Connect → product page). Declarable: VoiceOver, Voice Control, Larger Text, Dark Interface, Differentiate Without Color Alone, Sufficient Contrast, Reduced Motion, Captions, Audio Descriptions.
+- Criterion: declare a feature only if ALL common tasks are completable with it.
+- Answering is voluntary now; Apple says sharing support details will become required for new apps + updates (notice + eval resources first). Answers become mandatory, features don't — "supports none" is a valid product page.
+- Accuracy = Guideline 2.3 (accurate metadata); misleading/harmful labels → App Review may contact you to update them.
+- tvOS Larger Text: largest Dynamic Type size (tvOS 27 Large Text, Section 2) or an equivalent size of your own.
 
-1. **VoiceOver Support**
-   - All UI elements must have labels
-   - Navigation must be logical
-   - All actions must be performable
+| Declare | Every common task must work with |
+|---|---|
+| VoiceOver | labels on all interactive elements, logical order, every action performable |
+| Larger Text | ≥200% (AX3 on iOS) or system max, via Dynamic Type or in-app control, no overlap or unreadable truncation; watchOS/tvOS: largest size; Zoom/Hover Text don't count |
+| Sufficient Contrast | 4.5:1 normal text; 3:1 large text (≥18pt) + UI components |
+| Differentiate Without Color Alone | no state conveyed by color alone |
+| Reduced Motion | motion-heavy animation replaced when on |
 
-2. **Dynamic Type**
-   - Text must scale from -3 to +12 sizes
-   - Layout must adapt without clipping
-
-3. **Sufficient Contrast**
-   - Minimum 4.5:1 for normal text
-   - Minimum 3:1 for large text (≥18pt)
-
-### App Store Connect Metadata
-
-**Accessibility Nutrition Labels** — declare the accessibility features your app supports (VoiceOver, Larger Text, Sufficient Contrast, Reduced Motion, and more) on your App Store product page; users who need accessible apps look for them. Only declare what you've actually tested. Larger Text is declarable for tvOS apps once they support tvOS 27's Large Text setting (Section 2).
-
-When submitting:
-1. Accessibility → Select features your app supports (Nutrition Labels taxonomy):
-   - ☑ VoiceOver
-   - ☑ Larger Text (Dynamic Type)
-   - ☑ Sufficient Contrast
-   - ☑ Reduced Motion
-
-2. Test Notes: Document accessibility testing
-   ```
-   Accessibility Testing Completed:
-   - VoiceOver: All screens tested with VoiceOver enabled
-   - Dynamic Type: Tested at all size categories
-   - Color Contrast: Verified 4.5:1 minimum contrast
-   - Touch Targets: All buttons minimum 44x44pt
-   - Reduce Motion: Animations respect user preference
-   ```
-
-### Common Rejection Reasons
-
-1. **"App is not fully functional with VoiceOver"**
-   - Missing labels on images/buttons
-   - Unlabeled custom controls
-   - Actions not performable with VoiceOver
-
-2. **"Text is not readable at all Dynamic Type sizes"**
-   - Fixed font sizes
-   - Text clipping at large sizes
-   - Layout breaks at accessibility sizes
-
-3. **"Insufficient color contrast"**
-   - Text fails 4.5:1 ratio
-   - UI elements fail 3:1 ratio
-   - Color-only indicators
+Stakes: users (~1 in 6 live with a significant disability, WHO; labels let them rule you out pre-install); law (US: apps named in ADA suits; EU: European Accessibility Act since 2025-06-28 — e-commerce, banking, passenger transport, e-books). App Review checks neither → passing review ≠ compliance.
 
 ---
 
-## Design Review Pressure: Defending Accessibility Requirements
+## Design Review Pressure
 
-### The Problem
+Typical asks: skip VoiceOver labels ("messy"), lock font sizes, lower contrast for brand, shrink 44pt targets. Each locks out users, blocks a truthful label, adds legal exposure. Defend with the label criterion + WCAG + law, never an invented guideline. **STOP and reference this skill** on any row below.
 
-Under design review pressure, you'll face requests to:
-- "Those VoiceOver labels make the code messy - can we skip them?"
-- "Dynamic Type breaks our carefully designed layout - let's lock font sizes"
-- "The high contrast requirement ruins our brand aesthetic"
-- "44pt touch targets are too big - make them smaller for a cleaner look"
+| Request | Consequence |
+|---|---|
+| Skip labels on icon-only buttons | VoiceOver users can't complete the task → no VoiceOver claim |
+| Fixed 14pt font | breaks Larger Text; excludes low vision |
+| "3:1 contrast is fine" | fails WCAG AA normal text (4.5:1) → no Sufficient Contrast |
+| 36x36pt buttons | below HIG 44x44pt hit region + WCAG 2.5.5 |
+| Disable Dynamic Type on a screen | if a common task passes through it → no Larger Text |
+| Color-only status (red=error) | excludes colorblind users (~8% of men) → no Differentiate Without Color Alone |
 
-These sound like reasonable design preferences. **But they violate App Store requirements and exclude 15% of users.** Your job: defend using App Store guidelines and legal requirements, not opinion.
+#### Implementation Traps (own code)
+- `.announcement` for content that appeared → speaks but strands focus. Use `.layoutChanged`/`.screenChanged` with the new element (taxonomy above).
+- Eyeballed contrast → light gray ~2.8:1 fails. Measure (Accessibility Inspector audit); `#767676` = lightest gray passing AA body text.
+- Fonts fixed but frame clips → `lineLimit(nil)` + `.fixedSize(horizontal: false, vertical: true)`; reflow HStack → VStack on `dynamicTypeSize.isAccessibilitySize`.
 
-### Red Flags — Designer Requests That Violate Accessibility
+#### Push-back sequence
+1. **Stakes**: forfeited label claims (VoiceOver, Larger Text…); WCAG 2.1 AA failure (basis of the EAA via EN 301 549; what US courts and DOJ look to under the ADA). Asks: labels on all interactive elements, Dynamic Type unlocked, 4.5:1 text / 3:1 UI, 44x44pt button hit regions.
+2. **Demo**: VoiceOver on device ("Button" announcements), largest text size (clipping), Accessibility Inspector audit (contrast), targets <44pt.
+3. **Compromise, no visual change**: programmatic labels; adaptive layouts (HIG); small color shifts to 4.5:1 that keep the brand; larger hit areas at the same visual size.
+4. **If overruled, record in writing**: the violations decided (e.g. fixed fonts, 38pt buttons, 3.8:1 text), the WCAG AA failure, label claims forfeited (Apple plans to require answers on every submission), legal exposure per market, users/tasks blocked.
 
-If you hear ANY of these, **STOP and reference this skill**:
-
-- ❌ **"Skip VoiceOver labels on icon-only buttons"** – App Store rejection (Guideline 2.5.1)
-- ❌ **"Use fixed 14pt font for compact design"** – Excludes users with vision disabilities
-- ❌ **"3:1 contrast ratio is fine"** – Fails WCAG AA for text (needs 4.5:1)
-- ❌ **"Make buttons 36x36pt for clean aesthetic"** – Fails touch target requirement (44x44pt minimum)
-- ❌ **"Disable Dynamic Type in this screen"** – App Store rejection risk
-- ❌ **"Color-code without labels (red=error, green=success)"** – Excludes colorblind users (8% of men)
-
-#### Implementation Traps (Your Own Code, Not the Designer)
-
-These pass a quick glance but fail real VoiceOver / Dynamic Type use:
-
-- ❌ **`.announcement` for content that arrived on screen** – Speaks it but strands focus. Use `.layoutChanged` (or `.screenChanged`) and pass the new element. See the notification taxonomy above.
-- ❌ **Eyeballing contrast ("looks readable")** – Light gray fails at ~2.8:1. Measure with the Accessibility Inspector Audit; `#767676` is the lightest gray that passes AA body text.
-- ❌ **Fixing fonts but leaving fixed `height`/`lineLimit(1)`** – Text scales then clips. The clip is the frame: `lineLimit(nil)` + `.fixedSize(horizontal: false, vertical: true)`, and reflow HStack → VStack via `dynamicTypeSize.isAccessibilitySize`.
-
-### How to Push Back Professionally
-
-#### Step 1: Show the Guideline
-
-```
-"I want to support this design direction, but let me show you Apple's App Store
-Review Guideline 2.5.1:
-
-'Apps should support accessibility features such as VoiceOver and Dynamic Type.
-Failure to include sufficient accessibility features may result in rejection.'
-
-Here's what we need for approval:
-1. VoiceOver labels on all interactive elements
-2. Dynamic Type support (can't lock font sizes)
-3. 4.5:1 contrast ratio for text, 3:1 for UI
-4. 44x44pt minimum touch targets
-
-Let me show where our design currently falls short..."
-```
-
-#### Step 2: Demonstrate the Risk
-
-Open the app with accessibility features enabled:
-- **VoiceOver** (Cmd+F5): Show buttons announcing "Button" instead of purpose
-- **Largest Text Size**: Show layout breaking or text clipping
-- **Color Contrast Analyzer**: Show failing contrast ratios
-- **Touch target overlay**: Show targets < 44pt
-
-#### Reference
-- App Store Review Guideline 2.5.1
-- WCAG 2.1 Level AA (industry standard)
-- ADA compliance requirements (legal risk in US)
-
-#### Step 3: Offer Compromise
-
-```
-"I can achieve your aesthetic goals while meeting accessibility requirements:
-
-1. VoiceOver labels: Add them programmatically (invisible in UI, required for approval)
-2. Dynamic Type: Use layout techniques that adapt (examples from Apple HIG)
-3. Contrast: Adjust colors slightly to meet 4.5:1 (I'll show options that preserve brand)
-4. Touch targets: Expand hit areas programmatically (visual size stays the same)
-
-These changes won't affect the visual design you're seeing, but they're required
-for App Store approval and legal compliance."
-```
-
-#### Step 4: Document the Decision
-
-If overruled (designer insists on violations):
-
-```
-Slack message to PM + designer:
-
-"Design review decided to proceed with:
-- Fixed font sizes (disabling Dynamic Type)
-- 38x38pt buttons (below 44pt requirement)
-- 3.8:1 text contrast (below 4.5:1 requirement)
-
-Important: These changes violate App Store Review Guideline 2.5.1 and WCAG AA.
-This creates three risks:
-
-1. App Store rejection during review (adds 1-2 week delay)
-2. ADA compliance issues if user files complaint (legal risk)
-3. 15% of potential users unable to use app effectively
-
-I'm flagging this proactively so we can prepare a response plan if rejected."
-```
-
-#### Why this works
-- You're not questioning their design taste
-- You're raising App Store rejection risk (business impact)
-- You're citing specific guidelines (not opinion)
-- You're offering solutions that preserve visual design
-- You're documenting the decision (protects you post-rejection)
-
-### Real-World Example: App Store Rejection (48-Hour Resubmit Window)
-
-#### Scenario
-- 48 hours until resubmit deadline after rejection
-- Apple cited: "2.5.1 - Insufficient VoiceOver support"
-- Designer says: "Just add generic labels quickly"
-- PM watching the meeting, wants fastest fix
-
-#### What to do
+#### Example: label claim under deadline
+Ships in 48h; marketing wants a VoiceOver claim; checkout icon buttons read "Button"; designer: "generic labels, quickly".
 
 ```swift
-// ❌ WRONG - Generic labels (will fail re-review)
-Button(action: addToCart) {
-    Image(systemName: "cart.badge.plus")
-}
-.accessibilityLabel("Button") // Apple will reject again
+// ❌ generic label: the task still can't be completed
+Button(action: addToCart) { Image(systemName: "cart.badge.plus") }
+    .accessibilityLabel("Button")
 
-// ✅ CORRECT - Descriptive labels (passes review)
-Button(action: addToCart) {
-    Image(systemName: "cart.badge.plus")
-}
-.accessibilityLabel("Add to cart")
-.accessibilityHint("Double-tap to add this item to your shopping cart")
+// ✅ descriptive label
+Button(action: addToCart) { Image(systemName: "cart.badge.plus") }
+    .accessibilityLabel("Add to cart")
 ```
 
-#### In the meeting, demonstrate
-1. Enable VoiceOver (Cmd+F5)
-2. Show "Button" announcement (generic - fails)
-3. Show "Add to cart" announcement (descriptive - passes)
-4. Reference Apple's rejection message: "Elements must have descriptive labels"
+Demo checkout with VoiceOver before/after; cite the all-common-tasks criterion. ~2-4 h to audit and label the common tasks. Outcome: claim true at launch, or ship without it and add it once checkout passes.
 
-**Time estimate** 2-4 hours to audit all interactive elements and add proper labels.
-
-#### Result
-- Honest time estimate prevents second rejection
-- Proper labels pass Apple review
-- Resubmit accepted within 48 hours
-
-### When to Accept the Design Decision (Even If You Disagree)
-
-Sometimes designers have valid reasons to override accessibility guidelines. Accept if:
-
-- [ ] They understand the App Store rejection risk
-- [ ] They're willing to delay launch if rejected
-- [ ] You document the decision in writing
-- [ ] They commit to fixing if rejected
-
-#### Document in Slack
-
-```
-"Design review decided to proceed with [specific violations].
-
-We understand this creates:
-- App Store rejection risk (Guideline 2.5.1)
-- Potential 1-2 week delay if rejected
-- Need to audit and fix all instances if rejected
-
-Monitoring plan:
-- Submit for review with current design
-- If rejected, implement proper accessibility (estimated 2-4 hours)
-- Have accessibility-compliant version ready as backup"
-```
-
-This protects both of you and shows you're not blocking - just de-risking.
+#### Accepting an override
+Only if: they know which label claims are forfeited; legal/compliance signed off for your markets; decision documented; fix date committed. Record: violations, forfeited claims, blocked users/tasks, fix release.
 
 ---
 
 ## WCAG Compliance Levels
 
-### Level A (Minimum — Required for App Store)
+### Level A (Minimum)
 - 1.1.1 Non-text Content — Images have text alternatives
 - 2.1.1 Keyboard — All functionality via keyboard (iPadOS/macOS)
 - 4.1.2 Name, Role, Value — Elements have accessible names
 
-### Level AA (Standard — Recommended)
-- 1.4.3 Contrast (Minimum) — 4.5:1 text, 3:1 UI
+### Level AA (Standard — the level accessibility laws usually reference)
+- 1.4.3 Contrast (Minimum) — 4.5:1 text, 3:1 large text
+- 1.4.11 Non-text Contrast — 3:1 for UI components and meaningful graphics
 - 1.4.4 Resize Text — Support 200% text scaling
 - 1.4.5 Images of Text — Use real text when possible
 
 ### Level AAA (Enhanced — Best Practice)
-- 1.4.6 Contrast (Enhanced) — 7:1 text, 4.5:1 UI
+- 1.4.6 Contrast (Enhanced) — 7:1 text, 4.5:1 large text
 - 2.3.3 Animation from Interactions — Reduce Motion support
-- 2.5.5 Target Size - 44x44pt minimum targets
+- 2.5.5 Target Size - 44x44 CSS px targets
 
 **Goal** Meet Level AA for all content, Level AAA where feasible.
 
@@ -1395,4 +1230,4 @@ After making fixes:
 
 ---
 
-**Remember** Accessibility is not a feature, it's a requirement. 15% of users have some form of disability. Making your app accessible isn't just the right thing to do - it expands your user base and improves the experience for everyone.
+**Remember** Accessibility is not a feature, it's a requirement. About 1 in 6 people live with a significant disability (WHO). Making your app accessible isn't just the right thing to do - it expands your user base and improves the experience for everyone.

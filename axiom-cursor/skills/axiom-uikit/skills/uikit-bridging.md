@@ -767,6 +767,6 @@ class DashboardViewController: UIViewController {
 
 **WWDC**: 2019-231, 2022-10072, 2023-10149, 2024-10118, 2024-10145, 2025-243, 2025-256
 
-**Docs**: /swiftui/uiviewrepresentable, /swiftui/uiviewcontrollerrepresentable, /swiftui/uigesturerecognizerrepresentable, /uikit/uihostingcontroller, /uikit/uihostingconfiguration, /swiftui/uitraitbridgedenvironmentkey, /observation, /uikit/updating-views-automatically-with-observation-tracking
+**Docs**: /swiftui/uiviewrepresentable, /swiftui/uiviewcontrollerrepresentable, /swiftui/uigesturerecognizerrepresentable, /uikit/uihostingcontroller, /uikit/uihostingconfiguration, /swiftui/uitraitbridgedenvironmentkey, /observation, /uikit/updating-views-automatically-with-observation-tracking-in-uikit
 
 **Skills**: app-composition, axiom-swiftui, camera-capture, transferable-ref, swift-concurrency

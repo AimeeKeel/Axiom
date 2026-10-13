@@ -52,9 +52,9 @@ Determine the provider from the user's request or command argument:
 5. Reverse Sentry frames (bottom-up → top-down). Set `kind: "hang"` for "App Hang"/"App Hanging" issue types.
 
 **App Store Connect:**
-1. Use `metrics_build_diagnostics` to list crash signatures.
-2. Use `metrics_get_diagnostic_logs` to fetch frame detail per issue.
-3. Emit `frames_unavailable: true` for any aggregate without frame data.
+1. TestFlight builds: `beta_feedback_list_crashes`, then `beta_feedback_get_crash_log` per submission for frames.
+2. App Store builds: the API exposes hang, launch and disk-write signatures only (`metrics_build_diagnostics` → `metrics_get_diagnostic_logs`), never crashes. For App Store crashes, ask the user for an Xcode Organizer export.
+3. A TestFlight submission whose crash log is missing → `frames_unavailable: true`, impact 1 user / 1 event.
 
 Write each normalized issue as one JSONL line to a temp file (e.g., `/tmp/corpus.jsonl`).
 

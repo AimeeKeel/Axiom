@@ -649,44 +649,47 @@ Task {
 
 ## Part 11: Geocoding
 
-### CLGeocoder — Forward Geocoding (Address → Coordinate)
+From iOS 26, geocode with MapKit's `MKGeocodingRequest` and `MKReverseGeocodingRequest`. `CLGeocoder` is deprecated from iOS 26 ("Use MapKit"), so use it only on deployment targets below that.
+
+### Forward Geocoding (Address → Coordinate)
 
 ```swift
-let geocoder = CLGeocoder()
+import MapKit
 
-func geocodeAddress(_ address: String) async throws -> CLLocation? {
-    let placemarks = try await geocoder.geocodeAddressString(address)
-    return placemarks.first?.location
-}
-
-// With locale for localized results
-let placemarks = try await geocoder.geocodeAddressString(
-    "1 Apple Park Way",
-    in: nil,  // CLRegion hint (optional)
-    preferredLocale: Locale(identifier: "en_US")
-)
-```
-
-### CLGeocoder — Reverse Geocoding (Coordinate → Address)
-
-```swift
-func reverseGeocode(_ location: CLLocation) async throws -> CLPlacemark? {
-    let placemarks = try await geocoder.reverseGeocodeLocation(location)
-    return placemarks.first
-}
-
-// Usage
-if let placemark = try await reverseGeocode(location) {
-    let street = placemark.thoroughfare          // "Apple Park Way"
-    let city = placemark.locality                // "Cupertino"
-    let state = placemark.administrativeArea     // "CA"
-    let zip = placemark.postalCode               // "95014"
-    let country = placemark.country              // "United States"
-    let isoCountry = placemark.isoCountryCode    // "US"
+@available(iOS 26, macOS 26, watchOS 26, tvOS 26, visionOS 26, *)
+func coordinate(for address: String) async throws -> CLLocationCoordinate2D? {
+    guard let request = MKGeocodingRequest(addressString: address) else { return nil }
+    return try await request.mapItems.first?.location.coordinate
 }
 ```
 
-### CLPlacemark Key Properties
+### Reverse Geocoding (Coordinate → Address)
+
+```swift
+@available(iOS 26, macOS 26, watchOS 26, tvOS 26, visionOS 26, *)
+func address(for location: CLLocation) async throws -> (full: String, city: String?)? {
+    guard let request = MKReverseGeocodingRequest(location: location),
+          let item = try await request.mapItems.first,
+          let address = item.address else { return nil }
+    return (address.fullAddress, item.addressRepresentations?.cityName)
+}
+```
+
+`MKMapItem` replaces the placemark: `location`, `address` (`fullAddress`, `shortAddress`), and `addressRepresentations` (`cityName`, `regionName`, `fullAddress(includingRegion:singleLine:)`). `MKMapItem.placemark` is deprecated from iOS 26.
+
+### Below iOS 26: CLGeocoder
+
+```swift
+func coordinateBeforeIOS26(for address: String) async throws -> CLLocationCoordinate2D? {
+    try await CLGeocoder().geocodeAddressString(address).first?.location?.coordinate
+}
+
+func placemarkBeforeIOS26(for location: CLLocation) async throws -> CLPlacemark? {
+    try await CLGeocoder().reverseGeocodeLocation(location).first
+}
+```
+
+### CLPlacemark Key Properties (CLGeocoder)
 
 | Property | Example | Notes |
 |----------|---------|-------|
@@ -704,15 +707,22 @@ if let placemark = try await reverseGeocode(location) {
 
 ### Geocoding Rate Limits
 
-- **One request at a time** — CLGeocoder throws if a request is in progress
-- **Apple rate-limits** — Throttle to avoid `kCLErrorGeocodeCanceled`
+- **One request at a time** — a `CLGeocoder` is single-shot; check `isGeocoding` and `cancelGeocode()` before starting another
+- **Apple rate-limits per app** — too many requests in a short period fail with `CLError.Code.network`; send at most one request per user action
 - **Cache results** — Don't re-geocode the same address/coordinate
 - **Batch carefully** — Add delays between sequential geocode requests
 
+To keep one `CLGeocoder` request in flight, hold a single geocoder on the main actor and cancel before starting a new request:
+
 ```swift
-// Check if geocoder is busy
-if geocoder.isGeocoding {
-    geocoder.cancelGeocode()  // Cancel previous before starting new
+@MainActor
+final class LegacyGeocoder {
+    private let geocoder = CLGeocoder()
+
+    func coordinate(for address: String) async throws -> CLLocationCoordinate2D? {
+        if geocoder.isGeocoding { geocoder.cancelGeocode() }
+        return try await geocoder.geocodeAddressString(address).first?.location?.coordinate
+    }
 }
 ```
 

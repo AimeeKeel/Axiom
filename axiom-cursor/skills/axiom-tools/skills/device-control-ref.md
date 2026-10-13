@@ -469,9 +469,11 @@ killall -9 Simulator DeviceHub
 pgrep -l Simulator DeviceHub    # must print NOTHING
 ```
 
-CarPlay simulation moved with it, into DeviceKit's
-`CarPlaySimulator.devicekitplugin`; the Xcode 26 `defaults write com.apple.iphonesimulator
-CarPlayExtraOptions -bool YES` key does not exist anywhere in the 27 toolchain.
+Xcode 27 exposes no device-free CarPlay display: neither Device Hub nor `simctl` offers one, and the
+Xcode 26 `defaults write com.apple.iphonesimulator CarPlayExtraOptions -bool YES` key does not exist
+anywhere in the 27 toolchain (verified structurally against 27.1). Device Hub instead carries CarPlay Simulator as a built-in DeviceKit plugin
+(`CarPlaySimulator.devicekitplugin`, its **CarPlay Simulator** menu item), which needs a physical
+iPhone and ignores simulators — see `axiom-media (skills/carplay-hig.md)`.
 
 Device Hub offers the same toolset for simulators and physical devices, in
 a *compact* window (live screen plus a few essentials) that expands to a *full window* with canvas,

@@ -292,7 +292,7 @@ This is the mechanism that connects the shared menu bar to the correct window. I
 
 ### Step 1 — Define Focused Value Keys
 
-Use the `@Entry` macro (iOS 17+ / macOS 14+) for value types:
+Use the `@Entry` macro for value types. It back-deploys to every OS `FocusedValues` supports, and needs only the Xcode 16+ toolchain:
 
 ```swift
 extension FocusedValues {

@@ -537,6 +537,7 @@ Tools return their `Output` directly. There is no standalone `ToolOutput` type �
 import FoundationModels
 import WeatherKit
 import CoreLocation
+import MapKit
 
 struct GetWeatherTool: Tool {
     let name = "getWeather"
@@ -549,8 +550,10 @@ struct GetWeatherTool: Tool {
     }
 
     func call(arguments: Arguments) async throws -> GeneratedContent {
-        let places = try await CLGeocoder().geocodeAddressString(arguments.city)
-        let weather = try await WeatherService.shared.weather(for: places.first!.location!)
+        guard let location = try await MKGeocodingRequest(addressString: arguments.city)?.mapItems.first?.location else {
+            throw CLError(.geocodeFoundNoResult)
+        }
+        let weather = try await WeatherService.shared.weather(for: location)
         let temperature = weather.currentWeather.temperature.value
 
         // Structured output: return GeneratedContent directly.
@@ -1328,7 +1331,7 @@ let session = LanguageModelSession(tools: [BarcodeReaderTool(), OCRTool()])
 
 - The FoundationModels framework is going **open source** and runs anywhere Swift runs (including Linux).
 - The `LanguageModel` protocol lets a session be backed by custom on-device models via **MLX** (`MLXLanguageModel`) or **Core AI** (`CoreAILanguageModel`) — both open-source, running on the Neural Engine / Mac GPU — or by **frontier server models** from providers (Anthropic, Google) shipping conforming Swift packages. With third-party server models you own auth + per-token billing: use OAuth + Keychain, never embed keys.
-- **Evaluations** framework — measure feature quality/accuracy as you iterate on prompts (macOS tooling; not in the iOS SDK).
+- **Evaluations** framework (`import Evaluations`, OS27 except tvOS) — measure feature quality and accuracy as you iterate on prompts. It is a Developer framework that links into test targets, beside XCTest, not part of the platform SDK. See foundation-models-evaluations-ref.
 - **`fm` CLI** (`macOS27`) — terminal access to the on-device and PCC models (`fm chat`), scriptable into shell pipelines.
 - **Foundation Models SDK for Python** (`apple_fm_sdk`) — the same on-device model from Python.
 - **Core AI** is the 27-cycle on-device inference framework for authoring/compiling/running your own models (`AIModel`/`InferenceFunction`/`NDArray`, specialization & caching); `CoreAILanguageModel` is its open-source `coreai-models` Swift package, not a system-framework type. See `axiom-ai (skills/core-ai.md)`. The custom-provider plumbing behind MLX/Core AI/server models (`LanguageModel`, `LanguageModelExecutor`, `LanguageModelExecutorGenerationChannel`) is in the **Custom Model Providers (OS27)** section above.
