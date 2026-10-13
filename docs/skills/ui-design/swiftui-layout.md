@@ -11,7 +11,7 @@ Discipline-enforcing skill for building layouts that respond to available space 
 
 Covers tool selection (ViewThatFits vs AnyLayout vs onGeometryChange), size class limitations on iPad, iOS 26 free-form windows, and common anti-patterns that break in multitasking.
 
-## When to Use This Skill
+## When to Use
 
 - "How do I make this layout work on iPad and iPhone?"
 - "Should I use GeometryReader or ViewThatFits?"

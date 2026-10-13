@@ -7,25 +7,23 @@ version: 1.0.0
 
 # SwiftUI Previews
 
-Discipline for building good SwiftUI previews. Covers the previewability principle, five performance rules that turn slow previews fast, environment-object setup patterns, variant matrix discipline for design-system components, and when previews are the wrong tool.
-
-This page covers *building* previews. For preview *crashes*, see [swiftui-debugging](/skills/ui-design/swiftui-debugging).
+Discipline for building fast, useful SwiftUI previews. Covers the previewability principle, five rules that turn slow previews fast, environment setup patterns, variant matrices for design-system components, and when a preview is the wrong tool.
 
 ## When to Use
 
 Use this skill when:
 
 - Building, organizing, or speeding up previews for a SwiftUI app
-- Previews take 20+ seconds to load and you don't know why
+- Previews take 20 seconds or more to load and you don't know why
 - Designing a design-system component that needs a variant matrix
 - Setting up environment objects, model containers, or mock data for previews
 - Deciding whether a complex view is worth previewing at all
 
-**Core principle**: If a view is hard to preview, the view is wrong, not previews. A view that needs a network client, an auth session, an analytics SDK, and three environment objects before it renders has revealed a design problem the simulator was hiding.
+**Core principle:** If a view is hard to preview, the view is wrong, not the preview. A view that needs a network client, an auth session, an analytics SDK, and three environment objects before it renders has revealed a design problem the simulator was hiding.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "My SwiftUI previews take 30 seconds to load. How do I speed them up?"
 - "How do I preview a view that takes an `@Environment(AppModel.self)`?"
@@ -40,56 +38,63 @@ Questions you can ask Claude that will draw from this skill:
 
 ### The Previewability Principle
 
-A view that can't be previewed in 5 lines is over-coupled. The fix is to refactor the view, not to write a 50-line preview. Authority cite: Apple's WWDC 2023-10252 framing — "Previews are kind of like the scenes that you define at the top level of your app."
+A view you can't preview in five lines is over-coupled, and the fix is to refactor the view, not to write a 50-line preview. Apple frames it this way in WWDC 2023-10252: "Previews are kind of like the scenes that you define at the top level of your app."
 
 ### The Five Performance Rules
 
-Loss-framed for impact. A 20-second preview compile hit 40 times a day costs ~55 hours/year per developer.
+A 20-second preview compile hit 40 times a day costs about 55 hours a year per developer.
 
-1. **Isolate UI in a Swift Package** – Single biggest win. Move views to a local Swift Package with only `SwiftUI` and `Foundation` as deps. Preview compiles drop from 20+ to 2–3 seconds.
-2. **Use `PreviewModifier` for shared expensive setup** – Apple's official answer (Xcode 16+, iOS 18+, macOS 15+) for expensive shared state across previews via `makeSharedContext()`.
-3. **Pin the parent preview** – Canvas pin button locks the canvas to a meaningful preview while you edit children.
-4. **Disable auto-refresh for large views** – Editor → Canvas → Automatically Refresh Canvas off; trigger with ⌥⌘P.
-5. **Skip SDK init in preview builds** – Guard `FirebaseApp.configure()` and similar with `ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]`.
+1. **Isolate UI in a Swift package** – The single biggest win. Move views into a local Swift package that depends only on `SwiftUI` and `Foundation`, and preview builds drop from 20+ seconds to 2–3.
+2. **Use `PreviewModifier` for shared expensive setup** – Apple's answer (Xcode 16+, iOS 18+) for sharing expensive state across previews through `makeSharedContext()`.
+3. **Pin the parent preview** – The canvas pin keeps a meaningful preview visible while you edit child views in other files.
+4. **Turn off auto-refresh for large views** – Editor → Canvas → Automatically Refresh Canvas, then refresh by hand with ⌥⌘P.
+5. **Skip SDK setup in previews** – Guard `FirebaseApp.configure()` and similar calls with `ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]`.
 
 ### Environment Setup Patterns
 
-Six patterns matched to use case:
+Six patterns, each matched to a situation:
 
-- **Pattern A** – Plain `.sample` data on the model for leaf views
+- **Pattern A** – Plain `.sample` data on the model, for leaf views
 - **Pattern B** – `@Previewable @State` for inline state (Xcode 16+)
-- **Pattern C** – Single-preview `.environment()` injection
+- **Pattern C** – `.environment()` injection in a single preview
 - **Pattern D** – `PreviewModifier` for repeated expensive setup
-- **Pattern E** – SwiftData in-memory `ModelContainer`
-- **Pattern F** – Side-by-side composition with `Group` for semantic-state comparisons
+- **Pattern E** – An in-memory SwiftData `ModelContainer`
+- **Pattern F** – Side-by-side composition with `Group` or `HStack` for comparing states
 
 ### Variant Matrix Discipline
 
-For design-system components: light + dark, all Dynamic Type sizes, LTR + RTL, semantic states (default, disabled, loading, error). Variant Mode handles color scheme + Dynamic Type automatically (Apple-confirmed dimensions); RTL and semantic states need explicit code via `.environment(\.layoutDirection, .rightToLeft)` and a VStack-based preview respectively.
+Design-system components need light and dark, every Dynamic Type size, left-to-right and right-to-left layout, and every semantic state (default, hover, selected, disabled, loading, error). The canvas's Variant Mode covers color scheme, Dynamic Type, and orientation automatically. Right-to-left needs `.environment(\.layoutDirection, .rightToLeft)`, and semantic states need a single preview with a `VStack` of each state.
 
-### When NOT to Use Previews
+### Beyond the Mac Canvas
 
-Boundary table: NavigationStack roots, real network responses, CALayer/Metal/camera feeds, real permissions, real animation timing, App root scenes. The simulator (with hot-reload and debug deep links) is faster for these.
+- On-device previews, for real sensors, color, ProMotion, and touch on a connected iPhone
+- Xcode 27's resize mode, which lets you drag the preview device's edges to test adaptive layout live
+
+### When Not to Use Previews
+
+A boundary table covering `NavigationStack` roots, real network responses, `CALayer`, Metal, and camera content, real permissions, real animation timing, and the app's root scene. For these, the simulator (with debug deep links) is the better tool.
+
+### Pressure Scenarios and Checklists
+
+- Pushing back on "previews are slow, I'll just use the simulator", copy-pasted preview setup, and force-unwrapping in previews
+- An anti-pattern table and a checklist to run before shipping a new component
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui--previews` skill — discipline for *building* good previews. The complementary [swiftui-previews-ref](/reference/swiftui-previews-ref) reference page documents the API surface (`#Preview`, `@Previewable`, `PreviewModifier`, traits, canvas modes).
+This page documents the `previews` skill (in the `axiom-swiftui` suite), which your assistant draws on when you build, organize, or speed up previews.
 
-**For preview crashes:** Use [swiftui-debugging](/skills/ui-design/swiftui-debugging) when previews won't load, crash on launch, or show "Cannot find in scope" errors.
-
-**For runtime performance:** Use [swiftui-performance](/skills/ui-design/swiftui-performance) — runtime jank and preview slowness are different problems with different fixes.
-
-**For variant audits:** Use the [accessibility diagnostic](/diagnostic/accessibility-diag) to know *what to look for* in Dynamic Type and RTL variants.
+- For the API surface (`#Preview`, `@Previewable`, `PreviewModifier`, traits, and canvas modes), see [swiftui-previews-ref](/reference/swiftui-previews-ref)
+- For what to look for in Dynamic Type and right-to-left variants, see [accessibility-diag](/diagnostic/accessibility-diag)
 
 ## Related
 
-- [swiftui-previews-ref](/reference/swiftui-previews-ref) – Complete API reference for `#Preview`, `@Previewable`, `PreviewModifier`, traits, and canvas features
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – Diagnostic decision tree for preview crashes (different problem from slow previews)
-- [swiftui-performance](/skills/ui-design/swiftui-performance) – Runtime performance with the SwiftUI Instrument (not preview perf)
-- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – The previewability principle is the same architectural discipline (views render, models coordinate)
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – The decision tree for previews that crash, a different problem from slow previews
+- [swiftui-hot-reload](/skills/ui-design/swiftui-hot-reload) – Iterating inside the running app; a complement to previews, not a substitute
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – Runtime performance with the SwiftUI Instrument, not preview speed
+- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – The same discipline behind the previewability principle: views render, models coordinate
 
 ## Resources
 
-**WWDC**: 2023-10252 (Build programmatic UI with Xcode Previews), 2024-10144 (What's new in SwiftUI — `@Previewable`), 2020-10185 (Structure your app for SwiftUI previews)
+**WWDC**: 2020-10185, 2023-10252, 2024-10144
 
-**Docs**: /xcode/previewing-your-apps-interface-in-xcode, /swiftui/previewmodifier, /swiftui/previewable()
+**Docs**: /swiftui/preview(_:body:), /swiftui/preview(_:traits:_:body:), /swiftui/previewable(), /swiftui/previewmodifier

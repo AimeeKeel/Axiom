@@ -5,9 +5,9 @@ description: Use when composing or scheduling custom workouts for the Apple Watc
 
 # WorkoutKit
 
-Composing and scheduling custom workouts that run in the Apple Watch Workout app — complementary to, and distinct from, the live-tracking `HKWorkoutSession` API.
+Compose and schedule custom workouts that run in the Apple Watch Workout app. WorkoutKit complements, and is distinct from, the live-tracking `HKWorkoutSession` API.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Creating custom or planned workouts for the Apple Watch Workout app
@@ -19,67 +19,66 @@ Use this skill when you're:
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I schedule a workout to appear on the user's watch tomorrow morning?"
 - "What's the difference between WorkoutKit and HKWorkoutSession?"
 - "How do I build a 6×400m interval workout with heart-rate alerts?"
 - "How do I compose a pool swim workout that enforces a send-off interval?"
-- "Why does my scheduled workout not appear on the watch?"
+- "Why doesn't my scheduled workout appear on the watch?"
 
 ## What This Skill Provides
 
-### WorkoutKit vs HealthKit Workouts
-- Side-by-side comparison of WorkoutKit plans and `HKWorkoutSession` live tracking
-- When to use each — authoring vs tracking, Workout app execution vs your own app
-- How they cooperate: author a plan, later query the resulting `HKWorkout` from HealthKit
+### WorkoutKit vs. HealthKit Workouts
+- A side-by-side comparison of WorkoutKit plans and `HKWorkoutSession` live tracking
+- When to use each: authoring vs. tracking, and the Workout app vs. your own app
+- How they cooperate: author a plan, then query the resulting `HKWorkout` from HealthKit
+- Platform reach: an iOS app can compose and schedule watch workouts without a companion watch app
 
 ### Composing Workouts
-- `CustomWorkout` structure — warmup, repeatable `IntervalBlock`s, cooldown
-- `WorkoutStep` and `IntervalStep` with `.work` / `.recovery` roles
+- The `CustomWorkout` structure: warmup, repeatable `IntervalBlock`s, cooldown
+- `WorkoutStep` and `IntervalStep` with `.work` and `.recovery` roles
 - `WorkoutGoal` types: `.open`, `.time`, `.distance`, `.energy`, `.poolSwimDistanceWithTime`
 - Built-in shapes: `SingleGoalWorkout`, `PacerWorkout`, `SwimBikeRunWorkout`
-- Nine `WorkoutAlert` types (heart rate, power, cadence, speed — no "pace alert" in the shipping API)
+- Nine `WorkoutAlert` types for heart rate, power, cadence, and speed (the shipping API has no "pace" alert)
 - Checking alert compatibility with `WorkoutAlert.supports(activity:location:)`
+- Which names from early WWDC 2023 sample code (`BlockStep`, `WarmupStep`, `CustomWorkoutComposition`) the shipping API replaced
 
 ### Scheduling and Previewing
-- `WorkoutScheduler.shared` authorization — separate from HealthKit authorization
-- Scheduling a `WorkoutPlan` at a future date with `schedule(_:at:)`
-- Scheduler limits: max 15 plans, ±7 days window
+- `WorkoutScheduler.shared` authorization, which is separate from HealthKit authorization
+- Scheduling a `WorkoutPlan` with `schedule(_:at:)`, which takes `DateComponents` rather than a `Date`
+- Scheduler limits: at most 15 scheduled plans, within ±7 days of now
 - Listing, removing, and marking scheduled workouts complete
 - Opening a plan immediately in the Workout app with `plan.openInWorkoutApp()`
 
 ### Swimming Workouts (iOS 18+)
-- `.poolSwimDistanceWithTime` goal for send-off-interval semantics
-- Pool-length awareness — watch converts your meters to laps at runtime
+- The `.poolSwimDistanceWithTime` goal for send-off-interval semantics
+- Pool-length awareness: the watch converts your meters to laps at runtime
 
 ## Key Pattern
 
-WorkoutKit plans and live sessions are different APIs with different purposes. A plan is authored and handed to the Workout app; a session runs inside your own app and collects sensor data directly. The single most common mistake is conflating them.
+WorkoutKit plans and live sessions are different APIs with different purposes. You author a plan and hand it to the Workout app; a session runs inside your own app and collects sensor data directly. Conflating the two is the most common mistake.
 
 ```swift
-// WorkoutKit: author a plan, schedule or open it
+// WorkoutKit: author a plan, then schedule it (or open it in the Workout app)
 let plan = WorkoutPlan(.custom(workout))
-try await WorkoutScheduler.shared.schedule(plan, at: tomorrowMorning)
+// tomorrowMorning is DateComponents, not a Date; schedule(_:at:) doesn't throw
+await WorkoutScheduler.shared.schedule(plan, at: tomorrowMorning)
 ```
 
 ## Documentation Scope
 
-This page documents the `workoutkit` skill in the `axiom-health` suite. The skill file contains comprehensive guidance Claude uses when answering your questions.
-
-**For live sensor-driven workouts inside your own app** — Use [workouts](/skills/health/workouts) when you need `HKWorkoutSession` with real-time heart rate, distance, and energy collection.
+This page documents the `workoutkit` skill (in the `axiom-health` suite). The skill also holds complete composition, alert, scheduling, and swimming code, plus a common-mistakes table.
 
 ## Related
 
-- [workouts](/skills/health/workouts) – Complementary live-tracking API for workouts that run inside your own app
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) – HealthKit permissions the resulting `HKWorkout` will need; WorkoutKit scheduler authorization is separate
-- [queries](/skills/health/queries) – Reading the `HKWorkout` produced by the Workout app after a plan runs
-- [smart-stack-and-complications](/skills/watchos/smart-stack-and-complications) – Watch surfaces where scheduled workouts may be promoted
+- [Workouts](/skills/health/workouts) – The complementary live-tracking API for workouts that run inside your own app
+- [Authorization and Privacy](/skills/health/authorization-and-privacy) – The HealthKit permissions that cover WorkoutKit results; scheduler authorization is separate
+- [Queries](/skills/health/queries) – Reading the `HKWorkout` the Workout app produces after a plan runs
+- [Smart Stack and Complications](/skills/watchos/smart-stack-and-complications) – Smart Stack placement for your workout widgets
 
 ## Resources
 
-**WWDC**: 2023-10016, 2024-10084
+**WWDC**: 2023-10016 (Build custom workouts with WorkoutKit), 2024-10084 (Build custom swimming workouts with WorkoutKit)
 
 **Docs**: /workoutkit, /workoutkit/customizing-workouts-with-workoutkit, /workoutkit/customworkout, /workoutkit/singlegoalworkout, /workoutkit/pacerworkout, /workoutkit/swimbikerunworkout, /workoutkit/workoutplan, /workoutkit/workoutstep, /workoutkit/intervalblock, /workoutkit/intervalstep, /workoutkit/workoutgoal, /workoutkit/workoutalert, /workoutkit/workoutscheduler
-
-**Skills**: axiom-health, axiom-watchos

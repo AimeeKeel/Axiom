@@ -1,23 +1,23 @@
 # Tools
 
-Axiom's native helpers capture build diagnostics, simulator logs, crash reports, Instruments traces, project structure and the live accessibility tree. Your assistant runs each helper from the installed plugin's `tools/` folder after checking that it works. Installing the plugin doesn't necessarily put the helpers on your `PATH`.
+Axiom's command-line helpers, built for Apple Silicon Macs, capture build diagnostics, simulator logs, crash reports, Instruments traces, project structure and the live accessibility tree. Your assistant runs each helper from the installed plugin's `tools/` folder after checking that it works. In Claude Code, Axiom's session hook adds that folder to your `PATH`; in Codex, your assistant calls each helper by its full path; in Pi, you link them yourself ([Pi setup](/start/pi-install#command-line-helpers)). Cursor and other MCP clients reach xclog, xcsym and xcprof as tools of [Axiom's MCP server](/start/mcp-install).
 
 ## Bundled tools
 
 | Tool | What it does |
 |------|--------------|
-| **axbuild** | Run `xcodebuild`, `swift build` or `swift test` and get a short JSON summary of errors and failed tests, while the full log and report are saved |
+| [**axbuild**](#axbuild) | Run `xcodebuild`, `swift build` or `swift test` and get a short JSON summary of errors and failed tests, while the full log and report are saved |
 | **xcproject** | Inspect Xcode project structure and read captured build settings without modifying the project |
-| [**xclog**](/reference/xclog-ref) | Capture simulator & device console output (`print`, `os_log`, `Logger`) as structured JSON/JSONL |
-| [**xcprof**](/reference/xcprof-ref) | Record and analyze Instruments traces — CPU bottlenecks, an honest per-family support matrix, and user-code attribution |
+| [**xclog**](/reference/xclog-ref) | Capture simulator and device console output (`print`, `os_log`, `Logger`) as structured JSON/JSONL |
+| [**xcprof**](/reference/xcprof-ref) | Record and analyze Instruments traces — CPU bottlenecks attributed to your own code, and a clear report of what it couldn't measure rather than a false "no findings" |
 | [**xcsym**](/reference/xcsym-ref) | Symbolicate and triage crash reports (`.ips`, MetricKit, legacy `.crash`, `.xccrashpoint`) with automatic dSYM discovery |
-| [**xcui**](/reference/xcui-ref) | Drive and assert on the simulator UI and accessibility tree — wait, assert, toggle a11y settings, handle system dialogs, check VoiceOver |
+| [**xcui**](/reference/xcui-ref) | Drive and assert on the simulator UI and accessibility tree — wait for elements, check them, toggle accessibility settings, handle system dialogs, verify VoiceOver |
 
-xclog, xcprof, xcsym and xcui emit **compact JSON by default** (token-lean for LLM consumers); pass `--human` for a prose view, or pipe to `jq .` for indented JSON.
+xclog, xcprof, xcsym and xcui emit **compact JSON by default**, which costs your assistant few tokens; pass `--human` for a prose view, or pipe to `jq .` for indented JSON.
 
 ## axbuild
 
-Use axbuild when a build or test might produce more output than your assistant can show, or when you need failure locations and test values afterward. Put axbuild in front of the command you'd normally run, keeping your scheme, destination and flags. Before starting an Xcode build, check whether another `xcodebuild` is already running and find out why.
+Use axbuild when a build or test might produce more output than your assistant can show, or when you need failure locations and test values afterward. Put axbuild in front of the command you'd normally run, keeping your scheme, destination and flags. Before starting an Xcode build, check whether another `xcodebuild` is already running, and find out why if one is. In Claude Code, `axbuild` is already on your `PATH`, so the bare name works; elsewhere, replace `<plugin-root>` below with the installed plugin's folder (in Codex, the one containing `.codex-plugin/plugin.json`).
 
 ```sh
 "<plugin-root>/tools/axbuild" --help
@@ -32,7 +32,7 @@ The saved compiler log is the main source of errors; test results and Swift Test
 
 ### Availability
 
-The Claude Code and Codex plugins include axbuild. In Pi, put it on your `PATH`. Cursor and MCP setups don't include it, so the assistant saves build output to a log file and reads that instead.
+The Claude Code and Codex plugins include axbuild. In Pi, put it on your `PATH`. Cursor and MCP setups don't include it, so your assistant saves build output to a log file and reads that instead.
 
 axbuild has been tested with Xcode 27.2 beta (27B5028f) and Swift 6.4 (6.4.0.34.1). With other toolchains, `swift test` runs without automatic Swift Testing event capture and axbuild relies on the log. Xcode 26 hasn't been tested. axbuild is supported on macOS 26 and newer, like the rest of Axiom.
 
@@ -45,21 +45,22 @@ Example prompt: "Run the tests and show me where the failing assertion is and wh
 
 ## How they fit in
 
-Most tools have a slash command and, where it makes sense, an agent that drives it:
+Each tool has a slash command that uses it and, where it makes sense, an agent that drives it:
 
 | Tool | Command | Agent |
 |------|---------|-------|
 | axbuild | [`/axiom:fix-build`](/commands/build/fix-build), [`/axiom:run-tests`](/commands/testing/run-tests) | [build-fixer](/agents/build-fixer), [test-runner](/agents/test-runner) |
-| xclog | [`/axiom:console`](/commands/) | — |
-| xcprof | [`/axiom:profile`](/commands/) | [performance-profiler](/agents/performance-profiler) |
-| xcsym | [`/axiom:analyze-crash`](/commands/) | [crash-analyzer](/agents/crash-analyzer) |
-| xcui | [`/axiom:ui`](/commands/) | [simulator-tester](/agents/simulator-tester) |
+| xclog | [`/axiom:console`](/commands/debugging/console) | — |
+| xcprof | [`/axiom:profile`](/commands/debugging/profile) | [performance-profiler](/agents/performance-profiler) |
+| xcsym | [`/axiom:analyze-crash`](/commands/debugging/analyze-crash) | [crash-analyzer](/agents/crash-analyzer) |
+| xcui | [`/axiom:ui`](/commands/testing/ui) | [simulator-tester](/agents/simulator-tester) |
+| xcproject | [`/axiom:status`](/commands/utility/status), [`/axiom:optimize-build`](/commands/build/optimize-build) | [build-optimizer](/agents/build-optimizer), [spm-conflict-resolver](/agents/spm-conflict-resolver) |
 
-You rarely call these directly — Axiom's skills and agents invoke them for you. The reference pages above document xclog, xcprof, xcsym and xcui for when you want to drive them yourself; axbuild is covered on this page.
+You rarely call these directly — Axiom's skills and agents invoke them for you. The reference pages linked in [Bundled tools](#bundled-tools) document xclog, xcprof, xcsym and xcui for when you want to drive them yourself; axbuild is covered on this page.
 
 ## Related tools
 
-Axiom also documents the third-party and Apple CLIs the bundled tools build on:
+Axiom also documents the third-party and Apple command-line tools the bundled tools build on:
 
-- [**AXe**](/reference/axe-ref) – simulator HID automation; `xcui` delegates input (`tap`/`type`/`swipe`) to it.
-- [**xctrace**](/reference/xctrace-ref) – Apple's Instruments CLI; `xcprof` wraps it for recording and export.
+- [**AXe**](/reference/axe-ref) – Simulator input automation; `xcui` delegates input (`tap`/`type`/`swipe`) to it.
+- [**xctrace**](/reference/xctrace-ref) – Apple's Instruments command-line tool; `xcprof` wraps it for recording and export.

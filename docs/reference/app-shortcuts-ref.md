@@ -7,7 +7,7 @@ description: Reference — Complete App Shortcuts API guide for instant Siri/Spo
 
 Complete reference for App Shortcuts framework — pre-configured App Intents that work instantly after install.
 
-## When to Use This Skill
+## When to Use
 
 - Implement AppShortcutsProvider for your app
 - Add suggested phrases for Siri invocation

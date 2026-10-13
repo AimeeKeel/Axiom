@@ -5,35 +5,34 @@ description: Swift 6 strict concurrency patterns — progressive journey from si
 
 # Swift 6 Concurrency
 
-Progressive journey from single-threaded to concurrent Swift code. Covers Swift 6 strict concurrency, `@concurrent` attribute (Swift 6.2+), actor isolation, and data race prevention.
+A step-by-step path from single-threaded to concurrent Swift code. It covers Swift 6 strict concurrency, the `@concurrent` attribute (Swift 6.2+), actor isolation, and data race prevention.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
-- Starting a new project and deciding concurrency strategy
-- Debugging Swift 6 concurrency errors (actor isolation, data races, Sendable)
-- Deciding when to introduce async/await vs full concurrency
+- Starting a new project and choosing a concurrency strategy
+- Debugging Swift 6 concurrency errors (actor isolation, data races, `Sendable`)
+- Deciding when to introduce async/await and when to go fully concurrent
 - Implementing `@MainActor` classes or async functions
+- Choosing between `@MainActor`, `nonisolated`, `@concurrent`, and an actor
 - Converting delegate callbacks to async-safe patterns
 - Resolving "Sending 'self' risks causing data races" errors
-- Offloading CPU-intensive work to background threads
+- Moving CPU-intensive work off the main thread
 
-**Apple's guidance:** "Start single-threaded. Add complexity only when profiling shows you need it."
+> "Your apps should start by running all of their code on the main thread, and you can get really far with single-threaded code." — Apple
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "I'm getting 'Sending self risks causing data races'. How do I fix this?"
-- "When should I use @MainActor vs nonisolated vs @concurrent?"
+- "When should I use @MainActor, nonisolated, or @concurrent?"
 - "My UI freezes during image processing. How do I move it off the main thread?"
 - "How do I make my type conform to Sendable?"
 - "What's the difference between async/await and actual concurrency?"
 - "How do I convert a delegate callback to async/await?"
-- "When do I need an actor vs just @MainActor?"
-- "My app compiles but crashes with data race. How do I debug?"
-- "How do I report progress from a long async operation with ProgressManager?" (iOS 27)
-- "Why does my loop never exit inside `withTaskCancellationShield`?" (iOS 27)
+- "When do I need an actor instead of just @MainActor?"
+- "How do I report progress from a long async operation with ProgressManager?"
 
 ## What This Skill Provides
 
@@ -46,31 +45,33 @@ Single-Threaded → Asynchronous → Concurrent → Actors
 ```
 
 ### Core Concepts
-- **@MainActor** – Isolate to main thread (UI code)
-- **nonisolated** – Opt out of actor isolation
-- **nonisolated(nonsending)** (Swift 6.2+) — New default for async functions; stays on caller's actor instead of switching to global executor
-- **@concurrent** (Swift 6.2+) — Force background execution (explicit spelling for the pre-6.2 default behavior)
-- **Sendable** – Safe to pass between threads
-- **Actor** – Isolated mutable state
-- **ProgressManager / ProgressReporter** (OS27) — Sendable, @Observable structured async progress reporting; Subprogress provides ~Copyable child tokens
+- `@MainActor` – Isolates code to the main thread (UI code)
+- `nonisolated` – Opts out of actor isolation, so the caller decides where the work runs
+- `nonisolated(nonsending)` (Swift 6.2+) – Keeps an async function on the caller's actor instead of switching to the global executor; it's the default once Approachable Concurrency is on, which new Xcode projects enable but Swift packages don't
+- `@concurrent` (Swift 6.2+) – Forces an async function onto a background thread, the explicit spelling of the pre-6.2 default
+- `Sendable` – Marks a type as safe to pass between threads
+- **Actors** – Own isolated mutable state
+- `ProgressManager` and `ProgressReporter` (OS 27) – `Sendable`, `@Observable` progress reporting for async work, with `~Copyable` `Subprogress` tokens for child operations
 
 ### Common Patterns
-- Async/await for network calls
-- Task groups for parallel operations
-- Actor-isolated data managers
-- MainActor for SwiftUI state
-- Continuation for bridging callbacks
+- 12 copy-paste patterns, including delegate value capture, weak self in stored tasks, task timeouts, and isolated protocol conformances
+- Background access patterns for SwiftData, Core Data, and GRDB
+- `Task { }`, `Task { @concurrent in }`, and `Task.detached`: what each inherits
+- Default isolation for an app target (main actor) compared with a library (`nonisolated`)
 
 ### Error Resolution
-- "Sending 'self' risks causing data races"
-- "Non-sendable type cannot cross actor boundary"
-- "Actor-isolated property cannot be mutated"
-- "Call to main actor-isolated function in synchronous context"
+A decision tree for the most common compiler errors, including:
+- "Main actor-isolated property accessed from nonisolated context"
+- "Capture of non-sendable type in @Sendable closure"
+- "Value of non-Sendable type accessed after being transferred"
+- "Reference to captured var in concurrently-executing code"
+- "Type does not conform to Sendable"
 
-### Xcode 26+ Features
-- Main Actor mode build settings
-- Approachable concurrency defaults
+### Xcode 26 and Later
+- Main actor mode (Default Actor Isolation build setting)
+- Approachable Concurrency defaults
 - Isolated conformances
+- A five-step migration from Swift 5 to Swift 6
 
 ## Key Pattern
 
@@ -95,9 +96,9 @@ class ImageLoader {
 // Step 3: Add @concurrent when CPU work freezes UI
 @MainActor
 class ImageLoader {
-    @concurrent  // Swift 6.2+
-    func processImage(_ data: Data) -> UIImage {
-        // ✅ Runs on background thread
+    @concurrent  // Swift 6.2+; requires an async function
+    func processImage(_ data: Data) async -> UIImage {
+        // ✅ Runs on a background thread
         return expensiveProcessing(data)
     }
 }
@@ -105,19 +106,21 @@ class ImageLoader {
 
 ## Documentation Scope
 
-This page documents the `axiom-concurrency` (swift-concurrency reference) skill — comprehensive Swift 6 concurrency guidance Claude uses when answering your questions. The skill contains the complete progressive journey, 11 copy-paste patterns, error resolution guides, and decision trees.
+This page documents the `swift-concurrency` skill in the `axiom-concurrency` suite. The skill holds the full progressive journey, the copy-paste patterns, the error decision trees, and the migration steps your assistant uses to answer your questions.
 
-**For concurrency audits:** Use the [concurrency-auditor](/agents/concurrency-auditor) agent to scan for Swift 6 strict concurrency violations automatically.
+- For exact API syntax (`TaskGroup`, `AsyncStream`, continuations, cancellation), see [Swift Concurrency Reference](/reference/swift-concurrency-ref)
 
 ## Related
 
-- [concurrency-auditor](/agents/concurrency-auditor) – Autonomous agent scanning for concurrency violations
-- [/axiom:audit concurrency](/commands/concurrency/audit-concurrency) – Quick scan for unsafe patterns
-- [swift-performance](/skills/concurrency/swift-performance) – CPU and threading performance optimization
-- [swiftdata](/skills/persistence/swiftdata) – SwiftData's @MainActor requirements
+- [concurrency-auditor](/agents/concurrency-auditor) – An agent that scans your code for concurrency violations
+- [/axiom:audit concurrency](/commands/concurrency/audit-concurrency) – A quick scan for unsafe patterns
+- [Runtime Isolation Crash Diagnostics](/diagnostic/isolation-inheritance-diag) – For a warning-free Swift 6 build that still crashes at runtime
+- [concurrency-profiling](/skills/concurrency/concurrency-profiling) – Measure async performance and actor contention in Instruments
+- [swift-performance](/skills/concurrency/swift-performance) – Language-level optimization once profiling points at your Swift code
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData's isolation rules for `ModelContext` and models
 
 ## Resources
 
-**WWDC**: 2025-268, 2024-10169, 2023-10164, 2022-10144, 2026-262
+**WWDC**: 2025-268, 2025-245, 2022-110351, 2021-10133, 2026-262
 
-**Docs**: /swift/concurrency, /swift/sendable, /foundation/progressmanager, /foundation/subprogress
+**Docs**: /swift/adoptingswift6, /swift/sendable, /foundation/progressmanager, /foundation/subprogress

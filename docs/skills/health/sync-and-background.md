@@ -5,21 +5,21 @@ description: Use when tracking HealthKit changes across launches, responding to 
 
 # HealthKit Sync and Background Delivery
 
-Anchored queries, observer queries, and sync identifiers — the three APIs you combine so your app handles HealthKit changes correctly without re-reading the whole store on every launch.
+Anchored queries, observer queries, and sync identifiers are the three APIs you combine so your app handles HealthKit changes correctly without re-reading the whole store on every launch.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Reading from HealthKit across app launches without re-reading the entire history every time
 - Responding to HealthKit changes in the background without polling
 - Syncing HealthKit data to a server without creating duplicates
-- Handling sample deletions correctly (not just additions)
+- Handling sample deletions correctly, not just additions
 - Adding the `com.apple.developer.healthkit.background-delivery` entitlement
 - Deciding between `HKObserverQuery`, `HKAnchoredObjectQuery`, and their descriptor variants
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I stop re-reading every step sample on every app launch?"
 - "I need to sync HealthKit to my server without duplicates — what's the pattern?"
@@ -32,34 +32,35 @@ Questions you can ask Claude that will draw from this skill:
 ### The Sync Architecture
 - Why re-reading the whole store on every launch is wrong (battery, correctness, duplicates)
 - How observer queries, anchored queries, and sync identifiers work together
-- The "wake-up signal + payload + de-duplicator" three-API pattern
+- The three roles: observer query as the wake-up signal, anchored query as the payload, sync identifiers as the de-duplicator
 
 ### HKAnchoredObjectQuery Details
-- `HKQueryAnchor` persistence with `NSKeyedArchiver` (one anchor per type)
-- Classic callback signature vs modern descriptor (`result(for:)` for one-shot, `results(for:)` for streaming)
-- When to use one-shot vs streaming variants
-- Canonical delta-read implementation
+- Persisting `HKQueryAnchor` with `NSKeyedArchiver` (one anchor per type)
+- The classic callback signature vs. the modern descriptor (`result(for:)` for one-shot, `results(for:)` for streaming)
+- When to use the one-shot or the streaming variant
+- A canonical delta-read implementation
 
 ### Observer Queries and Background Delivery
+- Registering observer queries at app launch, not in a view's `onAppear`
 - The three-strikes rule for the `HKObserverQueryCompletionHandler`
-- Why you must always call completion, including in error paths
-- `HKUpdateFrequency` semantics on iOS vs watchOS
+- Why you must always call the completion handler, including on error paths
+- `HKUpdateFrequency` semantics on iOS vs. watchOS
 - Why `HKCorrelationType` isn't supported for background delivery
-- Simulator limitations
+- Why background delivery can't be tested in the Simulator
 
 ### Deletions — The Easy-to-Miss Piece
-- `HKDeletedObject` semantics and why observer-only architectures leak tombstones
-- Why Apple's "deleted objects are temporary" warning matters for long-offline cases
-- How to use metadata on deleted objects for server-side sync identifier cleanup
+- `HKDeletedObject` semantics, and why an observer-only design leaves deleted samples in your local copy
+- Why Apple's "deleted objects are temporary" warning matters when an app stays offline for weeks
+- How to use metadata on deleted objects to clean up sync identifiers on your server
 
 ### Sync Identifiers
 - `HKMetadataKeySyncIdentifier` and `HKMetadataKeySyncVersion`
-- The conflict rule — newer version replaces older with matching identifier
-- How to design identifiers that are stable across devices and sessions
+- The conflict rule: a newer version replaces an older sample with the same identifier
+- How to design identifiers that stay stable across devices and sessions
 
 ## Key Pattern
 
-The canonical delta read — run at startup and from inside the observer's handler — replaces the naive "read everything on launch" approach.
+The canonical delta read, run at startup and from inside the observer's handler, replaces the naive "read everything on launch" approach.
 
 ```swift
 let anchor = loadAnchor()  // nil on first launch
@@ -80,28 +81,22 @@ apply(additions: result.addedSamples, deletions: result.deletedObjects)
 try persist(anchor: result.newAnchor)  // save for next launch
 ```
 
-Same three moves every time — load anchor, fetch delta, persist new anchor. Deletions flow automatically.
+It's the same three moves every time: load the anchor, fetch the delta, persist the new anchor. Deletions arrive in the same result as additions.
 
 ## Documentation Scope
 
-This page documents the `sync-and-background` skill in the `axiom-health` suite. The skill file contains comprehensive guidance Claude uses when answering your questions — a decision map of "what goes where," a pressure scenario walking through a battery-drain fix, and a common-mistakes table with concrete consequences.
-
-**For one-shot reads** — Use [queries](/skills/health/queries) when you just need today's data or a single aggregate, not change tracking across launches.
-
-**For watchOS-specific background behavior** — Use [background-and-networking](/skills/watchos/background-and-networking) for watch-specific wake-up budgets that layer on top of the HealthKit background-delivery model.
+This page documents the `sync-and-background` skill (in the `axiom-health` suite). The skill also holds a "what goes where" decision map, a pressure scenario that walks through a battery-drain fix, and a common-mistakes table.
 
 ## Related
 
-- [fundamentals](/skills/health/fundamentals) – Prerequisite for `HKHealthStore` setup and the sample-type system
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) – Background reads have authorization constraints documented there; read before any background workflow
-- [queries](/skills/health/queries) – Complementary skill for foreground one-shot reads; many anchored-query call sites share the same predicate patterns
-- [background-and-networking](/skills/watchos/background-and-networking) – Watch-specific background task budgets that apply when running this pattern on Apple Watch
-- [cloud-sync](/skills/persistence/cloud-sync) – Alternative sync mechanism for app-level data that isn't health data; compare trade-offs when designing a full sync stack
+- [Fundamentals](/skills/health/fundamentals) – Read first for `HKHealthStore` setup and the sample-type system
+- [Authorization and Privacy](/skills/health/authorization-and-privacy) – Background reads fail without read authorization; read it before building any background workflow
+- [Queries](/skills/health/queries) – The companion skill for foreground one-shot reads, which share these predicate patterns
+- [Background Tasks and Networking on watchOS](/skills/watchos/background-and-networking) – Watch background task budgets that apply when you run this pattern on Apple Watch
+- [Cloud Sync](/skills/persistence/cloud-sync) – Sync for app data that isn't health data; compare the trade-offs when designing a full sync stack
 
 ## Resources
 
-**WWDC**: 2020-10184
+**WWDC**: 2020-10184 (Synchronize health data with HealthKit)
 
-**Docs**: /healthkit/executing-anchored-object-queries, /healthkit/executing-observer-queries, /healthkit/hkanchoredobjectquery, /healthkit/hkobserverquery, /healthkit/hkdeletedobject, /healthkit/hkanchoredobjectquerydescriptor, /healthkit/hkqueryanchor, /healthkit/hkupdatefrequency, /healthkit/hkmetadatakeysyncidentifier, /healthkit/hkmetadatakeysyncversion, /bundleresources/entitlements/com.apple.developer.healthkit.background-delivery
-
-**Skills**: axiom-health, fundamentals, authorization-and-privacy, queries, axiom-concurrency, axiom-data
+**Docs**: /healthkit/executing-anchored-object-queries, /healthkit/executing-observer-queries, /healthkit/hkanchoredobjectquery, /healthkit/hkobserverquery, /healthkit/hkdeletedobject, /healthkit/hkanchoredobjectquerydescriptor, /healthkit/hkqueryanchor, /healthkit/hkupdatefrequency, /healthkit/hkmetadatakeysyncidentifier, /healthkit/hkmetadatakeysyncversion, /healthkit/hkhealthstore/enablebackgrounddelivery(for:frequency:withcompletion:), /bundleresources/entitlements/com.apple.developer.healthkit.background-delivery

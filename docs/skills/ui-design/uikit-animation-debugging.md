@@ -84,4 +84,4 @@ view.layer.speed = 0.1               // Slow down 10x for debugging
 
 ## Resources
 
-**Docs**: /quartzcore, /caanimation
+**Docs**: /quartzcore

@@ -1,44 +1,46 @@
 # Passkeys
 
-Discipline skill for implementing passkey-based authentication on iOS. Covers the full passkey lifecycle from registration through assertion, AutoFill integration, automatic password-to-passkey upgrades, and migrating existing password-based accounts.
+Guidance for passkey sign-in in iOS apps, from registration through assertion: AutoFill-assisted requests, automatic upgrades from passwords, combined credential requests, and migrating existing password accounts.
 
 ## When to Use
 
 Use this skill when:
 - Adding passkey sign-in to an iOS app
-- Implementing the WebAuthn server-side ceremony (registration and assertion)
-- Integrating passkeys with AutoFill credential suggestions
-- Setting up automatic passkey upgrades from existing passwords
-- Planning a migration strategy from password-only to passkey authentication
-- Debugging ASAuthorization errors or credential creation failures
-- Supporting cross-platform passkey flows (iOS to web, Android interop)
+- Configuring `ASAuthorizationController` for passkey registration and assertion
+- Putting passkeys in the QuickType bar with AutoFill-assisted requests
+- Setting up automatic passkey upgrades for existing password users (iOS 18+)
+- Offering passkeys, passwords, and Sign in with Apple in one combined request
+- Configuring associated domains for the `webcredentials` service
+- Planning a phased migration from passwords to passkeys
+- Debugging passkey assertion failures or missing QuickType suggestions
 
 ## Example Prompts
 
 - "How do I add passkey sign-in to my app?"
-- "How does the passkey registration flow work?"
-- "How do I integrate passkeys with AutoFill?"
+- "My passkeys aren't showing in the QuickType bar."
+- "What's the difference between `performRequests` and `performAutoFillAssistedRequests`?"
 - "Can I automatically upgrade users from passwords to passkeys?"
-- "How do I handle passkey assertion on the server?"
-- "What's the migration strategy from passwords to passkeys?"
-- "Why is ASAuthorizationController failing silently?"
+- "How do I support both passkeys and passwords during migration?"
+- "How do I set up associated domains for passkeys?"
+- "I keep getting `ASAuthorizationError.canceled`. What's going wrong?"
 
 ## What This Skill Provides
 
-- Complete passkey lifecycle: registration (attestation), assertion (authentication), and credential management
-- Registration and assertion ceremony flows with client and server responsibilities
-- AutoFill credential provider integration with `ASAuthorizationController`
-- Automatic upgrade workflows that convert password sign-ins to passkeys transparently
-- Migration strategy for apps with existing password-based accounts (phased rollout)
-- Associated domains configuration for the webcredentials service
-- Delivered verification codes for credential-provider apps (iOS 27) — offering SMS one-time codes for AutoFill
-- Anti-patterns with user experience impact (forcing passkeys without fallback, skipping credential discovery)
-- Pressure scenarios for common shortcuts (skipping server-side validation, ignoring cross-platform users)
+- Registration and assertion flows, including what your app sends to your server's WebAuthn endpoints
+- AutoFill-assisted requests (`performAutoFillAssistedRequests`) as the primary sign-in path, with the modal sheet as the fallback
+- Automatic upgrades (iOS 18+) that quietly add a passkey after a password sign-in
+- Combined credential requests for passkeys, passwords, and Sign in with Apple
+- Cross-device sign-in by QR code, with Bluetooth as the proximity check
+- Associated domains setup, including the apple-app-site-association file
+- A three-phase migration from password-only accounts, plus Passwords app integration
+- Delivered verification codes for credential-provider apps (new in the 27 releases; not on watchOS or tvOS), which offer one-time codes delivered to the device for AutoFill
+- Anti-patterns: `performRequests` for the primary sign-in, a username field without the `.username` content type, `userVerification` set to `"required"`, creating passkeys from an extension, and passkey-only requests that lock out password users
+- Pressure scenarios for common shortcuts: "our users aren't ready for passkeys" and "ship passwords now, add passkeys later"
 
 ## Documentation Scope
 
-This page documents the `axiom-security` discipline skill. The discipline skill provides end-to-end workflows and decision guidance for passkey implementation, not API-level details.
+This page documents the `passkeys` skill (in the `axiom-security` suite).
 
 ## Related
 
-- [Keychain](/skills/security/keychain) – Credentials stored in the keychain alongside passkeys; shared access group configuration applies to both
+- [Keychain](/skills/security/keychain) – storing the session tokens your server issues after a passkey sign-in

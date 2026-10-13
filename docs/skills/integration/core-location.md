@@ -5,26 +5,25 @@ description: Core Location implementation patterns - authorization strategy, mon
 
 # Core Location
 
-Implementation patterns for Core Location. Covers authorization strategy, monitoring approach selection, accuracy optimization, and background location setup.
+Implementation patterns for Core Location, covering authorization strategy, choosing a monitoring approach, accuracy optimization, and background location setup.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
-- Choosing between When In Use vs Always authorization
-- Deciding on monitoring approach (continuous, significant-change, CLMonitor)
+- Choosing between When In Use and Always authorization
+- Deciding on a monitoring approach (continuous updates, significant-change, or `CLMonitor`)
 - Implementing geofencing or region monitoring
 - Setting up background location updates
+- Debugging "location not working" issues
 - Reviewing location code for anti-patterns
-
-**Note:** For API details and code examples, see [core-location-ref](/reference/core-location-ref). For troubleshooting, see [core-location-diag](/diagnostic/core-location-diag).
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "Should I use When In Use or Always authorization?"
 - "How should I implement geofencing in my app?"
-- "What's the best way to track user location in background?"
+- "What's the best way to track user location in the background?"
 - "Why is my location code draining battery?"
 - "How do I upgrade from When In Use to Always authorization?"
 - "What accuracy level should I use for a store finder?"
@@ -33,27 +32,29 @@ Questions you can ask Claude that will draw from this skill:
 ## What This Skill Provides
 
 ### Anti-Patterns Prevented
-- Premature Always authorization (30-60% denial rate)
-- Continuous updates for geofencing (10x battery drain vs CLMonitor)
+- Premature Always authorization (a 30–60% denial rate)
+- Continuous updates for geofencing (10× the battery drain of `CLMonitor`)
 - Ignoring stationary detection (wasted battery)
 - No graceful denial handling
-- Wrong accuracy for use case
+- The wrong accuracy for the use case
 - Not stopping updates when done
-- Ignoring CLServiceSession (iOS 18+)
+- Ignoring `CLServiceSession` (iOS 18+)
+- Treating reduced accuracy as a toggle you control, when Approximate location silently breaks geofences
 
 ### Decision Trees
-- Authorization strategy (When In Use vs Always, upgrade flow)
-- Monitoring strategy (continuous vs significant-change vs CLMonitor)
-- Accuracy selection (navigation vs fitness vs store finder)
+- Authorization strategy (When In Use vs. Always, and the upgrade flow)
+- Monitoring strategy (continuous vs. significant-change vs. `CLMonitor`)
+- Accuracy selection (navigation vs. fitness vs. store finder)
 
 ### Pressure Scenarios
-- "Just use Always authorization" pushback
-- "Location isn't working in background" debugging
-- "Geofence events aren't firing" production issues
+- Pushing back on "just use Always authorization"
+- Debugging "location isn't working in the background"
+- Fixing "geofence events aren't firing" in production
 
-### Checklists
-- Pre-release location checklist
-- Background location setup checklist
+### Checklists and Version Notes
+- A pre-release location checklist (`Info.plist` keys, privacy manifest, authorization, updates, testing)
+- A background location setup checklist
+- Which APIs need iOS 17 (`CLLocationUpdate`, `CLMonitor`) or iOS 18 (`CLServiceSession`), and the `CLLocationManager` path for iOS 14–16
 
 ## Key Pattern
 
@@ -73,24 +74,20 @@ let navSession = CLServiceSession(
 )
 ```
 
-**Why**: Starting with Always authorization has 30-60% denial rate. Progressive upgrade when user understands value has 5-10% denial rate.
+**Why**: Requesting Always authorization up front draws a 30–60% denial rate. Upgrading progressively, once the user understands the value, draws 5–10%.
 
 ## Documentation Scope
 
-This page documents the `axiom-location` skill — implementation patterns and decision frameworks Claude uses when helping you design location features.
-
-**For API reference:** See [core-location-ref](/reference/core-location-ref) for CLLocationUpdate, CLMonitor, CLServiceSession APIs.
-
-**For troubleshooting:** See [core-location-diag](/diagnostic/core-location-diag) for debugging location issues.
+This page documents the `core-location` skill (in the `axiom-location` suite), the implementation patterns and decision frameworks your assistant uses when helping you design location features.
 
 ## Related
 
-- [core-location-ref](/reference/core-location-ref) – Complete API reference for modern Core Location
-- [core-location-diag](/diagnostic/core-location-diag) – Symptom-based troubleshooting
-- [energy](/skills/debugging/energy) – Location as battery subsystem
+- [Core Location Reference](/reference/core-location-ref) – API details and code examples for modern Core Location
+- [Core Location Diagnostics](/diagnostic/core-location-diag) – Symptom-based troubleshooting
+- [Energy Optimization](/skills/debugging/energy) – Location as a battery subsystem
 
 ## Resources
 
-**WWDC**: 2023-10180, 2023-10147, 2024-10212
+**WWDC**: 2023-10180 (Discover streamlined location updates), 2023-10147 (Meet Core Location Monitor), 2024-10212 (What's new in location authorization)
 
-**Docs**: /corelocation, /corelocation/clmonitor, /corelocation/cllocationupdate
+**Docs**: /corelocation, /corelocation/clmonitor, /corelocation/cllocationupdate, /corelocation/clservicesession

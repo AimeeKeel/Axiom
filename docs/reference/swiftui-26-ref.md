@@ -5,7 +5,7 @@ description: iOS 26 and iOS 27 SwiftUI features — Liquid Glass, @Animatable, W
 
 # SwiftUI 26 Reference
 
-Complete API reference for iOS 26 SwiftUI features. Covers Liquid Glass design system, performance improvements, @Animatable macro, WebView, rich text editing, 3D charts, and spatial layout.
+Complete API reference for the SwiftUI features introduced in iOS 26, plus the 27-cycle additions that build on them. Covers Liquid Glass, performance, the `@Animatable` macro, WebView, rich text editing, 3D charts and spatial layout.
 
 ## When to Use This Reference
 
@@ -13,60 +13,51 @@ Use this reference when you need:
 - Liquid Glass APIs and toolbar patterns
 - Toolbar transitions and morphing during navigation
 - Performance improvements in iOS 26
-- @Animatable macro for custom animation
-- WebView and WebPage integration
-- TextEditor with AttributedString
-- Chart3D for 3D data visualization
+- The `@Animatable` macro for custom animation
+- `WebView` and `WebPage` integration
+- `TextEditor` with `AttributedString`
+- `Chart3D` for 3D data visualization
 - Spatial layout and scene bridging
 - List section index and section margins
-
-**For Liquid Glass implementation:** See [liquid-glass](/skills/ui-design/liquid-glass) for adoption patterns.
+- Slider ticks, safe area bars, or line height control
+- Multi-item drag and drop (27 cycle)
+- A checklist for moving an app to the iOS 26 SDK
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
 - "What Liquid Glass APIs are available in iOS 26?"
 - "How do I keep nested corners concentric with their container in iOS 26?"
 - "How should a custom bottom sheet's corners match the iPhone's screen corners?"
-- "How do I use the @Animatable macro?"
-- "How do I embed web content with WebView in SwiftUI?"
-- "How do I intercept form submissions in a SwiftUI WebView?"
-- "Why does my WebView scroll wrong inside a NavigationStack?"
-- "How do I use TextEditor with AttributedString?"
+- "How do I use the `@Animatable` macro?"
+- "How do I embed web content with `WebView` in SwiftUI?"
+- "How do I intercept form submissions in a SwiftUI `WebView`?"
+- "Why does my `WebView` scroll wrong inside a `NavigationStack`?"
+- "How do I use `TextEditor` with `AttributedString`?"
 - "How do I make links, phone numbers, and addresses tappable in SwiftUI text?"
 - "How do I create 3D charts in SwiftUI?"
-- "Why does my Chart crash with conditional if/else content?"
 - "What performance improvements does iOS 26 bring to SwiftUI?"
 - "How do I make toolbars morph during navigation transitions?"
 - "Why isn't my toolbar morphing when I push a new view?"
-- "How do I add the A–Z index strip to a SwiftUI List?"
+- "How do I add the A–Z index strip to a SwiftUI `List`?"
 - "Why isn't my section index showing up?"
-- "How do I change the margins around a List section?"
+- "How do I change the margins around a `List` section?"
 
 ## What's Covered
 
-### Lists
-- sectionIndexLabel(_:) – per-section entry in the A–Z index
-- listSectionIndexVisibility(_:) – override the index strip's visibility
-- Default visibility behavior, and excluding sections from the index
-- listSectionMargins(_:_:) – override a section's margins
-- Platform availability, including where each API is unavailable
-
 ### Liquid Glass Design
-- .glassEffect() modifier
-- Toolbar spacers and roles
-- ToolbarItemGroup visual grouping (shared glass backgrounds)
-- Toolbar transitions and morphing during NavigationStack push/pop
-- DefaultToolbarItem, toolbar(id:) stable items, ToolbarSpacer patterns
-- Combined DefaultToolbarItem + ToolbarSpacer bottom bar patterns
-- Bottom-aligned search fields (with .sidebar placement escape hatch)
-- searchToolbarBehavior(.minimize) with backward-compat wrapper
-- Search tab with Tab(role: .search)
-- .badge() and .tint() on Liquid Glass toolbar items
-- User-customizable toolbars (CustomizableToolbarContent, ToolbarCustomizationBehavior)
-- SearchToolbarBehavior type (.minimize, .automatic)
-- Material-aware backgrounds
+- Automatic adoption on recompile
+- `ToolbarSpacer`, `ToolbarItemGroup` shared glass backgrounds, `sharedBackgroundVisibility(_:)`
+- Toolbar morphing during `NavigationStack` push and pop; `toolbar(id:)` stable items
+- `DefaultToolbarItem`, and `DefaultToolbarItem` + `ToolbarSpacer` bottom bar patterns
+- User-customizable toolbars (`CustomizableToolbarContent`)
+- `navigationSubtitle(_:)`, `.badge()` on toolbar items, monochrome icons, scroll edge blur
+- Bottom-aligned search fields (with the `.sidebar` placement escape hatch)
+- `searchToolbarBehavior(.minimize)` with a backward-compatible wrapper
+- Search tab with `Tab(role: .search)` (iOS 18+), and the `.onGeometryChange` bug that breaks its morph
+- `.glassEffect()`, `GlassEffectContainer`, `glassEffectID(_:in:)`, sheet morphing
+- Button changes: `.glass` / `.glassProminent` styles, `Button(role: .close)` / `.confirm`, `buttonSizing(_:)`, `.controlSize(.extraLarge)`
 
 ### Corner Concentricity
 - `ConcentricRectangle` shape and `.rect(corners:isUniform:)` sugar
@@ -76,50 +67,78 @@ Questions you can ask Claude that will draw from this reference:
 - `GeometryProxy.containerCornerInsets`; `concentricCornerRadii` (iOS 27)
 - Matching the device's screen corners without a hard-coded radius; custom bottom sheets (fixed top corners, concentric bottom corners)
 
-### Performance Improvements
-- 6x faster simple lists
-- 16x faster complex lists
-- Nested ScrollView optimization
-- SwiftUI Instrument in Instruments 26
-- Cause & Effect Graph
+### Sliders, Text and View Modifiers
+- `SliderTick`, `SliderTickContentForEach`, `enabledBounds`, `neutralValue`, `sliderThumbVisibility(_:)`
+- `safeAreaBar(edge:)` with `scrollEdgeEffectStyle(_:for:)`
+- `openURL(_:prefersInApp:)`
+- `lineHeight(_:)` presets and precise values, including on `AttributedString`
 
-### @Animatable Macro
-- Automatic animatableData synthesis
-- @AnimatableIgnored for excluded properties
-- Custom animation interpolation
-
-### WebView Integration
-- WebView for URL content
-- WebPage for custom HTML
-- Navigation and load status handling
-- JavaScript interaction
-- Scroll control – `webViewScrollPosition(_:)`, `webViewOnScrollGeometryChange(for:of:action:)`, `webViewScrollInputBehavior(_:for:)` (available on iOS but not callable there — no `ScrollInputKind` value exists)
-- Appearance and gestures – `webViewContentBackground(_:)`, `webViewBackForwardNavigationGestures(_:)`, `webViewMagnificationGestures(_:)`, `webViewLinkPreviews(_:)`, `webViewElementFullscreenBehavior(_:)`, `webViewTextSelection(_:)`
-- WebView inside NavigationStack – safe-area and toolbar interaction, and why `.ignoresSafeArea()` is wrong there
-- Form-submission hook (iOS/macOS/visionOS 27) — `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest` / `overrideReferrer` / `isGlobalPrivacyControlEnabled` / `allowsJSHandleCreationInPageWorld`
+### Lists
+- `sectionIndexLabel(_:)` – per-section entry in the A–Z index
+- `listSectionIndexVisibility(_:)` – override the index strip's visibility
+- Default visibility behavior, and excluding sections from the index
+- Deriving index labels across languages (`UILocalizedIndexedCollation`)
+- `listSectionMargins(_:_:)` – override a section's margins
+- Platform availability, including where each API is unavailable
 
 ### Data Detection (iOS 27)
 - `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable (iOS / watchOS / visionOS 27 only — not macOS or tvOS)
-- `DataDetector.MatchType` options (DataDetection, iOS/macOS/watchOS/visionOS/tvOS 26+); the SwiftUI `.dataDetection(_:options:)` modifier itself is iOS/watchOS/visionOS 27 only
+- `DataDetector.MatchType` options from the DataDetection framework (iOS 26+), and `String.dataDetectorMatches(_:options:)` for detection without UI
+
+### Performance Improvements
+- Lists of 100,000+ items on macOS load 6x faster and update 16x faster, with gains on every platform
+- Fewer dropped frames while scrolling
+- Nested `ScrollView`s with lazy stacks
+- The SwiftUI instrument in Instruments 26 (long view body updates, platform view updates)
+
+### @Animatable Macro
+- Automatic `animatableData` synthesis
+- `@AnimatableIgnored` for excluded properties
+- Which property types the macro can synthesize, and the error when one can't be
+
+### WebView Integration
+- `WebView` for URL content
+- `WebPage` observable model – title, URL, loading progress, back-forward list
+- Navigation and load status handling
+- JavaScript execution, custom user agents and custom URL schemes
+- Scroll control – `webViewScrollPosition(_:)`, `webViewOnScrollGeometryChange(for:of:action:)`, `webViewScrollInputBehavior(_:for:)` (available on iOS but not callable there — no `ScrollInputKind` value exists)
+- Appearance and gestures – `webViewContentBackground(_:)`, `webViewBackForwardNavigationGestures(_:)`, `webViewMagnificationGestures(_:)`, `webViewLinkPreviews(_:)`, `webViewElementFullscreenBehavior(_:)`, `webViewTextSelection(_:)`, and the macOS-only `webViewContextMenu(_:)`
+- WebView inside NavigationStack – safe-area and toolbar interaction, and why `.ignoresSafeArea()` is wrong there
+- Form-submission hook (iOS/macOS/visionOS 27) – `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest` / `overrideReferrer` / `isGlobalPrivacyControlEnabled` / `allowsJSHandleCreationInPageWorld`
+- No `WebView` or `WebPage` on tvOS
 
 ### Rich Text Editing
-- TextEditor with AttributedString
-- .textFormatting() modifier
-- Character-level styling
-- Markdown export
+- `TextEditor` bound to `AttributedString`, with built-in formatting controls
+- `TextField` with `axis: .vertical` for plain text
+- Paragraph styles, attribute transformations, and constraining which attributes users can apply
+
+### Drag and Drop (27 Cycle)
+- `draggable(containerItemID:)`, `dragContainer(for:)`, `dragContainerSelection(_:)`
+- `DragConfiguration`, `onDragSessionUpdated`, `dragPreviewsFormation(_:)` (macOS)
 
 ### 3D Charts
-- Chart3D container
-- BarMark3D, LineMark3D, PointMark3D
-- Perspective options
-- Data visualization in 3D
-- Expanded 3D Charts (Chart3D, SurfacePlot, Chart3DPose, surface styling)
-- Conditional `ChartContent` crashes below an iOS 27 deployment target; extract into a `@ChartContentBuilder` function
+- `Chart3D` container, with closures or data collections
+- `SurfacePlot`, surface styling (`.heightBased`, `.normalBased`, roughness)
+- `Chart3DPose` camera control and `Chart3DCameraProjection`
+- Z-axis modifiers (`chartZScale`, `chartZAxis`)
 
-### Scene Bridging
-- UIKit ↔ SwiftUI transitions
-- .sceneBridge() modifier
-- Shared state management
+### Spatial Layout (visionOS)
+- `Alignment3D` with `spatialOverlay(alignment:content:)`
+- `.manipulable()` and surface snapping
+
+### Scene Bridging and Framework Integration
+- SwiftUI-only scenes from UIKit and AppKit apps: `MenuBarExtra`, `ImmersiveSpace`, `RemoteImmersiveSpace`, `AssistiveAccess`
+- AppKit: SwiftUI sheets via `NSHostingController`, `NSGestureRecognizerRepresentable`, `NSHostingView` in Interface Builder
+- RealityKit: observable entities, `PresentationComponent`, `ViewAttachmentComponent`, `GestureComponent`
+- iPad menu bar (`.commands`) and resizable windows; macOS `windowResizeAnchor(_:)`
+
+### Widgets and Controls
+- Controls on watchOS and in the macOS Control Center
+- visionOS widget `levelOfDetail`, Live Activities on CarPlay
+
+### Migration and Troubleshooting
+- Deprecated `UIRequiresFullScreen`, automatic adoptions, customizations to remove, manual adoptions
+- Fixes for common symptoms, including `.toolbarBackground` ignored on `TabView`
 
 ## Key Pattern
 
@@ -129,7 +148,7 @@ Questions you can ask Claude that will draw from this reference:
 NavigationStack {
     ContentView()
         .navigationTitle("Home")
-        .toolbar {
+        .toolbar {   // On the view inside the stack, not on NavigationStack, so it morphs on push
             ToolbarItem(placement: .automatic) {
                 Button("Add", systemImage: "plus") { }
             }
@@ -142,7 +161,7 @@ NavigationStack {
 
 ```swift
 @Animatable
-struct ProgressView: View {
+struct ProgressRing: View {
     var progress: Double  // Automatically animatable
 
     var body: some View {
@@ -175,21 +194,19 @@ struct ArticleReader: View {
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-26-ref` reference skill — complete API coverage Claude uses when you need specific iOS 26 SwiftUI APIs or feature details.
-
-**For Liquid Glass adoption:** See [liquid-glass](/skills/ui-design/liquid-glass) for implementation workflows.
-
-**For performance profiling:** See [swiftui-performance](/skills/ui-design/swiftui-performance) for Instruments workflows.
+This page documents the `26-ref` skill (in the `axiom-swiftui` suite), the API coverage your assistant uses when you need specific iOS 26 SwiftUI APIs or feature details. For Liquid Glass design principles and adoption patterns, see [liquid-glass](/skills/ui-design/liquid-glass).
 
 ## Related
 
-- [liquid-glass](/skills/ui-design/liquid-glass) – Liquid Glass implementation patterns
-- [swiftui-performance](/skills/ui-design/swiftui-performance) – Performance optimization
-- [swiftui-animation-ref](/reference/swiftui-animation-ref) – Animation API reference
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – View update debugging
+- [liquid-glass-ref](/reference/liquid-glass-ref) – app-wide Liquid Glass adoption guide
+- [swiftui-search-ref](/reference/swiftui-search-ref) – the foundational `.searchable` APIs that the iOS 26 search changes build on
+- [swiftui-animation-ref](/reference/swiftui-animation-ref) – the full animation API, including `Animatable` and `VectorArithmetic`
+- [swiftui-performance](/skills/ui-design/swiftui-performance) – profiling with the SwiftUI instrument
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – diagnosing views that don't update
+- [typography-ref](/reference/typography-ref) – the typography system behind `lineHeight`
 
 ## Resources
 
-**WWDC**: 2025-256 (What's New in SwiftUI), 2025-268 (Swift Concurrency)
+**WWDC**: 2025-256, 2025-278, 2025-287, 2025-310, 2025-323, 2025-325, 2025-341
 
-**Docs**: /swiftui, /swiftui/animation
+**Docs**: /swiftui, /webkit, /charts/chart3d, /foundation/attributedstring

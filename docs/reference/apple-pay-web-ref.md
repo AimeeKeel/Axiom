@@ -54,7 +54,7 @@ Questions developers ask that this reference answers:
 
 ## Documentation Scope
 
-This page documents the `apple-pay-web-ref` skill — the JavaScript API surface for Apple Pay on the web (Apple Pay JS plus the W3C Payment Request API form).
+This page documents the `apple-pay-web-ref` skill (in the `axiom-payments` suite) — the JavaScript API surface for Apple Pay on the web (Apple Pay JS plus the W3C Payment Request API form).
 
 - For **when and why** (cert export, domain verification, server-side merchant validation, AUG parity, 30-second production triage), see [Apple Pay on the Web](/skills/integration/apple-pay-web)
 - For **the native counterpart** of the same merchant ID and Payment Processing Certificate, see [Apple Pay Reference](/reference/apple-pay-ref)

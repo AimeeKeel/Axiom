@@ -7,83 +7,80 @@ version: 3.0.0
 
 # SQLiteData
 
-Type-safe SQLite persistence using [SQLiteData](https://github.com/pointfreeco/sqlite-data) by Point-Free. A fast, lightweight replacement for SwiftData with CloudKit synchronization support, built on GRDB and StructuredQueries.
+Type-safe SQLite persistence using [SQLiteData](https://github.com/pointfreeco/sqlite-data) by Point-Free. A fast, lightweight replacement for SwiftData with CloudKit synchronization, built on GRDB and StructuredQueries.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
-- Using SQLiteData with @Table models
-- Setting up CloudKit sync with SQLiteData
-- Writing queries with @FetchAll, @FetchOne
-- Inserting, updating, or deleting records
-- Debugging StructuredQueries crashes
+- Defining `@Table` models
+- Writing queries with `@FetchAll` and `@FetchOne`
+- Inserting, updating, upserting, or deleting records
 - Batch importing data
+- Setting up CloudKit sync or record sharing with SQLiteData
+- Fixing StructuredQueries compiler errors, such as `==` in a predicate or a missing `#bind`
+- Testing sync or previewing sharing UI
 
-**Core principle:** Value types (struct) + @Table macro + database.write { } blocks for all mutations.
+**Core principle** Value types (`struct`), the `@Table` macro, and `database.write { }` blocks for every mutation.
 
-**Choose SQLiteData when:** Type-safe SQLite, CloudKit sync, large datasets (50k+), Swift 6 strict concurrency.
-
-**Use SwiftData instead when:** Simple CRUD, prefer @Model classes, don't need CloudKit record sharing.
-
-**Use raw GRDB when:** Complex SQL joins across 4+ tables, custom migration logic, performance-critical manual SQL.
+Choose SQLiteData for type-safe SQLite, CloudKit sync with record sharing, large datasets (50,000+ records), and Swift 6 strict concurrency. Use SwiftData instead for simple CRUD with `@Model` classes when you don't need CloudKit record sharing, and raw GRDB for joins across four or more tables, window functions, or hand-written SQL on a profiled hot path.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
-- "How do I set up a @Table model with custom column types?"
-- "My @FetchAll query crashes with 'no such column'. What's wrong?"
-- "How do I share data between my app and widget using SQLiteData?"
+- "How do I set up a `@Table` model with custom column types?"
+- "Why does `.where { $0.status == .done }` no longer compile?"
+- "Why can't I `await` inside a `database.write` block?"
 - "How do I do a bulk insert efficiently?"
 - "How do I set up CloudKit sync with SQLiteData?"
-- "What's the difference between @FetchAll and @FetchOne?"
+- "What's the difference between `@FetchAll` and `@FetchOne`?"
 - "How do I group my list into sections the way SwiftData does, but in SQL?"
-- "My @FetchOne shows the wrong row — I passed the record but it loads a different one."
+- "My `@FetchOne` shows the wrong row — I passed the record, but it loads a different one."
 - "Which SQLiteData package traits should I turn on?"
-- "My tests pass but sync is never exercised. What am I missing?"
+- "My tests pass, but sync is never exercised. What am I missing?"
 
 ## What This Skill Provides
 
-### @Table Models
-- let for auto primary key (first let = primary key)
-- var with defaults = non-nullable
-- Optional = nullable
-- @Column(as:) for custom representations
-- @Ephemeral for non-persisted properties
+### Table Models
+- The property named `id` becomes the primary key; a key on any other column needs `@Column(primaryKey: true)`
+- Properties with defaults map to non-nullable columns, and optionals to nullable ones
+- `@Column(as:)` for custom representations
+- `@Ephemeral` for properties that aren't persisted
 
 ### Queries
-- @FetchAll for array results
-- @FetchOne for single value/aggregate, and why single-record observation must be seeded with a statement rather than a record
-- where() with keypaths and closures
-- order(by:) and limit/offset
-- Static helpers: fetchAll, find (v1.4.0+)
-- Sectioned results with `sectionBy:` (v1.8.0+) — `ResultsSectionCollection`, `ResultsSection`
-- Loading and error state inherited from [Sharing](/skills/persistence/swift-sharing) (`isLoading`, `loadError`)
+- `@FetchAll` for arrays, and `@FetchOne` for single values and aggregates
+- Why single-record observation must be seeded with a statement (`Item.find(id)`), not a record
+- `where` with key paths and closures, `order(by:)`, `limit`, and `offset`
+- Static helpers `fetchAll` and `find` (v1.4.0+)
+- Lifecycle-aware fetching that cancels with the view's `.task` (v1.4.0+)
+- Sectioned results with `sectionBy:` (v1.8.0+), through `ResultsSectionCollection` and `ResultsSection`
+- Loading and error state (`isLoading`, `loadError`) inherited from swift-sharing
 
 ### Mutations
-- insert with Draft pattern
-- update single and bulk
-- delete single and bulk
-- RETURNING clause for inserted values
+- Inserts with the `Draft` pattern, including lazily initialized columns
+- `RETURNING` to get generated values back
+- Single and bulk updates and deletes
+- Upserts, with merge strategies and partial unique indexes
+- Batch inserts and transaction safety
 
 ### CloudKit Sync
-- SyncEngine configuration
-- prepareDependencies setup
+- `SyncEngine` setup through `prepareDependencies`
+- Manual sync control (v1.3.0+) and sync-state observation (v1.2.0+)
+- Querying sync metadata (v1.3.0+)
 - Record sharing, with per-record database resolution (v1.11.1+)
-- Previewable sharing UI — `CloudSharingView` mocks in previews and tests (v1.5.0+)
+- Previewable sharing UI: `CloudSharingView` shows a mock in previews and tests (v1.5.0+)
+- `SyncEngine.migratePrimaryKeys` for switching sync strategies
 
 ### Package Traits
 - Six traits — CasePaths, Tagged, ColumnCoding, LazyInitializableByDefault, StrictDecoding, SuppressPlatformSQLiteAvailability — plus `SQLiteDataTagged`, a deprecated alias for `Tagged`
-- Which three become default behavior in the next major release
+- The three that upstream documents as becoming default behavior in the next major release
 
 ### Testing and Previews
-- Context-driven database provisioning (in-memory for previews, temporary pool for tests)
-- The sync engine no longer auto-starts under test (v1.5.1+) — `await syncEngine.start()` is required
+- `defaultDatabase()`, which provisions a temporary on-disk pool for both previews and tests
+- The sync engine no longer auto-starts under test (v1.5.1+), so a test that exercises sync must call `syncEngine.start()`
 
-### Advanced Patterns
-- #sql macro for raw SQL
-- FTS5 full-text search
-- @DatabaseFunction for custom functions
+### Raw SQL
+- The `#sql` macro for raw queries and custom expressions
 
 ## Key Pattern
 
@@ -92,8 +89,9 @@ Questions you can ask Claude that will draw from this skill:
 ```swift
 // MODEL
 @Table nonisolated struct Item: Identifiable {
-    let id: UUID                    // First let = auto primary key
+    let id: UUID                    // Property named `id` = auto primary key
     var title = ""                  // Default = non-nullable
+    var isActive = true
     var notes: String?              // Optional = nullable
     @Ephemeral var isSelected = false  // Not persisted
 }
@@ -127,7 +125,7 @@ try database.write { db in
 ```swift
 // Filter
 Item.where(\.isActive)                     // Keypath (simple)
-Item.where { $0.title.contains("phone") }  // Closure (complex)
+Item.where { $0.title.like("%phone%") }    // Closure (complex)
 Item.where { $0.status.eq(#bind(.done)) }  // Enum comparison
 
 // Sort and paginate
@@ -138,21 +136,16 @@ Item.limit(10).offset(20)                  // Pagination
 
 ## Documentation Scope
 
-This page documents the `axiom-data` skill — SQLiteData patterns Claude uses when you're working with Point-Free's SQLite framework.
-
-**For advanced patterns:** See [sqlitedata-ref](/reference/sqlitedata-ref) for CTEs, views, custom aggregates, schema composition, and TableAlias.
-
-**For raw GRDB:** See [grdb](/skills/persistence/grdb) when you need maximum SQL control.
+This page documents the `sqlitedata` skill (in the `axiom-data` suite) — the SQLiteData patterns your assistant uses when you work with Point-Free's SQLite library.
 
 ## Related
 
-- [sqlitedata-ref](/reference/sqlitedata-ref) – Advanced patterns: CTEs, views, aggregates, @Selection
-- [grdb](/skills/persistence/grdb) – Raw GRDB for complex queries
-- [database-migration](/skills/persistence/database-migration) – Safe schema evolution patterns
-- [swift-sharing](/skills/persistence/swift-sharing) – The layer `@FetchAll` and `@FetchOne` are built on; `isLoading`, `loadError`, and custom persistence strategies live there
+- [sqlitedata-ref](/reference/sqlitedata-ref) – advanced patterns: CTEs, views, custom aggregates, `@Selection`, FTS5, and `@DatabaseFunction`
+- [sqlitedata-migration](/skills/persistence/sqlitedata-migration) – moving an app from SwiftData to SQLiteData
+- [grdb](/skills/persistence/grdb) – raw GRDB for queries the query builder can't express
+- [database-migration](/skills/persistence/database-migration) – safe schema evolution patterns
+- [swift-sharing](/skills/persistence/swift-sharing) – the layer `@FetchAll` and `@FetchOne` are built on; `isLoading`, `loadError`, and custom persistence strategies live there
 
 ## Resources
 
-**WWDC**: N/A (third-party framework)
-
-**Docs**: github.com/pointfreeco/sqlite-data, github.com/groue/GRDB.swift
+**GitHub**: pointfreeco/sqlite-data, pointfreeco/swift-structured-queries, groue/GRDB.swift

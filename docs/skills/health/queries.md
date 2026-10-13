@@ -5,9 +5,9 @@ description: Use when reading or writing HealthKit data — choosing between sam
 
 # HealthKit Queries and Sample Writes
 
-One-shot reads, rollups for charts, and writing new samples — plus the descriptor-based Swift Concurrency APIs that replace the old callback-based query classes.
+Covers one-shot reads, rollups for charts, and writing new samples, plus the descriptor-based Swift Concurrency APIs that replace the old callback-based query classes.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Reading data from HealthKit for a one-shot display (today's steps, most recent heart rate)
@@ -18,7 +18,7 @@ Use this skill when you're:
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I fetch today's total step count with Swift Concurrency?"
 - "I need daily calorie rollups for the last 30 days — which query should I use?"
@@ -29,30 +29,30 @@ Questions you can ask Claude that will draw from this skill:
 ## What This Skill Provides
 
 ### Query Selection
-- Decision tree for `HKSampleQuery` vs `HKStatisticsQuery` vs `HKStatisticsCollectionQuery`
-- When to stop reading this skill and switch to `sync-and-background` instead
+- A decision tree for `HKSampleQuery` vs. `HKStatisticsQuery` vs. `HKStatisticsCollectionQuery`
+- When to switch to Sync and Background instead (change tracking, background delivery)
 - Why descriptors (iOS 15.4+) are preferred over the classic callback classes
 
 ### Canonical Patterns
-- Reading raw samples with predicate, sort, and limit
-- Single aggregate over a window (total steps today)
+- Reading raw samples with a predicate, sort, and limit
+- A single aggregate over a window (total steps today)
 - Rollups over intervals for a chart (daily steps, last 30 days)
 - Writing quantity samples with metadata
 
 ### HKStatisticsOptions Rules
-- Which accessor goes with which option (`.cumulativeSum` → `sumQuantity()`, `.discreteAverage` → `averageQuantity()`, etc.)
+- Which accessor goes with which option (`.cumulativeSum` → `sumQuantity()`, `.discreteAverage` → `averageQuantity()`, and so on)
 - Why cumulative and discrete options can't be combined
-- Why `HKStatisticsCollectionQuery` only accepts `HKQuantitySample` (and what to do for workouts or correlations)
+- Why `HKStatisticsCollectionQuery` accepts only quantity samples, and what to do for workouts or correlations
 
 ### Writes and Performance
 - Batch save rules and sample-granularity recommendations
-- Why samples are immutable and how to "update" by delete-and-replace
-- Memory-safe query practices (always set a `limit:` or date predicate)
+- Why samples are immutable, and how to "update" one by deleting and replacing it
+- Memory-safe query practices (always narrow by date, and set a `limit:`)
 - When to fall back to `HKAnchoredObjectQueryDescriptor` with pagination
 
 ## Key Pattern
 
-Prefer async descriptors. They replace the entire callback-based query API with typed, cancellable, actor-aware variants.
+Prefer async descriptors. They replace the callback-based query classes with typed, `Sendable` variants that inherit the caller's actor context.
 
 ```swift
 let predicate = HKSamplePredicate<HKQuantitySample>.quantitySample(
@@ -69,28 +69,24 @@ let statistics = try await descriptor.result(for: store)
 let steps = statistics?.sumQuantity()?.doubleValue(for: .count()) ?? 0
 ```
 
-No completion handler, no manual `stop(query)` cleanup, generic typing catches wrong-sample-type bugs at compile time.
+There's no completion handler and no manual `stop(query)` cleanup, and generic typing catches wrong-sample-type bugs at compile time.
 
 ## Documentation Scope
 
-This page documents the `queries` skill in the `axiom-health` suite. The skill file contains comprehensive guidance Claude uses when answering your questions — full decision tree, `HKStatisticsOptions` reference table, per-accessor nil behavior, and common mistakes.
+This page documents the `queries` skill (in the `axiom-health` suite). The skill also holds the full decision tree, an `HKStatisticsOptions` reference table, which accessors return nil for each option, and common mistakes.
 
-**For change tracking over time** — Use [sync-and-background](/skills/health/sync-and-background) when you need deltas since last launch, observer queries, or background delivery. Those are long-running queries with different lifecycle rules.
-
-**For workout sessions** — Use the `workouts` skill (covered in the [axiom-health suite](/skills/health/)) for `HKWorkoutSession` and `HKLiveWorkoutBuilder` lifecycle.
+- For the `HKWorkoutSession` and `HKLiveWorkoutBuilder` lifecycle, see [Workouts](/skills/health/workouts)
 
 ## Related
 
-- [fundamentals](/skills/health/fundamentals) – Prerequisite for the `HKObjectType` hierarchy and quantity-vs-category distinction
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) – Empty query results can mean denied reads; authorization rules affect error handling here
-- [sync-and-background](/skills/health/sync-and-background) – Escalate here when one-shot reads aren't enough and you need delta tracking
-- [swift-concurrency](/skills/concurrency/swift-concurrency) – Swift 6 actor isolation patterns that affect descriptor result handling
-- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – `@Observable` view model patterns for rendering `HKStatisticsCollection` results in charts
+- [Fundamentals](/skills/health/fundamentals) – Read first for the `HKObjectType` hierarchy and the quantity-versus-category distinction
+- [Authorization and Privacy](/skills/health/authorization-and-privacy) – Why an empty result can mean a denied read, and how authorization affects error handling
+- [Sync and Background](/skills/health/sync-and-background) – The next step when one-shot reads aren't enough and you need to track changes
+- [Swift 6 Concurrency](/skills/concurrency/swift-concurrency) – Actor isolation patterns that affect how you handle descriptor results
+- [SwiftUI Architecture](/skills/ui-design/swiftui-architecture) – `@Observable` view models for rendering `HKStatisticsCollection` results in charts
 
 ## Resources
 
-**WWDC**: 2020-10664, 2022-10005
+**WWDC**: 2020-10664 (Getting started with HealthKit), 2022-10005 (What's new in HealthKit)
 
-**Docs**: /healthkit/reading-data-from-healthkit, /healthkit/queries, /healthkit/running-queries-with-swift-concurrency, /healthkit/hksamplequerydescriptor, /healthkit/hkstatisticsquerydescriptor, /healthkit/hkstatisticscollectionquerydescriptor, /healthkit/hkstatisticsoptions, /healthkit/hkstatistics, /healthkit/hkstatisticscollection, /healthkit/saving-data-to-healthkit
-
-**Skills**: axiom-health, fundamentals, authorization-and-privacy, sync-and-background, axiom-concurrency
+**Docs**: /healthkit/reading-data-from-healthkit, /healthkit/queries, /healthkit/running-queries-with-swift-concurrency, /healthkit/hksamplequerydescriptor, /healthkit/hkstatisticsquerydescriptor, /healthkit/hkstatisticscollectionquerydescriptor, /healthkit/hkstatisticsoptions, /healthkit/hkstatistics, /healthkit/hkstatisticscollection, /healthkit/hksamplepredicate, /healthkit/saving-data-to-healthkit

@@ -5,22 +5,22 @@ description: Use when ANY runtime debugging is needed — setting breakpoints, i
 
 # LLDB Debugging
 
-Interactive debugging with LLDB. The debugger freezes time so you can interrogate your running app — inspect variables, evaluate expressions, navigate threads, and understand exactly why something went wrong.
+Interactive debugging with LLDB. The debugger freezes time so you can question your running app: inspect variables, evaluate expressions, navigate threads, and find out exactly why something went wrong.
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when you're:
-- Hitting a crash you can reproduce locally and need to inspect state at the crash site
-- Seeing wrong values at runtime even though the code looks correct
-- Needing to understand thread state during a hang or deadlock
-- Getting garbage output from `po` and need alternatives for Swift types
-- Want to test a fix without rebuilding by evaluating expressions at a breakpoint
-- Need to break on all exceptions, specific conditions, or symbolic breakpoints
-- Analyzing a crash log and need to set breakpoints to reproduce the failure path
+Use this skill when:
+- A crash reproduces locally and you need to inspect state at the crash site
+- Values are wrong at runtime even though the code looks correct
+- You need to understand thread state during a hang or deadlock
+- `po` prints garbage for a Swift type and you need an alternative
+- You want to test a fix without rebuilding by evaluating expressions at a breakpoint
+- You need to break on all exceptions, on a condition, or on a symbol
+- You've analyzed a crash log and want breakpoints that reproduce the failure path
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "My app crashes on this line but I can't tell why. How do I inspect the state?"
 - "How do I set a conditional breakpoint that only fires for a specific user ID?"
@@ -29,47 +29,46 @@ Questions you can ask Claude that will draw from this skill:
 - "I need to break whenever any exception is thrown. How?"
 - "How do I navigate threads and understand which one caused the crash?"
 - "What's the difference between `v`, `p`, and `po` in LLDB?"
-- "How do I use LLDB to test a fix without recompiling?"
+- "My app is frozen. How do I find the deadlock?"
 
 ## What This Skill Provides
 
-### 6 Playbooks for Common Debugging Scenarios
+### Five Playbooks
 
-1. **Crash Triage** – Read stop reasons, navigate the call stack, inspect crash context
-2. **Inspect State** – Choose the right command (`v` vs `p` vs `po`), dig into nested types, handle optionals and collections
-3. **When `po` Doesn't Work** – Swift struct workarounds, protocol-typed values, iterative dynamic type resolution
-4. **Breakpoint Strategy** – Conditional, symbolic, exception, and one-shot breakpoints
-5. **Expression Evaluation** – Test fixes at runtime, modify state, call functions without rebuilding
-6. **Thread Analysis** – Navigate threads, read backtraces, identify which thread caused the issue
+1. **Crash triage** – Read the stop reason, get the backtrace, navigate to your frame, inspect state, and set a conditional breakpoint to catch it earlier next time
+2. **Hang and deadlock diagnosis** – Pause the app, read every thread's backtrace, classify thread states, and check for deadlocks
+3. **Swift value inspection** – Choose between `v`, `p`, `po`, and `expr`; inspect optionals, collections, SwiftUI state, and actors; modify values at runtime; trigger background tasks
+4. **Breakpoint strategies** – Conditional, logpoint, symbolic, exception, one-shot breakpoints, and watchpoints
+5. **Async and concurrency debugging** – Identify async frames, and inspect task state, actor-isolated code, and task groups
 
-### Decision Trees
+### Decision Aids
 
-- LLDB vs other tools (when to reach for Instruments, Memory Graph, or crash log analysis instead)
-- Variable inspection command selection (`v` → `p` → `po` decision flow)
-- Breakpoint type selection based on what you're trying to catch
+- When to use LLDB instead of xcsym, Instruments, or memory and hang diagnostics (Instruments measures trends; LLDB inspects a moment)
+- Which print command to use (`v` first, then `p`, `po`, or `expr`)
+- An anti-pattern table and a checklist for before, during, and after a debug session
 
-### Anti-Rationalization
+### Pressure Scenarios
 
-- Prevents "I'll just add print statements" when LLDB would be faster
-- Prevents "po is broken" when `v` or `p` would work for Swift types
-- Prevents skipping thread analysis during crash triage
+- "It's a Release-only crash, so LLDB is useless"
+- "Just add print statements"
+- "`po` doesn't work, so LLDB is broken"
 
 ## Documentation Scope
 
-This page documents the `axiom-build` skill — the debugging workflow and decision tree skill Claude uses when helping you debug at runtime with LLDB. The skill contains complete playbooks, command selection logic, and pressure scenario handling.
+This page documents the `lldb` skill in the `axiom-build` suite. It's the workflow and decision-making half of LLDB debugging; the command catalog lives in its own reference.
 
-**For the complete command reference:** See [LLDB Command Reference](/reference/lldb-ref) for every LLDB command organized by task.
+- For every command organized by task (variables, breakpoints, threads, expressions, memory), see [LLDB Command Reference](/reference/lldb-ref)
 
 ## Related
 
-- [LLDB Command Reference](/reference/lldb-ref) – Complete command reference organized by task (variables, breakpoints, threads, expressions, memory)
-- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for build failures and Xcode issues
-- [Memory Debugging](/skills/debugging/memory-debugging) – Instruments-based memory leak diagnosis (use when memory grows over time)
-- [Performance Profiling](/skills/debugging/performance-profiling) – Instruments workflows for CPU, memory, and energy (use when measuring trends)
-- [Hang Diagnostics](/skills/debugging/hang-diagnostics) – Diagnosis approach for frozen apps (may use LLDB for thread inspection)
+- [Crash Symbolication (xcsym)](/reference/xcsym-ref) – Symbolicate a `.ips`, MetricKit, or `.crash` file before you reach for the debugger
+- [Hang Diagnostics](/skills/debugging/hang-diagnostics) – The diagnosis approach for a frozen app, which may then use LLDB for thread inspection
+- [Memory Debugging](/skills/debugging/memory-debugging) – Instruments-based leak diagnosis, for memory that grows over time
+- [Performance Profiling](/skills/debugging/performance-profiling) – Instruments workflows for measuring CPU, memory, and energy over time
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics for build failures and Xcode problems
 
 ## Resources
 
-**Docs**: /xcode/debugging, /xcode/stepping-through-code-and-inspecting-variables-to-isolate-bugs
+**WWDC**: 2019-429, 2018-412, 2022-110370
 
-**Skills**: axiom-build, axiom-performance
+**Docs**: /xcode/stepping-through-code-and-inspecting-variables-to-isolate-bugs, /xcode/setting-breakpoints-to-pause-your-running-app, /xcode/diagnosing-memory-thread-and-crash-issues-early

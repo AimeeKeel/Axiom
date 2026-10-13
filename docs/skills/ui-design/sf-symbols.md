@@ -7,21 +7,22 @@ apple_platforms: iOS 17+, iOS 18+, iOS 26+
 
 # SF Symbols
 
-Master SF Symbols' rendering modes, animation effects, and the new Draw animations from SF Symbols 7. Covers the full lifecycle from choosing the right rendering mode to implementing complex animated symbol states.
+SF Symbols is Apple's library of configurable icons that scale with text and adapt to appearance. This skill covers choosing a rendering mode, picking the right animation effect, and the Draw animations introduced in SF Symbols 7.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Choosing between rendering modes (Monochrome, Hierarchical, Palette, Multicolor)
 - Adding animation effects to symbols (Bounce, Pulse, Scale, Wiggle, Rotate, Breathe, Draw)
-- Working with SF Symbols 7 Draw On/Off animations (iOS 26+)
+- Deciding which effect fits a specific UX purpose
+- Working with SF Symbols 7 Draw On and Draw Off animations (iOS 26+)
 - Creating custom symbols with Draw annotation
 - Troubleshooting symbol colors, effects not playing, or weight mismatches
 - Handling accessibility for animated symbols (Reduce Motion)
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "My SF Symbol shows as a flat color but I want it to have depth. How do I fix this?"
 - "I want my download button to animate when tapped, then pulse while downloading."
@@ -34,12 +35,12 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **Rendering mode decision tree** – which of the 4 modes (Monochrome, Hierarchical, Palette, Multicolor) fits your design
-- **Effect selection guide** – 12+ effects mapped to UX purposes (tap feedback, loading, show/hide, symbol swap)
-- **SF Symbols 7 Draw animations** (iOS 26+) — Draw On/Off, playback modes, Variable Draw, gradient rendering
-- **Custom symbol authoring** – Draw annotation with guide points in SF Symbols app
-- **Anti-patterns and troubleshooting** – wrong mode, effect not playing, weight mismatches, version checks
-- **Pressure scenarios** – pushing back on "just use PNGs" and "add animations later"
+- **Rendering mode decision tree** – which of the four modes fits your design, and how to check from the command line which modes a symbol supports
+- **Effect selection guide** – discrete, indefinite, transition, and content-transition effects mapped to UX purposes (tap feedback, loading, show and hide, symbol swap)
+- **SF Symbols 7 Draw animations** (iOS 26+) – Draw On and Draw Off, playback modes, Variable Draw, and gradient rendering
+- **Custom symbol authoring** – Draw annotation with guide points in the SF Symbols app
+- **Anti-patterns and troubleshooting** – the wrong mode, effects that don't play, weight mismatches, missing version checks, and accessibility gaps
+- **Pressure scenarios** – pushing back on "just use PNGs" and "we'll add animations later"
 
 ## Key Pattern
 
@@ -65,16 +66,15 @@ Image(systemName: "checkmark.circle")
 
 ## Documentation Scope
 
-This page documents the `axiom-design` skill — decision trees, effect selection guidance, and troubleshooting for SF Symbols implementation.
+This page documents the `sf-symbols` skill (in the `axiom-design` suite), which your assistant draws on when you choose a rendering mode, pick a symbol effect, or troubleshoot a symbol.
 
-**For complete API reference:** See [SF Symbols Reference](/reference/sf-symbols-ref) for every modifier signature, UIKit equivalents, and the full platform availability matrix.
+- For every modifier, the UIKit equivalents, the platform availability matrix, and the `sfsymbols` command-line tool, see [sf-symbols-ref](/reference/sf-symbols-ref)
 
 ## Related
 
-- [SF Symbols Reference](/reference/sf-symbols-ref) – Complete API reference for all rendering modes, effects, and UIKit equivalents
-- [SwiftUI Animation](/reference/swiftui-animation-ref) – General SwiftUI animation (non-symbol)
-- [HIG Reference](/reference/hig-ref) – Broader icon design guidelines
-- [Liquid Glass](/skills/ui-design/liquid-glass) – For Liquid Glass material design (complements symbol effects)
+- [swiftui-animation-ref](/reference/swiftui-animation-ref) – General SwiftUI animation, for motion that isn't a symbol effect
+- [hig-ref](/reference/hig-ref) – Broader icon design guidelines
+- [hig](/skills/ui-design/hig) – When SF Symbols beat custom icons, and how to defend that choice
 
 ## Resources
 

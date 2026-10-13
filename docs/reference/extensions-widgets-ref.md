@@ -1,90 +1,85 @@
 ---
 name: extensions-widgets-ref
-description: Comprehensive API reference for WidgetKit, ActivityKit, and App Groups
+description: API reference for WidgetKit widgets, Control Center controls, and App Groups data sharing
 skill_type: reference
 version: 0.9
-apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+
+apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+, macOS 11+, visionOS 26+
 ---
 
 # Extensions & Widgets API Reference
 
-Comprehensive API reference for Apple's widget and extension ecosystem. Covers WidgetKit, ActivityKit, Control Center widgets, and App Groups data sharing.
+API reference for WidgetKit widgets, Control Center controls, and the App Groups data sharing that connects them to your app. Use it when you need exact signatures, refresh rules, or platform limits.
 
 ## When to Use This Reference
 
 Use this reference when you need:
-- Complete API signatures for WidgetKit or ActivityKit
+- Complete API signatures for WidgetKit or Control Center controls
 - Timeline configuration options and refresh policies
-- Live Activity data limits and update patterns
-- Control Center widget implementation details
+- The widget reload budget and what is exempt from it
+- Interactive and configurable widget setup
 - App Groups entitlement and data sharing specifics
-- watchOS or visionOS widget platform differences
-
-**For discipline patterns:** See [extensions-widgets](/skills/integration/extensions-widgets) for anti-patterns, troubleshooting, and decision trees.
+- Platform differences for watchOS, visionOS, and the iPhone extra-large widget
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
-- "What are all the TimelineReloadPolicy options and when should I use each?"
-- "What's the exact 4KB data limit for Live Activities and what counts toward it?"
-- "How do I configure a Control Center widget with async ValueProvider?"
-- "What are the differences between widget families on different platforms?"
+- "What are all the `TimelineReloadPolicy` options, and when should I use each?"
+- "Why do 60 one-minute timeline entries still show the same data?"
+- "How do I give a Control Center control async state with a `ControlValueProvider`?"
+- "Which widget families does each platform support?"
 - "How do I set up App Groups correctly for both targets?"
-- "What's the complete ActivityAttributes implementation pattern?"
-- "How do I support extra-large widgets on the iPhone Home Screen? (iOS 27)"
+- "How do I update my widget from my server with a push notification?"
+- "How do I bring an extra-large widget to the iPhone Home Screen in iOS 27?"
 
 ## What's Covered
 
 ### Standard Widgets (iOS 14+)
-- Widget protocol and WidgetConfiguration
-- TimelineProvider: getTimeline, getSnapshot, placeholder
-- TimelineReloadPolicy: atEnd, after, never
-- Widget families: systemSmall/Medium/Large, accessory variants
-- Extra-large family on iPhone Home Screen + `systemExtraLargePortrait` (iOS 27)
-- WidgetCenter for reloads and configuration
+- Configuration types: `StaticConfiguration`, `AppIntentConfiguration`, `ActivityConfiguration`
+- `TimelineProvider`: `placeholder`, `getSnapshot`, `getTimeline`
+- `TimelineReloadPolicy`: `.atEnd`, `.after(date)`, `.never`
+- Entries vs. reloads
+- System and accessory (Lock Screen) widget families
+- `systemExtraLargePortrait`, which brings the extra-large widget to the iPhone Home Screen (iOS 27, macOS 27)
+- `WidgetCenter` reloads
+- Reload budget (40–70 a day), budget-exempt cases, memory limits, images
 
 ### Interactive Widgets (iOS 17+)
-- Button and Toggle in widget views
-- App Intent integration with perform()
-- Configuration intents
-- WidgetCenter.shared.reloadAllTimelines()
+- Interactivity is independent of configuration type
+- `Button` and `Toggle` with App Intents
+- `invalidatableContent`
+- Animations: `contentTransition`, view transitions
 
-### Live Activities (iOS 16.1+)
-- ActivityAttributes definition
-- Dynamic Island layouts (compact, minimal, expanded)
-- 4KB content state limit
-- Push notification updates
-- ActivityKit request and update APIs
-- `isDynamicIslandLimitedInWidth` for narrow-island layout (iOS 27)
+### Configurable Widgets (iOS 17+)
+- `WidgetConfigurationIntent`
+- Entity and `EntityQuery` for dynamic options
 
 ### Control Center Controls (iOS 18+)
-- Control protocol
-- ValueProvider for async state
-- ControlWidgetButton and ControlWidgetToggle
-- Optimistic UI patterns
+- `ControlWidget`, `StaticControlConfiguration`, `AppIntentControlConfiguration`
+- `ControlWidgetButton` and `ControlWidgetToggle`
+- `ControlValueProvider` for async state
+- Configurable controls and refinements
+- watchOS controls (watchOS 26+)
+
+### Rendering and Platforms
+- Accented rendering: `widgetAccentable()`, `WidgetAccentedRenderingMode`, container backgrounds
+- Liquid Glass in widgets (iOS 26+)
+- visionOS widgets (visionOS 26+): mounting styles, textures, proximity awareness
+- Relevance widgets for the Smart Stack (iOS 18+)
+- Push notification updates with `WidgetPushHandler` (iOS 26+)
 
 ### App Groups & Data Sharing
 - Entitlement configuration
-- UserDefaults(suiteName:) patterns
-- Container URLs for file sharing
-- Background refresh coordination
-
-### Platform Variations
-- watchOS widget considerations
-- visionOS widget support (mounting styles, textures, proximity awareness)
-- macOS desktop widgets
-- Liquid Glass widget rendering (iOS 26+)
+- Shared containers, `UserDefaults(suiteName:)`, Core Data
+- Cross-process signals: background URL sessions, Darwin notifications
+- SwiftData and GRDB in widgets
 
 ### Troubleshooting
-- Common failure patterns
-- Debug logging techniques
-- Memory limit issues
+- Widget not refreshing, data not shared, interactive button not working, performance
+- Simulator vs. device, WidgetKit developer mode, `currentConfigurations()`
 
 ### Expert Review Checklist
-- 50+ item checklist for widget code review
-- Timeline efficiency validation
-- Data sharing verification
+- About 40 items covering architecture, performance, data and state, user experience, Liquid Glass, visionOS, controls, and testing
 
 ## Key Pattern
 
@@ -127,18 +122,16 @@ struct Provider: TimelineProvider {
 
 ## Documentation Scope
 
-This page documents the `axiom-integration` reference skill — comprehensive API coverage Claude uses when you need specific API details for widgets and extensions.
-
-**For patterns and troubleshooting:** See [extensions-widgets](/skills/integration/extensions-widgets) for discipline patterns, anti-patterns, and debugging workflows.
+This page documents the `extensions-widgets-ref` skill (in the `axiom-integration` suite), the API detail your assistant draws on for widgets, controls, and extensions. Live Activities and the Dynamic Island have their own reference, covered on the [live-activities](/skills/integration/live-activities) page.
 
 ## Related
 
-- [extensions-widgets](/skills/integration/extensions-widgets) – Discipline skill with patterns and troubleshooting
-- [app-intents-ref](/reference/app-intents-ref) – App Intents for interactive widgets
-- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for data loading
+- [extensions-widgets](/skills/integration/extensions-widgets) – Discipline skill with anti-patterns, decision trees, and debugging
+- [app-intents-ref](/reference/app-intents-ref) – App Intents behind interactive and configurable widgets
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for loading widget data
 
 ## Resources
 
-**WWDC**: 2025-278, 2024-10157, 2024-10068, 2023-10028, 2023-10194, 2020-10028
+**WWDC**: 2026-277, 2025-278, 2024-10157, 2024-10098, 2023-10028, 2022-10184, 2022-10185
 
-**Docs**: /widgetkit, /activitykit, /widgetkit/making-a-configurable-widget
+**Docs**: /widgetkit, /widgetkit/widgetfamily/systemextralargeportrait, /appintents

@@ -5,9 +5,9 @@ description: Use when adding/modifying database columns, encountering "FOREIGN K
 
 # Database Migration
 
-Safe database schema evolution for production apps with user data. Prevents data loss with additive, idempotent migration patterns.
+Safe schema evolution for production apps that hold user data. Additive, idempotent migration patterns keep upgrades from losing data.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Adding new columns to existing tables
@@ -18,11 +18,11 @@ Use this skill when you're:
 - Adding relationships between tables
 - Planning schema migrations before release
 
-**Core principle:** Migrations are immutable after shipping. Make them additive and idempotent.
+**Core principle** Migrations are immutable once shipped. Make them additive and idempotent.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "I need to add a new column but the app is live with user data. How do I do this safely?"
 - "I'm getting 'cannot add NOT NULL column' errors. What's wrong?"
@@ -36,29 +36,30 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Critical Rules (Data Loss Prevention)
 
-**NEVER do these with user data:**
-- ❌ DROP TABLE with user data
-- ❌ Modify shipped migrations (create new one)
+Never do these with user data:
+- ❌ `DROP TABLE` on a table that holds user data
+- ❌ Modify a shipped migration (create a new one instead)
 - ❌ Drop a table before copying its rows (a rebuild goes create new → copy → drop old → rename)
-- ❌ Add NOT NULL column without DEFAULT
+- ❌ Add a `NOT NULL` column without a `DEFAULT`
 - ❌ Delete columns before retiring them in code
 
 ### Safe Patterns
-- Adding nullable columns
+- Adding nullable columns, with an existence check so the migration can run twice
 - Adding columns with defaults
-- Type migration (new column → migrate → deprecate)
+- Changing a column's type (new column → migrate data → deprecate the old one)
+- Renaming a column the same way
 - Foreign keys: a new column with `ADD COLUMN … REFERENCES`, or a copy-first table rebuild
-- Index creation
+- Splitting a complex refactor across several migrations, including index creation
+- `STRICT` tables for new tables where type integrity matters
 
 ### Testing Workflows
-- Pre-flight migration testing
-- Rollback strategies
-- Version compatibility testing
+- Three tests against the migrator you ship: the upgrade path (data preservation), a fresh install, and running the migrations twice
+- Manual testing before TestFlight
+- Why tvOS migrations must also work against a fresh database
 
 ### Framework-Specific
-- GRDB DatabaseMigrator patterns
-- SQLiteData @Column migrations
-- SwiftData schema versioning
+- GRDB `DatabaseMigrator` setup and checking which migrations have run
+- SwiftData `VersionedSchema` and `SchemaMigrationPlan`
 
 ## Key Pattern
 
@@ -82,7 +83,7 @@ migrator.registerMigration("v3_add_created_at") { db in
 // ❌ UNSAFE: NOT NULL without default (fails on existing rows)
 try db.execute(sql: """
     ALTER TABLE users ADD COLUMN required_field TEXT NOT NULL
-    -- Error: cannot add NOT NULL column with default value NULL
+    -- Error: Cannot add a NOT NULL column with default value NULL
 """)
 ```
 
@@ -104,19 +105,17 @@ migrator.registerMigration("v4_migrate_age_to_int") { db in
 
 ## Documentation Scope
 
-This page documents the `axiom-data` skill — safe schema evolution patterns Claude uses when helping you plan and execute migrations. The skill contains complete patterns for SQLite, GRDB, SQLiteData, and SwiftData.
-
-**For persistence frameworks:** See [swiftdata](/skills/persistence/swiftdata), [grdb](/skills/persistence/grdb), or [sqlitedata](/skills/persistence/sqlitedata) for framework-specific guidance.
+This page documents the `database-migration` skill (in the `axiom-data` suite), which your assistant uses when you plan and run schema migrations. The skill covers SQLite, GRDB, and SwiftData.
 
 ## Related
 
-- [swiftdata](/skills/persistence/swiftdata) – SwiftData patterns including schema versioning
-- [grdb](/skills/persistence/grdb) – GRDB DatabaseMigrator patterns
-- [sqlitedata](/skills/persistence/sqlitedata) – SQLiteData @Column and migration patterns
+- [swiftdata-migration](/skills/persistence/swiftdata-migration) – Custom SwiftData schema migrations with `VersionedSchema` and `SchemaMigrationPlan`
+- [grdb](/skills/persistence/grdb) – GRDB queries, `ValueObservation`, and `DatabaseMigrator` patterns
+- [sqlitedata](/skills/persistence/sqlitedata) – SQLiteData `@Table` models and registering their schema migrations
 - [xcode-debugging](/skills/debugging/xcode-debugging) – Environment diagnostics when migrations fail
 
 ## Resources
 
-**WWDC**: 2019-230, 2023-10187
+**WWDC**: 2023-10195
 
-**Docs**: /grdb, /swiftdata/schema-versioning
+**Docs**: /swiftdata/versionedschema, /swiftdata/schemamigrationplan

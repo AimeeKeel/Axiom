@@ -5,7 +5,7 @@ description: Apple platform typography reference with San Francisco fonts, text 
 
 # Typography Reference
 
-Complete reference for typography on Apple platforms. Covers San Francisco font system, text styles, Dynamic Type, optical sizes, and internationalization through iOS 26.
+Reference for typography on Apple platforms through iOS 26. It covers the San Francisco font system, text styles, Dynamic Type, tracking and leading, and international text.
 
 ## When to Use This Reference
 
@@ -15,13 +15,12 @@ Use this reference when you need:
 - Dynamic Type implementation patterns
 - Font weight and width options
 - Optical size behavior
+- Tracking and line-spacing values
 - International typography considerations
-
-**For quick decisions:** See [hig](/skills/ui-design/hig) for font weight recommendations.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
 - "What are all the San Francisco font variants?"
 - "What's the default size for each text style?"
@@ -36,36 +35,48 @@ Questions you can ask Claude that will draw from this reference:
 
 ### San Francisco Font System
 - SF Pro and SF Pro Rounded (iOS, iPadOS, macOS, tvOS)
-- SF Compact (watchOS, narrow columns)
+- SF Compact and SF Compact Rounded (watchOS, narrow columns)
 - SF Mono (monospaced, code)
 - New York (serif)
 - SF Arabic (right-to-left)
 
 ### Variable Font Axes
-- Weight (9 weights: Ultralight to Black)
+- Weight (9 weights, Ultralight to Black)
 - Width (Condensed, Compressed, Regular, Expanded)
-- Optical sizes (automatic text/display switching)
+- Optical sizes (automatic switching between text and display variants)
 
 ### Text Styles
-- largeTitle through caption2
-- Default sizes at each style
-- Scaling behavior with Dynamic Type
+- `largeTitle` through `caption2`, with default sizes
+- Emphasized (bold) variants
+- Tight and loose leading variants
+- Scaling with Dynamic Type
 
 ### Dynamic Type
-- Preferred content size categories
-- Text style adoption in SwiftUI/UIKit
-- Custom font scaling
-- Accessibility sizes
+- Automatic scaling from the user's Text Size setting
+- Text style adoption in SwiftUI and UIKit
+- Custom font scaling with `UIFontMetrics`, `relativeTo:`, and `@ScaledMetric`
+- Testing at accessibility sizes
 
-### Typography Best Practices
-- Weight recommendations by context
-- Minimum sizes for legibility
-- Line height and tracking
-- Internationalization considerations
-- Mac typographic density (measured text-style sizes vs iOS)
+### Platform Differences
+- Mac typographic density (measured text-style sizes compared with iOS)
+- Mac Catalyst scaling
+- watchOS and visionOS behavior
+
+### Tracking and Leading
+- Tracking (letter spacing) and leading (line spacing) values
+- Tracking for third-party fonts
+- Font attributes in `AttributedString` and how they interact with the `.font()` modifier
+
+### Internationalization
+- Bidirectional text and complex scripts
+- Language-aware line breaking
 - CJK density in compact widths (line height, per-character wrapping, `typesettingLanguage`, Hangul word priority)
+- Preventing text clipping
 
-## Key Pattern
+### Web Typography
+- CSS system font families (`system-ui`, `ui-rounded`, `ui-serif`, `ui-monospace`)
+
+## Key Patterns
 
 ### Text Styles in SwiftUI
 
@@ -87,14 +98,13 @@ Text("Caption 2").font(.caption2)         // 11pt
 ### Font Weights
 
 ```swift
-// Available weights
 .fontWeight(.ultraLight)  // Avoid at small sizes
 .fontWeight(.thin)        // Avoid at small sizes
 .fontWeight(.light)       // Avoid at small sizes
-.fontWeight(.regular)     // ✅ Default, good legibility
-.fontWeight(.medium)      // ✅ Slightly heavier
-.fontWeight(.semibold)    // ✅ Headlines
-.fontWeight(.bold)        // ✅ Emphasis
+.fontWeight(.regular)     // Default
+.fontWeight(.medium)
+.fontWeight(.semibold)    // Headlines
+.fontWeight(.bold)        // Emphasis
 .fontWeight(.heavy)
 .fontWeight(.black)
 ```
@@ -102,28 +112,31 @@ Text("Caption 2").font(.caption2)         // 11pt
 ### Custom Font with Dynamic Type
 
 ```swift
-// SwiftUI - scales custom font with body text style
+// SwiftUI: scale a custom font with the body text style
 Text("Custom")
     .font(.custom("Helvetica", size: 17, relativeTo: .body))
 
-// UIKit - scale with metrics
+// UIKit: scale with UIFontMetrics
 let metrics = UIFontMetrics(forTextStyle: .body)
-let font = metrics.scaledFont(for: UIFont(name: "Helvetica", size: 17)!)
+label.font = metrics.scaledFont(for: UIFont(name: "Helvetica", size: 17)!)
+label.adjustsFontForContentSizeCategory = true
 ```
 
 ## Documentation Scope
 
-This page documents the `axiom-design` reference skill — comprehensive typography coverage Claude uses when you need specific font details, text style sizes, or Dynamic Type patterns.
+This page documents the `typography-ref` skill in the `axiom-design` suite. Your assistant draws on it for specific font details, text style sizes, and Dynamic Type patterns.
 
-**For quick decisions:** See [hig](/skills/ui-design/hig) for typography best practices.
+- For text layout and editing with TextKit 2, see [textkit-ref](/reference/textkit-ref)
+- For choosing iPad or Mac metrics in a Mac Catalyst app, see [iOS Apps on Mac](/skills/macos/ios-apps-on-mac)
 
 ## Related
 
-- [hig](/skills/ui-design/hig) – Typography best practices and weight recommendations
-- [hig-ref](/reference/hig-ref) – Complete HIG reference
+- [hig](/skills/ui-design/hig) – Quick design decisions, including which font weight to use
+- [hig-ref](/reference/hig-ref) – The full Human Interface Guidelines reference, which places typography alongside color, spacing, and icons
+- [accessibility-auditor](/agents/accessibility-auditor) – Scans your code for Dynamic Type and custom-font scaling problems
 
 ## Resources
 
-**WWDC**: 2020-10175 (San Francisco variable fonts), 2022-10057 (SF Arabic)
+**WWDC**: 2020-10175, 2022-110381, 2023-10058
 
-**Docs**: /design/typography, /uikit/uifont/text_styles
+**Docs**: /uikit/uifontdescriptor, /uikit/uifontmetrics, /swiftui/font

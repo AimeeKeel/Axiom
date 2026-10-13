@@ -5,9 +5,9 @@ description: Use when embedding AppKit views inside SwiftUI (NSViewRepresentable
 
 # macOS AppKit Interoperability
 
-The two-directional bridge — `NSViewRepresentable` and `NSViewControllerRepresentable` for embedding AppKit in SwiftUI; `NSHostingController` and `NSHostingView` for hosting SwiftUI in AppKit. Plus the responder chain, NSToolbar, NSOpenPanel, and drag-and-drop bridging.
+Bridges SwiftUI and AppKit in both directions: `NSViewRepresentable` and `NSViewControllerRepresentable` embed AppKit in SwiftUI, and `NSHostingController` and `NSHostingView` host SwiftUI in AppKit. Also covers the responder chain, `NSToolbar`, `NSOpenPanel`, and drag and drop across the boundary.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Embedding an AppKit view or view controller inside SwiftUI
@@ -17,13 +17,13 @@ Use this skill when you're:
 - Bridging drag-and-drop between SwiftUI's `Transferable` model and AppKit's `NSDraggingDestination`
 - Diagnosing responder chain or focus behavior that breaks when mixing frameworks
 - Optimizing SwiftUI cells inside `NSCollectionView` or `NSTableView` for scroll performance
-- Updating NSViews automatically from `@Observable` models (observation tracking — no SwiftUI required)
+- Updating `NSView`s automatically from `@Observable` models (observation tracking, no SwiftUI required)
 - Reusing an existing `NSGestureRecognizer` in a SwiftUI view (`NSGestureRecognizerRepresentable`, macOS 26)
 - Building main-menu items in SwiftUI (`NSHostingMenu`) or adding SwiftUI scenes like `MenuBarExtra` and `Settings` to an AppKit app delegate (`NSHostingSceneRepresentation`, macOS 26)
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I host an `NSTextView` inside SwiftUI and keep bindings synced?"
 - "My SwiftUI cells inside `NSCollectionView` cause scroll jank. What's wrong?"
@@ -43,16 +43,17 @@ Questions you can ask Claude that will draw from this skill:
 ### NSViewRepresentable Lifecycle
 - `makeCoordinator()` → `makeNSView(context:)` → `updateNSView(_:context:)` → `dismantleNSView(_:coordinator:)`
 - The coordinator pattern for delegate callbacks writing back to bindings
-- Refreshing `context.coordinator.parent = self` in `updateNSView` so bindings stay current
-- Guarding redundant property sets to avoid unnecessary AppKit work
-- Reading `context.environment` (e.g., `isEnabled`) and applying it to the AppKit view
+- Refreshing `context.coordinator.parent = self` in `updateNSView`; a stale reference silently swallows writes back to SwiftUI state
+- Guarding redundant property sets, which otherwise reset the text caret and selection while the user types
+- Reading `context.environment` (for example, `isEnabled`) and applying it to the AppKit view
+- Wrapping `NSTextView` in the scroll view from `NSTextView.scrollableTextView()`
 - The never-set-frame rule — SwiftUI owns layout; use `.frame()` on the SwiftUI side
 
 ### NSHostingController vs NSHostingView
 - `NSHostingController` for view-controller contexts (`NSSplitViewItem`, sheets, popovers, modal windows, tabs)
 - `NSHostingView` for raw view contexts (collection cells, sidebars, table cells)
 - `sizingOptions` on the controller for Auto Layout constraint generation
-- Critical reuse rule: create the hosting view once, then update `rootView` on reuse — never new-hosting-view-per-cell
+- The reuse rule: create the hosting view once, then update `rootView` on reuse, never a new hosting view per cell
 
 ### Responder Chain and Focus
 - The "they don't live in separate worlds" mental model — SwiftUI views participate in the AppKit responder chain
@@ -61,19 +62,19 @@ Questions you can ask Claude that will draw from this skill:
 - Full Keyboard Navigation testing (System Settings toggle on and off)
 
 ### Incremental SwiftUI Adoption
-- Automatic observation tracking — AppKit redraws NSViews when `@Observable` properties accessed in draw/layout methods change; back-deploys to macOS 15
-- `NSGestureRecognizerRepresentable` (macOS 26) and `NSHostingMenu` (macOS 14.4) — existing gestures and SwiftUI-built menus across the boundary
-- `NSHostingSceneRepresentation` + `addSceneRepresentation` — `MenuBarExtra`/`Settings` scenes from an app delegate (macOS 26)
+- Automatic observation tracking: AppKit redraws an `NSView` when `@Observable` properties read in its draw or layout methods change; on by default with the 2026 SDKs, and back-deployable to macOS 15 with the `NSObservationTrackingEnabled` Info.plist key
+- `NSGestureRecognizerRepresentable` (macOS 26) for existing gesture recognizers, and `NSHostingMenu` (macOS 14.4) for SwiftUI-built menus
+- `NSHostingSceneRepresentation` and `addSceneRepresentation` for `MenuBarExtra` and `Settings` scenes in an app-delegate app (macOS 26)
 
 ### Bridging Other AppKit APIs
-- NSToolbar for capabilities `.toolbar` doesn't cover (item validation, user customization, centered groups)
+- `NSToolbar` for capabilities `.toolbar` doesn't cover (item validation, user customization, centered groups)
 - `NSOpenPanel` for capabilities `.fileImporter` doesn't cover (directories, accessory views, ubiquitous content)
-- Drag and drop — `Transferable` + `.draggable`/`.dropDestination` for SwiftUI-native; `NSDraggingDestination` on the AppKit view inside a representable
+- Drag and drop: `Transferable` with `.draggable` and `.dropDestination` when SwiftUI can handle it, `NSDraggingDestination` on the AppKit view inside a representable, and `.onDrop(of:delegate:)` for legacy pasteboard types
 - Shared state via `@Observable` (or `ObservableObject`) accessible to both sides
 
 ## Key Pattern
 
-The most common performance bug — creating a new `NSHostingView` on every cell reuse instead of updating `rootView`:
+The most common performance bug is creating a new `NSHostingView` on every cell reuse instead of updating `rootView`:
 
 ```swift
 class ShortcutItemView: NSCollectionViewItem {
@@ -93,13 +94,9 @@ class ShortcutItemView: NSCollectionViewItem {
 }
 ```
 
-In `updateNSView`, always refresh `context.coordinator.parent = self` so coordinator-held bindings stay current — stale references silently swallow writes back to SwiftUI state.
-
 ## Documentation Scope
 
-This page documents the `appkit-interop` skill in the `axiom-macos` suite. The skill file contains comprehensive guidance Claude uses when answering your questions about bridging SwiftUI and AppKit.
-
-**For UIKit-SwiftUI bridging** — Use [uikit-bridging](/skills/ui-design/uikit-bridging) for the same `Representable` pattern with `UIView`/`UIViewController` types.
+This page documents the `appkit-interop` skill (in the `axiom-macos` suite), which your assistant uses when you bridge SwiftUI and AppKit.
 
 ## Related
 
@@ -115,5 +112,3 @@ This page documents the `appkit-interop` skill in the `axiom-macos` suite. The s
 **WWDC**: 2022-10075, 2026-272
 
 **Docs**: /swiftui/nsviewrepresentable, /swiftui/nsviewcontrollerrepresentable, /swiftui/nshostingcontroller, /swiftui/nshostingview, /swiftui/nshostingmenu, /swiftui/nsgesturerecognizerrepresentable, /swiftui/nshostingscenerepresentation, /appkit/nstoolbar, /appkit/nsopenpanel
-
-**Skills**: axiom-macos, swiftui-differences, windows, sandbox-and-file-access, menus-and-commands

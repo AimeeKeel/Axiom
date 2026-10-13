@@ -6,7 +6,7 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 
 | Skill | Description |
 |-------|-------------|
-| [**accessibility-diag**](./accessibility-diag) | VoiceOver, Dynamic Type, color contrast, touch targets — WCAG compliance with App Store rejection defense |
+| [**accessibility-diag**](./accessibility-diag) | VoiceOver, Dynamic Type, color contrast, touch targets — WCAG compliance and Accessibility Nutrition Labels |
 | [**app-store-diag**](./app-store-diag) | App Store rejections, metadata issues, review guidelines — submission failure diagnostics |
 | [**background-processing-diag**](./background-processing-diag) | Background tasks not executing, BGTaskScheduler debugging, scheduling factors — background processing diagnostics |
 | [**camera-capture-diag**](./camera-capture-diag) | Camera freezes, preview rotation, capture failures — AVCaptureSession diagnostics |
@@ -14,7 +14,7 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 | [**code-signing-diag**](./code-signing-diag) | Certificate not found, provisioning profile mismatch, errSecInternalComponent, ITMS upload errors — code signing diagnostics |
 | [**core-data-diag**](./core-data-diag) | Schema migrations, thread-confinement, N+1 queries — Core Data diagnostics with production crisis defense |
 | [**core-location-diag**](./core-location-diag) | Location updates not arriving, background location broken, authorization denied, geofence not triggering — Core Location diagnostics |
-| [**coreml-diag**](./coreml-diag) | Model loading failures, prediction errors, conversion issues — CoreML diagnostics |
+| [**coreml-diag**](./coreml-diag) | Core ML load errors, slow inference, memory growth, accuracy loss after compression |
 | [**energy-diag**](./energy-diag) | Battery drain, device hot, background drain, cellular usage — symptom-based decision trees with time-cost analysis |
 | [**foundation-models-diag**](./foundation-models-diag) | Context exceeded, guardrail violations, slow generation — Foundation Models diagnostics with production crisis defense |
 | [**isolation-inheritance-diag**](./isolation-inheritance-diag) | `_dispatch_assert_queue_fail`, `_swift_task_checkIsolatedSwift` — warning-free Swift 6 builds that crash from closure/delegate isolation inheritance (Core Data `context.perform`, Combine, NotificationCenter, CLLocationManager, NSDocument, AVAudioPlayerDelegate, WKNavigationDelegate) |

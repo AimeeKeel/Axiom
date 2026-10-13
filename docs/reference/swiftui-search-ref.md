@@ -1,6 +1,12 @@
+---
+name: swiftui-search-ref
+description: SwiftUI search API reference — searchable, suggestions, scopes, tokens, and programmatic focus from iOS 15 through iOS 18
+skill_type: reference
+---
+
 # SwiftUI Search API Reference
 
-Comprehensive reference for SwiftUI's search APIs, from the `.searchable` modifier (iOS 15) through search tokens and programmatic focus control (iOS 18). This skill covers the foundational search layer that iOS 26 refinements build upon.
+A reference for SwiftUI's search APIs, from the `.searchable` modifier (iOS 15) through search tokens and programmatic focus control (iOS 18). It covers the foundation that the iOS 26 search refinements build on.
 
 ## When to Use This Reference
 
@@ -11,32 +17,61 @@ Use this reference when:
 - Using search scopes to narrow results by category
 - Using search tokens for structured queries
 - Controlling search focus programmatically
-- Debugging "search field doesn't appear" issues
+- Debugging a search field that doesn't appear
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
 - "How do I add search to my SwiftUI list?"
 - "Why isn't my search field showing up?"
 - "How do I add search suggestions with auto-completion?"
-- "What's the difference between filter-as-you-type and onSubmit search?"
+- "What's the difference between filter-as-you-type and `onSubmit` search?"
 - "How do I add search scopes like Mail's inbox/sent/all filter?"
 - "How do I use search tokens in SwiftUI?"
 - "How do I programmatically open the search field?"
 
 ## What's Covered
 
-- **The searchable modifier** – Core API, placement options, column association in NavigationSplitView
-- **Search results** – `isSearching` environment, `dismissSearch` action, overlay pattern
-- **Search suggestions** – Suggestions closure, `.searchCompletion()` for auto-fill
-- **Search submission** – `onSubmit(of: .search)`, filter vs submit decision
-- **Search scopes** (iOS 16+) — Category picker with `SearchScopeActivation` control
-- **Search tokens** (iOS 16+) — Structured "pill" elements with suggested tokens (iOS 17+)
-- **Programmatic control** (iOS 18+) — `.searchFocused()` for activating/dismissing search
-- **Platform behavior** – How search adapts across iOS, macOS, watchOS, tvOS
-- **Common gotchas** – 6 documented pitfalls with before/after fixes
-- **API quick reference** – All modifiers, environment values, and types with iOS versions
+### The searchable Modifier
+- `.searchable(text:placement:prompt:)`, and why a navigation container renders the field
+- `SearchFieldPlacement` options
+- Column association in `NavigationSplitView`
+
+### Search Results
+- `isSearching` and `dismissSearch` environment values
+- The results-overlay pattern
+
+### Suggestions and Submission
+- The suggestions closure and `.searchCompletion(_:)` for auto-fill
+- `onSubmit(of: .search)`, and when to filter vs submit
+
+### Scopes (iOS 16+)
+- `.searchScopes(_:_:)`
+- `SearchScopeActivation`: `.automatic`, `.onTextEntry`, `.onSearchPresentation` (iOS 16.4+)
+
+### Tokens (iOS 16+)
+- `.searchable(text:tokens:token:)` and suggested tokens
+- The `isPresented` parameter (iOS 17+)
+- Combining tokens with text filtering
+
+### Programmatic Control (iOS 18+)
+- `.searchFocused(_:)` and `.searchFocused(_:equals:)`
+- `searchFocused` vs `dismissSearch`
+
+### Platform Behavior
+- iOS (bottom-aligned from iOS 26), iPadOS, macOS, watchOS, tvOS
+- `.searchPresentationToolbarBehavior(.avoidHidingContent)` (iOS 17.1+)
+
+### Common Gotchas
+- Search field doesn't appear
+- `isSearching` always returns false
+- Suggestions don't fill the search field
+- Search placed on the wrong navigation level
+- Search scopes don't appear
+
+### API Quick Reference
+- Every search modifier, environment value, and type, with the iOS version that introduced it
 
 ## Key Patterns
 
@@ -70,14 +105,17 @@ var filteredRecipes: [Recipe] {
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-search-ref` skill. It covers foundational search APIs (iOS 15-18).
-
-- For iOS 26 search refinements (bottom-aligned, minimized toolbar, search tab role), see [swiftui-26-ref](./swiftui-26-ref)
-- For navigation architecture that contains search, see [swiftui-nav-ref](../reference/swiftui-nav-ref)
-- For automated SwiftUI navigation scanning, use the [swiftui-nav-auditor](/agents/swiftui-nav-auditor) agent
+This page documents the `search-ref` skill (in the `axiom-swiftui` suite), which covers the foundational search APIs from iOS 15 to iOS 18.
 
 ## Related
 
-- [swiftui-26-ref](./swiftui-26-ref) – iOS 26 search refinements that build on these foundational APIs
-- [swiftui-nav-ref](../reference/swiftui-nav-ref) – Navigation containers that render search fields
-- [swiftui-nav](/skills/ui-design/swiftui-nav) – Anti-patterns and pressure scenarios for navigation including search
+- [swiftui-26-ref](/reference/swiftui-26-ref) – The iOS 26 refinements that build on these APIs: bottom-aligned search, `.searchToolbarBehavior(.minimize)`, and `DefaultToolbarItem(kind: .search)`
+- [swiftui-nav-ref](/reference/swiftui-nav-ref) – The navigation containers that render search fields, and the `Tab(role: .search)` search tab
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – Navigation anti-patterns, including where search belongs in the hierarchy
+- [swiftui-nav-auditor](/agents/swiftui-nav-auditor) – Scans the navigation structure that search depends on
+
+## Resources
+
+**WWDC**: 2021-10176, 2022-10052
+
+**Docs**: /swiftui/view/searchable(text:placement:prompt:), /swiftui/environmentvalues/issearching, /swiftui/view/searchscopes(_:activation:_:), /swiftui/view/searchfocused(_:), /swiftui/searchfieldplacement

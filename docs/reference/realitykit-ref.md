@@ -5,7 +5,7 @@ description: RealityKit API reference — Entity, Component, System, RealityView
 
 # RealityKit API Reference
 
-Complete API reference for RealityKit organized by category. Covers the Entity hierarchy, all built-in components, the System protocol, SwiftUI views (RealityView, Model3D), the material system, physics, animation, audio, and RealityRenderer for Metal integration.
+API reference for RealityKit, organized by category: the `Entity` hierarchy, built-in components, the `System` protocol, the SwiftUI views (`RealityView`, `Model3D`), materials, physics, animation, audio, Metal integration, and the 27-release additions.
 
 ## When to Use This Reference
 
@@ -17,16 +17,18 @@ Use this reference when:
 - Setting up physics body parameters
 - Looking up animation or audio API details
 - Checking platform availability for specific APIs
-- Browsing the 27-cycle additions (navigation mesh, LOD, soft shadows, splats, reverb, cloth, ComputeGraph)
+- Browsing the 27-release additions (navigation mesh, level of detail, soft shadows, Gaussian splats, reverb, cloth, ComputeGraph, the low-level renderer)
 
 ## Example Prompts
 
-- "What properties does PhysicallyBasedMaterial have?"
-- "How do I create a RealityView with attachments?"
-- "What are the ShapeResource types for collision?"
+Questions you can ask your assistant that will draw from this reference:
+
+- "What properties does `PhysicallyBasedMaterial` have?"
+- "How do I create a `RealityView` with attachments?"
+- "What are the `ShapeResource` types for collision?"
 - "What events can I subscribe to in RealityKit?"
 - "How do I set up spatial audio on an entity?"
-- "What Entity subclasses are available?"
+- "What `Entity` subclasses are available?"
 - "How do I render RealityKit content from my own Metal command buffer?"
 - "Can I build a shader graph in Swift instead of Reality Composer Pro?"
 - "How do I generate an image-based light at runtime from an HDR?"
@@ -34,21 +36,22 @@ Use this reference when:
 
 ## What's Covered
 
-- **Entity API** – Creation, properties (isEnabled, isAnchored, scene), hierarchy methods, 10 Entity subclasses (ModelEntity, AnchorEntity, PerspectiveCamera, lights, TriggerVolume)
-- **Component catalog** – 20+ built-in components including Transform, ModelComponent, CollisionComponent, PhysicsBodyComponent, AnchoringComponent, InputTargetComponent, AccessibilityComponent
+- **Entity API** – Creation, properties (`isEnabled`, `isAnchored`, `scene`), hierarchy methods, and nine `Entity` subclasses (`ModelEntity`, `AnchorEntity`, `PerspectiveCamera`, lights, `TriggerVolume`, `ViewAttachmentEntity`, `BodyTrackedEntity`)
+- **Component catalog** – Built-in components including `Transform`, `ModelComponent`, `CollisionComponent`, `PhysicsBodyComponent`, `PhysicsMotionComponent`, `CharacterControllerComponent`, `AnchoringComponent`, light components, `AccessibilityComponent`, and `InputTargetComponent`; shape resources and plane classification
 - **MeshResource generators** – Box, sphere, plane, cylinder, cone, text
-- **System protocol** – SceneUpdateContext, EntityQuery (has/and/not), 8 scene event types (Update, DidAddEntity, CollisionEvents)
-- **RealityView API** – Initializers (basic, update, placeholder, attachments), RealityViewContent, gesture integration (tap, drag, rotate, magnify)
+- **System protocol** – `SceneUpdateContext`, `EntityQuery` (has/and/not), and eight event types (scene, collision, and animation events)
+- **RealityView API** – Initializers (basic, update, placeholder, attachments), `RealityViewContent`, gesture integration (tap, drag, rotate, magnify)
 - **Model3D API** – Simple display, phase handling, URL loading
-- **Material system** – SimpleMaterial, PhysicallyBasedMaterial (full PBR), UnlitMaterial, OcclusionMaterial, VideoMaterial, TextureResource loading
-- **Animation** – Transform animation with timing functions, USD animation playback, AnimationPlaybackController
-- **Audio** – AudioFileResource, SpatialAudioComponent, AmbientAudioComponent, ChannelAudioComponent, playback control
-- **RealityRenderer** – Low-level Metal integration for rendering RealityKit content to Metal textures
-- **RealityKit 27 additions** – Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS/macOS), lightmaps, Gaussian splats (iOS/macOS/visionOS 27), custom reverb meshes, ARKit object tracking, cloth simulation (`ClothBodyComponent`, iOS/macOS/visionOS 27), ComputeGraph framework (programmatic node graphs)
+- **Material system** – `SimpleMaterial`, `PhysicallyBasedMaterial` (full PBR), `UnlitMaterial`, `OcclusionMaterial`, `VideoMaterial`, `TextureResource` loading
+- **Animation** – Transform animation with timing functions, USD animation playback, `AnimationPlaybackController`
+- **Audio** – `AudioFileResource`, `SpatialAudioComponent`, `AmbientAudioComponent`, `ChannelAudioComponent`, playback control
+- **RealityRenderer** – Rendering a RealityKit scene into Metal textures
+- **RealityKit 27 additions** – Navigation mesh pathfinding, level of detail, soft shadows, projective textures, physical space lighting (visionOS and macOS), lightmaps, Gaussian splats, custom reverb meshes, ARKit object tracking (iOS), cloth simulation (`ClothBodyComponent`; iOS, macOS, and visionOS), and the ComputeGraph framework for building compute node graphs in code
+- **More 27 components** – Bloom, tone mapping, clipping, PBR decals, occlusion culling, render layers, lighting models (including hair), subsurface scattering, mesh deformers, skeletal retargeting and IK, animation graphs, behavior trees, diffuse light probes, `USDStageComponent`
 
-### Renderer layer (iOS 27)
+### Renderer Submodules (27 Releases)
 
-Reached through `import RealityKit` — the defining submodules cannot be imported directly.
+The low-level renderer drives RealityKit's shading from your own `MTLCommandBuffer`, with no entities. It and the ShaderGraph, deformation, and texture-processing submodules are reached through `import RealityKit`; none of them can be imported directly.
 
 - **Frame loop** – `LowLevelRenderer` (`output`, `cameras`, `time`, `colorMatch`, `render(using:_:)`), `Configuration`, `Camera` / `CameraArray`, `RenderState`
 - **Resource context** – `LowLevelRenderContext`, `…Standalone`, `…Lighting`, `…ShaderGraph`
@@ -62,21 +65,17 @@ Reached through `import RealityKit` — the defining submodules cannot be import
 
 ## Documentation Scope
 
-This page documents the `axiom-graphics` skill. For architecture patterns, ECS guidance, and best practices, use the discipline skill. For troubleshooting, use the diagnostic skill.
-
-- For ECS architecture and patterns, see [RealityKit](/skills/games/realitykit)
-- For troubleshooting, see [RealityKit Diagnostics](/diagnostic/realitykit-diag)
-- For SceneKit migration mapping, see [SceneKit API Reference](/reference/scenekit-ref)
+This page documents the `realitykit-ref` skill (in the `axiom-graphics` suite). Rendering a USDKit stage with `USDStageComponent` is covered in depth in [USDKit](/skills/games/usdkit).
 
 ## Related
 
-- [RealityKit](/skills/games/realitykit) – ECS architecture patterns and best practices
+- [RealityKit](/skills/games/realitykit) – Entity-component-system (ECS) architecture patterns and best practices
 - [RealityKit Diagnostics](/diagnostic/realitykit-diag) – Troubleshooting invisible entities, physics, and rendering
 - [SceneKit API Reference](/reference/scenekit-ref) – SceneKit equivalents for migration reference
 - [SpriteKit API Reference](/reference/spritekit-ref) – 2D game framework (complements RealityKit's 3D)
 
 ## Resources
 
-**WWDC**: 2019-605, 2023-10080, 2023-10081, 2026-279
+**WWDC**: 2019-603, 2019-605, 2021-10074, 2022-10074, 2023-10080, 2024-10103, 2024-10153, 2026-279
 
-**Docs**: /realitykit, /realitykit/entity, /realitykit/realityview
+**Docs**: /realitykit, /realitykit/entity, /realitykit/component, /realitykit/system, /realitykit/realityview, /realitykit/model3d, /realitykit/modelentity, /realitykit/anchorentity, /realitykit/physicallybasedmaterial, /computegraph

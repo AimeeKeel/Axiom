@@ -5,31 +5,31 @@ description: AVCaptureSession camera preview, photo capture, video recording, Ro
 
 # Camera Capture
 
-AVFoundation camera patterns for custom camera UIs. Covers session setup, photo capture, video recording, rotation handling, responsive capture pipeline, and session lifecycle management.
+AVFoundation camera patterns for custom camera UIs, covering session setup, photo capture, video recording, rotation handling, a responsive capture pipeline, and session lifecycle management.
 
 ## When to Use
 
 Use this skill when you're:
 - Building a custom camera UI (not the system picker)
-- Capturing photos with quality/speed tradeoffs
+- Capturing photos with quality and speed trade-offs
 - Recording video with audio
-- Handling device rotation correctly with RotationCoordinator (iOS 17+)
-- Making capture feel instant (zero-shutter-lag, deferred processing)
-- Making camera launch fast with deferred start (iOS 26 and later)
+- Handling device rotation correctly with `RotationCoordinator` (iOS 17+)
+- Making capture feel instant (zero shutter lag, deferred processing)
+- Making the camera launch fast with deferred start (iOS 26 and later)
 - Recording high-data-rate video (ProRes) with Pro Video Storage (iOS 27)
 - Handling session interruptions (phone calls, multitasking, thermal pressure)
 - Switching between front and back cameras
-- Switching cameras on iPhone Duo's two front cameras (the virtual front camera, available today; the iOS 27.1 camera-direction API is verified with Xcode 27.1 RC and absent from Xcode 27.2 beta 2)
+- Choosing among iPhone Duo's front cameras by the direction they face, not their position
 
-**Note:** If you just need users to pick existing photos, use [photo-library](/skills/integration/photo-library) instead. This skill is for building custom camera experiences with AVCaptureSession.
+**Note:** If you just need users to pick existing photos, use [Photo Library](/skills/integration/photo-library) instead. This skill is for building custom camera experiences with `AVCaptureSession`.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I set up a camera preview in SwiftUI?"
 - "My camera freezes when I get a phone call"
-- "The photo preview is rotated wrong on front camera"
+- "The photo preview is rotated wrong on the front camera"
 - "How do I make photo capture feel instant?"
 - "Should I use deferred processing?"
 - "How do I switch between front and back cameras?"
@@ -42,41 +42,43 @@ Questions you can ask Claude that will draw from this skill:
 ## What This Skill Provides
 
 ### Session Architecture
-- AVCaptureSession setup with dedicated serial queue
-- Input/output configuration with atomic beginConfiguration/commitConfiguration
-- Session presets for photo vs video use cases
+- Choosing a capture mode and requesting camera permission before setup
+- `AVCaptureSession` setup on a dedicated serial queue
+- Input and output configuration inside an atomic `beginConfiguration()`/`commitConfiguration()` block
+- Session presets for photo vs. video use cases
 
 ### Capture Patterns
-- Basic photo capture with AVCapturePhotoOutput
-- Video recording with AVCaptureMovieFileOutput and audio
-- Camera switching between front and back with fallback handling
+- Basic photo capture with `AVCapturePhotoOutput`
+- Video recording with `AVCaptureMovieFileOutput` and audio
+- Switching between front and back cameras, with fallback handling
+- iPhone Duo's front cameras: the virtual front camera, the camera-direction API (iOS 27.1), and when to override preview mirroring
 
 ### Responsive Capture Pipeline (iOS 17+)
-- Zero-shutter-lag with ring buffer for instant capture
+- Zero shutter lag with a ring buffer for instant capture
 - Responsive capture for overlapping photo captures
 - Fast capture prioritization for burst-like shooting
-- Readiness coordinator for shutter button state management
+- A readiness coordinator for shutter button state
 - Deferred processing with proxy images and background processing
 
 ### Launch Performance and Pro Recording
-- Deferred start for fast launch — preview up in roughly half the time (iOS 26 and later)
-- Automatic vs manual deferred start, including the video-data-output preview case
+- Deferred start for fast launch, with the preview up in roughly half the time (iOS 26 and later)
+- Automatic vs. manual deferred start, including previews rendered through a video data output
 - Pro Video Storage for deterministic ProRes file writes (iOS 27)
 
 ### Rotation and Orientation
-- RotationCoordinator for automatic rotation tracking (replaces deprecated videoOrientation)
-- KVO observation for preview angle updates
-- Capture angle application for correctly oriented photos
+- `RotationCoordinator` for automatic rotation tracking (replaces the deprecated `videoOrientation`)
+- Key-value observation (KVO) of preview angle updates
+- Applying the capture angle so photos come out correctly oriented
 
 ### Session Lifecycle
 - Interruption handling (phone calls, Split View, thermal pressure)
-- Proper start/stop on background queue
+- Starting and stopping the session on a background queue
 - UI feedback patterns for interrupted states
 
-### Pressure Scenarios
-- Shipping camera features under deadline pressure
-- Responding to "camera is too slow" complaints
-- Explaining front camera mirroring behavior to designers
+### Anti-Patterns, Pressure Scenarios, and Checklist
+- Common mistakes, such as session work on the main thread, and setting a capture value while its `automatically…` flag is still on (iOS 27), which raises an exception
+- Shipping camera features under deadline pressure, answering "the camera is too slow", and explaining front camera mirroring to designers
+- A pre-ship checklist covering setup, permissions, rotation, launch, interruptions, and iPhone Duo
 
 ## Key Pattern
 
@@ -104,23 +106,19 @@ struct CameraPreview: UIViewRepresentable {
 
 ## Documentation Scope
 
-This page documents the `axiom-media` skill -- AVFoundation camera patterns Claude uses when helping you build custom camera features. The skill contains 9 core patterns with code examples, anti-patterns, a shipping checklist, and pressure scenarios.
-
-**For diagnostics:** See [camera-capture-diag](/diagnostic/camera-capture-diag) for troubleshooting black previews, frozen cameras, and rotation issues.
-
-**For API reference:** See [camera-capture-ref](/reference/camera-capture-ref) for comprehensive AVCaptureSession, AVCapturePhotoOutput, and RotationCoordinator API coverage.
+This page documents the `camera-capture` skill (in the `axiom-media` suite), the AVFoundation camera patterns your assistant uses when helping you build custom camera features. The skill contains nine core patterns with code examples, anti-patterns, a shipping checklist, and pressure scenarios.
 
 ## Related
 
-- [camera-capture-diag](/diagnostic/camera-capture-diag) – Troubleshooting camera issues (black preview, rotation, slow capture)
-- [camera-capture-ref](/reference/camera-capture-ref) – Complete AVFoundation camera API reference
-- [photo-library](/skills/integration/photo-library) – Photo picking and library access (use instead if you just need photo selection)
-- [iPhone Duo](/skills/ui-design/iphone-duo) – front-camera switching, direction vs. position, and showing camera UI on both displays
+- [Camera Capture Diagnostics](/diagnostic/camera-capture-diag) – Troubleshooting camera issues (black preview, rotation, slow capture)
+- [Camera Capture API Reference](/reference/camera-capture-ref) – Complete AVFoundation camera API reference, including high-resolution capture and the Center Stage front camera
+- [Photo Library](/skills/integration/photo-library) – Photo picking and library access
+- [iPhone Duo](/skills/ui-design/iphone-duo) – Showing camera UI on both displays, alongside the front-camera switching covered here
 
 ## Resources
 
-**WWDC**: 2021-10247, 2023-10105, 2026-303
+**WWDC**: 2021-10247 (Capture high-quality photos using video formats), 2023-10105 (Create a more responsive camera experience), 2026-303 (Build a responsive camera app that launches quickly), 2026-304 (Implement high resolution photo capture), 2026-341 (Support the Center Stage front camera in your iOS app)
 
-**Tech Talks**: 111465
+**Tech Talks**: 111465 (Build a great camera experience for iPhone Duo)
 
-**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage
+**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avcapturephotosettings, /avfoundation/avcapturephotooutputreadinesscoordinator, /avfoundation/avprovideostorage

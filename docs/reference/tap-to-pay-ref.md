@@ -52,7 +52,7 @@ Questions developers ask that this reference answers:
 
 ## Documentation Scope
 
-This page documents the `tap-to-pay-ref` skill — the `ProximityReader` framework API surface.
+This page documents the `tap-to-pay-ref` skill (in the `axiom-payments` suite) — the `ProximityReader` framework API surface.
 
 - For **the entitlement workflow, PSP onboarding, prepare-on-foreground discipline, HIG button label rule**, see [Tap to Pay](/skills/integration/tap-to-pay)
 - For **NFC loyalty pass schema** the reader consumes, see [Wallet Passes](/skills/integration/wallet-passes) and [Wallet Passes Reference](/reference/wallet-passes-ref)

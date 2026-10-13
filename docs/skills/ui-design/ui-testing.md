@@ -6,26 +6,26 @@ version: 2.1.0
 
 # UI Testing
 
-Reliable UI testing with condition-based waiting patterns. Covers Recording UI Automation (Xcode 26), accessibility-first testing, multi-device configurations, and network conditioning.
+Reliable UI tests built on condition-based waiting instead of fixed delays. Covers Recording UI Automation (Xcode 26), accessibility-first testing, multi-device and multi-language configurations, network conditioning, and testing resizable apps.
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when you're:
-- Writing UI tests for the first time
+Use this skill when:
+- You're writing UI tests for the first time
 - Tests pass locally but fail in CI
 - Tests use `sleep()` and are flaky
-- Recording interactions with Xcode 26's Recording UI Automation
+- You're recording interactions with Xcode 26's Recording UI Automation
 - Tests fail on iPad but pass on iPhone
-- Want to test across multiple network conditions
-- Testing a resizable app: window-dimension matrix, RTL/pseudolocalization passes, live-resize checks
-- Asserting what VoiceOver actually speaks for your UI, not just that a label exists (iOS 27)
-- Testing your App Intents through the system from a UI test (iOS 27)
+- You want to test under slow, lossy, or missing network connections
+- You're testing a resizable app: the window-dimension matrix, right-to-left and pseudolocalization passes, and live resizing
+- You want to assert what VoiceOver actually speaks for your UI, not just that a label exists (OS 27)
+- You want to test your App Intents through the system from a UI test (OS 27)
 
 **Core principle:** Wait for conditions, not arbitrary timeouts. Flaky tests come from guessing how long operations take.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "My UI tests pass locally on my Mac but fail in CI. How do I make them more reliable?"
 - "My tests use sleep(2) and sleep(5) but they're still flaky."
@@ -43,44 +43,50 @@ Questions you can ask Claude that will draw from this skill:
 
 ### Condition-Based Waiting
 - `waitForExistence(timeout:)` instead of `sleep()`
-- `XCTNSPredicateExpectation` for element disappearance
-- Predicate-based waiting for specific states
-- Appropriate timeouts (2s UI, 10s network, 30s max)
+- `XCTNSPredicateExpectation` for waiting on an element to disappear or reach a state, such as becoming enabled
+- Waiting through animations on a real post-animation element, never a delay
+- Timeouts that fit the work: 2–3 seconds for UI animations, 10 for network requests, 30 at most
 
 ### Recording UI Automation (Xcode 26)
-- Three phases: Record → Replay → Review
-- Accessibility identifiers as foundation
-- Query selection (stable identifiers over labels)
-- Video debugging with UI element overlays
+- Three phases: record, replay, and review
+- Accessibility identifiers as the foundation
+- Choosing stable queries (identifiers over labels)
+- Reviewing failures in video recordings with UI element overlays
 
 ### Accessibility-First Testing
 - `.accessibilityIdentifier()` for stable element queries
 - Avoiding hardcoded localized labels
-- Accessibility Inspector for reviewing elements
+- Reviewing elements with Accessibility Inspector
 - `performAccessibilityAudit()` in tests
-- `XCUIDevice.shared.voiceOverService` (iOS 27) – move the VoiceOver cursor and assert the spoken output
+- `XCUIDevice.shared.voiceOverService` (OS 27) – moves the VoiceOver cursor so you can assert the spoken output
 
-### App Intents (iOS 27)
-- AppIntentsTesting runs your intents out of process from a UI Testing Bundle and checks their results
-- Full API, parameter rules, and error reference in [app-intents-ref](/reference/app-intents-ref)
+### App Intents (OS 27)
+- AppIntentsTesting runs your intents out of process, through the same stack as Siri and Shortcuts, and checks their results
+- It works only from a UI Testing Bundle, and the app must launch first so the system serves current intent metadata
 
 ### Test Plans
-- Multiple device/language configurations
+- Multiple device and language configurations
 - Video and screenshot capture settings
 - Right-to-left language testing
-- Xcode Cloud integration
+- Replaying tests in Xcode Cloud
 
 ### Network Conditioning
-- No-sudo, automatable conditioning via an in-process `URLProtocol` harness (latency + jitter, low bitrate, flaky or hard request failures, offline) — deterministic by default, CI-friendly, no GUI
-- Network Link Conditioner / `dnctl` for whole-Mac OS-level conditioning, plus the on-device profile for real hardware
-- Optional toxiproxy proxy for conditioning traffic the app's `URLSession` doesn't own (gated — warns and points to install docs when it isn't installed)
-- Longer timeouts for slow networks; catch device + network combination failures
+- An in-process `URLProtocol` harness that needs no sudo: latency and jitter, low bitrate, flaky or hard request failures, and offline, deterministic by default and CI-friendly
+- Network Link Conditioner and `dnctl` for conditioning the whole Mac, plus the on-device profile for real hardware
+- Optional toxiproxy for traffic the app's `URLSession` doesn't own; Axiom doesn't ship it, so the skill checks for it and falls back to the `URLProtocol` harness when it's missing
+- Running the same tests across device sizes and network speeds to catch failures that need both
+
+### Resizable Apps and Device Control
+- A window-dimension matrix that covers sizes and the transitions between them, not device models
+- Launch arguments for double-length strings, forced right-to-left layout, and real locales
+- Which dimensions automate (including continuous resizing with `devicectl device appResize`) and which need real hardware, such as iPhone Mirroring
+- `devicectl` from CI, including Face ID enrollment and matching on a simulator
 
 ### Debugging Test Failures
-- Video review workflow
-- UI element overlay at failure point
-- Crash log analysis
-- Concurrency bugs revealed by tests
+- A video review workflow
+- The UI element overlay at the point of failure
+- Crash log analysis for crashes that UI tests reveal
+- Concurrency bugs the tests expose, and stress tests that verify the fix
 
 ## Key Pattern
 
@@ -132,21 +138,23 @@ flowchart TD
 
 ## Documentation Scope
 
-This page documents the `axiom-testing` (ui-testing reference) skill — reliable UI testing patterns Claude uses when you're writing or debugging XCTest UI tests. Covers condition-based waiting, Recording UI Automation (Xcode 26), accessibility-first testing, and multi-configuration testing.
+This page documents the `ui-testing` skill (in the `axiom-testing` suite), which your assistant draws on when you write or debug XCTest UI tests. For test-driven development methodology, the skill defers to the `test-driven-development` skill in the separate Superpowers plugin.
 
-**For TDD workflow:** See the superpowers:test-driven-development skill for test-driven development methodology.
-
-**For Swift Testing framework:** See [swift-testing](/skills/testing/swift-testing) for the new Swift Testing framework patterns.
+- For the full AppIntentsTesting API, parameter rules, and error reference, see [app-intents-ref](/reference/app-intents-ref)
+- For `devicectl`, Device Hub, and the simulator subcommand matrix, see [device-control-ref](/reference/device-control-ref)
 
 ## Related
 
-- [swift-testing](/skills/testing/swift-testing) – Swift Testing framework patterns
-- [swift-concurrency](/skills/concurrency/swift-concurrency) – @MainActor patterns for crash debugging
-- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment diagnostics when tests fail due to Xcode issues
-- [app-intents-ref](/reference/app-intents-ref) – Full AppIntentsTesting reference for testing App Intents from a UI test target
+- [ui-recording](/skills/testing/ui-recording) – A focused guide to recording UI tests in Xcode 26
+- [xctest-automation](/skills/testing/xctest-automation) – Element identification, test isolation, and CI/CD integration for XCUITest
+- [swift-testing](/skills/testing/swift-testing) – Swift Testing patterns for the unit tests beneath your UI tests
+- [xcui-ref](/reference/xcui-ref) – Axiom's simulator tool for toggling Dynamic Type and checking the accessibility tree
+- [test-failure-analyzer](/agents/test-failure-analyzer) – Agent that diagnoses why a specific test is flaky or fails only in CI
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Main-actor and async patterns behind crashes that UI tests reveal
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment diagnostics when tests fail because of Xcode itself
 
 ## Resources
 
-**WWDC**: 2025-344 (Recording UI Automation), 2023-10175 (Test Reports), 2023-10035 (Accessibility Audits)
+**WWDC**: 2022-110371, 2023-10035, 2023-10175, 2023-10278, 2024-10179, 2025-344
 
-**Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /accessibility/performing_accessibility_testing_for_your_app
+**Docs**: /xctest, /xcuiautomation/recording-ui-automation-for-testing, /xctest/xctwaiter, /accessibility/delivering_an_exceptional_accessibility_experience, /accessibility/performing-accessibility-testing-for-your-app

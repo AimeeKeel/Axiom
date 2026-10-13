@@ -15,7 +15,7 @@ The Vision framework provides computer vision capabilities for:
 - **Document scanning** – Edge detection, perspective correction, structured extraction (iOS 26+)
 - **Live scanning** – DataScannerViewController for real-time text/barcode (iOS 16+)
 
-## When to Use This Skill
+## When to Use
 
 Use when you need to:
 - ☑ Isolate subjects from backgrounds (subject lifting)

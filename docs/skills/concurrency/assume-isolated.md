@@ -9,7 +9,7 @@ description: Synchronous actor access for tests, legacy callbacks, and performan
 **Swift Version**: Swift 5.9+
 **iOS Version**: iOS 13+
 
-## When to Use This Skill
+## When to Use
 
 ✅ **Use this skill when**:
 - Testing MainActor code synchronously (avoiding Task overhead)

@@ -1,139 +1,81 @@
 ---
 name: realm-migration-ref
-description: Complete migration guide from Realm to SwiftData — pattern equivalents, threading models, schema strategies, CloudKit sync transition
+description: Migrating from Realm to SwiftData — model and relationship equivalents, threading conversion, data import strategies, CloudKit in place of Realm Device Sync
 ---
 
 # Realm to SwiftData Migration Reference
 
-**URGENT**: Realm Device Sync sunsets September 30, 2025. Complete migration guide to prevent data loss.
-
-## Overview
-
-Comprehensive reference for migrating from Realm to SwiftData without losing user data or breaking threading patterns. Covers pattern equivalents, schema migration strategies, and CloudKit sync transition.
-
-## What's Covered
-
-### Pattern Equivalents
-
-#### Model Definitions
-- `Object` → `@Model`
-- `@Persisted` → `@Attribute` / `@Relationship`
-- Primary keys and indexing
-- Inverse relationships
-
-#### Queries
-- `results(ofType:)` → `@Query` / `FetchDescriptor`
-- Predicates and sorting
-- Lazy loading vs eager fetching
-- Performance characteristics
-
-#### Threading Models
-- Realm's thread-confined objects → SwiftData's ModelContext
-- Background writes → ModelContext on background actors
-- Freeze patterns → value snapshots
-- Notifications → observation framework
-
-### Schema Migration
-
-#### Data Migration Strategies
-- Export Realm data to JSON/SQLite
-- Batch import into SwiftData
-- Validation and integrity checks
-- Rollback strategies
-
-#### Schema Mapping
-- Property type conversions
-- Relationship restructuring
-- Embedded objects → nested models
-- List/Array handling
-
-### CloudKit Sync Transition
-
-#### From Realm Device Sync
-- Atlas Device Sync → CloudKit
-- Conflict resolution differences
-- Authentication changes
-- Network Reachability patterns
+Reference for moving an app's Realm database to SwiftData without losing user data: model and relationship equivalents, threading conversion, data import strategies, and CloudKit in place of Realm Device Sync. Realm Device Sync shut down on September 30, 2025, so apps that relied on it no longer have a sync service.
 
 ## When to Use This Reference
 
 Use this reference when:
-- Planning migration from Realm to SwiftData
-- Converting Realm Object models to @Model
+- Planning a move from Realm to SwiftData
+- Converting Realm `Object` models to `@Model` classes
 - Replacing Realm Device Sync with CloudKit
-- Dealing with legacy Realm codebases
-- **Before September 30, 2025** (Realm Device Sync sunset)
+- Rewriting Realm's per-thread code with actors and `ModelContext`
+- Importing an existing Realm database into SwiftData, with progress reporting for large datasets
+- Verifying a migration before you remove Realm
 
-## Migration Timeline
+## Example Prompts
 
-```
-1. Audit (Week 1)
-   - Inventory all Realm models
-   - Document threading patterns
-   - List Device Sync dependencies
+Questions you can ask your assistant that will draw from this reference:
 
-2. Schema Design (Week 2)
-   - Design SwiftData @Model equivalents
-   - Plan relationship mappings
-   - CloudKit schema design
+- "How do I convert my Realm models to SwiftData?"
+- "What replaces `@Persisted(primaryKey: true)` in SwiftData?"
+- "How do I declare indexes in SwiftData?"
+- "Realm Sync is gone. How do I sync with CloudKit instead?"
+- "How do I import a million Realm records without running out of memory?"
+- "How do I check that every record migrated before I delete the Realm database?"
 
-3. Data Migration (Week 3-4)
-   - Export Realm data
-   - Import to SwiftData
-   - Validate integrity
-   - Test rollback
+## What's Covered
 
-4. Code Migration (Week 4-6)
-   - Replace Realm queries with @Query
-   - Update threading patterns
-   - Implement CloudKit sync
-   - Remove Realm dependencies
+### Models
+- `Object` → `@Model` `final class`, with an explicit initializer
+- `@Persisted(primaryKey: true)` → `@Attribute(.unique)`, which CloudKit sync doesn't support
+- `List<T>` → arrays with `@Relationship(deleteRule:inverse:)`
+- `@Persisted(indexed: true)` → the `#Index` macro (iOS 18+)
 
-5. Testing (Week 7-8)
-   - User acceptance testing
-   - Performance validation
-   - Cloud sync verification
-   - Production rollout plan
-```
+### Threading
+- `DispatchQueue` and per-thread `Realm` instances → actors with a shared `ModelContainer` and background `ModelContext`
+- `realm.write { }` → `context.insert()` and `context.save()`
+- `Thread.isMainThread` checks → `@MainActor`
 
-## Key Differences
+### Data Import
+- Direct conversion for simple schemas (fewer than 5 tables and 10 fields)
+- A transformation layer for complex schemas and data cleanup
+- Opening Realm isolated to an actor with `Realm(configuration:actor:)`
 
-| Realm | SwiftData | Notes |
-|-------|-----------|-------|
-| Thread-confined objects | ModelContext per thread | Must extract values before crossing threads |
-| `realm.write {}` | `modelContext.save()` | Explicit vs automatic saving |
-| Device Sync | CloudKit | Different conflict resolution |
-| Lazy relationships | Eager by default | Performance implications |
-| Notifications | `@Query` observation | Different update patterns |
+### CloudKit Sync
+- `ModelConfiguration(schema:cloudKitDatabase:)` in place of Realm Sync, whose API Realm 20 removed
+- Sync status from `NSPersistentCloudKitContainer` events
+- A testing and rollout timeline for the switch to CloudKit
 
-## Related Skills
+### Migration Scenarios
+- Small apps (under 10,000 records): all-at-once import, 1–2 weeks
+- Medium apps (100,000–1,000,000 records): chunked import with a progress UI, 3–4 weeks
+- Large apps (over 1 million records): gradual batched import with verification and a rollback plan, 6–8 weeks
 
-- [swiftdata](/skills/persistence/swiftdata) – SwiftData implementation patterns
-- [database-migration](/skills/persistence/database-migration) – Safe schema evolution
-- [core-data-diag](/diagnostic/core-data-diag) – Core Data troubleshooting (if considering Core Data instead)
+### Verification and Troubleshooting
+- Record counts, spot checks, relationship integrity, CloudKit sync, and query performance
+- Common issues: CloudKit's default-value requirement, missing inverses, stuck sync, memory growth during import, and data loss without a backup
+- Success criteria, including keeping the Realm database as a backup for two weeks
 
 ## Documentation Scope
 
-This is a **reference skill** — comprehensive migration guide without mandatory workflows.
+This page documents the `realm-migration-ref` skill (in the `axiom-data` suite), which your assistant loads when you move a Realm database or Realm Sync code to SwiftData. No agent or command performs the migration; once your models are converted, `/axiom:audit swiftdata` runs the swiftdata-auditor agent to check the new SwiftData code.
 
-#### Reference includes
-- Pattern equivalents catalog
-- Threading model comparisons
-- Schema migration strategies
-- CloudKit sync patterns
-- Real-world migration scenarios
+## Related
 
-## Urgency
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData models, queries, and CloudKit integration for the code you migrate to
+- [swiftdata-migration](/skills/persistence/swiftdata-migration) – Versioned schema migrations once your data lives in SwiftData
+- [cloudkit-ref](/reference/cloudkit-ref) – CloudKit sync and sharing APIs that take over from Realm Sync
+- [swiftdata-auditor](/agents/swiftdata-auditor) – Scans SwiftData code for model, relationship, and migration problems
+- [core-data](/skills/persistence/core-data) – Core Data stack and migration patterns, if you move to Core Data instead
+- [database-migration](/skills/persistence/database-migration) – Safe schema evolution for SQLite, GRDB, and SQLiteData stores
 
-#### Realm Device Sync sunsets September 30, 2025
+## Resources
 
-After this date:
-- No new Device Sync apps accepted
-- Existing apps continue but deprecated
-- Migration required for long-term support
+**WWDC**: 2024-10137
 
-Start migration planning now if using Realm Device Sync.
-
-## Size
-
-28 KB - Complete migration reference with pattern catalog
+**Docs**: /swiftdata

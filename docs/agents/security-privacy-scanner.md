@@ -55,7 +55,7 @@ Overall security rating: **HARDENED / GAPS / VULNERABLE** based on credentials, 
 ## Related
 
 - [privacy-ux](/skills/integration/privacy-ux) – Privacy-first UX patterns
-- [storage](/reference/storage) – Secure storage patterns including Keychain
+- [storage](/skills/persistence/storage) – Secure storage patterns including Keychain
 - **iap-auditor** agent — Adjacent receipt-validation security concerns
 - **storage-auditor** agent — Compound with insecure token storage findings
 - **networking-auditor** agent — Compound with HTTP endpoints carrying auth

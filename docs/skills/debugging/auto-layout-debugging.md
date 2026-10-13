@@ -7,28 +7,28 @@ version: 1.0.0
 
 # Auto Layout Debugging
 
-Systematic debugging for Auto Layout constraint errors. Covers constraint conflicts, ambiguous layouts, and views positioned incorrectly.
+A systematic workflow for Auto Layout constraint errors in UIKit apps. It covers constraint conflicts, ambiguous layouts, and views that end up in the wrong place.
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when you're:
-- Seeing "Unable to simultaneously satisfy constraints" errors
-- Views positioned incorrectly or not appearing
-- Constraint warnings during app launch or navigation
-- Ambiguous layout errors
-- Views appearing at unexpected sizes
+Use this skill when:
+- The console shows "Unable to simultaneously satisfy constraints"
+- Views are positioned incorrectly or don't appear
+- Constraint warnings appear during app launch or navigation
+- You see ambiguous layout errors
+- Views appear at unexpected sizes
 - Debug View Hierarchy shows misaligned views
-- Storyboard/XIB constraints behaving differently at runtime
+- Storyboard or XIB constraints behave differently at runtime
 
-**Time savings:** Typical debugging without workflow: 30-60 minutes. With systematic approach: 5-10 minutes.
+**Time savings** Debugging constraints without a workflow typically takes 30–60 minutes; with this one, 5–10 minutes.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "I'm getting 'Unable to simultaneously satisfy constraints' but I can't figure out which view."
 - "How do I set up a breakpoint to catch constraint conflicts?"
-- "My view appears at the wrong size even though I set width/height constraints."
+- "My view appears at the wrong size even though I set width and height constraints."
 - "What does 'UIView-Encapsulated-Layout-Height' mean in the error?"
 - "How do I use lldb to debug Auto Layout issues?"
 - "My cell is showing constraint errors but I can't identify which constraints conflict."
@@ -36,26 +36,27 @@ Questions you can ask Claude that will draw from this skill:
 ## What This Skill Provides
 
 ### Understanding Error Messages
-- Anatomy of constraint conflict messages
-- Memory addresses for view/constraint identification
-- System-generated constraints (UIView-Encapsulated-Layout)
-- Autoresizing mask translation (h=--&, v=&--)
+- The anatomy of a constraint conflict message
+- Memory addresses that identify views and constraints
+- System-generated constraints (`UIView-Encapsulated-Layout-Width` and `-Height`)
+- Autoresizing mask constraints (`h=--&`, `v=&--`)
 
 ### Debugging Workflow
-- Symbolic breakpoint setup (UIViewAlertForUnsatisfiableConstraints)
-- Memory address identification with po (lldb)
-- _autolayoutTrace for ambiguous layouts
+- A symbolic breakpoint on `UIViewAlertForUnsatisfiableConstraints`
+- lldb techniques to identify views from memory addresses: `po $arg1`, a temporary background color, `_autolayoutTrace`, and `constraintsAffectingLayoutForAxis:`
 - Debug View Hierarchy with constraint inspection
+- Naming constraints and views so future error messages are readable
 
-### Common Patterns
-- Cell content with intrinsic size conflicts
-- Compression resistance vs hugging priority
-- System constraint conflicts (encapsulated layout)
-- Safe area and layout margins issues
+### Common Conflict Patterns
+- Conflicting fixed widths (over-constrained axes)
+- `UIView-Encapsulated-Layout` conflicts in table and collection view cells
+- Autoresizing mask conflicts from a missing `translatesAutoresizingMaskIntoConstraints = false`
+- Ambiguous layouts from missing constraints
+- Priority conflicts
 
 ### Resolution Strategies
-- Priority adjustment (999 vs 1000)
-- Removing redundant constraints
+- Constraint priorities: required (1000), `.defaultHigh` (750), or any custom value from 1 to 999
+- Removing redundant constraints (two constraints per axis)
 - Content hugging and compression resistance
 - Fixing ambiguous layouts
 
@@ -77,49 +78,51 @@ flowchart TD
     style F fill:#cce5ff
 ```
 
-### Symbolic Breakpoint Setup (One-Time)
+### Symbolic Breakpoint Setup (One Time)
 
-1. Open Breakpoint Navigator (⌘+8)
+1. Open the Breakpoint navigator (⌘8)
 2. Click `+` → "Symbolic Breakpoint"
 3. **Symbol**: `UIViewAlertForUnsatisfiableConstraints`
-4. (Optional) Add Action → "Sound"
-5. Run app — breakpoint fires at exact moment of conflict
+4. (Optional) Add an action → "Sound"
+5. Run the app; the breakpoint fires at the moment of the conflict
 
-### Identifying Views from Memory Address
+### Identifying Views from a Memory Address
+
+When the breakpoint fires, print every conflicting constraint and view, then color a suspect view to find it on screen:
 
 ```text
-(lldb) po 0x7f8b9c4...
-<UILabel: 0x7f8b9c4; frame = ...; text = 'Hello'>
+(lldb) po $arg1
+(lldb) expr ((UIView *)0x7f8b9c4...).backgroundColor = [UIColor redColor]
+(lldb) continue
 ```
 
-The memory address in the error message (0x7f8b9c4...) can be printed in the debugger to identify which view is involved.
-
-### Priority Resolution
+### Removing an Over-Constraint
 
 ```swift
-// ❌ Conflict: Both have priority 1000 (Required)
-label.widthAnchor.constraint(equalToConstant: 300).isActive = true
-superview.widthAnchor.constraint(equalToConstant: 200).isActive = true
+// ❌ Conflict: width + leading + trailing is three horizontal constraints
+imageView.widthAnchor.constraint(equalToConstant: 300).isActive = true
+imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20).isActive = true
+imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
 
-// ✅ Resolved: Lower priority allows system to break one
-let widthConstraint = label.widthAnchor.constraint(equalToConstant: 300)
+// ✅ Resolved: a lower-priority width yields to the required edges
+let widthConstraint = imageView.widthAnchor.constraint(equalToConstant: 300)
 widthConstraint.priority = .defaultHigh  // 750
 widthConstraint.isActive = true
+// Keep the leading and trailing constraints as they are
 ```
 
 ## Documentation Scope
 
-This page documents the `axiom-uikit` skill — systematic debugging workflows Claude uses when you encounter Auto Layout constraint conflicts in UIKit apps.
-
-**For SwiftUI layout issues:** See [swiftui-debugging](/skills/ui-design/swiftui-debugging) for SwiftUI-specific layout debugging.
+This page documents the `auto-layout-debugging` skill in the `axiom-uikit` suite. Your assistant uses it when you hit Auto Layout constraint conflicts in a UIKit app.
 
 ## Related
 
-- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – SwiftUI view update and layout issues
-- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment diagnostics for general Xcode issues
+- [lldb](/skills/debugging/lldb) – More debugger techniques for inspecting views and state at a breakpoint
+- [swiftui-debugging](/skills/ui-design/swiftui-debugging) – SwiftUI view update and layout problems
+- [xcode-debugging](/skills/debugging/xcode-debugging) – Environment checks when the problem is Xcode or the build, not your constraints
 
 ## Resources
 
 **WWDC**: 2015-219 (Mysteries of Auto Layout), 2018-220 (High Performance Auto Layout)
 
-**Docs**: /uikit/nslayoutconstraint, /uikit/uiview/debugging_auto_layout
+**Docs**: /uikit/nslayoutconstraint

@@ -5,35 +5,35 @@ description: PHPickerViewController, PhotosPicker, PhotosPickerItem, Transferabl
 
 # Photo Library API Reference
 
-Comprehensive API reference for PhotoKit and photo pickers covering PHPickerViewController, PhotosPicker, PHPhotoLibrary authorization, PHAsset fetching, PHImageManager image requests, and asset creation.
+API reference for PhotoKit and the system photo pickers: `PHPickerViewController`, `PhotosPicker`, `PHPhotoLibrary` authorization, `PHAsset` fetching, `PHImageManager` image requests, asset creation, and the 27-release additions.
 
 ## When to Use This Reference
 
 Use this reference when:
-- Looking up PHPickerConfiguration options and filter syntax
-- Checking PhotosPicker modifiers for embedded, inline, or compact styles
-- Understanding PHAuthorizationStatus values and access levels
-- Fetching assets with PHFetchOptions predicates and sort descriptors
-- Requesting images from PHImageManager with delivery modes
-- Creating assets with PHAssetCreationRequest including deferred photo proxies
-- Implementing PHPhotoLibraryChangeObserver for library sync, or tracking changes across launches with the iOS 27 persistent change observer
+- Looking up `PHPickerConfiguration` options and filter syntax
+- Checking `PhotosPicker` modifiers for embedded, inline, or compact styles
+- Understanding `PHAuthorizationStatus` values and access levels
+- Fetching assets with `PHFetchOptions` predicates and sort descriptors
+- Requesting images from `PHImageManager` with delivery modes
+- Creating assets with `PHAssetCreationRequest`, including deferred photo proxies
+- Implementing `PHPhotoLibraryChangeObserver` for library sync, or tracking changes across launches with the iOS 27 persistent change observer
 - Editing asset keywords, ratings, and captions (iOS 27)
-- Checking which PhotoKit types are `Sendable` and which callbacks fire once vs repeatedly
+- Checking which PhotoKit types are `Sendable`, and how many times `requestImage` calls its handler
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
-- "What are all the PHPickerFilter options?"
-- "How do I configure PhotosPicker for inline embedded style?"
-- "What's the difference between .authorized and .limited?"
+- "What are all the `PHPickerFilter` options?"
+- "How do I configure `PhotosPicker` for an inline embedded style?"
+- "What's the difference between `.authorized` and `.limited`?"
 - "How do I fetch the most recent 100 photos?"
-- "What are the PHImageRequestOptions delivery modes?"
+- "What are the `PHImageRequestOptions` delivery modes?"
 - "How do I save a deferred photo proxy to the library?"
-- "What properties does PHAsset have?"
-- "Is PHFetchResult Sendable?"
-- "Does requestImage call its handler more than once?"
-- "How do I write a PHPhotoLibraryChangeObserver under Swift 6?"
+- "What properties does `PHAsset` have?"
+- "Is `PHFetchResult` `Sendable`?"
+- "Does `requestImage` call its handler more than once?"
+- "How do I write a `PHPhotoLibraryChangeObserver` under Swift 6?"
 - "How do I strip location metadata from photos the user picks?"
 - "How do I present the shared album creation sheet?"
 - "How do I find out what changed in the photo library while my app wasn't running?"
@@ -43,33 +43,30 @@ Questions you can ask Claude that will draw from this reference:
 
 ## What's Covered
 
-- PHPickerViewController configuration, filters, delegate, and embedded mode (iOS 17+)
+- `PHPickerViewController` (iOS 14+): configuration, filters, presentation, delegate, and `PHPickerResult`
+- `PhotosPicker` (iOS 16+): filters, selection behaviors, embedded styles (presentation, inline, compact; iOS 17+), disabled capabilities, accessory visibility, and HDR preservation
 - Picker metadata stripping and search seeding (iOS 27) — `PHPickerMetadataOptions`, `PHPickerSearchText`, `photosPickerMetadataOptions(_:)`, `photosPickerSearchText(_:)`
 - Shared album sheets (iOS 27) — `photosSharedAlbumCreationSheet` / `…PostingSheet` / `…CustomizationSheet`, `PHSharedAlbumCreationResult`, `PHSharedAlbumCreationSharingPolicy`
 - Apple Reference Image (iOS and macOS 27) — `PHReferenceImageInfo`, `imageContainsReferenceImageData`, and the four `photosReferenceImageViewer(…)` modifiers
-- PhotosPicker styles (presentation, inline, compact), selection behaviors, disabled capabilities, and HDR preservation
-- PhotosPickerItem loading with Transferable and custom transfer representations
-- PHPhotoLibrary authorization statuses, access levels (.readWrite, .addOnly), and limited library picker
-- PHAsset properties, media types, subtypes, and fetch options
-- PHAssetCreationRequest from UIImage, file URL, and deferred photo proxy (iOS 17+)
-- PHFetchResult access patterns and enumeration
-- PHImageManager image/video requests, delivery modes, and secondary degraded images (iOS 17+)
-- PHChange handling with incremental updates for collection views
+- `PhotosPickerItem` loading with `Transferable` and custom transfer representations
+- `PHPhotoLibrary` authorization statuses, access levels (`.readWrite`, `.addOnly`), and the limited library picker
+- `PHAsset` properties, media types, subtypes, and fetch options
+- `PHAssetCreationRequest` from a `UIImage`, a file URL, resources, and a deferred photo proxy (iOS 17+); custom albums
+- `PHFetchResult` access patterns and enumeration
+- `PHImageManager` image and video requests, delivery modes, and secondary degraded images (iOS 17+)
+- `PHChange` handling with incremental updates for collection views
 - Persistent change history observer (iOS 27) — `PHPhotoLibraryPersistentChangesObserver`, `register(_:)` / `unregisterPersistentChangesObserver(_:)`, `fetchPersistentChanges(since:)`, `PHPhotosError.persistentChangeTokenExpired`
 - Asset metadata editing (iOS 27) — `addKeyword(_:)` / `removeKeyword(_:)`, `rating` (`PHAsset.Rating`), `caption`, `setLivePhotoVideoPlaybackEnabled(_:)`, `revertAssetContent(to:)`, `originalResourceChoice`, `PHAssetExtendedMetadata`, `prefetchAssetExtendedMetadata`
 - Collections and identifiers (iOS 27) — `PHCollectionListSubtype.rootFolder`, `localIdentifierMappings(forSynced:)`
 - CloudKit server-side asset export (iOS 27) — `PHAssetResourceManager.exportedAssetID(for:)`, `PHAssetResource.dataSize`
 - Background asset resource upload (iOS and macOS 27) — `enableUploadJobExtension(with:)`, `setUploadJobExtensionOptions(_:)`, `disableUploadJobExtension()`, `PHAssetResourceUploadJobOptions`, `PHAssetResource.assetResource(forUploadJob:)`, `PHBackgroundResourceUploadJobExtension`
-- Sendable annotations across PHAsset, PHObject, PHFetchResult, PHChange, and PHPhotoLibrary
+- `Sendable` annotations across `PHAsset`, `PHObject`, `PHFetchResult`, `PHChange`, and `PHPhotoLibrary`
 - Isolation requirements for `photoLibraryDidChange` and `performChanges` change blocks
-- Callback arity per PHImageManager request method (`requestImage` fires one or more times; `requestImageDataAndOrientation` fires exactly once)
+- `requestImage` callback order: a degraded image, an optional secondary degraded image, then the final image
 
 ## Documentation Scope
 
-This page documents the `photo-library-ref` skill in the `axiom-media` suite. It provides complete API documentation for PhotoKit classes and photo picker views. For guided implementation patterns, use the discipline skill.
-
-- For implementation guidance, use [photo-library](/skills/integration/photo-library)
-- For camera capture, see [camera-capture](/skills/integration/camera-capture)
+This page documents the `photo-library-ref` skill (in the `axiom-media` suite), the API detail for PhotoKit classes and the photo picker views.
 
 ## Key APIs
 

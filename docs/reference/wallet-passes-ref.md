@@ -57,7 +57,7 @@ Questions developers ask that this reference answers:
 
 ## Documentation Scope
 
-This page documents the `wallet-passes-ref` skill — the `pass.json` schema plus the consumer-side PassKit API.
+This page documents the `wallet-passes-ref` skill (in the `axiom-payments` suite) — the `pass.json` schema plus the consumer-side PassKit API.
 
 - For **building, signing, distributing, and updating** passes (PKCS #7 chain, WWDR, manifest, web service flow, lock-screen relevance, NFC entitlement, iOS 18 poster event ticket migration), see [Wallet Passes](/skills/integration/wallet-passes)
 - For **post-purchase order tracking** (a sibling Wallet surface with its own cert and similar signing chain), see [Wallet Orders](/skills/integration/wallet-orders)

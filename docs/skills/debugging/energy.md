@@ -6,70 +6,77 @@ version: 1.0.0
 
 # Energy Optimization
 
-Power Profiler workflows for identifying and fixing battery drain. Covers CPU, GPU, Network, Location, and Display subsystem diagnosis with anti-pattern fixes.
+Power Profiler workflows for finding and fixing battery drain. It covers diagnosis for the CPU, GPU, network, location, and display, with a fix for each anti-pattern.
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when you're:
-- App appears at top of Battery Settings
-- Device gets hot during normal use
-- Users report battery drain in reviews
-- Xcode Energy Gauge shows sustained high impact
-- Background runtime exceeds expectations
-- Preparing for App Store release
+Use this skill when:
+- Your app sits at the top of Battery Settings
+- The device gets hot during normal use
+- Users mention battery drain in reviews
+- Xcode's Energy Gauge shows sustained high impact
+- Your app runs longer in the background than you expect
+- You want to check energy use before a release
 
-**Core principle:** Measure before optimizing. Use Power Profiler to identify which subsystem dominates, then apply targeted fixes.
-
-**For symptoms:** See [energy-diag](/diagnostic/energy-diag) for decision trees with time-cost analysis.
-
-**For API reference:** See [energy-ref](/reference/energy-ref) for complete code examples from WWDC.
+**Core principle** Measure before optimizing. Use Power Profiler to find the subsystem that dominates, then apply a targeted fix.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "My app is draining battery faster than expected."
 - "Device gets hot when using my app."
 - "How do I use Power Profiler to find energy issues?"
 - "My app uses too much energy in the background."
 - "What's causing high CPU usage?"
+- "How do I measure whether my optimization actually improved battery life?"
 - "How should my app respond when the system prefers reduced resource usage?" (iOS 27)
 
 ## What This Skill Provides
 
 ### Power Profiler Workflow
-- Running baseline measurement (5 min)
-- Identifying dominant subsystem
-- Before/after verification
+- Recording a five-minute baseline trace over wireless debugging (a charging cable makes the power metrics read zero)
+- Finding the dominant lane: CPU, GPU, Display, or Network (location shows up in the CPU lane)
+- Verifying the fix with a second recording
 
-### CPU Subsystem
-- Timer leaks and polling loops
-- Eager loading vs lazy loading
-- Background task duration
-- Repeated parsing
+### CPU
+- Timers without tolerance, and polling that could be event-driven
+- Eager loading and repeated parsing
+- Background tasks that run too long
 
-### GPU Subsystem
-- Animation visibility (hidden views still animate)
-- Blur effects over dynamic content
-- Complex compositing (shadows, masks)
-- Frame rate optimization
+### GPU
+- Animations that keep running when their view isn't visible
+- Blur effects
+- Secondary animations at higher frame rates than they need (`CADisplayLink`)
+- Metal rendering without frame limiting
 
-### Network Subsystem
-- Polling vs push notifications
-- Request batching
-- Discretionary flag for background
-- Connection coalescing
+### Network
+- Polling instead of push notifications
+- Batching many small requests
+- Discretionary background `URLSession` for deferrable downloads
+- Deferring cellular work to Wi-Fi
 
-### Location Subsystem
-- Continuous updates vs significant-change
-- Accuracy requirements
-- Background location modes
-- Deferred location updates
+### Location
+- Continuous updates compared with significant-change monitoring
+- Choosing the accuracy you actually need, and `distanceFilter`
+- `CLLocationUpdate` stationary detection (iOS 26+)
+- Justifying background location
 
-### Display Subsystem
-- Dark mode for OLED battery savings
-- Reduce brightness API usage
-- EDR (Extended Dynamic Range) impact
+### Display
+- Dark Mode for OLED power savings (up to 70%)
+- Darker UI for high-brightness content
+- Letting the screen sleep
+
+### Background Execution and System Signals
+- The EMRCA principles (Efficient, Minimal, Resilient, Courteous, Adaptive)
+- `BGProcessingTask`, and `BGContinuedProcessingTask` for user-initiated work (iOS 26+)
+- Responding to Low Power Mode
+- Responding to `systemPrefersReducedResourceUsage` in SwiftUI and UIKit (iOS 27)
+
+### Checks and Monitoring
+- Audit checklists for timers, network, location, background execution, display and GPU, and disk I/O
+- Pressure scenarios, such as "just poll every 5 seconds" and "ship now, optimize later"
+- Field monitoring with MetricKit and the Battery Usage pane in Xcode Organizer
 
 ## Key Pattern
 
@@ -82,25 +89,25 @@ flowchart TD
     B -->|CPU| C{Pattern}
     C -->|Continuous processing| C1[Timer leak or<br/>polling loop]
     C -->|Spikes during actions| C2[Eager loading or<br/>repeated parsing]
-    C -->|Background CPU| C3[BGTasks running<br/>too long]
+    C -->|Background CPU| C3[BGTasks running too long<br/>or location updates]
 
     B -->|GPU| D{Pattern}
-    D -->|Animations running| D1[Check visibility,<br/>frame rate]
-    D -->|Blur effects| D2[Over dynamic content]
-    D -->|Shadows/masks| D3[Complex compositing]
+    D -->|Animations running| D1[Stop when not visible,<br/>audit frame rate]
+    D -->|Blur effects| D2[Reduce or remove]
+    D -->|Metal rendering| D3[Add frame limiting]
 
     B -->|Network| E{Pattern}
     E -->|Frequent activity| E1[Polling instead<br/>of push]
     E -->|Many small requests| E2[Batching issue]
-    E -->|Background network| E3[Missing discretionary<br/>flag]
+    E -->|Foreground downloads| E3[Use discretionary<br/>background session]
 
-    B -->|Location| F{Pattern}
+    C -->|Location icon showing| F{Pattern}
     F -->|Continuous updates| F1[Use significant-change<br/>monitoring]
     F -->|High accuracy always| F2[Reduce when<br/>not needed]
 
     B -->|Display| G{Pattern}
-    G -->|Light backgrounds on OLED| G1[Consider dark mode]
-    G -->|Always-on features| G2[Reduce refresh]
+    G -->|Light backgrounds on OLED| G1[Implement Dark Mode]
+    G -->|Screen always on| G2[Let the screen sleep]
 
     style C1 fill:#f8d7da
     style C2 fill:#f8d7da
@@ -119,32 +126,27 @@ flowchart TD
 
 ### Quick Power Profiler Workflow
 
-```bash
-# 1. Open Instruments
-open -a Instruments
-
-# 2. Select "Power Profiler" template
-# 3. Record for 2-3 minutes of typical app usage
-# 4. Identify which lane (CPU/GPU/Network/Location/Display) is high
-# 5. Apply fixes for that subsystem
-# 6. Record again to verify improvement
-```
+1. Connect your iPhone to Xcode with wireless debugging
+2. Choose Product → Profile, pick the Blank template, and add the Power Profiler instrument
+3. Record 2–3 minutes of typical use
+4. Find the lane (CPU, GPU, Network, or Display) with the highest sustained impact
+5. Apply the fix for that subsystem
+6. Record again to verify the improvement
 
 ## Documentation Scope
 
-This page documents the `axiom-performance` skill — Power Profiler workflows Claude uses when you're diagnosing battery drain in your iOS app.
-
-**For symptom-based diagnosis:** See [energy-diag](/diagnostic/energy-diag) for decision trees starting from symptoms like "phone gets hot".
-
-**For complete API reference:** See [energy-ref](/reference/energy-ref) for code examples and WWDC patterns.
+This page documents the `energy` skill in the `axiom-performance` suite. Your assistant uses its Power Profiler workflows when you're diagnosing battery drain in your iOS app.
 
 ## Related
 
-- [energy-diag](/diagnostic/energy-diag) – Symptom-based energy troubleshooting
-- [energy-ref](/reference/energy-ref) – Complete API reference with WWDC examples
+- [energy-diag](/diagnostic/energy-diag) – Symptom-based decision trees with time-cost analysis
+- [energy-ref](/reference/energy-ref) – API reference with complete code examples from WWDC
+- [energy-auditor](/agents/energy-auditor) – Scans your code for timer, polling, location, and animation anti-patterns; run it with [`/axiom:audit energy`](/commands/debugging/audit-energy)
+- [performance-profiling](/skills/debugging/performance-profiling) – Choosing and using other Instruments templates
+- [memory-debugging](/skills/debugging/memory-debugging) – Finding the timer and observer leaks that keep CPU busy
 
 ## Resources
 
-**WWDC**: 2025-226, 2025-227, 2022-10083
+**WWDC**: 2025-226, 2025-227, 2022-10083, 2020-10095, 2019-417
 
 **Docs**: /xcode/improving-your-app-s-performance

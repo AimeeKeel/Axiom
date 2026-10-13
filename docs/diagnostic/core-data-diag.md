@@ -1,196 +1,70 @@
 ---
 name: core-data-diag
-description: Schema migrations, thread-confinement, N+1 queries — systematic Core Data diagnostics with production crisis defense
+description: Schema migration crashes, thread-confinement violations, N+1 queries — systematic Core Data diagnostics and safe migration patterns
 ---
 
 # Core Data Diagnostics
 
-Systematic Core Data troubleshooting with production crisis defense for 500K+ user data loss prevention.
+Systematic troubleshooting for Core Data crashes after a schema change, objects used off their context's queue, slow relationship access, and Core Data mixed with SwiftData. Most problems come from thread confinement, schema migration requirements, and relationship query patterns, not from Core Data itself.
 
-## Overview
+## Symptoms This Diagnoses
 
-Diagnostic workflows for schema migration crashes, thread-confinement errors, N+1 query performance, and SwiftData bridging issues. Includes mandatory safety patterns for production migrations affecting hundreds of thousands of users.
+Use when you're experiencing:
+- A launch crash with `NSCocoaErrorDomain 134100` ("The managed object model version used to open the persistent store is incompatible with the one that was used to create the store") after a schema change
+- A migration that works in the Simulator but crashes on users' devices
+- A migration that fails with `NSCocoaErrorDomain 134110` after you add a required attribute without a default
+- An attribute type change, such as `String` to `Date`, that automatic migration can't handle
+- Managed objects used off their context's queue, which stays silent until you launch with `-com.apple.CoreData.ConcurrencyDebug 1`
+- An app that slowed down after you added a relationship, such as reading `user.posts` in a loop
+- High memory use when fetching a large result set
+- SwiftData and Core Data opening the same store, with "Store is locked" errors or `EXC_BAD_ACCESS`
 
-## What This Diagnostic Covers
+## Example Prompts
 
-### Critical Production Issues
+- "My app crashes on launch with error 134100 after I added an attribute."
+- "How do I change an attribute's type from String to Date without losing data?"
+- "Why does my migration work in the Simulator but crash on users' devices?"
+- "How do I find Core Data objects that are used on the wrong thread?"
+- "My list got slow after I added a relationship. How do I find N+1 queries?"
+- "Should I use Core Data alongside SwiftData for features SwiftData lacks?"
+- "My manager wants to delete the store to stop the crash. What should I do instead?"
 
-#### Schema Migration Crashes
-- "Can't find model for source store" errors
-- Migration failures on 10% of devices
-- Data corruption after migration
-- Version mismatch crashes
-- Missing lightweight migration options
+## Diagnostic Workflow
 
-#### Thread-Confinement Errors
-- "Object was created in different context" crashes
-- Intermittent crashes when passing objects to tasks
-- Background fetch crashes
-- Main thread checker violations
+Your assistant guides you through three steps.
 
-#### N+1 Query Performance
-- App freezing when scrolling lists
-- Relationship access triggering hundreds of queries
-- Missing prefetching hints
-- Slow list rendering (>1s per row)
+### Step 1: Gather Evidence
 
-#### Production Crisis Scenarios
-- 500K+ users affected by migration crash
-- Data loss reports flooding support
-- App Store rating dropping from 4.8 → 2.3
-- Emergency hotfix required within hours
+Before changing code:
+1. Record the exact crash message: `134100` means the store and the app's model don't match
+2. Compare the store's model version identifiers with the app's current model
+3. Check which thread and context touch each managed object, and launch with `-com.apple.CoreData.ConcurrencyDebug 1` to trap off-queue access
+4. Launch with `-com.apple.CoreData.SQLDebug 1` and count the SQL queries each screen issues
+5. Check whether SwiftData and Core Data both open the same store
 
-## When to Use This Diagnostic
+### Step 2: Check the Most Common Cause First
 
-Use this diagnostic when:
-- Planning schema changes for production app
-- Migration crashes reported in Crashlytics
-- Thread-confinement errors in production logs
-- App feels sluggish loading Core Data
-- Before shipping migration to 100K+ users
-- **Emergency**: Production crisis active
+The most common cause of an incompatible-store crash is editing the existing `.xcdatamodel` in place instead of adding a new model version. Your assistant checks for more than one model version in the `.xcdatamodeld` bundle, then confirms that automatic lightweight migration is turned on (`shouldMigrateStoreAutomatically` and `shouldInferMappingModelAutomatically`). It's off by default on a raw `NSPersistentStoreCoordinator`, and turning it on resolves most crashes from additive changes.
 
-## Diagnostic Workflows
+A Simulator that was reset starts from an empty store, so the migration never runs there. The skill has you test every migration on a device that holds real data.
 
-### Schema Migration Safety
+### Step 3: Apply the Targeted Pattern
 
-```
-1. Pre-Migration Validation (CRITICAL - 2 hours)
-   ├─ Backup production data
-   ├─ Test migration on 100+ device types
-   ├─ Verify lightweight migration options set
-   ├─ Test rollback to previous version
-   └─ Monitor migration time (must be <10s)
-
-2. Migration Testing Checklist
-   ├─ Empty database → full migration ✓
-   ├─ Partially migrated database → resume ✓
-   ├─ Corrupted database → error handling ✓
-   ├─ Network offline during migration ✓
-   ├─ App killed during migration → recovery ✓
-   └─ Downgrade to previous version → compatibility ✓
-
-3. Production Rollout (Phased)
-   ├─ Week 1: Internal testers (50 users)
-   ├─ Week 2: Beta testers (500 users)
-   ├─ Week 3: 5% of production (25K users)
-   ├─ Week 4: 25% of production (125K users)
-   └─ Week 5: 100% rollout if <0.1% crash rate
-```
-
-### Thread-Confinement Diagnosis
-
-```
-1. Enable Main Thread Checker
-   - Edit Scheme → Diagnostics → Main Thread Checker ✓
-
-2. Reproduce Issue
-   - Find crash pattern
-   - Identify object crossing thread boundary
-   - Document call stack
-
-3. Apply Fix Pattern
-   ├─ Extract objectID before leaving context
-   ├─ Fetch object on destination context
-   ├─ Use value types for thread-safe data
-   └─ Never pass NSManagedObject to Task/DispatchQueue
-```
-
-### N+1 Query Detection
-
-```
-1. Enable SQLite Debug Logging
-   -com.apple.CoreData.SQLDebug 1
-
-2. Profile with Instruments
-   - Core Data instrument
-   - Count fetch operations
-   - Identify relationship access in loops
-
-3. Add Prefetching
-   fetchRequest.relationshipKeyPathsForPrefetching = ["relationship"]
-```
-
-## Production Crisis Defense
-
-**Scenario**: Migration crash affecting 500K users, 2-hour hotfix window
-
-**Emergency Protocol**:
-1. **Stop the rollout** – Halt app updates immediately
-2. **Triage severity** – Data loss vs crashes vs performance
-3. **Quick fixes only**:
-   - Skip migration, use old schema (if possible)
-   - Add migration options if missing
-   - Increase error handling, never delete store
-4. **Communicate**: In-app message, support docs, social media
-5. **Hotfix review**: Request expedited App Store review
-6. **Monitor closely**: Crashlytics, user reports, ratings
-
-**Never do in crisis**:
-- ❌ Delete persistent store (100% data loss)
-- ❌ Rewrite migration from scratch (high risk)
-- ❌ Change multiple things at once (can't isolate issue)
-- ❌ Deploy without testing on real devices
-
-**Always do in crisis**:
-- ✅ Add defensive error handling
-- ✅ Test on 10+ real device configurations
-- ✅ Have rollback plan ready
-- ✅ Communicate transparently with users
-
-## Safety-First Migration Patterns
-
-#### Pattern 1: Lightweight Migration Only
-```swift
-let options = [
-    NSMigratePersistentStoresAutomaticallyOption: true,
-    NSInferMappingModelAutomaticallyOption: true
-]
-// NEVER delete store in production
-```
-
-#### Pattern 2: Additive Changes Only
-```swift
-// ✅ SAFE: Add optional property
-// ❌ UNSAFE: Remove property, change type, add required property
-```
-
-#### Pattern 3: Test Migration Path
-```swift
-// Test v1 → v2, v1 → v3, v2 → v3
-// Users may skip versions
-```
-
-#### Pattern 4: Never Delete Store
-```swift
-// ❌ NEVER in production
-try? FileManager.default.removeItem(at: storeURL)
-
-// ✅ Handle migration errors gracefully
-catch {
-    // Log error, show user message, keep old data
-}
-```
-
-## Related Resources
-
-- [audit-core-data](/commands/debugging/audit-core-data) – Quick automated scan
-- [swiftdata](/skills/persistence/swiftdata) – Modern SwiftData patterns
-- [database-migration](/skills/persistence/database-migration) – Safe schema evolution
+- **Lightweight migration** – adding optional attributes, required attributes with a default in the model, removals, and renames with a renaming identifier, all in a new model version
+- **Custom migration** – `NSStagedMigrationManager` with an `NSCustomMigrationStage` (iOS 17+), and a rename, add, and backfill recipe for attribute type changes
+- **Thread confinement** – private-queue contexts for background work, the async `perform` API, and passing IDs or values across threads instead of managed objects
+- **N+1 queries** – `relationshipKeyPathsForPrefetching` for relationships and `fetchBatchSize` for large result sets
+- **SwiftData and Core Data** – when to stay in SwiftData, when to drop to Core Data, and never touching the same entity from both
+- **Migration testing** – a test that migrates a copy of real production data, and a checklist to finish before shipping
 
 ## Documentation Scope
 
-This is a **diagnostic skill** — mandatory workflows with production crisis defense.
+This page documents the `core-data-diag` skill (in the `axiom-data` suite), which your assistant loads when Core Data crashes after a schema change, misbehaves across threads, or slows down. To scan your code and data models for these risks, run `/axiom:audit core-data`, which launches the core-data-auditor agent. The skill file also holds a quick-reference table, common mistakes, and advice for a production crash where someone proposes deleting the persistent store: show how many users would lose their data, offer a tested migration instead, and record the decision if deletion goes ahead.
 
-#### Diagnostic includes
-- Step-by-step troubleshooting
-- Production crisis emergency protocols
-- Safety-first migration patterns
-- 500K+ user impact scenarios
-- Phased rollout strategies
+## Related
 
-**Vs Reference**: Diagnostic skills enforce specific workflows and handle pressure scenarios. Reference skills provide comprehensive information without mandatory steps.
-
-## Size
-
-25 KB - Diagnostic workflows with production crisis defense
+- [core-data](/skills/persistence/core-data) – Core Data stack setup, concurrency patterns, and migration strategies
+- [core-data-auditor](/agents/core-data-auditor) – Scans your code and models for migration risks, thread-confinement violations, and N+1 queries
+- [audit-core-data](/commands/debugging/audit-core-data) – The command that runs the Core Data auditor
+- [swiftdata](/skills/persistence/swiftdata) – SwiftData patterns, for deciding whether to stay in SwiftData
+- [database-migration](/skills/persistence/database-migration) – Safe schema evolution for SQLite, GRDB, and SQLiteData stores

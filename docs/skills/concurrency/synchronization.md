@@ -9,7 +9,7 @@ description: Thread-safe primitives for performance-critical code — Mutex (iOS
 **Swift Version**: Swift 6 for Mutex, Swift 5+ for OSAllocatedUnfairLock
 **iOS Version**: iOS 18+ for Mutex, iOS 16+ for OSAllocatedUnfairLock
 
-## When to Use This Skill
+## When to Use
 
 ✅ **Use this skill when**:
 - Microsecond operations where actor hop is too slow

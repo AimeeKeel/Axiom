@@ -1,177 +1,88 @@
 ---
 name: networking-diag
-description: Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense
+description: Connection timeouts, TLS failures, data that never arrives — systematic Network.framework and URLSession diagnostics
 ---
 
 # Networking Diagnostics
 
-Systematic Network.framework troubleshooting for connection failures, TLS issues, and data arrival problems with production crisis defense.
+Systematic troubleshooting for Network.framework connections that time out, fail TLS, or lose data, and for `URLSession` requests that fail after the app returns from the background. Most failures come from misread connection states, unhandled network transitions, or missing error handling, not from the framework itself.
 
-## Overview
+## Symptoms This Diagnoses
 
-Diagnostic workflows for debugging Network.framework connections using NWConnection (iOS 12-18) and NetworkConnection (iOS 26+). Includes systematic troubleshooting, production crisis scenarios, and network logging interpretation.
+Use when you're experiencing:
+- A connection times out after 60 seconds with no clear error
+- A connection stays in `.preparing` for more than 5 seconds, or moves straight to `.waiting`
+- A connection fails with POSIX error 61 (connection refused) or 50 (network down)
+- TLS fails with `-9806` (invalid certificate), `-9807` (expired certificate), or `-9801` (protocol version)
+- `send` succeeds, but the receiver never gets the data or gets only part of a message
+- Latency grows over time, throughput drops, CPU use is high, or memory keeps growing during a connection
+- The app works on Wi-Fi but fails on cellular, or fails only while a VPN is active
+- A connection drops when the device switches from Wi-Fi to cellular
+- The app works in the Simulator but fails on a real device
+- `URLSession` fails with `URLError(-1005)`, "The network connection was lost", on the first request after the app returns from the background
+- App Transport Security blocks an HTTP request, or HTTPS fails with "An SSL error has occurred"
 
-## What This Diagnostic Covers
+## Example Prompts
 
-### Connection State Issues
-
-#### Never Reaches Ready
-- Stuck in preparing → DNS failure
-- Waiting state → No connectivity
-- Posix 61 error → Connection refused
-- Posix 50 error → Network down
-
-#### Ready Then Fails
-- After network change → Viability handler
-- TLS -9806 → Certificate invalid
-- Timeout → Receiver not processing
-- Random drops → Network instability
-
-### Data Transmission Problems
-
-#### Data Missing or Corrupted
-- Not received → Framing problem
-- Partial data → Min/max bytes
-- Corrupted → TLS disabled
-- Intermittent → Race condition
-
-#### Performance Issues
-- High latency → TCP congestion
-- Low throughput → Network transition
-- High CPU → Missing batching
-- Memory leaks → Handler retention
-
-### Network-Specific Scenarios
-
-- IPv6-only cellular (hardcoded IPv4)
-- VPN/proxy interference
-- Firewall port blocking
-- NAT traversal for P2P
-
-## When to Use This Diagnostic
-
-Use this diagnostic when:
-- Connection times out after 60 seconds
-- TLS handshake fails with certificate errors
-- Data sent but never arrives
-- Works on WiFi, fails on cellular
-- Connection drops during network transitions
-- Performance degradation over time
+- "My NWConnection is stuck in the preparing state. What's wrong?"
+- "Why does my connection fail with TLS error -9806?"
+- "Messages I send over TCP arrive merged or split on the other side."
+- "My app works on Wi-Fi but fails on cellular."
+- "The first request after my app comes back from the background fails with -1005."
+- "URLSession fails against my server, but NWConnection works. Why?"
 
 ## Diagnostic Workflow
 
-```
-1. Enable Network Logging (5 min)
-   ├─ Add -NWLoggingEnabled 1 to scheme
-   ├─ Run app and reproduce issue
-   ├─ Check console for state transitions
-   └─ Identify error codes
+Your assistant guides you through three steps.
 
-2. Analyze Connection States (10 min)
-   ├─ Check state history
-   ├─ Identify stuck states
-   ├─ Match error codes to patterns
-   └─ Review TLS configuration
+### Step 1: Gather Evidence
 
-3. Packet Capture (15 min)
-   ├─ Use Instruments Network template
-   ├─ Check DNS resolution
-   ├─ Verify TLS handshake
-   └─ Inspect data framing
+Before changing code:
+1. Turn on Network.framework logging with the `-NWLoggingEnabled 1` and `-NWConnectionLoggingEnabled 1` launch arguments
+2. Log every connection state change with a timestamp
+3. Check any custom TLS settings, such as the minimum TLS version
+4. Capture the traffic with a proxy such as Charles Proxy or Wireshark
+5. Test on Wi-Fi, on cellular alone, after toggling Airplane Mode, with a VPN active, and on an IPv6-only network
 
-4. Test Network Transitions (10 min)
-   ├─ WiFi → Cellular
-   ├─ Airplane Mode toggle
-   ├─ VPN enable/disable
-   └─ Check viability handler
-```
+The Simulator uses the Mac's networking stack and hides cellular and IPv6-only problems, so the skill has you test on a real device.
 
-## Production Crisis Defense
+### Step 2: Match the Symptom to a Cause
 
-**Scenario**: iOS update causes 15% connection failures, 10K affected users, CEO asking for ETA
+| What you see | Likely cause |
+|--------------|--------------|
+| Stuck in `.preparing` for more than 5 seconds | DNS failure or network down |
+| Moves to `.waiting` immediately | No connectivity, or cellular blocked by the connection's parameters |
+| `.failed` with POSIX error 61 | Connection refused: the server isn't listening |
+| `.failed` with POSIX error 50 | Network down: the interface is disabled |
+| `.ready`, then an immediate `.failed` | TLS handshake failure |
+| `.ready`, `send` succeeds, no data arrives | Missing message framing, or a receiver that isn't reading |
+| Works on Wi-Fi, fails on cellular | IPv6-only network and a hardcoded IPv4 address |
+| Works without a VPN, fails with one | Proxy interference or a DNS override |
+| `URLSession` fails, `NWConnection` works | App Transport Security |
+| `-1005` on the first request after backgrounding | A stale `URLSession` connection pool |
 
-**Mandatory Protocol**:
-1. **Establish Baseline** (5 min) - What worked before vs now
-2. **Reproduce Production** (10 min) - Same iOS version, network conditions
-3. **Check Recent Changes** (5 min) - Framework updates, API changes
-4. **Apply Targeted Fix** (15 min) - Based on diagnostic pattern
-5. **Deploy Hotfix** (20 min) - Fast-track release
+Command-line checks confirm a cause outside your app: `nslookup` or `dig` for DNS, `openssl s_client` for certificates, and `nscurl --ats-diagnostics` for App Transport Security.
 
-**Communication Template**:
-```
-"Identified root cause: [specific issue].
-Affects: [%] on [specific condition].
-Deploying hotfix in [time].
-Workaround: [if available]."
-```
+### Step 3: Apply One Fix at a Time
 
-**Time Saved**: Panic rollback 1-2 hours vs proper diagnosis 30 minutes
+Your assistant applies the fix for your symptom, tests it, and tries the next one only if the problem remains, because changing several things at once hides which change worked:
+- **DNS and connectivity** – DNS failures, no connectivity, refused connections, and a disabled network interface
+- **TLS** – fixing the certificate on the server instead of disabling validation, and pinning either the certificate or the public key, never a mix of the two
+- **Data delivery** – message framing with TLV (iOS 26+) or a length prefix, receive sizes, and race conditions
+- **Performance** – pacing sends with the `contentProcessed` callback or async `send`, batching, and connection leaks
+- **Network-specific failures** – IPv6-only cellular networks, VPNs and proxies, firewalls, and peer-to-peer NAT traversal
+- **App Transport Security** – a domain-specific exception for a blocked HTTP load, a server upgrade for an old TLS version, and never `NSAllowsArbitraryLoads`
+- **Stale connection pool** – confirming reuse with `isReusedConnection`, recycling the session when the app becomes active, and retrying only requests that are safe to repeat
 
-## Diagnostic Patterns
-
-### Pattern 1: DNS Failure (Preparing Stuck)
-**Symptom**: Connection stuck in `.preparing` state
-**Diagnosis**: `nslookup hostname` fails
-**Fix**: Check hostname spelling, DNS configuration
-
-### Pattern 2: TLS Certificate Error (-9806)
-**Symptom**: Connection fails with posix error -9806
-**Diagnosis**: `openssl s_client -connect host:port`
-**Fix**: Update certificate, check date/time, validate chain
-
-### Pattern 3: Framing Problem (Partial Data)
-**Symptom**: Only partial messages received
-**Diagnosis**: Check TLV framing configuration
-**Fix**: Implement proper message boundaries
-
-### Pattern 4: IPv6-Only Cellular
-**Symptom**: Works on WiFi, fails on cellular
-**Diagnosis**: Hardcoded IPv4 address
-**Fix**: Use hostname, enable IPv6 support
-
-## Network Logging Interpretation
-
-| Log Message | Meaning | Action |
-|-------------|---------|--------|
-| `preparing` | DNS resolution | Check hostname |
-| `waiting` | No connectivity | Check network settings |
-| `posix 61` | Connection refused | Check server running |
-| `posix 50` | Network down | Check WiFi/cellular |
-| `TLS -9806` | Certificate invalid | Check certificate |
-
-## Tools and Resources
-
-### Xcode Tools
-- Network Instruments template
-- Console app with NWLoggingEnabled
-- System Log for debugging
-- Network Link Conditioner
-
-### Command Line
-- `nslookup` – DNS resolution
-- `openssl s_client` – TLS validation
-- `netstat` – Port checking
-- `tcpdump` – Packet capture
-
-## Related Resources
-
-- [networking](/skills/integration/networking) – Network.framework patterns and anti-patterns
-- [network-framework-ref](/reference/network-framework-ref) – Complete API reference
-- [audit-networking](/commands/integration/audit-networking) – Automated scan for deprecated APIs
+The skill steers away from disabling TLS, switching to raw sockets, or adding timeouts and retries before the cause is known.
 
 ## Documentation Scope
 
-This is a **diagnostic skill** — mandatory workflows with production crisis defense.
+This page documents the `networking-diag` skill (in the `axiom-networking` suite), which your assistant loads when a network connection fails, stalls, or loses data. To scan your code for deprecated networking APIs and anti-patterns instead, run `/axiom:audit networking`, which launches the networking-auditor agent. The skill file also holds a quick-reference table with fix-time estimates and common debugging mistakes. A worked outage follows an app update that required TLS 1.3 and broke connections for users behind servers and proxies that support only TLS 1.2, with the diagnosis steps and the status updates sent to leadership, engineering, and support.
 
-#### Diagnostic includes
-- 8+ diagnostic patterns with symptom/diagnosis/fix
-- Production crisis scenario with communication templates
-- Network logging interpretation guide
-- Quick reference table for error codes
-- Systematic troubleshooting workflows
+## Related
 
-**Vs Reference**: Diagnostic skills enforce specific workflows and handle pressure scenarios. Reference skills provide comprehensive information without mandatory steps.
-
-## Size
-
-27 KB - Systematic diagnostics with production crisis defense
+- [networking](/skills/integration/networking) – Network.framework connection patterns that prevent these failures
+- [network-framework-ref](/reference/network-framework-ref) – `NWConnection` and `NetworkConnection` API reference, including TLV framing and listeners
+- [networking-auditor](/agents/networking-auditor) – Scans your code for deprecated networking APIs and anti-patterns
+- [audit-networking](/commands/integration/audit-networking) – The command that runs the networking auditor

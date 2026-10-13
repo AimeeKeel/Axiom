@@ -79,7 +79,7 @@ Entries carry extra notes for caveats their schema descriptions bury — among t
 
 ## Documentation Scope
 
-This page documents the `xcode-mcp-ref` reference skill. For setup and connection guidance, including the headless server, see [Xcode MCP Setup](/skills/xcode-mcp/xcode-mcp-setup). For workflow patterns (workspace bootstrap, BuildFix loop, TestFix loop), see [Xcode MCP Tools](/skills/xcode-mcp/xcode-mcp-tools).
+This page documents the `xcode-mcp-ref` reference skill (in the `axiom-xcode-mcp` suite). For setup and connection guidance, including the headless server, see [Xcode MCP Setup](/skills/xcode-mcp/xcode-mcp-setup). For workflow patterns (workspace bootstrap, BuildFix loop, TestFix loop), see [Xcode MCP Tools](/skills/xcode-mcp/xcode-mcp-tools).
 
 - For environment diagnostics outside MCP (Derived Data, zombie xcodebuild processes), see [Xcode Debugging](/skills/debugging/xcode-debugging)
 - For Apple's bundled for-LLM documentation guides, see [Apple Documentation Access](/skills/integration/apple-docs) — a separate resource from the `DocumentationSearch` tool

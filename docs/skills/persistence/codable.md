@@ -2,7 +2,7 @@
 
 Comprehensive Codable patterns for JSON and PropertyList encoding/decoding in Swift 6.x. Prevent silent data loss, handle errors properly, and master Swift's universal serialization protocol.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when:
 - Working with JSON APIs and decoding responses

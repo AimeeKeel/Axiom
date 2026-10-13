@@ -5,23 +5,24 @@ description: Use when encountering BUILD FAILED, test crashes, simulator hangs, 
 
 # Xcode Debugging
 
-Environment-first diagnostics for mysterious Xcode issues. Prevents 30+ minute rabbit holes by checking build environment before debugging code.
+Environment-first diagnostics for mysterious Xcode issues. Checking the build environment before debugging code turns a 30–120 minute investigation into a 2–5 minute fix.
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when you're:
-- Getting BUILD FAILED with no clear error
-- Tests passed yesterday, failing today with no code changes
-- Build succeeds but old code executes
-- Simulator says "Unable to boot" or stuck at splash screen
-- Getting "No such module" after SPM updates
-- Experiencing intermittent build failures
+Use this skill when:
+- You get BUILD FAILED with no clear error
+- Tests passed yesterday but fail today, with no code changes
+- The build succeeds but old code runs
+- A simulator says "Unable to boot" or sticks at the splash screen
+- You get "No such module" after updating Swift packages
+- Builds fail intermittently
+- `xcodebuild` processes pile up and you suspect zombies
 
 **Core principle:** 80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, zombie processes), not code bugs.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "My build fails with 'BUILD FAILED' but no error details. I haven't changed anything."
 - "Tests passed yesterday, failing today with no code changes. What's going on?"
@@ -30,9 +31,9 @@ Questions you can ask Claude that will draw from this skill:
 - "I'm getting 'No such module' errors after updating SPM dependencies."
 - "Build sometimes succeeds, sometimes fails. Why?"
 - "I have 20 xcodebuild processes running. Is that normal?"
-- "What's Device Hub in Xcode 27, and how does it relate to simctl/devicectl?" (iOS 27)
-- "Xcode shows an inline issue before I build — is that a real build failure?" (iOS 27)
-- "A bug only reproduces on my physical device — how do I recreate it on a simulator with Device Hub?" (iOS 27)
+- "What's Device Hub in Xcode 27, and how does it relate to simctl and devicectl?"
+- "Xcode 27 shows an inline issue before I build. Is that a real build failure?"
+- "A bug only reproduces on my physical device. How do I recreate it on a simulator with Device Hub?"
 
 ## What This Skill Provides
 
@@ -40,26 +41,32 @@ Questions you can ask Claude that will draw from this skill:
 - "It works on my machine but not CI"
 - "Tests passed yesterday, failing today"
 - "Build succeeds but old code executes"
-- Intermittent success/failure
-- Simulator stuck or unresponsive
-- Multiple zombie xcodebuild processes
+- Intermittent success and failure
+- A simulator stuck at the splash screen, or "Unable to install app"
+- 10 or more `xcodebuild` processes older than 30 minutes
 
 ### Environment Diagnostics
-- Derived Data state and cleanup
-- Simulator health checks with simctl
-- Zombie process detection and cleanup
-- SPM cache verification
+- Checks for running `xcodebuild`, Simulator, and Device Hub processes
+- Derived Data size, and why size alone doesn't prove it's stale
+- Simulator states with `simctl`
+- What each result means: investigate code, or clean only what is confirmed
 
 ### Recovery Commands
-- Safe Derived Data deletion
-- Simulator reset and recovery
-- Process cleanup without reboot
-- SPM cache refresh
+- Deleting only this project's Derived Data folder, not all of DerivedData
+- Shutting down or erasing only the affected simulator
+- Stopping one confirmed abandoned build instead of running `killall`
+- Isolating one failing test with `-only-testing`
 
-### Time Cost Transparency
-- 2-5 minutes: Derived Data cleanup
-- 5-10 minutes: Full environment reset
-- 30+ minutes: Debugging code when problem is environment
+### Devices, Crashes, and Verification
+- `devicectl` for installing, launching, and inspecting apps on a physical device
+- Device Hub (Xcode 27) for reproducing a device-only bug on a simulator
+- Predicted issues (Xcode 27): inline markers that appear before you build and are not yet confirmed failures
+- Where crash logs live, and how to symbolicate them
+- Screenshot checks in the simulator after a fix
+
+### Time Cost
+- 2–5 minutes: environment cleanup
+- 30–120 minutes: debugging code when the problem is the environment
 
 ## Key Pattern
 
@@ -69,50 +76,48 @@ Questions you can ask Claude that will draw from this skill:
 # 1. Check for running builds (exit 1 = none, 0 = listed, 2/3 = the check itself failed)
 pgrep -lx xcodebuild; echo "pgrep exit=$?"
 # Inspect a listed build before stopping anything; count and age don't prove it's stuck
-ps -ww -o pid,ppid,user,stat,lstart,etime,command -p <PID>
+ps -ww -o pid,ppid,user,stat,lstart,etime,time,command -p <PID>
 
 # 2. Stop only a confirmed abandoned build you started
 #    (never killall: it also kills other people's builds, CI jobs and archives)
 kill -TERM <PID>
 
 # 3. Clean this project's Derived Data folder, not all of DerivedData
-#    (the build-debugging skill includes a script that finds the right folder)
+#    (the skill includes a script that finds the right folder)
 
 # 4. Reset only the stuck simulator
 xcrun simctl shutdown <device-uuid>
 xcrun simctl erase <device-uuid>   # erases that simulator's data
-
-# 5. Clear the SwiftPM cache (shared by every project) only if package
-#    resolution still fails after resolving again
-rm -rf ~/Library/Caches/org.swift.swiftpm
 ```
 
-### When to Use Each Step
+### Which Fix for Which Symptom
 
-| Symptom | Fix | Time |
-|---------|-----|------|
-| Stale builds, old code runs | Delete this project's Derived Data | 2 min |
-| "No such module" | Delete this project's Derived Data; SPM cache only if still failing | 3 min |
-| Simulator stuck | Shut down and reboot that simulator | 2 min |
-| Abandoned build process | Inspect it, then stop that one PID | 1 min |
-| All of the above | Each step above for this project and device, then reboot | 10 min |
+| Symptom | Fix |
+|---------|-----|
+| BUILD FAILED with no details | Delete this project's Derived Data, then rebuild |
+| Old code runs after a successful build | Delete this project's Derived Data, then rebuild |
+| "No such module" | Clean, delete this project's Derived Data, then rebuild |
+| "Unable to boot simulator" | Shut down that simulator, then erase it |
+| Tests hang | Check `xcrun simctl list`, then reboot the simulator |
+| Abandoned build process | Inspect it, then stop that one PID |
 
 ## Documentation Scope
 
-This page documents the `axiom-build` skill — environment-first diagnostics Claude uses before investigating code issues. The skill contains complete command sequences, decision trees, and time-cost analysis.
+This page documents the `xcode-debugging` skill (in the `axiom-build` suite), the environment-first diagnostics your assistant runs before investigating code. The skill holds the complete command sequences, the decision tree, and the recovery steps for each symptom.
 
-**For build failures specifically:** Use [/axiom:fix-build](/commands/build/fix-build) for automated diagnosis and fixes.
+- For Device Hub's interface and the full `devicectl` and `simctl` reference, see [Device Control Reference](/reference/device-control-ref)
 
 ## Related
 
-- [/axiom:fix-build](/commands/build/fix-build) – Automated build failure diagnosis
-- [build-fixer](/agents/build-fixer) – Autonomous agent that diagnoses and fixes build issues
-- [build-debugging](/skills/debugging/build-debugging) – Dependency resolution for CocoaPods/SPM
-- [testflight-triage](/skills/debugging/testflight-triage) – Use when issue is TestFlight crash, not build environment
-- [performance-profiling](/skills/debugging/performance-profiling) – When issue is performance, not environment
+- [/axiom:fix-build](/commands/build/fix-build) – Command that launches the build-fixer agent
+- [build-fixer](/agents/build-fixer) – Agent that runs these environment checks and fixes build issues autonomously
+- [Build Debugging](/skills/debugging/build-debugging) – Dependency resolution for CocoaPods and SPM, including when to clear the SwiftPM cache
+- [Crash Symbolication (xcsym)](/reference/xcsym-ref) – Symbolicates the crash logs this skill points you to
+- [TestFlight Triage](/skills/debugging/testflight-triage) – For a TestFlight crash rather than a build-environment problem
+- [Performance Profiling](/skills/debugging/performance-profiling) – For a performance problem rather than an environment problem
 
 ## Resources
 
-**WWDC**: 2021-10209, 2023-10164, 2026-258
+**WWDC**: 2026-258 (What's new in Xcode 27)
 
-**Docs**: /xcode/debugging-and-testing
+**Docs**: /xcode/debugging

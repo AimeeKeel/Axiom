@@ -6,25 +6,22 @@ version: 1.0.0
 
 # Energy Optimization Reference
 
-Complete API reference for iOS energy efficiency. Covers Power Profiler, timer efficiency, network efficiency, location efficiency, background execution, and display/GPU optimization with WWDC code examples.
+API reference for making iOS apps use less battery, with code examples from WWDC sessions. It covers the Power Profiler, timers, networking, location, background execution, display and GPU work, disk I/O, Low Power Mode, MetricKit, and push notifications.
 
 ## When to Use This Reference
 
 Use this reference when you need:
-- Power Profiler workflow and interpretation
+- The Power Profiler workflow and how to read its results
 - Timer API patterns for energy efficiency
-- Network coalescing and batching APIs
+- Discretionary and background networking APIs
 - Location accuracy and monitoring options
 - Background execution best practices
 - Display and GPU energy optimization
-
-**For discipline patterns:** See [energy](/skills/debugging/energy) for decision trees and workflows.
-
-**For symptom-based diagnosis:** See [energy-diag](/diagnostic/energy-diag) for troubleshooting.
+- Low Power Mode and thermal state responses
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
 - "How do I configure DispatchSource timers with proper leeway?"
 - "What's the discretionary flag for URLSession and when should I use it?"
@@ -32,51 +29,58 @@ Questions you can ask Claude that will draw from this reference:
 - "What are the background task duration limits?"
 - "How do I use MetricKit to monitor energy in production?"
 - "What's the difference between continuous and significant-change location?"
+- "How should my app respond to Low Power Mode or a hot device?"
 
 ## What's Covered
 
 ### Power Profiler Workflow
-- Recording traces in Instruments 26
+- Recording traces with Instruments, tethered to a Mac
+- On-device recording without a Mac (iOS 26+)
 - Interpreting the 5 power impact lanes
-- On-device profiling (iOS 26+)
-- Comparing implementations
+- Comparing before and after traces
 
 ### Timer Efficiency
-- DispatchSource vs NSTimer
-- Leeway configuration for coalescing
-- Timer invalidation patterns
-- Common timer leaks
+- `Timer` with tolerance, the Combine timer publisher, and `DispatchSource` timers with leeway
+- Invalidating timers when done
+- Event-driven alternatives to polling
 
 ### Network Efficiency
-- Discretionary transfers
-- Request batching
-- Connection coalescing
-- Background URLSession
+- `URLSession` configuration
+- Discretionary background downloads
+- Background session delegates
 
 ### Location Efficiency
-- Accuracy levels and energy impact
-- Continuous vs significant-change monitoring
-- Deferred location updates
-- Region monitoring
-- Background location modes
+- `CLLocationManager` accuracy, distance filter, and automatic pausing
+- Significant-change monitoring
+- `CLLocationUpdate` and `CLMonitor`
+- Accuracy levels and their energy cost
 
 ### Background Execution
-- BGTaskScheduler patterns
-- Processing task duration limits
-- Refresh task timing
-- App refresh budgets
+- `beginBackgroundTask`, `BGAppRefreshTask`, `BGProcessingTask`, `BGContinuedProcessingTask` (iOS 26+)
+- The EMRCA principles: efficient, minimal, resilient, courteous, adaptive
 
-### Display/GPU Optimization
-- Dark mode battery benefits on OLED
-- Animation energy impact
-- Blur effect costs
-- EDR and brightness
+### Display and GPU
+- Dark Mode and true black on OLED displays
+- Frame rate control with `CADisplayLink`
+- Stopping animations that aren't visible
 
-### MetricKit Integration
-- MXDiagnosticPayload for energy diagnostics
-- Production monitoring
-- Hang and crash correlation
+### Disk I/O
+- Batching writes, SQLite WAL mode, `XCTStorageMetric` in tests
+
+### Low Power Mode and Thermal State
+- Detecting Low Power Mode and responding to thermal state changes
+
+### MetricKit
+- `MXMetricManagerSubscriber` setup, energy metrics, and `MXDiagnosticPayload` (iOS 13–26)
+- Battery usage in the Xcode Organizer
 - MetricKit 27: `MetricManager` AsyncSequence streams replace `MXMetricManagerSubscriber` — see [metrickit-ref](/reference/metrickit-ref)
+
+### Push Notifications
+- Alert and background push setup, server payloads, and priority headers
+
+### Checklists
+- Troubleshooting: an app at the top of Battery settings, a hot device, background drain, high cellular use
+- Expert review checklists for timers, network, location, background execution, and display
 
 ## Key Pattern
 
@@ -122,19 +126,17 @@ config.allowsCellularAccess = false
 
 ## Documentation Scope
 
-This page documents the `axiom-performance` reference skill — complete API coverage Claude uses when you need specific energy optimization APIs and patterns.
-
-**For discipline patterns:** See [energy](/skills/debugging/energy) for Power Profiler workflows and decision trees.
-
-**For symptom-based diagnosis:** See [energy-diag](/diagnostic/energy-diag) for troubleshooting.
+This page documents the `energy-ref` skill (in the `axiom-performance` suite), the API reference your assistant uses for energy optimization APIs and patterns.
 
 ## Related
 
-- [energy](/skills/debugging/energy) – Discipline skill with Power Profiler workflows
-- [energy-diag](/diagnostic/energy-diag) – Symptom-based troubleshooting
+- [energy](/skills/debugging/energy) – Decision trees and Power Profiler workflows for finding what drains the battery
+- [energy-diag](/diagnostic/energy-diag) – Symptom-based troubleshooting, starting from what the user notices
+- [energy-auditor](/agents/energy-auditor) – Agent that scans your code for timer abuse, polling, continuous location, and background mode misuse
+- [timer-patterns](/skills/debugging/timer-patterns) – `DispatchSourceTimer` lifecycle safety and crash prevention for the timers tuned here
 
 ## Resources
 
-**WWDC**: 2025-226, 2025-227, 2022-10083
+**WWDC**: 2025-226, 2025-227, 2022-10083, 2020-10095, 2019-707, 2019-417
 
-**Docs**: /instruments, /xcode/improving-your-app-s-performance, /backgroundtasks
+**Docs**: /xcode/improving-your-app-s-performance, /backgroundtasks

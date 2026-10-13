@@ -5,21 +5,21 @@ description: Use when starting any HealthKit feature and you need the framework 
 
 # HealthKit Fundamentals
 
-The mental model for every HealthKit feature — how the store works, what data types exist, and why HealthKit behaves the way it does.
+The mental model behind every HealthKit feature: how the store works, which data types exist, and why HealthKit behaves the way it does.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Starting your first HealthKit feature and need the framework mental model
 - Deciding between characteristic data and sample data for a new type
-- Confused about `HKQuantitySample` vs `HKCumulativeQuantitySample` vs `HKDiscreteQuantitySample`
+- Confused about `HKQuantitySample` vs. `HKCumulativeQuantitySample` vs. `HKDiscreteQuantitySample`
 - Figuring out which platforms support HealthKit read and write access
 - Setting up `HKHealthStore` correctly for the first time
 - Debugging completion-handler threading issues
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "What's the difference between a characteristic type and a sample type in HealthKit?"
 - "Should I cast heart rate samples as `HKDiscreteQuantitySample` or `HKQuantitySample`?"
@@ -31,30 +31,35 @@ Questions you can ask Claude that will draw from this skill:
 ## What This Skill Provides
 
 ### Core Concepts
-- Why HealthKit is a shared store across third-party apps, not your app's private database
-- The three properties that shape every API (per-type authorization, shared contributors, immutable samples)
-- Why samples can't be edited — only deleted and replaced
+- Why HealthKit is a store shared with other apps, not your app's private database
+- The three properties that shape every API: per-type authorization, shared contributors, and immutable samples
+- Why samples can't be edited, only deleted and replaced
 
 ### HKHealthStore Setup
-- One-instance-per-app rule with a canonical `@MainActor` singleton pattern
+- The one-instance-per-app rule, with a canonical `@MainActor` singleton pattern
 - Device availability gating with `isHealthDataAvailable()`
-- `Info.plist` usage-key requirements (missing keys crash the app)
+- The required `Info.plist` usage keys (a missing key crashes the app when you request authorization)
 
 ### Data Type Hierarchy
-- The `HKObjectType` tree — characteristic types versus sample types
+- The `HKObjectType` tree: characteristic types versus sample types
 - The sample kinds (quantity, category, correlation, workout, series, clinical, audiogram, electrocardiogram, activity summary)
-- Why `HKQuantitySample` became abstract in iOS 13 and when to cast to cumulative or discrete subclasses
-- Aggregation styles that govern statistics queries (cumulative, discrete arithmetic, temporally weighted, equivalent continuous level)
-- The `heartRateVariabilityRMSSD` quantity type (27 platform releases), HealthKit's second heart rate variability metric alongside SDNN
+- Why `HKQuantitySample` became abstract in iOS 13, and when to cast to the cumulative or discrete subclass
+- The aggregation styles that govern statistics queries (cumulative, discrete arithmetic, temporally weighted, equivalent continuous level)
+- The `heartRateVariabilityRMSSD` quantity type (OS 27, every platform), HealthKit's second heart rate variability metric alongside SDNN
 
 ### Platform Availability and Threading
-- "Full" vs "Limited" HealthKit store support per platform (iOS, iPadOS 17+, watchOS, visionOS have full; macOS and Mac Catalyst are compile-only)
-- Why completion handlers run on private background queues and how to hop to the main actor safely
-- Which queries keep running until explicitly stopped
+- Which platforms have a full HealthKit store (iOS, iPadOS 17+, watchOS, visionOS) and which only compile against it (macOS, Mac Catalyst, iPadOS 16 and earlier)
+- Why completion handlers run on private background queues, and how to hop to the main actor safely
+- Which queries keep running until you stop them
+
+### Common Mistakes
+- Reading a successful `requestAuthorization` as "the user said yes"
+- Casting a quantity sample to the wrong subclass, which yields `nil` or a crash
+- Hand-summing samples that iPhone and Apple Watch both recorded, which double-counts the same activity
 
 ## Key Pattern
 
-The characteristic-vs-sample distinction is the most important thing to internalize.
+The characteristic-versus-sample distinction is the most important thing to internalize.
 
 | Aspect | Characteristic | Sample |
 |--------|----------------|--------|
@@ -63,27 +68,23 @@ The characteristic-vs-sample distinction is the most important thing to internal
 | Access | Synchronous getters on `HKHealthStore` | Queries (sample, statistics, anchored, observer) |
 | Authorization | Read-only | Read and write are separate permissions |
 
-If a data type has one answer per user, it's a characteristic. If it has a value that changes over time, it's a sample.
+If a data type has one answer per user, it's a characteristic. If its value changes over time, it's a sample.
 
 ## Documentation Scope
 
-This page documents the `fundamentals` skill in the `axiom-health` suite. The skill file contains comprehensive guidance Claude uses when answering your questions about HealthKit's data model and store setup.
-
-**For authorization and privacy** — Use [authorization-and-privacy](/skills/health/authorization-and-privacy) when you're requesting permissions, writing purpose strings, or handling read-access asymmetry.
-
-**For actually reading and writing data** — Use [queries](/skills/health/queries) for one-shot reads, rollups, and sample writes.
+This page documents the `fundamentals` skill (in the `axiom-health` suite). The skill holds the full type hierarchy, the sample-kind and platform tables, and the setup code your assistant draws on.
 
 ## Related
 
-- [authorization-and-privacy](/skills/health/authorization-and-privacy) – Required follow-up before any read or write flow; covers the permission model built on top of these data types
-- [queries](/skills/health/queries) – How to actually read the quantity, category, and workout samples described here
-- [sync-and-background](/skills/health/sync-and-background) – Long-running query lifecycles referenced in the threading section
-- [swift-concurrency](/skills/concurrency/swift-concurrency) – General Swift 6 actor isolation rules that apply to HealthKit completion handlers
+- [Authorization and Privacy](/skills/health/authorization-and-privacy) – The required next step before any read or write; covers the permission model built on these data types
+- [Queries](/skills/health/queries) – How to read the quantity, category, and workout samples described here
+- [Sync and Background](/skills/health/sync-and-background) – Lifecycles for the long-running queries mentioned under threading
+- [Workouts](/skills/health/workouts) – Live workout sessions, which build on `HKHealthStore` and the workout sample type
+- [Clinical and Mobility](/skills/health/clinical-and-mobility) – Clinical record types and mobility metrics
+- [Swift 6 Concurrency](/skills/concurrency/swift-concurrency) – General Swift 6 actor isolation rules that apply to HealthKit completion handlers
 
 ## Resources
 
-**WWDC**: 2019-218, 2020-10664, 2020-10182, 2022-10005
+**WWDC**: 2019-218 (Exploring New Data Representations in HealthKit), 2020-10664 (Getting started with HealthKit), 2020-10182 (What's new in HealthKit), 2022-10005 (What's new in HealthKit)
 
 **Docs**: /healthkit, /healthkit/about-the-healthkit-framework, /healthkit/data-types, /healthkit/hkhealthstore, /healthkit/hkobjecttype, /healthkit/hksampletype
-
-**Skills**: axiom-health, authorization-and-privacy, queries, sync-and-background, axiom-concurrency

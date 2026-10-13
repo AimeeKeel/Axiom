@@ -66,7 +66,3 @@ __weak typeof(self) weakSelf = self;
 
 - [memory-debugging](/skills/debugging/memory-debugging) – General memory leak diagnosis with Instruments
 - [memory-auditor](/agents/memory-auditor) – Automated scan for leak patterns
-
-## Resources
-
-**Docs**: /objective-c, /automatic-reference-counting

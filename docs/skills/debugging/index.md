@@ -45,8 +45,8 @@ flowchart LR
 
 ## Skills
 
-- **[Accessibility Diagnostics](/diagnostic/accessibility-diag)** – WCAG compliance, VoiceOver testing, Dynamic Type support, App Store Review preparation
-  - *"App Store rejected my app for VoiceOver issues. How do I fix missing labels?"*
+- **[Accessibility Diagnostics](/diagnostic/accessibility-diag)** – WCAG compliance, VoiceOver testing, Dynamic Type support, Accessibility Nutrition Labels
+  - *"VoiceOver reads my icon buttons as 'Button'. How do I fix missing labels?"*
   - *"How do I test my app for color contrast and Dynamic Type support?"*
   - **Command** [`/axiom:audit accessibility`](/commands/accessibility/audit-accessibility) for quick WCAG compliance scanning
 

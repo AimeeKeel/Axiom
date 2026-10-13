@@ -58,7 +58,7 @@ Questions developers ask that this reference answers:
 
 ## Documentation Scope
 
-This page documents the `background-assets-ref` skill — the API reference half of the Background Assets pair.
+This page documents the `background-assets-ref` skill (in the `axiom-integration` suite) — the Background Assets API reference.
 
 - For **when to use Background Assets vs alternatives** (bundle, iCloud, URLSession, BGProcessingTask), see [Background Assets](/skills/integration/background-assets)
 - For the **adapter-side integration** consuming this API, see [Foundation Models Adapters](/skills/integration/foundation-models-adapters)

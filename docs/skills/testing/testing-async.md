@@ -9,7 +9,7 @@ description: Swift Testing patterns for async code — confirmation for callback
 **Swift Version**: Swift 6+
 **Xcode Version**: Xcode 16+
 
-## When to Use This Skill
+## When to Use
 
 ✅ **Use this skill when**:
 - Writing tests for async functions

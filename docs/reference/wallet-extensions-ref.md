@@ -39,7 +39,7 @@ Questions developers ask that this reference answers:
 
 ## Documentation Scope
 
-This page documents the `wallet-extensions-ref` skill — the issuer provisioning surface for banks and card networks.
+This page documents the `wallet-extensions-ref` skill (in the `axiom-payments` suite) — the issuer provisioning surface for banks and card networks.
 
 - For **merchant acceptance** (accepting payments rather than issuing cards), see [Apple Pay](/skills/integration/apple-pay)
 - For **non-payment Wallet artifacts** (tickets, coupons, loyalty cards), see [Wallet Passes](/skills/integration/wallet-passes)

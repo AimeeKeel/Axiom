@@ -1,27 +1,27 @@
 ---
 name: networking-legacy
-description: NWConnection patterns for iOS 12-18 with completion handlers, UDP batching, NWListener, and NWBrowser service discovery
+description: NWConnection patterns for iOS 12–18 with completion handlers, UDP batching, NWListener, and NWBrowser service discovery
 ---
 
 # Networking Legacy
 
-NWConnection patterns for apps supporting iOS 12-18 that can't use async/await yet. Covers TLS connections, UDP batching, server listeners, and Bonjour service discovery using completion-handler-based APIs.
+`NWConnection` patterns for apps that support iOS 12–18 and can't use async/await yet. Covers TLS connections, UDP batching, server listeners, and Bonjour service discovery with the completion-handler APIs.
 
 ## When to Use
 
 Use this skill when you're:
-- Supporting iOS 12-18 and can't use NetworkConnection (iOS 26+)
-- Maintaining codebases that haven't adopted async/await
-- Building libraries that need backward compatibility
-- Implementing UDP batching for real-time streaming
-- Setting up NWListener for incoming connections
-- Using NWBrowser for Bonjour service discovery
+- Supporting iOS 12–18 and can't use `NetworkConnection` (iOS 26+)
+- Maintaining a codebase that hasn't adopted async/await
+- Building a library that needs backward compatibility
+- Batching UDP sends for real-time streaming
+- Accepting incoming connections with `NWListener`
+- Discovering Bonjour services with `NWBrowser`
 
-**Note:** If your app targets iOS 26+, use the modern NetworkConnection API instead. See [network-framework-ref](/reference/network-framework-ref).
+**Note** If your app targets iOS 26 or later, use the modern `NetworkConnection` API instead; see [network-framework-ref](/reference/network-framework-ref).
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I create a TLS connection with NWConnection for iOS 12+?"
 - "How do I batch UDP sends for better CPU performance?"
@@ -32,28 +32,32 @@ Questions you can ask Claude that will draw from this skill:
 
 ## What This Skill Provides
 
-- **TLS connections** with NWConnection using completion handlers and proper `[weak self]` patterns
-- **UDP batch sending** that reduces CPU by ~30% compared to individual sends (one syscall instead of N)
-- **NWListener** for accepting incoming connections with Bonjour advertising
-- **NWBrowser** for discovering services on the local network without hardcoded IPs
-- **Migration pointers** showing the path from each legacy pattern to its iOS 26+ equivalent
-- **When-to-use guidance** for real-time streaming, peer-to-peer, and backward-compatible libraries
+- **TLS connections** – `NWConnection` with completion handlers and the `[weak self]` captures they need
+- **UDP batch sending** – About 30% less CPU than individual sends, because a batch costs about one syscall instead of one per datagram
+- **`NWListener`** – Accepting incoming connections, with Bonjour advertising and security basics (TLS, client validation, connection limits)
+- **`NWBrowser`** – Discovering services on the local network without hardcoded IP addresses
+- **Migration pointers** – The iOS 26+ replacements for TLS connections and Bonjour discovery
+- **When-to-use guidance** – Real-time streaming, peer-to-peer apps, and backward-compatible libraries
 
 ## Key Differences from iOS 26+
 
-| NWConnection (iOS 12-18) | NetworkConnection (iOS 26+) |
+| NWConnection (iOS 12–18) | NetworkConnection (iOS 26+) |
 |--------------------------|----------------------------|
 | Completion handlers | async/await |
 | `[weak self]` required | No `[weak self]` needed |
-| stateUpdateHandler callback | Async sequence of states |
-| Manual JSON encode/decode | Built-in Coder protocol |
+| `stateUpdateHandler` callback | Optional `onStateUpdate` closure; `send` and `receive` wait until ready |
+| Manual JSON encode/decode | Built-in `Coder` protocol |
+
+## Documentation Scope
+
+This page documents the `networking-legacy` skill (in the `axiom-networking` suite), which your assistant uses when your app must still support iOS versions before 26.
 
 ## Related
 
 - [networking](/skills/integration/networking) – Network architecture decisions and modern patterns
 - [networking-migration](/reference/networking-migration) – Step-by-step migration guides from legacy to modern APIs
-- [network-framework-ref](/reference/network-framework-ref) – Complete Network.framework API reference including iOS 26+
-- [networking-diag](/diagnostic/networking-diag) – Connection failure troubleshooting
+- [network-framework-ref](/reference/network-framework-ref) – Complete Network.framework API reference, including the iOS 26+ APIs
+- [networking-diag](/diagnostic/networking-diag) – Troubleshooting connection failures
 
 ## Resources
 

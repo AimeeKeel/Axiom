@@ -5,19 +5,22 @@ description: Modernizing AppKit apps — replacing mouseDown overrides, control 
 
 # AppKit Modernization
 
-Guidance for bringing an existing AppKit app up to modern macOS conventions: input handling without `mouseDown` overrides, keyboard navigation, graceful quit and state restoration, and the macOS 27 look-and-feel.
+Bringing an existing AppKit app up to modern macOS conventions: input handling without `mouseDown` overrides, keyboard navigation, graceful quitting and state restoration, and the macOS 27 look and feel.
 
 ## When to Use
 
 Use this skill when you're:
-- Replacing `mouseDown` overrides used for selection, context menus, drag-and-drop, or text selection
+- Replacing `mouseDown` overrides used for selection, context menus, drag and drop, or text selection
 - Reacting to control interactions with control events instead of tracking loops
+- Fixing Full Keyboard Navigation that skips views or follows a stale key view loop
 - Showing custom windows from a menu bar status item (expanded interface sessions)
 - Making your app quit gracefully during system restarts and restore its windows on relaunch
-- Adopting the macOS 27 look: concentric corners, interactive Liquid Glass
+- Adopting the macOS 27 look: concentric corners and interactive Liquid Glass
 - Handling touch input on the Mac (touch scrolling, pull-to-refresh)
 
 ## Example Prompts
+
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I modernize my AppKit app's mouseDown handling?"
 - "My status item shows a custom window — how do I handle keyboard focus?"
@@ -29,8 +32,8 @@ Use this skill when you're:
 ## What This Skill Provides
 
 ### Modern Input
-- A replacement map for common `mouseDown` overrides (selection observation, context-menu APIs, modern dragging delegates, NSTextSelectionManager on macOS 27)
-- Control events in AppKit — target/action back-deploys to macOS 11; the semantic cases (`.valueChanged`, `.primaryActionTriggered`) are new in macOS 27
+- A replacement map for common `mouseDown` overrides (selection observation, context-menu APIs, modern dragging delegates, and `NSTextSelectionManager` on macOS 27)
+- Control events in AppKit: `addTarget(_:action:for:)` works back to macOS 11, and the semantic cases (`.valueChanged`, `.primaryActionTriggered`, `.trackingRepeated`, `.menuActionTriggered`) are new in macOS 27
 - The overlapping-sibling hit-testing gotcha and the `hitTest` fall-through fix
 
 ### Keyboard Navigation and Status Items
@@ -38,29 +41,28 @@ Use this skill when you're:
 - Expanded interface sessions for status items that show custom windows (macOS 27)
 
 ### Continuity
-- Graceful termination (`preventsApplicationTerminationWhenModal`)
-- The full three-step `NSWindowRestoration` workflow with encode/decode examples
+- Graceful termination: setting `preventsApplicationTerminationWhenModal` to `false` on sheets that don't need intervention
+- The full three-step `NSWindowRestoration` workflow with encode and decode examples, restoring UI state rather than data
 
 ### macOS 27 Look and Feel
-- Automatic Liquid Glass refinements, interactive glass (`effectIsInteractive`)
+- The automatic Liquid Glass refinements, and interactive glass (`effectIsInteractive`)
 - Concentric corner configuration (`cornerConfiguration`, `NSViewCornerRadius.containerConcentric`)
-- The touch-input SDK surface (touch scrolling, `NSRefreshController` pull-to-refresh)
+- Semantic roles for segmented controls and toolbar item groups
+- The touch-input SDK surface (touch scrolling, `NSRefreshController` pull-to-refresh, including in `WKWebView`)
 
 ## Documentation Scope
 
-This page documents the `appkit-modernization` skill in the `axiom-macos` suite. The skill file contains comprehensive guidance Claude uses when answering your questions about modernizing AppKit input handling, restoration, and the macOS 27 look-and-feel.
-
-**For SwiftUI hosting** — Use [appkit-interop](/skills/macos/appkit-interop) when the modernization step is adopting SwiftUI itself.
+This page documents the `appkit-modernization` skill (in the `axiom-macos` suite), which your assistant uses when you modernize AppKit input handling, state restoration, and your app's macOS 27 look and feel.
 
 ## Related
 
-- [appkit-interop](/skills/macos/appkit-interop) – hosting SwiftUI in AppKit (observation tracking, NSHostingMenu, SwiftUI scenes from an app delegate)
-- [windows](/skills/macos/windows) – scene types, window lifecycle, and document apps
-- [menus-and-commands](/skills/macos/menus-and-commands) – menu bar and command patterns
-- [uikit-modernization](/skills/ui-design/uikit-modernization) – the UIKit sibling skill
+- [appkit-interop](/skills/macos/appkit-interop) – Hosting SwiftUI in AppKit (observation tracking, `NSHostingMenu`, SwiftUI scenes from an app delegate)
+- [windows](/skills/macos/windows) – Scene types, window lifecycle, and document apps
+- [menus-and-commands](/skills/macos/menus-and-commands) – Menu bar and command patterns
+- [uikit-modernization](/skills/ui-design/uikit-modernization) – The UIKit counterpart to this skill
 
 ## Resources
 
 **WWDC**: 2026-289
 
-**Docs**: /appkit/nscontrol/events, /appkit/nswindowrestoration, /appkit/nsviewcornerconfiguration
+**Docs**: /appkit/nscontrol/events, /appkit/nstextselectionmanager, /appkit/nsstatusitem, /appkit/nswindowrestoration, /appkit/nsviewcornerconfiguration

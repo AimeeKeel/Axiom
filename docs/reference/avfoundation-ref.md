@@ -20,7 +20,7 @@ Use this reference when:
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
 - "Which audio session category should a podcast player use?"
 - "How do I activate my audio session without blocking the main thread on iOS 27?"
@@ -35,8 +35,9 @@ Questions you can ask Claude that will draw from this reference:
 ## What's Covered
 
 ### AVAudioSession
-- Categories (`.ambient`, `.soloAmbient`, `.playback`, `.record`, `.playAndRecord`, `.multiRoute`) and modes
-- Options (`.mixWithOthers`, `.duckOthers`, `.allowBluetoothHFP`, `.allowBluetoothA2DP`, `.bluetoothHighQualityRecording`, `.defaultToSpeaker`)
+- Categories (`.ambient`, `.soloAmbient`, `.playback`, `.record`, `.playAndRecord`, `.multiRoute`)
+- Modes (`.default`, `.voiceChat`, `.videoChat`, `.gameChat`, `.videoRecording`, `.measurement`, `.moviePlayback`, `.spokenAudio`)
+- Options (`.mixWithOthers`, `.duckOthers`, `.interruptSpokenAudioAndMixWithOthers`, `.allowBluetoothHFP`, `.allowBluetoothA2DP`, `.bluetoothHighQualityRecording`, `.defaultToSpeaker`, `.allowAirPlay`)
 - Interruption and route-change handling
 
 ### Async activation and deactivation (iOS 27, not macOS)
@@ -54,6 +55,7 @@ Questions you can ask Claude that will draw from this reference:
 ### Throwing engine and node APIs (iOS 27)
 - `connectNode(_:to:format:)` and bus/connection-point variants, `playAudio()`, `playAudio(at:)`
 - `installAudioTap(onBus:bufferSize:format:tapProvider:)`, `AVReadOnlyAudioPCMBuffer`, `channelData(_:)`
+- New `AVAudioPCMBuffer` accessors: `channelData(_:)`, `mutableChannelData(_:)`, `init(copying:)`, `withUnsafeAudioBufferList(_:)`
 - `connectMIDI(_:to:format:eventListProvider:)`, `AVMIDIEventListBlock`
 - `AVAudioFormat.init(formatDescription:)`
 - Realtime-safe render and receiver blocks (Objective-C and C only)
@@ -66,22 +68,22 @@ Questions you can ask Claude that will draw from this reference:
 - `AVInputPickerInteraction`
 - AirPods high-quality recording
 - Spatial audio capture (First Order Ambisonics), ASAF, APAC
-- Audio Mix with the Cinematic framework (`CNAssetSpatialAudioInfo`)
+- Audio Mix with the Cinematic framework (`CNAssetSpatialAudioInfo`, `AUAudioMix`)
+
+### Common patterns and anti-patterns
+- Background audio playback, ducking other audio, Bluetooth device handling
+- Wrong category, missing interruption handling, tap memory leaks, format mismatch crashes, forgetting to activate the session
 
 ## Documentation Scope
 
-This page documents the `avfoundation-ref` skill in the `axiom-media` suite. It is a **reference skill** — a comprehensive API guide without mandatory workflows. The skill file holds the code examples and anti-patterns Claude uses when answering.
-
-- For AVFoundation **video** writing, export, and rendering, see [AVFoundation Video](/reference/avfoundation-video-ref)
-- For camera and microphone capture sessions, see [Camera Capture](/reference/camera-capture-ref)
+This page documents the `avfoundation-ref` skill (in the `axiom-media` suite), an API reference with no mandatory workflow. The skill holds the code examples and anti-patterns your assistant uses when answering.
 
 ## Related
 
 - [AVFoundation Video](/reference/avfoundation-video-ref) – The video write/export/render counterpart to this audio reference
 - [Camera Capture](/reference/camera-capture-ref) – `AVCaptureSession` setup, which also configures the audio session for spatial and AirPods recording
 - [Now Playing](/skills/integration/now-playing) – Lock Screen and Control Center metadata for background audio playback
-- [Screen Capture](/skills/integration/screen-capture) – ScreenCaptureKit recording, which writes the `AVFileType` and codec types covered here
-- [networking](/skills/integration/networking) – Network.framework for streaming audio
+- [Screen Capture](/skills/integration/screen-capture) – ScreenCaptureKit recording, which delivers app audio and microphone sample buffers alongside the screen
 
 ## Resources
 

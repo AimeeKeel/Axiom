@@ -5,14 +5,14 @@ description: Use when building a sandboxed macOS app, debugging "Operation not p
 
 # macOS App Sandbox and File Access
 
-The kernel-enforced access-control model — what the sandbox restricts, why debug builds hide it, and the security-scoped bookmark pattern developers get wrong most often.
+How the kernel-enforced App Sandbox works: what it restricts, why debug builds hide it, and the security-scoped bookmark pattern developers most often get wrong.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
 - Building a new macOS app destined for the Mac App Store
 - Diagnosing an app that works in debug but fails in release, TestFlight, or production
-- Seeing "Operation not permitted" or sandbox violation errors
+- Seeing "Operation not permitted" or sandbox-violation errors
 - Implementing file open/save/import workflows on macOS
 - Persisting access to user-selected files across app launches
 - Preparing a macOS app for App Store review or notarization
@@ -21,7 +21,7 @@ Use this skill when you're:
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "My app works in Xcode but fails to open files in release. Why?"
 - "How do I keep access to a user-selected folder across app launches?"
@@ -35,32 +35,33 @@ Questions you can ask Claude that will draw from this skill:
 
 ### The Sandbox Model
 - What the sandbox restricts at the kernel level (container, user-selected files, entitled resources)
-- Why Xcode debug builds bypass the sandbox — the #1 cause of "works on my machine"
-- Four ways to test in the sandbox: Activity Monitor's Sandbox column, enabling in debug, exported archive, TestFlight
+- Why Xcode debug builds bypass the sandbox, the leading cause of "works on my machine" bugs
+- Four ways to test in the sandbox: Activity Monitor's Sandbox column, enabling it in debug builds, an exported archive, and TestFlight
 
 ### File Access Patterns
-- Decision tree across container files, fileImporter, security-scoped bookmarks, standard folder entitlements, App Groups, and Full Disk Access
+- A decision tree across container files, `fileImporter`, security-scoped bookmarks, standard folder entitlements, App Groups, and Full Disk Access
 - SwiftUI `.fileImporter`/`.fileExporter` with proper `defer { stopAccessingSecurityScopedResource() }`
 - AppKit `NSOpenPanel`/`NSSavePanel` with the same balance rule
-- The auto-started access rule — panel URLs come with access started; you only need to stop
+- The auto-started access rule: URLs from panels, `fileImporter`, and Dock drag and drop arrive with access already started, so you only need to stop it
 
 ### Security-Scoped Bookmarks
-- Step-by-step: create immediately on grant, store in a file (not UserDefaults), resolve with `bookmarkDataIsStale`, refresh stale bookmarks
+- The bookmark entitlements (`files.bookmarks.app-scope`, `files.bookmarks.document-scope`) that creating them requires
+- Step by step: create the bookmark as soon as access is granted, store it in a file (not `UserDefaults`), resolve it with `bookmarkDataIsStale`, and refresh stale bookmarks
 - Read-only mode via `.securityScopeAllowOnlyReadAccess`
 - Document-relative bookmarks for project-file references
-- The critical distinction: resolved bookmarks need `startAccessingSecurityScopedResource()`; panel URLs do not
+- The critical distinction: resolved bookmarks need `startAccessingSecurityScopedResource()`; panel URLs don't
 
 ### Entitlements
-- Core sandbox entitlement and Mac App Store requirement
+- The core `com.apple.security.app-sandbox` entitlement, which the Mac App Store requires
 - File access entitlements (`files.user-selected.*`, `files.downloads.*`, `files.pictures.*`, `files.music.*`, `files.movies.*`, `files.all`)
 - Network entitlements (`network.client`, `network.server`)
 - Device, personal-information, and App Group entitlements
-- Why temporary exceptions raise App Review scrutiny and the principle of least privilege
+- Why temporary exceptions draw App Review scrutiny, and the principle of least privilege
 
 ### Diagnosing Violations
-- Console.app subsystem `com.apple.sandbox.reporting` filter and the `violation` category
+- Filtering Console.app on the `com.apple.sandbox.reporting` subsystem and its `violation` category
 - `log stream` for live diagnostic output
-- Quinn's diagnostic flow: confirm sandbox is the cause, check entitlements, check for stale bookmarks, check code signing identity
+- Apple DTS engineer Quinn's diagnostic flow: confirm the sandbox is the cause, then check entitlements, stale bookmarks, and the code signing identity
 
 ### Cross-Team Container Access (macOS 27)
 - macOS 27 denies access to other developer teams' app data and app group containers by default, without prompting; the user manages exceptions in Privacy & Security settings
@@ -76,13 +77,11 @@ defer { url.stopAccessingSecurityScopedResource() }
 return try Data(contentsOf: url)
 ```
 
-Failing to call `stop` leaks a kernel resource. Enough leaks and ALL file access stops working until the user force-quits your app. Store bookmark data in a file in your app's container — never in `UserDefaults`.
+Every unbalanced `start` leaks a kernel resource, and after enough leaks all file access fails until the user quits and relaunches your app. Store bookmark data in a file in your app's container, never in `UserDefaults`.
 
 ## Documentation Scope
 
-This page documents the `sandbox-and-file-access` skill in the `axiom-macos` suite. The skill file contains comprehensive guidance Claude uses when answering your questions about the sandbox, file access, and entitlements.
-
-**For code signing and notarization** — Use [direct-distribution](/skills/macos/direct-distribution) for the signing, notarization, and packaging side of shipping.
+This page documents the `sandbox-and-file-access` skill (in the `axiom-macos` suite), which your assistant uses when you work with the App Sandbox, file access, and entitlements.
 
 ## Related
 
@@ -96,5 +95,3 @@ This page documents the `sandbox-and-file-access` skill in the `axiom-macos` sui
 **WWDC**: 2022-10096, 2023-10053, 2024-10123
 
 **Docs**: /security/app-sandbox, /security/accessing-files-from-the-macos-app-sandbox, /security/discovering-and-diagnosing-app-sandbox-violations, /xcode/configuring-the-macos-app-sandbox
-
-**Skills**: axiom-macos, direct-distribution, settings, appkit-interop

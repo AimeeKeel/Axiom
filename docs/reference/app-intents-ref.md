@@ -5,25 +5,25 @@ description: App Intents for Siri, Apple Intelligence, Shortcuts, Spotlight inte
 
 # App Intents Reference
 
-Complete API reference for App Intents framework. Covers AppIntent protocol, AppEntity, parameter handling, entity queries, and integration with Siri, Apple Intelligence, Shortcuts, and Spotlight.
+API reference for the App Intents framework, which exposes your app's actions and content to Siri, Apple Intelligence, Shortcuts, Spotlight, and Visual Intelligence. It covers intents, entities, queries, app schemas, and automated intent tests.
 
 ## When to Use This Reference
 
 Use this reference when you need:
-- AppIntent and AppEntity protocol implementation
+- To implement the `AppIntent` and `AppEntity` protocols
 - Parameter types and validation patterns
 - Entity queries for Siri disambiguation
 - Siri voice command integration
-- Shortcuts app action creation
-- Spotlight search indexing
-- Apple Intelligence integration
+- Actions in the Shortcuts app
+- Your app's content and actions in Spotlight search
+- Apple Intelligence integration through app schemas or the Use Model action
 - Automated tests that run your intents through the system (iOS 27)
 
-**For quick start:** Define an AppIntent, add parameters, implement perform().
+**For a quick start:** define an `AppIntent`, add parameters, and implement `perform()`.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
 - "How do I create an AppIntent for Siri?"
 - "How do I implement an AppEntity with queries?"
@@ -31,64 +31,62 @@ Questions you can ask Claude that will draw from this reference:
 - "Why isn't my intent showing up in Shortcuts?"
 - "How do I handle authentication in App Intents?"
 - "How do I index my intents for Spotlight search?"
-- "How do I adopt an app schema so Siri can drive my app? (iOS 27)"
-- "How do I write automated tests for my App Intents? (iOS 27)"
+- "How do I adopt an app schema so Siri can drive my app?"
+- "How do I write automated tests for my App Intents?"
 - "Why does my App Intents test say the intent doesn't exist?"
 
 ## What's Covered
 
-### Core Protocols
-- AppIntent definition and perform()
-- AppEntity with display representations
-- EntityQuery for finding entities
-- Parameter types and validation
+### Core Building Blocks
+- `AppIntent`: `title`, `description`, `isDiscoverable`, `@Parameter`, parameter summaries, `perform()`, errors
+- `AppEntity`: display representations, exposed properties, `@ComputedProperty`, `@DeferredProperty`
+- `AppEnum`
+- `EntityQuery` and `EntityStringQuery`; keeping entities separate from your data models
 
-### Siri Integration
-- Voice command handling
-- Disambiguation prompts
-- Confirmation dialogs
-- Error messages for voice
+### Execution and Interaction
+- Intent modes: `supportedModes` (iOS 26+), which replaces the deprecated `openAppWhenRun`, and `continueInForeground`
+- Confirmation dialogs and multiple choice (`requestChoice`, iOS 26+)
+- Interactive snippets (`SnippetIntent`, iOS 26+)
+- `AppIntentsPackage` for intents in Swift packages
 
-### Authentication & Security
-- IntentAuthenticationPolicy (iOS 16+)
-- Schema-inherited policies and risk-based confirmations (OS 27)
-- App Schemas — `@AppEntity`/`@AppIntent`/`@AppEnum(schema:)` macros + system schema domains (debuted iOS 18; domains expanded iOS 27: Calendar, Maps, Phone, Reminders, Notes, ImageGeneration, AppStore, Audio, Clock)
+### Authentication and Security
+- `IntentAuthenticationPolicy` (iOS 16+)
+- Schema-inherited policies and risk-based confirmations (iOS 27)
+
+### App Schemas
+- `@AppEntity`, `@AppIntent`, and `@AppEnum(schema:)` macros, which replace the deprecated `@Assistant…` macros
+- System schema domains: debuted in iOS 18; the 27 cycle adds Audio, Calendar, Clock, Maps, Messages, Notes, Phone, Reminders, ImageGeneration, and AppStore
 - Xcode schema-completeness build errors with fix-its (iOS 27)
+- Cross-app content: on-screen annotations and `Transferable` export
 
 ### Apple Intelligence
-- Smart suggestions
-- Contextual actions
-- Proactive recommendations
-- System integration
+- The Use Model action in Shortcuts (iOS 18.1+)
+- Exposing entities to models, `AttributedString` output, automatic type conversion, Follow-Up
 
-### Shortcuts App
-- Action discovery
-- Parameter customization
-- Multi-step workflows
-- Background execution
-
-### Spotlight Search
-- Intent indexing
-- Search result actions
-- Deep linking patterns
+### Spotlight and the Mac
+- `IndexedEntity` and its auto-generated Find action
+- Spotlight on Mac: parameter-summary requirements, suggestions, on-screen content tagging, `PredictableIntent`
+- Automations on Mac (folder and external-drive triggers)
 
 ### Visual Intelligence
-- Visual Intelligence integration (IntentValueQuery, SemanticContentDescriptor)
-- Computed and deferred properties (@ComputedProperty, @DeferredProperty)
-- Intent modes and background-to-foreground transitions
-- Interactive snippets (SnippetIntent)
+- `IntentValueQuery` and `SemanticContentDescriptor`
+- On-screen entities (`NSUserActivity.appEntityIdentifier`)
 
 ### Testing (iOS 27)
-- AppIntentsTesting — `IntentDefinitions`, `makeIntent`, `run()`, `ResolvedIntentResult`
+- AppIntentsTesting: `IntentDefinitions`, `makeIntent`, `run()`, `ResolvedIntentResult`
+- Why the tests must live in a UI Testing Bundle
 - Passing strings, enums, entities, transient entities, and your own wrapper types as parameters
 - Which entity properties a test can read
-- Spotlight (`spotlightQuery`), on-screen annotations (`viewAnnotations`), and Transferable round trips
+- Spotlight (`spotlightQuery`), on-screen annotations (`viewAnnotations`), and `Transferable` round trips
 - Error reference: wrong bundle type, stale intent metadata, misspelled parameters, the 30-second timeout
 - Running the tests with Swift Testing instead of XCTest
 
 ### Debugging
-- Shortcuts app debugging
-- Siri transcript logging
+- Testing by hand in Shortcuts and Siri
+- Common issues: an intent missing from Shortcuts, parameters that don't resolve, crashes in the background, empty entity queries
+
+### Best Practices
+- Intent naming, parameter summaries, error messages, entity suggestions, and an App Store checklist
 
 ## Key Pattern
 
@@ -96,7 +94,7 @@ Questions you can ask Claude that will draw from this reference:
 
 ```swift
 struct OrderCoffeeIntent: AppIntent {
-    static var title: LocalizedStringResource = "Order Coffee"
+    static let title: LocalizedStringResource = "Order Coffee"
 
     @Parameter(title: "Coffee Type")
     var coffeeType: CoffeeType
@@ -115,31 +113,33 @@ struct SongEntity: AppEntity {
     var id: String
     var title: String
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Song"
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Song"
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(title)")
     }
 
-    static var defaultQuery = SongEntityQuery()
+    static let defaultQuery = SongEntityQuery()
 }
 
 struct SongEntityQuery: EntityQuery {
     func entities(for identifiers: [String]) async throws -> [SongEntity] {
-        // Fetch songs by ID
+        try await SongStore.shared.songs(ids: identifiers)
     }
 
     func suggestedEntities() async throws -> [SongEntity] {
-        // Return popular songs for Siri
+        try await SongStore.shared.popularSongs(limit: 10)  // suggestions for Siri
     }
 }
 ```
 
+## Intent Not Showing Up
+
+If an intent is missing from Shortcuts, first check that it isn't marked `isDiscoverable = false`; leaving the property out is fine, because it defaults to `true`. Then launch the app once after installing the new build. After a reinstall, the system keeps serving the previous build's intents until the app launches, and retrying doesn't refresh them.
+
 ## Documentation Scope
 
-This page documents the `app-intents-ref` reference skill in the `axiom-integration` suite — complete API coverage Claude uses when you need specific App Intents APIs, integration patterns, or automated intent tests.
-
-**For troubleshooting:** If an intent doesn't show up, first check that it isn't marked `isDiscoverable = false`. Then launch the app once after installing the new build. The intent list is compiled into the app bundle (not Info.plist), and in testing on the iOS 27 simulator the system kept serving the previous build's intents after a reinstall until the app launched — a minute of retries didn't refresh it.
+This page documents the `app-intents-ref` skill (in the `axiom-integration` suite), the API reference your assistant uses for App Intents APIs, integration patterns, and automated intent tests. The skill holds the full API detail and code examples.
 
 ## Related
 
@@ -147,9 +147,11 @@ This page documents the `app-intents-ref` reference skill in the `axiom-integrat
 - [core-spotlight-ref](/reference/core-spotlight-ref) – Indexes the entities your intents operate on, so they appear in Spotlight search
 - [ui-testing](/skills/ui-design/ui-testing) – Where AppIntentsTesting tests live: they must run from a UI test target
 - [extensions-widgets](/skills/integration/extensions-widgets) – Interactive widgets and Control Center controls run App Intents for their buttons and toggles
+- [app-discoverability](/skills/integration/app-discoverability) – The strategy for surfacing your app system-wide, of which App Intents are one part
+- [agentic-security](/skills/security/agentic-security) – Threat modeling for schema-adopting intents that the model, not the user, decides to run
 
 ## Resources
 
-**WWDC**: 2026-295 (App Intents testing), 2025-260 (App Intents), 2023-10103 (Dive into App Intents), 2022-10170 (App Shortcuts)
+**WWDC**: 2026-240, 2026-295, 2026-343, 2026-345, 2026-347, 2025-244, 2025-260, 2025-275
 
-**Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintentstesting
+**Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintentstesting

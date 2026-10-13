@@ -1,6 +1,6 @@
 # watchOS
 
-Build Apple Watch apps the supported way — SwiftUI-first, independent, and built with the watchOS 26 SDK. These skills cover app structure, Watch Connectivity, Smart Stack widgets and complications, controls, Live Activities, background tasks, and migration from WatchKit and ClockKit.
+Build Apple Watch apps the supported way: SwiftUI-first, independent, and built with the watchOS 26 SDK or later. These skills cover app structure, Watch Connectivity, Smart Stack widgets and complications, controls, Live Activities, background tasks, migration from WatchKit and ClockKit, and what's new in watchOS 27.
 
 ```mermaid
 flowchart LR
@@ -28,62 +28,69 @@ flowchart LR
 Use watchOS skills when you're:
 
 - Starting a new watchOS app or adding a watchOS target to an existing iOS app
-- Preparing for the April 2026 watchOS 26 SDK and ARM64 submission deadlines
+- Meeting the watchOS 26 SDK and ARM64 submission requirements in effect since April 2026
 - Coordinating data and state between a paired iPhone and Apple Watch
 - Building complications, Smart Stack widgets, or controls for watch surfaces
 - Presenting Live Activities on the watch
-- Scheduling background refreshes or dealing with TN3135 networking limits
+- Scheduling background refreshes, moving to `BGTaskScheduler` in watchOS 27, or working within the low-level networking limits in Apple's technote TN3135
+- Adding Foundation Models to a watch app in watchOS 27
 - Migrating WatchKit or ClockKit code to SwiftUI and WidgetKit
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from these skills:
+Questions you can ask your assistant that will draw from these skills:
 
 - "How do I structure a new watchOS app that also has a companion iPhone app?"
 - "My watch app needs to work without the iPhone installed. What changes?"
 - "How do I send a file from the phone to the watch and handle delivery failure?"
-- "My complication is stale — how should I update it from a push notification?"
+- "My complication is stale. How should I update it from a push notification?"
 - "How do I migrate my ClockKit complication to WidgetKit?"
 - "What are the watchOS 26 submission requirements?"
 
 ## Skills
 
-- **[Platform Basics](/skills/watchos/platform-basics)** – App structure, independent vs. companion, entry point, submission gates
+- **[Platform Basics](/skills/watchos/platform-basics)** – App structure, independent vs. companion apps, the entry point, submission requirements, and Foundation Models on the watch
   - *"Starting a new watchOS app — watch-only, companion, or independent?"*
-  - *"What do I need to verify before submitting to the App Store in April 2026?"*
+  - *"What do I need to verify before submitting to the App Store?"*
 
-- **[Design for watchOS](/skills/watchos/design-for-watchos)** – watchOS HIG, glanceable UX, navigation model
+- **[Design for watchOS](/skills/watchos/design-for-watchos)** – watchOS HIG, glanceable UX, the navigation model, and Always On
   - *"How should I structure navigation on the watch — NavigationStack or a TabView?"*
   - *"My watch screens feel cluttered. What does Apple recommend for glanceable UX?"*
 
-- **[Watch Connectivity](/skills/watchos/watch-connectivity)** – WCSession, paired-device data transfer, Family Setup
+- **[Watch Connectivity](/skills/watchos/watch-connectivity)** – `WCSession`, paired-device data transfer, and Family Setup
   - *"How do I sync preferences between my iPhone and Apple Watch apps?"*
   - *"`transferUserInfo` vs. `updateApplicationContext` vs. `sendMessage` — which one do I use?"*
 
-- **[Apple Watch Connection Diagnostics](/diagnostic/watch-device-diag)** – Getting a Watch reliably attached to Xcode, and telling that apart from a WatchConnectivity problem
+- **[Apple Watch Connection Diagnostics](/diagnostic/watch-device-diag)** – Getting a Watch reliably attached to Xcode, and telling that apart from a Watch Connectivity problem
   - *"Xcode can't see my Apple Watch — where do I start?"*
   - *"My Watch shows `unavailable` in Device Hub. Do I need to unpair it?"*
 
-- **[Background and Networking](/skills/watchos/background-and-networking)** – Background tasks, freshness scheduling, TN3135 networking limits
+- **[Background and Networking](/skills/watchos/background-and-networking)** – Background tasks, `BGTaskScheduler`, freshness scheduling, and TN3135 networking limits
   - *"How do I refresh my watch app's data while it's on the wrist?"*
   - *"Why do my network requests on the watch hit limits the iPhone doesn't?"*
 
-- **[Smart Stack and Complications](/skills/watchos/smart-stack-and-complications)** – WidgetKit on the watch, RelevanceKit, ClockKit bridging
+- **[Smart Stack and Complications](/skills/watchos/smart-stack-and-complications)** – WidgetKit on the watch, RelevanceKit, and ClockKit bridging
   - *"How do I make my complication show up in the Smart Stack at the right time?"*
   - *"My complication isn't updating — what's the right way to push new data?"*
 
-- **[Controls and Live Activities](/skills/watchos/controls-and-live-activities)** – Controls on watch surfaces, Live Activities on watch
+- **[Controls and Live Activities](/skills/watchos/controls-and-live-activities)** – Controls on watch surfaces, and Live Activities on the watch
   - *"How do I add a control to the watch's Smart Stack and Control Center?"*
   - *"My Live Activity shows on iPhone — how do I make it look right on the watch?"*
 
-- **[Modernization](/skills/watchos/modernization)** – WatchKit to SwiftUI, ClockKit to WidgetKit
+- **[Modernization](/skills/watchos/modernization)** – WatchKit to SwiftUI, and ClockKit to WidgetKit
   - *"My app still uses a WatchKit Extension — what's the migration path?"*
   - *"How do I replace my ClockKit complication provider with WidgetKit?"*
 
+- **[Accessibility on watchOS](/skills/watchos/watchos-a11y)** – The VoiceOver rotor, AssistiveTouch, and Double Tap (part of the axiom-accessibility suite)
+  - *"How do I make my custom watch control adjustable with VoiceOver?"*
+  - *"Why can't AssistiveTouch focus this element?"*
+
 ## Related
 
-- **[axiom-health](/skills/health/)** – HealthKit sessions and WorkoutKit. Use when the watch app records workouts or reads health data
-- **[axiom-swiftui](/skills/ui-design/)** – General SwiftUI patterns (state, layout, animations) that apply across iOS, watchOS, and macOS
-- **[axiom-design](/skills/ui-design/hig)** – General Apple HIG, Liquid Glass, SF Symbols, typography
-- **[axiom-accessibility](/diagnostic/accessibility-diag)** – VoiceOver rotor, AssistiveTouch, Double Tap — the watch-specific accessibility surfaces
+- **[axiom-health](/skills/health/)** – HealthKit sessions and WorkoutKit, for watch apps that record workouts or read health data
+- **[axiom-swiftui](/skills/ui-design/)** – General SwiftUI patterns (state, layout, animation) that apply across iOS, watchOS, and macOS
+- **[axiom-design](/skills/ui-design/hig)** – The general Apple HIG, Liquid Glass, SF Symbols, and typography
+- **[axiom-accessibility](/diagnostic/accessibility-diag)** – Cross-platform VoiceOver, Dynamic Type, and WCAG fundamentals
 - **[axiom-integration](/skills/integration/extensions-widgets)** – iOS-side widgets, core ActivityKit, and App Intents that a watch app may coordinate with
+- **[axiom-ai](/reference/foundation-models-ref)** – Foundation Models sessions, `@Generable`, tools, and Private Cloud Compute, which the watch uses in watchOS 27
+- **[axiom-vision](/skills/computer-vision/)** – The Vision framework, new on watchOS 27

@@ -6,9 +6,9 @@ version: 1.0.0
 
 # GRDB Across App Groups
 
-Discipline for sharing a SQLite database between the main app and its widgets, extensions, or Live Activities on iOS. GRDB's own docs say this is "extremely difficult on iOS and almost impossible to test." This skill makes the checklist explicit.
+Discipline for sharing one SQLite database between your main app and its widgets, extensions, or Live Activities on iOS. GRDB's own documentation calls this "extremely difficult on iOS" and "almost impossible to test", so the skill turns it into an explicit checklist.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're seeing any of these:
 
@@ -19,66 +19,70 @@ Use this skill when you're seeing any of these:
 - "Two processes hit `SQLITE_BUSY` and never recover"
 - "SQLite error 10 (`SQLITE_IOERR`) only on locked devices"
 - "Why does my widget see different data than the app?"
-- You're starting a new widget/extension and need to read from the app's GRDB database safely
+- You're starting a new widget or extension that must read the app's GRDB database safely
 
-**This is a different symptom class from [grdb-performance](/skills/persistence/grdb-performance)**: performance fires on "query slow"; this one fires on "process boundary violated."
+This skill covers a different symptom class from [grdb-performance](/skills/persistence/grdb-performance), which fires on "query slow"; this one fires on "process boundary violated".
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
-- "My widget needs to read the same database as the app — how do I set it up safely?"
-- "I shipped to TestFlight and now I'm getting `0xDEAD10CC` crashes — what?"
+- "My widget needs to read the same database as the app. How do I set it up safely?"
+- "I shipped to TestFlight and now I'm getting `0xDEAD10CC` crashes. What's causing them?"
 - "My Live Activity can't read the database after the device locks. Why?"
 - "How do I notify my widget when the app writes to the database?"
-- "Should I use `DatabaseQueue` or `DatabasePool` for my app + widget setup?"
+- "Should I use `DatabaseQueue` or `DatabasePool` when my app and widget share a database?"
 - "What Data Protection class should my shared SQLite file use?"
 
 ## What This Skill Provides
 
-### Decision Frame
-- Snapshot file pattern (when you can avoid live sharing entirely)
-- WidgetCenter timeline reloads
+### Prefer Not to Share
+- The snapshot-file pattern: the app writes a derived JSON or read-only SQLite file for the widget
+- WidgetCenter timelines computed by the app, so the widget never opens the database
 - Shared `UserDefaults` for small datasets
+- Darwin notifications that ask the app to refresh instead of opening the database from the widget
 
 ### Mandatory Setup
-- App Groups entitlement on every target
-- Container URL retrieval
-- Dedicated subdirectory for the `.db` + `-wal` + `-shm` trio
+- The App Groups entitlement on every target, all listing the same group identifier
+- Resolving the container URL
+- A dedicated subdirectory for the `.db`, `-wal`, and `-shm` files
+- Running the same versioned migration in every process before it writes, so an FTS5 index can't drift
 
 ### Mandatory PRAGMAs and Configuration
-- `DatabasePool` required (WAL automatic, supports concurrent reads)
-- Persistent WAL via `SQLITE_FCNTL_PERSIST_WAL` ioctl
+- `DatabasePool`, which enables WAL automatically and allows concurrent reads
+- Persistent WAL through the `SQLITE_FCNTL_PERSIST_WAL` file control
 - `Configuration.busyMode = .timeout(5)`
-- `locking_mode = NORMAL` (not `EXCLUSIVE`)
+- `locking_mode = NORMAL`, never `EXCLUSIVE`
+- `PRAGMA optimize` in the writer process, since read-only widgets can't refresh the planner's statistics
 
 ### Data Protection
-- Why `.complete` breaks widgets after auto-lock
+- Why an explicit `.complete` breaks widgets after auto-lock
 - `.completeUntilFirstUserAuthentication` for shared databases
-- Apply to all three files (`.db`, `.db-wal`, `.db-shm`)
-- iOS 17+ `.completeWhenUserInactive` — when not to use it for widget sharing
+- Applying one class to all three files (`.db`, `-wal`, `-shm`), and again after any migration that recreates them
+- Why iOS 17's `.completeWhenUserInactive` blocks widget reads during idle periods
 
 ### Suspension Defense (`0xDEAD10CC`)
-- The iOS suspension watchdog and SQLite locks
+- How the iOS suspension watchdog terminates an app that still holds SQLite locks
 - `Configuration.observesSuspensionNotifications = true`
-- `Database.suspendNotification` / `resumeNotification` lifecycle posts
-- **Use `DidEnterBackground` not `WillResignActive`** – `.inactive` is transient
-- SwiftUI `scenePhase` wiring with `.inactive` as no-op
-- Catching `SQLITE_INTERRUPT` (9) and `SQLITE_ABORT` (4) at call sites
+- Posting `Database.suspendNotification` and `resumeNotification` from the app lifecycle
+- **Suspend on entering the background, not on resigning active** – `.inactive` is transient
+- SwiftUI `scenePhase` wiring, with `.inactive` as a no-op
+- Catching `SQLITE_ABORT` (4) and `SQLITE_INTERRUPT` (9) on the write path
 
 ### File Coordination on Open
-- `NSFileCoordinator` for writer/reader race protection
-- Preventing migration races on first multi-process launch
+- `NSFileCoordinator` to stop writer and reader races at open time
+- Read-only opens with `readingItemAt:` and `.withoutChanges`
+- Preventing migration races on the first multi-process launch
 
 ### Cross-Process Change Notification
-- `DatabaseRegionObservation` for transaction detection
-- Darwin notifications via `CFNotificationCenterGetDarwinNotifyCenter`
-- Pass `false` / `0` for `deliverImmediately` (ignored on Darwin)
+- `DatabaseRegionObservation` to detect every commit
+- Darwin notifications through `CFNotificationCenterGetDarwinNotifyCenter`
+- Why `deliverImmediately` is ignored on the Darwin center
 
 ### `SQLITE_BUSY` Retry
-- Always expected with multi-process
-- Exponential backoff (50ms, 200ms, 500ms)
-- When to surface to user as "sync busy" state
+- Why `SQLITE_BUSY` is expected, not fatal, when several processes share a database
+- Exponential backoff (50 ms, 200 ms, 500 ms) wrapped around the whole `write` call
+- When to show the user a "sync busy" state
 
 ## Key Pattern
 
@@ -147,19 +151,19 @@ let cancellable = regionObservation.start(in: dbPool) { error in
 
 ## Documentation Scope
 
-This page documents the `grdb-app-groups` skill — multi-process SQLite sharing discipline. For automated scanning of these patterns, use [grdb-performance-auditor](/agents/grdb-performance-auditor) (it includes app-group detection).
+This page documents the `grdb-app-groups` skill (in the `axiom-data` suite). For an automated scan, use the [grdb-performance-auditor](/agents/grdb-performance-auditor) agent, which flags journal-mode mismatches and missing suspension defense in app-group databases.
 
 ## Related
 
 - [grdb](/skills/persistence/grdb) – GRDB primer for setup and queries
-- [grdb-performance](/skills/persistence/grdb-performance) – performance discipline including `PRAGMA optimize` for shared DBs
-- [sqlite-fts-ref](/reference/sqlite-fts-ref) – cross-process FTS5 trigger caveats
-- [icloud-drive-ref](/reference/icloud-drive-ref) – iCloud Drive-based sharing (different model)
-- [storage](/reference/storage) – storage location semantics
-- [grdb-performance-auditor](/agents/grdb-performance-auditor) – detects journal mode mismatch and missing suspension defense for app-group DBs
+- [grdb-performance](/skills/persistence/grdb-performance) – performance discipline, including the `PRAGMA optimize` setup the writer process runs for shared databases
+- [database-migration](/skills/persistence/database-migration) – the versioned migrations every process runs before it writes
+- [sqlite-fts-ref](/reference/sqlite-fts-ref) – FTS5 sync triggers, and why a process that writes before the migration leaves the index stale
+- [icloud-drive-ref](/reference/icloud-drive-ref) – iCloud Drive file sharing, a different model from a shared database
+- [storage](/skills/persistence/storage) – deciding where data lives before you decide to share it
 
 ## Resources
 
-**GRDB docs**: github.com/groue/GRDB.swift Documentation/DatabaseSharing.md
+**GRDB docs**: github.com/groue/GRDB.swift, Documentation/DatabaseSharing.md
 
-**Apple docs**: configuring-app-groups, FileProtectionType
+**Docs**: /xcode/configuring-app-groups, /foundation/fileprotectiontype, /foundation/nsfilecoordinator

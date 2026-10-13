@@ -8,25 +8,25 @@ apple_platforms: iOS 14+, iPadOS 14+, watchOS 9+
 
 # Extensions & Widgets
 
-Widget development patterns for Home Screen, Lock Screen, StandBy, and Control Center controls. Covers timeline management, data sharing between app and extensions, and extension lifecycle.
+Patterns for Home Screen, Lock Screen, and StandBy widgets and Control Center controls. Covers timeline management, data sharing between your app and its extensions, and the limits extensions run under.
 
-> **Live Activities** (Dynamic Island, ActivityKit, push/broadcast) have their own page: [live-activities](/skills/integration/live-activities).
+> **Live Activities** (Dynamic Island, ActivityKit, push and broadcast updates) have their own page: [live-activities](/skills/integration/live-activities).
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when you're:
-- Implementing any widget (Home Screen, Lock Screen, StandBy, Control Center)
-- Widget shows stale data or doesn't update
-- Widget not appearing in gallery
-- Interactive buttons not responding
-- Control Center control is unresponsive
-- Sharing data between main app and widget
+Use this skill when:
+- You're implementing any widget (Home Screen, Lock Screen, StandBy, Control Center)
+- A widget shows stale data or doesn't update
+- A widget doesn't appear in the widget gallery
+- Interactive widget buttons don't respond
+- A Control Center control is unresponsive
+- You need to share data between your app and a widget
 
-**Mental model:** Widgets are archived snapshots on a timeline, not live views. They render, get archived, and the system displays the snapshot.
+**Mental model** Widgets are archived snapshots on a timeline, not live views. A widget renders, the system archives the result, and it displays that snapshot.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "My widget isn't updating even after I change data in the main app."
 - "How do I share data between my app and widget?"
@@ -38,33 +38,35 @@ Questions you can ask Claude that will draw from this skill:
 ## What This Skill Provides
 
 ### Timeline Management
-- TimelineProvider patterns (getTimeline, getSnapshot, placeholder)
-- Refresh budgets and policies
-- Manual reload with WidgetCenter
+- `TimelineProvider` patterns (`getTimeline`, `getSnapshot`, `placeholder`)
+- Reload budgets and timeline policies
+- Manual reloads with `WidgetCenter`
 - When widgets actually update
 
 ### Data Sharing
 - App Groups entitlement setup
-- Shared UserDefaults with suite name
-- Container URLs for file sharing
-- Why widgets can't see main app data directly
+- Shared `UserDefaults` with a suite name
+- Shared container URLs for files
+- Why widgets can't see the main app's data directly
 
 ### Control Center Controls (iOS 18+)
-- ValueProvider for async state
-- Optimistic UI patterns
+- `ControlValueProvider` for async state
+- A `previewValue` for instant fallback
 - Control action handling
 
 ### Interactive Widgets (iOS 17+)
 - App Intent integration
-- Button/Toggle in widget views
-- perform() implementation
-- WidgetCenter reload after actions
+- `Button` and `Toggle` in widget views
+- `perform()` implementation
+- When the system reloads the tapped widget for you, and when you reload manually
 
 ### Common Anti-Patterns
-- Network calls in widget view (use TimelineProvider)
-- Missing App Groups entitlement
-- Wrong UserDefaults suite name
-- Forgetting WidgetCenter.shared.reloadAllTimelines()
+- Network calls in the widget view (prefetch in the app, or fetch in `TimelineProvider`)
+- Missing App Groups entitlement, or a different group ID in each target
+- `UserDefaults.standard` instead of the shared suite
+- Over-refreshing until the reload budget runs out
+- Blocking calls in Control Center controls
+- Missing `supportedFamilies()`, which keeps a widget out of the gallery
 
 ## Key Pattern
 
@@ -111,17 +113,13 @@ struct WidgetView: View {
 
 ## Documentation Scope
 
-This page documents the `axiom-integration` skill — widget development patterns Claude uses when you're implementing Home Screen widgets or Control Center controls.
-
-**For comprehensive API reference:** See [extensions-widgets-ref](/reference/extensions-widgets-ref) for complete API coverage, troubleshooting, and expert review checklist.
-
-**For App Intents:** See [app-intents-ref](/reference/app-intents-ref) for interactive widget button implementation.
+This page documents the `extensions-widgets` skill (in the `axiom-integration` suite), which your assistant uses when you build widgets or Control Center controls.
 
 ## Related
 
-- [live-activities](/skills/integration/live-activities) – Live Activities & Dynamic Island (extracted from this skill)
-- [extensions-widgets-ref](/reference/extensions-widgets-ref) – Complete API reference, troubleshooting, expert checklist
-- [app-intents-ref](/reference/app-intents-ref) – App Intents for interactive widgets
+- [live-activities](/skills/integration/live-activities) – Live Activities and the Dynamic Island, which share the widget extension and its App Groups setup
+- [extensions-widgets-ref](/reference/extensions-widgets-ref) – Complete API reference, troubleshooting, and expert checklist
+- [app-intents-ref](/reference/app-intents-ref) – App Intents for interactive widgets and controls
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for data fetching
 - [swiftdata](/skills/persistence/swiftdata) – Using SwiftData with App Groups
 
@@ -129,4 +127,4 @@ This page documents the `axiom-integration` skill — widget development pattern
 
 **WWDC**: 2025-278, 2024-10157, 2023-10028
 
-**Docs**: /widgetkit, /widgetkit/controlling-interactivity-and-appearance
+**Docs**: /widgetkit, /widgetkit/adding-interactivity-to-widgets-and-live-activities

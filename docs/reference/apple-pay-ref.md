@@ -55,7 +55,7 @@ Questions developers ask that this reference answers:
 
 ## Documentation Scope
 
-This page documents the `apple-pay-ref` skill — the PassKit API surface for native Apple Pay.
+This page documents the `apple-pay-ref` skill (in the `axiom-payments` suite) — the PassKit API surface for native Apple Pay.
 
 - For **when and why** (discipline, certs, Pre-Flight checklist, Catalyst web-security model, button-vs-mark HIG rule), see [Apple Pay](/skills/integration/apple-pay)
 - For **the web counterpart** of the same merchant ID and Payment Processing Certificate, see [Apple Pay on the Web Reference](/reference/apple-pay-web-ref)

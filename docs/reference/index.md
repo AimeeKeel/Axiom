@@ -23,7 +23,6 @@ Comprehensive guides and documentation for Apple platform development. Reference
 
 | Skill | Description |
 |-------|-------------|
-| [**storage**](./storage) | iOS storage decision framework — database vs files, local vs cloud, SwiftData/CloudKit/iCloud Drive selection |
 | [**cloudkit-ref**](./cloudkit-ref) | Modern CloudKit sync — SwiftData integration, CKSyncEngine (WWDC 2023), database scopes, conflict resolution |
 | [**icloud-drive-ref**](./icloud-drive-ref) | File-based iCloud sync — ubiquitous containers, NSFileCoordinator, conflict resolution, NSUbiquitousKeyValueStore |
 | [**file-protection-ref**](./file-protection-ref) | iOS file encryption and data protection — FileProtectionType levels, background access, Keychain comparison |
@@ -76,7 +75,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 
 | Skill | Description |
 |-------|-------------|
-| [**coreml-ref**](./coreml-ref) | CoreML API — MLTensor, coremltools conversion, model compression, state management |
+| [**coreml-ref**](./coreml-ref) | Core ML API — `MLModel`, prediction and Sendability, `MLState`, `MLTensor`, `MLComputePlan`, `coremltools` index |
 
 ## Games
 
@@ -98,7 +97,6 @@ The four Axiom-bundled CLIs (`xclog`, `xcprof`, `xcsym`, `xcui`) have their own 
 | [**xcsym-ref**](./xcsym-ref) | xcsym (Crash Symbolication) — symbolicate and triage .ips/MetricKit/.crash/.xccrashpoint reports |
 | [**xcui-ref**](./xcui-ref) | xcui (Simulator UI & Accessibility) — drive and assert on the simulator UI and accessibility tree |
 | [**app-store-connect-ref**](./app-store-connect-ref) | App Store Connect API — builds, beta testing, metadata management |
-| [**asc-mcp-ref**](./asc-mcp-ref) | App Store Connect MCP — automated submission workflows |
 | [**app-store-ref**](./app-store-ref) | App Store submission — review guidelines, metadata requirements, rejection troubleshooting |
 | [**axe-ref**](./axe-ref) | AXe (Simulator Automation) — automated iOS Simulator interaction and testing |
 | [**code-signing-ref**](./code-signing-ref) | Code signing CLI — certificates, provisioning profiles, entitlements, Keychain, fastlane match, error codes |

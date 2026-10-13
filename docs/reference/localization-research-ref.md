@@ -7,7 +7,7 @@ version: 1.0.0
 
 # Localization Research & Consistency Reference
 
-Pre-translation and post-translation discipline for shipping localized apps that match platform conventions. Covers the research and consistency work that determines whether translations feel *native* or feel *machine-translated*.
+Research and consistency discipline for localized apps that match platform conventions. It covers the work before and after translation that decides whether translations feel *native* or *machine-translated*.
 
 ## When to Use This Reference
 
@@ -17,17 +17,13 @@ Use this reference when:
 - Building a project glossary before a translation pass
 - Writing translator context for VoiceOver-only strings
 - Stress-testing layout before real translations arrive
-- Choosing a Translation Management System (Crowdin, Lokalise, Phrase, SimpleLocalize)
+- Choosing a Translation Management System, or TMS (Crowdin, Lokalise, Phrase, SimpleLocalize)
 - Preparing for Apple Design Award Inclusivity review
-- Auditing existing translations for consistency or platform-match
-
-**Do NOT use this reference for:**
-- Xcode String Catalog setup → see [Localization & Internationalization](/skills/integration/localization)
-- Plural handling, RTL, locale-aware formatting → see [Localization & Internationalization](/skills/integration/localization)
+- Auditing existing translations for consistency or platform match
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
 - "How does Apple Music translate 'Up Next' in French?"
 - "Where can I read Apple's own Siri phrase wording for a locale?"
@@ -49,7 +45,7 @@ Questions you can ask Claude that will draw from this reference:
 ### Project Termbase (Glossary)
 - What belongs in a termbase (6 categories)
 - Markdown table format with source attribution
-- When to build it (before first translation pass, new locale, ADA prep)
+- When to build it (before the first translation pass, before a new locale, before Apple Design Award or App Store review, and after a terminology complaint)
 - Storage location options
 
 ### VoiceOver-Aware Comments
@@ -58,19 +54,19 @@ Questions you can ask Claude that will draw from this reference:
 - Pairing with `.accessibilityLabel` and `.accessibilityHint`
 
 ### Pseudolocalization
-- Four Xcode scheme modes (Accented, RTL, Double-Length, Bounded String)
+- Four Xcode scheme modes (Accented, Right-to-Left, Double-Length, Bounded String) and the launch arguments behind them
 - When to run each
-- Workflow sequence to catch hardcoded strings, layout breaks, and RTL bugs
+- Workflow sequence to catch hardcoded strings, layout breaks, and right-to-left bugs
 
 ### Translation Management Systems
-- When a TMS is warranted (several locales at once, or a review/approval workflow)
+- When a TMS is warranted (several locales at once, or a review and approval workflow) and when it isn't
 - Comparison of Crowdin, Lokalise, Phrase, SimpleLocalize
 - Round-trip workflow with `.xcstrings`
 - Termbase integration
 
 ### Pre-Submission Workflow
 - 8-step sequence from pseudolocalization through device testing
-- Ordered to minimize cost of late-discovered issues
+- Ordered to minimize the cost of issues discovered late
 
 ## Key Pattern
 
@@ -94,17 +90,14 @@ String(
 )
 ```
 
-The `VoiceOver:` prefix signals to translators (and TMS filters) that the string is spoken, not read — so it should be translated as a full spoken instruction rather than a UI label.
+The `VoiceOver:` prefix signals to translators (and TMS filters) that the string is spoken, not read, so they translate it as a full spoken instruction rather than a UI label.
 
 ## Documentation Scope
 
-This page documents the `localization-research-ref` skill in the `axiom-integration` suite. It complements the mechanics-focused [Localization & Internationalization](/skills/integration/localization) reference by covering the research and consistency discipline that surrounds the Xcode workflow.
-
-**For the Xcode/xcstrings mechanics:** see [Localization & Internationalization](/skills/integration/localization).
+This page documents the `localization-research-ref` skill (in the `axiom-integration` suite). It covers the research and consistency discipline around the Xcode workflow. For the mechanics (String Catalog setup, SwiftUI and UIKit APIs, plurals, right-to-left layout, locale-aware formatters, and Xcode 26's AI-generated translator comments), see [Localization & Internationalization](/skills/integration/localization).
 
 ## Related
 
-- [localization](/skills/integration/localization) – String Catalog mechanics, SwiftUI/UIKit APIs, plurals, RTL, formatters
 - [Accessibility Diagnostics](/diagnostic/accessibility-diag) – VoiceOver labels and hints (the strings this reference helps translate)
 - [hig](/skills/ui-design/hig) – HIG terminology conventions
 

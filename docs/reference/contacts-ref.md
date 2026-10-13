@@ -54,7 +54,7 @@ Use this reference when you need:
 
 ## Documentation Scope
 
-This page documents the `contacts-ref` skill — the API reference half of the Contacts pair.
+This page documents the `contacts-ref` skill (in the `axiom-integration` suite) — the Contacts framework API reference.
 
 - For **access-level decisions, permission UX, and pressure scenarios**, see [eventkit-contacts](/skills/integration/eventkit-contacts)
 - For **general permission UX patterns** (just-in-time prompts, denial handling), see [privacy-ux](/skills/integration/privacy-ux)

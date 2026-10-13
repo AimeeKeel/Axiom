@@ -7,7 +7,7 @@ description: Reference — Core Spotlight and NSUserActivity guide for indexing 
 
 Complete reference for Core Spotlight framework and NSUserActivity — make app content discoverable in Spotlight search, enable Siri predictions, and support Handoff.
 
-## When to Use This Skill
+## When to Use
 
 - Index app content (documents, notes, orders, messages) for Spotlight
 - Use NSUserActivity for Handoff or Siri predictions

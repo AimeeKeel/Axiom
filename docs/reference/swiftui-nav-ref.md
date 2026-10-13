@@ -8,91 +8,93 @@ apple_platforms: iOS 16+, iOS 18+ (Tab/Sidebar), iOS 26+ (Liquid Glass), iOS 27 
 
 # SwiftUI Navigation API Reference
 
-Comprehensive API reference for SwiftUI navigation. Covers NavigationStack, NavigationSplitView, NavigationPath, deep linking, state restoration, Tab/Sidebar integration, and Liquid Glass navigation.
+The API reference for SwiftUI navigation: `NavigationStack`, `NavigationSplitView`, `NavigationPath`, deep linking, state restoration, tabs and sidebars, and Liquid Glass navigation.
 
 ## When to Use This Reference
 
 Use this reference when you need:
-- Complete API signatures for NavigationStack or NavigationSplitView
-- NavigationPath manipulation patterns
+- API signatures for `NavigationStack` or `NavigationSplitView`
+- `NavigationPath` push, pop, and pop-to-root patterns
 - Deep linking with URL routing
-- State restoration with Codable paths
-- iOS 18+ Tab/Sidebar integration patterns
-- iOS 26+ Liquid Glass navigation APIs
-
-**For discipline patterns:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for decision trees and anti-patterns.
-
-**For troubleshooting:** See [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) for systematic diagnosis.
+- State restoration with a Codable path and `SceneStorage`
+- Tab and sidebar integration (iOS 18+)
+- Liquid Glass navigation APIs (iOS 26+) or the iOS 27 additions
+- A router or coordinator that keeps navigation testable
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
-- "What are all the NavigationPath methods for manipulating the stack?"
-- "How do I implement navigationDestination(for:) with multiple types?"
-- "What's the complete pattern for Codable NavigationPath with SceneStorage?"
-- "How do I use Tab with sidebar on iPad?"
+- "What are all the `NavigationPath` methods for manipulating the stack?"
+- "How do I register `navigationDestination(for:)` for multiple types?"
+- "What's the complete pattern for a Codable `NavigationPath` with `SceneStorage`?"
+- "How do I use `Tab` with a sidebar on iPad?"
+- "How do I hide a tab without losing its navigation state?"
 - "What Liquid Glass APIs are available for navigation bars?"
-- "How does navigationDestination(item:) differ from navigationDestination(for:)?"
-- "How do I use the prominent tab role or a cross-fade navigation transition? (iOS 27)"
+- "How do I use the iOS 27 prominent tab role or the cross-fade navigation transition?"
 
 ## What's Covered
 
 ### NavigationStack (iOS 16+)
-- NavigationStack initialization with path binding
-- NavigationPath: append, removeLast, count
-- Codable path serialization for state restoration
-- navigationDestination(for:) and navigationDestination(item:)
+- Initialization with and without a path binding
+- Value-based `NavigationLink`
+- `navigationDestination(for:)` for one or several types, and where to place it
+- Anti-patterns: mixing `NavigationLink(destination:)` with `navigationDestination(for:)`, duplicate registrations
+
+### NavigationPath
+- Typed array vs type-erased `NavigationPath`
+- `append`, `removeLast`, `count`, pop to root
+- `CodableRepresentation` for persistence
 
 ### NavigationSplitView (iOS 16+)
 - Two-column and three-column layouts
+- A `NavigationStack` inside the detail column
 - Column visibility control
-- Detail placeholder views
-- Automatic collapse on iPhone
-
-### NavigationPath
-- Type-erased heterogeneous paths
-- CodableRepresentation for persistence
-- Push (append) and pop (removeLast) operations
-- Pop-to-root pattern
+- Automatic adaptation: selection becomes push and pop on iPhone
 
 ### Deep Linking
-- URL parsing and path construction
-- onOpenURL handling
-- Timing considerations for path manipulation
+- `onOpenURL` and `URLComponents` parsing
+- Popping to root before building a multi-step path
 
 ### State Restoration
-- Codable NavigationPath pattern
-- SceneStorage for automatic save/restore
-- Crash-resistant restoration
+- `SceneStorage` with a Codable path or navigation model
+- Storing IDs rather than objects, so deleted items drop out on restore
+- Making a `@MainActor` model Codable
 
-### Tab/Sidebar (iOS 18+)
-- Tab role for customization
-- sidebarAdaptable style
-- TabSection for grouping
-- Per-tab NavigationStack
-- Prominent tab role — `Tab(role: .prominent)` (iOS 27)
+### Tabs and Sidebars (iOS 18+)
+- `Tab` syntax, per-tab `NavigationStack`, `TabSection`
+- `sidebarAdaptable` style
+- The search tab role, and where `.searchable` can go
+- Tab customization: `customizationID`, `customizationBehavior`, `defaultVisibility`, `TabViewCustomization`
+- Tab context menus
+- Programmatic visibility with `.hidden(_:)`, which keeps a tab's state
+
+### Liquid Glass (iOS 26+)
+- Automatic glass navigation bars, sidebars, and tab bars
+- `backgroundExtensionEffect`
+- `tabBarMinimizeBehavior`
+- Bottom-aligned search, and `tabViewSearchActivation`
+- `tabViewBottomAccessory` (dynamic `isEnabled:` form from iOS 26.1) and `tabViewBottomAccessoryPlacement`
+- Scroll edge effect
+- Sheets that zoom out of the button that presents them
+- Toolbar morphing transitions
 
 ### iOS 27 Additions
 - Prominent tab role (`Tab(role: .prominent)`)
 - Cross-fade navigation transition (`.navigationTransition(.crossFade)`, not macOS)
+- Why custom navigation transitions can't be authored
 
-### Liquid Glass (iOS 26+)
-- Automatic glass navigation bars
-- backgroundExtensionEffect
-- tabBarMinimizeBehavior
-- Bottom-aligned search
-- Search tab role (requires NavigationStack wrapper)
-- Dynamic tabViewBottomAccessory patterns (iOS 26.1+, with tabViewBottomAccessoryPlacement)
-- Toolbar morphing transitions (cross-ref to [swiftui-26-ref](/reference/swiftui-26-ref))
+### Router and Coordinator Patterns
+- When a coordinator earns its keep, and when built-in navigation is enough
+- A simple `Router`, a `Coordinator` protocol, and unit-testing navigation
 
 ### API Evolution
-- NavigationView (deprecated iOS 16)
-- NavigationStack/SplitView (iOS 16+)
-- Tab/Sidebar unification (iOS 18+)
+- `NavigationView` (soft-deprecated, with no compiler warning)
+- `NavigationStack` and `NavigationSplitView` (iOS 16+)
+- Tab and sidebar unification (iOS 18+)
 - Liquid Glass design (iOS 26+)
 
-## Key Pattern
+## Key Patterns
 
 ### NavigationPath with State Restoration
 
@@ -148,20 +150,20 @@ path.removeLast(path.count - 2)  // Keep first 2 items
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-nav-ref` reference skill — comprehensive API coverage Claude uses when you need specific navigation API details.
-
-**For patterns and decisions:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for architecture decisions and anti-patterns.
-
-**For troubleshooting:** See [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) for systematic diagnosis.
+This page documents the `nav-ref` skill (in the `axiom-swiftui` suite), the navigation API reference your assistant uses for implementation details.
 
 ## Related
 
-- [swiftui-nav](/skills/ui-design/swiftui-nav) – Discipline skill with decision trees
-- [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) – Systematic troubleshooting
-- [swiftui-nav-auditor](/agents/swiftui-nav-auditor) – Automated navigation code review
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – Decision trees and anti-patterns for choosing a navigation architecture
+- [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) – Systematic diagnosis when navigation, deep links, or the search tab misbehave
+- [swiftui-nav-auditor](/agents/swiftui-nav-auditor) – Scans your navigation code for these anti-patterns
+- [swiftui-26-ref](/reference/swiftui-26-ref) – The full toolbar morphing API, including `DefaultToolbarItem` and `ToolbarSpacer`
+- [swiftui-search-ref](/reference/swiftui-search-ref) – Foundational `.searchable` APIs: suggestions, scopes, tokens, and programmatic control
+- [swiftui-animation-ref](/reference/swiftui-animation-ref) – Zoom transitions and `matchedTransitionSource`
+- [liquid-glass](/skills/ui-design/liquid-glass) – Liquid Glass design beyond navigation chrome
 
 ## Resources
 
 **WWDC**: 2022-10054, 2024-10147, 2025-256, 2025-323, 2026-269
 
-**Docs**: /swiftui/navigationstack, /swiftui/navigationsplitview, /swiftui/navigationpath, /swiftui/tabrole/prominent, /swiftui/navigationtransition/crossfade
+**Docs**: /swiftui/navigationstack, /swiftui/navigationsplitview, /swiftui/navigationpath, /swiftui/tabrole/search, /swiftui/tabrole/prominent, /swiftui/navigationtransition/crossfade

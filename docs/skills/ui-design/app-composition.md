@@ -8,63 +8,66 @@ apple_platforms: iOS 26+
 
 # App Composition
 
-App-level composition patterns for iOS. Covers @main entry points, authentication state machines, root view switching, and scene lifecycle.
+Patterns for structuring an app at the top level: the `@main` entry point, app-wide states such as loading and signed in, switching the root view between them, scene lifecycle, multiple windows, and document-based apps.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
-- Structuring your @main entry point and root view
+- Structuring your `@main` entry point and root view
 - Managing authentication state (login → onboarding → main)
 - Switching between app-level states without flicker
-- Handling scene lifecycle events (scenePhase)
-- Restoring app state after termination
-- Deciding when to split into feature modules
-- Coordinating between multiple windows (iPad, visionOS)
-- Building document-based apps with the `@Observable` document model (iOS 27)
+- Handling scene lifecycle events (`scenePhase`)
+- Restoring app state after the system terminates your app
+- Deciding when to split your app into feature modules
+- Coordinating multiple windows on iPad or visionOS
+- Building a document-based app with the `@Observable` document model (iOS 27)
 
-**Core principle:** Apps have discrete states. Model them with enums, not scattered booleans.
+**Core principle:** Apps have discrete states. Model them with an enum, not scattered booleans.
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "How do I switch between login and main screens?"
 - "My app flickers when switching from splash to main."
 - "Where should auth state live?"
-- "How do I handle app going to background?"
+- "How do I handle my app going to the background?"
+- "How do I restore state after my app is killed?"
 - "When should I split my app into modules?"
-- "How do I build a document-based app with the new @Observable document model?" (iOS 27)
-- "How do I only show a 'New Window' button when the environment supports it?"
+- "How do I build a document-based app with the new `@Observable` document model?" (iOS 27)
+- "How do I show a New Window button only when the device supports multiple windows?"
 
 ## What This Skill Provides
 
 ### App-Level State Machines
-- AppState enum pattern (loading, unauthenticated, authenticated, error)
-- Avoiding "boolean soup" (scattered isLoading, isLoggedIn, hasError)
-- State transitions with validation
-- Centralized state management
+- The `AppState` enum pattern (loading, unauthenticated, onboarding, authenticated, error) in place of "boolean soup" such as `isLoading`, `isLoggedIn`, and `hasError`
+- Validated transitions in a central `AppStateController`, testable without UI
+- The state-as-bridge pattern: synchronous state changes drive the UI, and async work lives in the model
 
 ### Root View Switching
-- Clean transitions between app states
-- Animation coordination
-- Preventing screen flicker on launch
-- Minimum loading duration patterns
+- A thin `@main` that hands off to a root view
+- Animated transitions and a minimum loading duration that prevent flicker on launch
+- Coordinator integration at the root
 
-### Scene Lifecycle
-- scenePhase handling (active, inactive, background)
-- Session validation on foreground
-- Resource cleanup on background
-- State restoration
-
-### Modularization
-- Decision tree for when to split
-- Feature module patterns
-- Dependency injection between modules
+### Scene Lifecycle and Windows
+- `scenePhase` handling, and why the value differs when read from a view or from the app
+- Session validation on activation and resource cleanup in the background
+- `SceneStorage` state restoration, with validation of restored state
+- Multi-window coordination on iPad and visionOS, including when to show a New Window button
 
 ### Document-Based Apps (iOS 27)
-- **Document-based apps** – `ReadableDocument`/`WritableDocument`, async `DocumentGroup` initializers, snapshot/apply on `@MainActor`
+- An `@Observable` document class (`ReadableDocument`, `WritableDocument`) with async reading and writing and progress reporting
+- The new `DocumentGroup` initializers for viewers and editors, and when to keep `FileDocument`
 
-## Key Pattern
+### Modularization
+- A decision tree for when to split
+- Module boundaries, dependency injection, and navigation between modules
+
+### Migration and Review
+- Incremental SwiftUI adoption in a UIKit app (`UIHostingController`, `UIViewControllerRepresentable`, an `AppDelegate` alongside `@main`)
+- Anti-patterns, pressure scenarios, and a code review checklist
+
+## Key Patterns
 
 ### AppState Enum Pattern
 
@@ -88,86 +91,108 @@ enum AppState: Equatable {
 }
 
 @Observable
+@MainActor
 class AppStateController {
     private(set) var state: AppState = .loading
 
     func transition(to newState: AppState) {
-        // Validate transition is legal
+        // isValidTransition(from:to:) lists every legal transition
+        guard isValidTransition(from: state, to: newState) else {
+            assertionFailure("Invalid transition: \(state) → \(newState)")
+            return
+        }
         state = newState
     }
 }
 ```
 
-### Root View Switching
+### Thin @main and Root View
 
 ```swift
 @main
 struct MyApp: App {
-    @State private var controller = AppStateController()
+    @State private var appState = AppStateController()
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                switch controller.state {
-                case .loading:
-                    SplashView()
-                case .unauthenticated:
-                    LoginView()
-                case .onboarding(let step):
-                    OnboardingView(step: step)
-                case .authenticated(let user):
-                    MainView(user: user)
-                case .error(let error):
-                    ErrorView(error: error)
-                }
-            }
-            .animation(.default, value: controller.state)
+            RootView()
+                .environment(appState)
+                .task { await appState.initialize() }
         }
+    }
+}
+
+struct RootView: View {
+    @Environment(AppStateController.self) private var appState
+
+    var body: some View {
+        ZStack {
+            switch appState.state {
+            case .loading:
+                LaunchView().transition(.opacity)
+            case .unauthenticated:
+                AuthenticationFlow().transition(.opacity)
+            case .onboarding(let step):
+                OnboardingFlow(step: step).transition(.opacity)
+            case .authenticated(let user):
+                MainTabView(user: user).transition(.opacity)
+            case .error(let error):
+                ErrorRecoveryView(error: error).transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: appState.state)
     }
 }
 ```
 
 ### Scene Lifecycle
 
+Read at the app level, `scenePhase` is an aggregate: `.active` means any scene is active, and `.background` means every scene is in the background.
+
 ```swift
-struct ContentView: View {
+@main
+struct MyApp: App {
+    @State private var appState = AppStateController()
     @Environment(\.scenePhase) private var scenePhase
 
-    var body: some View {
-        MainContent()
-            .onChange(of: scenePhase) { _, newPhase in
-                switch newPhase {
-                case .active:
-                    // Validate session, refresh data
-                case .inactive:
-                    // Pause updates
-                case .background:
-                    // Clean up resources, save state
-                @unknown default:
-                    break
-                }
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .environment(appState)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .active:
+                Task { await appState.validateSession() }
+            case .inactive:
+                appState.prepareForBackground()
+            case .background:
+                appState.releaseResources()
+            @unknown default:
+                break
             }
+        }
     }
 }
 ```
 
 ## Documentation Scope
 
-This page documents the `axiom-design` skill — app-level patterns Claude uses when you're structuring @main, managing authentication flows, or handling scene lifecycle.
+This page documents the `app-composition` skill (in the `axiom-design` suite), which your assistant draws on when you structure `@main`, manage authentication flows, or handle scene lifecycle.
 
-**For feature architecture:** See [swiftui-architecture](/skills/ui-design/swiftui-architecture) for MVVM, TCA, and property wrapper patterns.
-
-**For navigation:** See [swiftui-nav](/skills/ui-design/swiftui-nav) for NavigationStack patterns.
+- For UIKit scene delegates and the iOS 27 scene-lifecycle requirement, see [uikit-modernization](/skills/ui-design/uikit-modernization)
+- For the Mac document-app shell (File menu, document tabs, and restoration), see [windows](/skills/macos/windows)
 
 ## Related
 
-- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – Feature-level patterns (MVVM, TCA)
-- [swiftui-nav](/skills/ui-design/swiftui-nav) – Navigation patterns
-- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns for state management
-- [iPhone Duo](/skills/ui-design/iphone-duo) – why the outer display can't create windows, and how to gate the affordance
+- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – Feature-level architecture (MVVM, TCA, coordinators) beneath the app level
+- [swiftui-nav](/skills/ui-design/swiftui-nav) – Navigation inside each app state, including deep links and state restoration
+- [swift-concurrency](/skills/concurrency/swift-concurrency) – Async patterns behind session validation and loading
+- [swift-testing](/skills/testing/swift-testing) – Moving app logic into a Swift package so `swift test` runs it without a simulator
+- [iphone-duo](/skills/ui-design/iphone-duo) – Why the outer display can't open windows, and how to gate the New Window button
 
 ## Resources
 
-**WWDC**: 2022-10072 (Scene lifecycle), 2023-10149 (@Observable)
+**WWDC**: 2022-10054, 2023-10149, 2024-10150, 2025-256, 2025-266
 
-**Docs**: /swiftui/app-structure-and-behavior, /swiftui/scenephase
+**Docs**: /swiftui/scenephase, /swiftui/scene, /swiftui/scenestorage, /swiftui/windowgroup, /observation/observable(), /swiftui/documentgroup, /swiftui/readabledocument, /swiftui/writabledocument

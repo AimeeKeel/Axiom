@@ -1,6 +1,6 @@
 ---
 name: swiftui-nav
-description: Use when implementing navigation patterns, choosing between NavigationStack and NavigationSplitView, handling deep links, adopting coordinator patterns, or requesting code review of navigation implementation - prevents navigation state corruption, deep link failures, and state restoration bugs for iOS 18+
+description: Use when implementing navigation patterns, choosing between NavigationStack and NavigationSplitView, handling deep links, adopting coordinator patterns, or requesting code review of navigation implementation — prevents navigation state corruption, deep link failures, and state restoration bugs for iOS 18+
 skill_type: discipline
 version: 1.0.0
 apple_platforms: iOS 18+ (Tab/Sidebar), iOS 26+ (Liquid Glass)
@@ -8,67 +8,56 @@ apple_platforms: iOS 18+ (Tab/Sidebar), iOS 26+ (Liquid Glass)
 
 # SwiftUI Navigation
 
-Navigation architecture patterns for modern SwiftUI. Covers NavigationStack, NavigationSplitView, deep linking, state restoration, and coordinator patterns.
+Navigation architecture for SwiftUI apps: choosing between `NavigationStack`, `NavigationSplitView`, and `TabView`, then handling programmatic navigation, deep links, state restoration, and coordinators.
 
-## When to Use This Skill
+## When to Use
 
 Use this skill when you're:
-- Choosing navigation architecture (NavigationStack vs NavigationSplitView vs TabView)
-- Implementing programmatic navigation with NavigationPath
+- Choosing a navigation architecture (`NavigationStack`, `NavigationSplitView`, or `TabView`)
+- Implementing programmatic navigation with `NavigationPath`
 - Setting up deep linking and URL routing
 - Implementing state restoration for navigation
-- Adopting Tab/Sidebar patterns (iOS 18+)
-- Implementing coordinator/router patterns
-- Code review of navigation implementation before shipping
+- Adopting the tab and sidebar patterns from iOS 18
+- Implementing coordinator or router patterns
+- Reviewing navigation code before shipping
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this skill:
+Questions you can ask your assistant that will draw from this skill:
 
 - "Should I use NavigationStack or NavigationSplitView for my app?"
 - "How do I navigate programmatically in SwiftUI?"
 - "My deep links aren't working. The app opens but shows the wrong screen."
-- "Navigation state is lost when my app goes to background."
+- "Navigation state is lost when my app goes to the background."
 - "How do I implement a coordinator pattern in SwiftUI?"
 - "How do I pop to root in NavigationStack?"
-- "What's the difference between navigationDestination(for:) and navigationDestination(item:)?"
+- "Why does my navigation reset when I switch tabs?"
 
 ## What This Skill Provides
 
-### Architecture Decision Tree
-- NavigationStack vs NavigationSplitView vs TabView
-- Device targets and content hierarchy depth
-- Multiplatform requirements
+### Decisions and First Steps
+- A decision tree across `NavigationStack`, `NavigationSplitView`, and `TabView`, based on device targets, content depth, and multiplatform needs
+- Mandatory first steps before writing code: the structure, the container, `Hashable` and `Codable` route values, deep link URLs, and restoration
+- Eight red flags, such as `NavigationView`, view-based `NavigationLink`, and `navigationDestination` inside a lazy container
 
-### NavigationStack Patterns
-- NavigationPath manipulation (push, pop, pop-to-root)
-- Type-safe navigation with navigationDestination(for:)
-- Value-based navigation
+### Navigation Patterns
+- `NavigationStack` with a typed array or a `NavigationPath`, including push, pop, and pop-to-root
+- `NavigationSplitView` with two or three columns, placeholder views, and a stack inside the detail column
+- `TabView` with its own `NavigationStack` per tab, so each tab keeps its state
+- The iOS 18 sidebar-adaptable `TabView`, with `TabSection` groups and the search tab role
 
-### NavigationSplitView Patterns
-- Two-column and three-column layouts
-- Column visibility control
-- Detail placeholder views
+### Deep Linking and Restoration
+- Handling URLs in `onOpenURL`: pop to root first, then build the path from parent to child
+- Restoring navigation with `SceneStorage` and a `Codable` model that stores IDs, not objects, and survives decode failures
 
-### Deep Linking
-- URL parsing and path construction
-- onOpenURL handling and timing issues
-- Universal links integration
+### Coordinators
+- When a router or coordinator adds value, and when it only adds complexity
+- A router implementation that keeps navigation logic testable
 
-### State Restoration
-- Codable NavigationPath persistence
-- SceneStorage for automatic save/restore
-- Crash-resistant restoration patterns
-
-### iOS 18+ Tab/Sidebar
-- Tab role for customization
-- Sidebar integration
-- Adaptive layout patterns
-
-### Coordinator/Router Patterns
-- When coordinators add value vs complexity
-- Router implementation examples
-- Navigation flow separation
+### Review and Pressure
+- Anti-patterns, such as pushing onto the presenting stack from inside a sheet
+- A code review checklist and a troubleshooting table
+- Pressure scenarios: pushing back on an over-engineered "make it like Instagram" design, and on keeping `NavigationView` for backward compatibility
 
 ## Key Pattern
 
@@ -104,18 +93,17 @@ struct ContentView: View {
 
 ## Documentation Scope
 
-This page documents the `axiom-swiftui-nav` skill — navigation architecture guidance Claude uses when answering your questions. The skill contains decision trees, patterns, and pressure scenario handling.
+This page documents the `nav` skill (in the `axiom-swiftui` suite), which your assistant draws on when you design, implement, or review SwiftUI navigation.
 
-**For troubleshooting:** Use [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) for systematic diagnosis of navigation failures.
-
-**For API reference:** See [swiftui-nav-ref](/reference/swiftui-nav-ref) for comprehensive API coverage with WWDC examples.
+- For the full API reference, including tab customization and iOS 26 features, see [swiftui-nav-ref](/reference/swiftui-nav-ref)
+- For automated scanning, use [swiftui-nav-auditor](/agents/swiftui-nav-auditor), or run [/axiom:audit-swiftui-nav](/commands/ui-design/audit-swiftui-nav)
 
 ## Related
 
-- [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) – Systematic troubleshooting for navigation bugs
-- [swiftui-nav-ref](/reference/swiftui-nav-ref) – Comprehensive API reference with WWDC examples
-- [swiftui-nav-auditor](/agents/swiftui-nav-auditor) – Autonomous agent for navigation code review
-- [swiftui-layout](/skills/ui-design/swiftui-layout) – Adaptive layout patterns for navigation containers
+- [swiftui-nav-diag](/diagnostic/swiftui-nav-diag) – Systematic troubleshooting when navigation already misbehaves
+- [swiftui-architecture](/skills/ui-design/swiftui-architecture) – Where a coordinator fits alongside MVVM, TCA, or Apple's native patterns
+- [app-composition](/skills/ui-design/app-composition) – App-level state and scene lifecycle above the navigation layer
+- [deep-link-debugging](/skills/debugging/deep-link-debugging) – Debug-only deep links for jumping straight to a screen while testing
 
 ## Resources
 

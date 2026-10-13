@@ -57,7 +57,7 @@ Use this reference when you need:
 
 ## Documentation Scope
 
-This page documents the `eventkit-ref` skill — the API reference half of the EventKit pair.
+This page documents the `eventkit-ref` skill (in the `axiom-integration` suite) — the EventKit API reference.
 
 - For **the three-tier access decision and pressure scenarios**, see [eventkit-contacts](/skills/integration/eventkit-contacts)
 - For **general permission UX patterns**, see [privacy-ux](/skills/integration/privacy-ux)
