@@ -132,16 +132,18 @@ See `carplay-hig.md` for the full entitlement request flow and what Apple review
 
 **Xcode Simulator (Xcode 12–26):**
 
-1. Simulator menu → I/O → External Displays → CarPlay — Xcode 26 and earlier only.
-   Xcode 27 ships no `Simulator.app`; CarPlay simulation moved into Device Hub as a
-   DeviceKit plugin (`CarPlaySimulator.devicekitplugin`)
+1. Simulator menu → I/O → External Displays → CarPlay.
+   Xcode 27 ships no `Simulator.app` and exposes no device-free CarPlay display: neither Device Hub nor `simctl` offers one
+   (verified against 27.1); use CarPlay Simulator (below) with an iPhone
 2. Tap CarPlay display
 3. Find your app in the Audio section
 4. Run without debugger attached for reliable testing (debugger interference is the most common cause of "works on device, not simulator")
 
-**CarPlay Simulator (standalone Mac app):**
+**CarPlay Simulator:**
 
-More faithful than Xcode Simulator — includes screen sizes, dark mode signaling, and instrument cluster scenarios. Install via Xcode → Open Developer Tool → More Developer Tools… (downloads the *Additional Tools for Xcode* package; CarPlay Simulator is in the Hardware folder). Source: *CarPlay Developer Guide*, Jun 2026, p.8.
+More faithful than Xcode Simulator — includes screen sizes, dark mode signaling, and instrument cluster scenarios. The standalone Mac app is in *Additional Tools for Xcode* (Xcode → Open Developer Tool → More Developer Tools…, Hardware folder). Source: *CarPlay Developer Guide*, Jun 2026, p.8.
+
+On Xcode 27 it is also built in: open it from Device Hub's **CarPlay Simulator** menu item. Both need a physical iPhone connected to the Mac, and neither can drive a simulator (verified against Xcode 27.1).
 
 **Real vehicle:**
 

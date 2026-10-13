@@ -5,7 +5,7 @@ description: CarPlay Now Playing integration patterns, CPNowPlayingTemplate cust
 
 # CarPlay Now Playing Reference
 
-CarPlay audio integration patterns for Now Playing metadata, custom playback controls, and entitlement configuration.
+How an audio app's Now Playing integration reaches CarPlay: the metadata it reuses, `CPNowPlayingTemplate` custom buttons and sports mode, the CarPlay audio entitlement, and how to test it all.
 
 ## When to Use This Reference
 
@@ -14,46 +14,50 @@ Use this reference when:
 - Now Playing metadata doesn't appear in CarPlay
 - Custom buttons (shuffle, repeat, playback rate) aren't showing in CarPlay
 - Your app doesn't appear in the CarPlay Audio section
-- Debugging differences between iOS and CarPlay simulator behavior
+- Showing live scores with the Now Playing template's sports mode
+- Debugging differences between iPhone and CarPlay Simulator behavior
 
 ## Example Prompts
 
-Questions you can ask Claude that will draw from this reference:
+Questions you can ask your assistant that will draw from this reference:
 
-- "My app doesn't show up in CarPlay at all"
-- "Now Playing works on Lock Screen but is blank in CarPlay"
+- "Why doesn't my app show up in CarPlay at all?"
+- "Now Playing works on the Lock Screen, so why is it blank in CarPlay?"
 - "How do I add shuffle and repeat buttons to CarPlay?"
-- "Custom buttons work on device but not in CarPlay simulator"
+- "Why do my custom buttons work on device but not in CarPlay Simulator?"
 - "What entitlements do I need for CarPlay audio?"
+- "How do I show team scores and a game clock in CarPlay's Now Playing screen?"
+- "How do I test my audio app in CarPlay on Xcode 27?"
 
 ## What's Covered
 
-- CarPlay's relationship to MPNowPlayingInfoCenter (zero additional code needed)
-- CPNowPlayingTemplate customization with custom buttons (iOS 14+)
-- Required entitlements (`com.apple.developer.carplay-audio`) and background modes
+- CarPlay's relationship to `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` (no CarPlay-specific metadata for the basic case)
+- `CPNowPlayingTemplate` customization with custom buttons (iOS 14+), configured at connection time
+- Sports mode (iOS 18.4+): the content schema, clock behavior, and when to use it
+- The `audio` background mode and the `com.apple.developer.carplay-audio` entitlement, which you request from Apple; the deprecated `playable-content` entitlement
 - CarPlay-specific gotchas table with time-to-fix estimates
-- Testing in CarPlay simulator and real vehicles
+- Testing in CarPlay Simulator (built into Xcode 27's Device Hub, or the standalone app; both need a physical iPhone), in Xcode Simulator's CarPlay display on Xcode 26 and earlier, and in real vehicles
 - Verification checklist for CarPlay audio integration
 
 ## Key Insight
 
-CarPlay reads from the same `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` as Lock Screen and Control Center. If your Now Playing integration works on iOS, it automatically works in CarPlay with zero additional code. The only CarPlay-specific work is the entitlement and optional CPNowPlayingTemplate customization.
+CarPlay reads from the same `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` as the Lock Screen and Control Center. If your Now Playing integration works on iOS, it renders in CarPlay with no additional code. The only CarPlay-specific work is the entitlement and optional `CPNowPlayingTemplate` customization.
 
 ## Documentation Scope
 
-This page documents the `axiom-media` reference skill -- CarPlay-specific patterns for Now Playing integration.
+This page documents the `now-playing-carplay` skill (in the `axiom-media` suite), which covers the CarPlay-specific parts of Now Playing.
 
-- For core Now Playing setup (MPNowPlayingInfoCenter, remote commands, artwork), see [now-playing](/skills/integration/now-playing)
-- For MusicKit automatic Now Playing with Apple Music content, see [now-playing-musickit](/reference/now-playing-musickit)
+- For CarPlay design rules, the entitlement request flow, and the full testing guidance, see [CarPlay HIG](/skills/integration/carplay-hig)
+- For template mechanics beyond Now Playing, see [carplay-templates-ref](/reference/carplay-templates-ref)
 
 ## Related
 
-- [now-playing](/skills/integration/now-playing) – Core Now Playing patterns (the foundation CarPlay builds on)
-- [now-playing-musickit](/reference/now-playing-musickit) – MusicKit automatic Now Playing for Apple Music content
-- [avfoundation-ref](/reference/avfoundation-ref) – AVAudioSession configuration for background audio
+- [now-playing](/skills/integration/now-playing) – Core Now Playing patterns, the foundation CarPlay builds on
+- [now-playing-musickit](/reference/now-playing-musickit) – Automatic Now Playing for Apple Music content played through MusicKit
+- [avfoundation-ref](/reference/avfoundation-ref) – `AVAudioSession` configuration for background audio
 
 ## Resources
 
-**WWDC**: 2019-501, 2022-110338
+**WWDC**: 2018-213, 2020-10635
 
 **Docs**: /carplay, /mediaplayer/mpnowplayinginfocenter
