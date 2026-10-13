@@ -308,26 +308,26 @@ Foundation Models support depends on the simulator/host/VM combination. Apple DT
 
 | Environment | Works? | Notes |
 |-------------|--------|-------|
-| Physical iPhone 15 Pro+ / iPad M-series / Apple silicon Mac on iOS / iPadOS / macOS 26+ | ✅ | Canonical; required for any meaningful behavior testing |
-| iPhone simulator on Apple silicon Mac running macOS 26+ with Apple Intelligence enabled | ✅ | Confirmed by Apple DTS; inherits host's model and availability; respects the scheme override |
-| visionOS simulator on Apple silicon Mac running macOS 26+ with Apple Intelligence enabled | ✅ | Same as iPhone simulator |
-| Any simulator on Apple silicon Mac running macOS Sequoia (15.x) | ❌ | Host macOS doesn't ship FM models; simulators have nothing to load |
-| Any simulator on Intel Mac | ❌ | Hardware-gated; Apple Intelligence requires Apple silicon |
-| macOS 26 running in a VM (Virtual Buddy, UTM, Parallels) on an Apple silicon host | ❌ | Apple Intelligence cannot be enabled in a macOS-in-a-VM environment (`.deviceNotEligible`); user-reported in forum thread 787199 |
+| Physical iPhone 15 Pro+ / iPad M-series / Apple Silicon Mac on iOS / iPadOS / macOS 26+ | ✅ | Canonical; required for any meaningful behavior testing |
+| iPhone simulator on Apple Silicon Mac running macOS 26+ with Apple Intelligence enabled | ✅ | Confirmed by Apple DTS; inherits host's model and availability; respects the scheme override |
+| visionOS simulator on Apple Silicon Mac running macOS 26+ with Apple Intelligence enabled | ✅ | Same as iPhone simulator |
+| Any simulator on Apple Silicon Mac running macOS Sequoia (15.x) | ❌ | Host macOS doesn't ship FM models; simulators have nothing to load |
+| Any simulator on Intel Mac | ❌ | Hardware-gated; Apple Intelligence requires Apple Silicon |
+| macOS 26 running in a VM (Virtual Buddy, UTM, Parallels) on an Apple Silicon host | ❌ | Apple Intelligence cannot be enabled in a macOS-in-a-VM environment (`.deviceNotEligible`); user-reported in forum thread 787199 |
 | iOS simulator running *inside* a macOS-26 VM | ⚠️ | Availability reports `.available` but runtime fails: `Error Domain=com.apple.UnifiedAssetFramework Code=5000` ("no underlying assets for asset set com.apple.MobileAsset.UAF.FM.Overrides") — the embedded sim has no real model to talk to |
 | Dual-boot macOS 26 on separate APFS volume | ✅ | Confirmed by Apple DTS as a supported alternative to upgrading the primary install |
 
 **Implication for CI/CD**:
 
-- Apple silicon runners booted into macOS 26+ with Apple Intelligence enabled → iOS / iPadOS / visionOS simulator tests against FM work
+- Apple Silicon runners booted into macOS 26+ with Apple Intelligence enabled → iOS / iPadOS / visionOS simulator tests against FM work
 - VM-based runners (the common cheap-CI configuration) → both host macOS app tests and embedded simulator tests will fail at runtime
-- macOS app tests that exercise FM directly require a **physical Apple silicon Mac** runner, not a VM
+- macOS app tests that exercise FM directly require a **physical Apple Silicon Mac** runner, not a VM
 - The Xcode scheme's Simulated Foundation Models Availability override (above) works in any supported environment and is the right tool for exercising non-AI paths on AI-capable CI runners
 
 **Practical recipes**:
 
 - **Single-developer machine, don't want to risk beta on primary install** → dual-boot macOS 26 on a separate APFS volume; develop and test from the macOS 26 boot, switch back for daily driver work
-- **CI runner constraint** → either provision physical Apple silicon runners booted into macOS 26+, or accept that the FM-touching tests must run on-device (TestFlight / device farm)
+- **CI runner constraint** → either provision physical Apple Silicon runners booted into macOS 26+, or accept that the FM-touching tests must run on-device (TestFlight / device farm)
 - **Designer / PM review without a fleet** → AI-capable Mac + iOS simulator + scheme override; covers every `.unavailable` branch and the happy path without leaving the desk
 
 **Source caveat**: the macOS-VM behavior is documented in forum thread 787199 as of June 2025 (iOS 26 beta) and was still accurate at the time of this writing. Apple may revisit VM support in a future macOS update; re-verify if VM-based CI is on the table.

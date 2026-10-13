@@ -1,6 +1,6 @@
 # iOS Apps on Mac — Designed for iPad & Mac Catalyst
 
-Two migration paths bring an iOS codebase to the Mac without a native rewrite: running the iOS app unmodified on Apple silicon ("Designed for iPad" / "Designed for iPhone"), and building a Mac app with Mac Catalyst. They are different products with different obligations — choose deliberately, don't drift into one.
+Two migration paths bring an iOS codebase to the Mac without a native rewrite: running the iOS app unmodified on Apple Silicon ("Designed for iPad" / "Designed for iPhone"), and building a Mac app with Mac Catalyst. They are different products with different obligations — choose deliberately, don't drift into one.
 
 (iPhone Mirroring is a third way users get your iPhone app on a Mac screen, with no opt-in or distribution work — see axiom-uikit (skills/uikit-modernization.md) for its compatibility checklist.)
 
@@ -22,7 +22,7 @@ For new cross-platform code, a SwiftUI multiplatform target usually beats both p
 
 ## Designed for iPad / Designed for iPhone (run unmodified)
 
-Compatible iOS apps are **automatically offered on the Mac App Store** for Apple silicon Macs — availability is opt-out, not opt-in. Manage it in App Store Connect ("Make this app available on Mac"); turning it off stops new downloads but existing users keep the app.
+Compatible iOS apps are **automatically offered on the Mac App Store** for Apple Silicon Macs — availability is opt-out, not opt-in. Manage it in App Store Connect ("Make this app available on Mac"); turning it off stops new downloads but existing users keep the app.
 
 The app runs on the Mac Catalyst infrastructure but stays an iOS app:
 

@@ -23,7 +23,7 @@ Symptoms that indicate push-specific issues:
 |---------|--------------|
 | No notifications at all | Missing Push Notification capability or provisioning profile |
 | Works in dev, not production | Sending to sandbox APNs with production token (or vice versa) |
-| Token registration fails on Simulator | Rare on Apple silicon/T2 — since iOS 16 the Simulator registers and receives pushes through the APNs sandbox. Check network reachability and the aps-environment entitlement |
+| Token registration fails on Simulator | Rare on Apple Silicon/T2 — since iOS 16 the Simulator registers and receives pushes through the APNs sandbox. Check network reachability and the aps-environment entitlement |
 | Notifications appear without sound | Missing .sound in authorization options or payload |
 | Rich notification shows plain text | Missing mutable-content: 1 in payload |
 | Image not showing in notification | Service extension failed silently — check serviceExtensionTimeWillExpire |
@@ -47,7 +47,7 @@ Symptoms that indicate push-specific issues:
 | "Silent push is reliable, we use it for sync" | System throttles to ~2-3/hour and ignores force-quit apps. It's a hint, not a guarantee. | Architecture rework when silent push can't sustain real-time sync |
 | "Service extension is set up, so rich notifications should work" | Extension needs correct bundle ID suffix, mutable-content in payload, AND completing within 30s. | 30+ min when any one of the three prerequisites is missing |
 | "FCM handles everything, I don't need to understand APNs" | FCM wraps APNs. Token type confusion, missing p8 key upload, and swizzling conflicts are all APNs-level problems. | Hours debugging FCM when the issue is APNs configuration |
-| "I'll test on Simulator first" | On Apple silicon/T2 the Simulator registers and receives APNs sandbox pushes, but `simctl push` delivers only app notifications — VoIP, complication and other push types still need a device. | A test cycle spent discovering which Simulator limits are real |
+| "I'll test on Simulator first" | On Apple Silicon/T2 the Simulator registers and receives APNs sandbox pushes, but `simctl push` delivers only app notifications — VoIP, complication and other push types still need a device. | A test cycle spent discovering which Simulator limits are real |
 | "Let me rewrite the notification handler" | Configuration — entitlements, tokens, environment — is what to verify first; Steps 1-4 are cheap and decisive. | Hours rewriting working code while the config stays broken |
 | "This worked on iOS 17, the bug must be in our code" | Each iOS version changes Focus defaults, interruption filtering, and provisional behavior. | Debugging code when the fix is a payload or Settings change |
 | "Just send the push 50 times so it gets through" | Resending the same payload stacks 50 banners and gets you flagged for APNs abuse. Reliable delivery is a header problem, not a volume problem — use apns-expiration for store-and-forward and apns-collapse-id to replace, not stack. | Spam complaints and 1-star reviews; the real fix was two headers |
@@ -416,7 +416,7 @@ Apple's Push Notification Console provides server-free testing:
 
 ## Simulator Testing with simctl
 
-On Apple silicon and T2 Macs the iOS 16+ Simulator registers for remote notifications itself and receives real pushes from the APNs sandbox (`api.sandbox.push.apple.com`). `simctl push` is the server-free alternative — it injects a payload locally, so no APNs round trip happens:
+On Apple Silicon and T2 Macs the iOS 16+ Simulator registers for remote notifications itself and receives real pushes from the APNs sandbox (`api.sandbox.push.apple.com`). `simctl push` is the server-free alternative — it injects a payload locally, so no APNs round trip happens:
 
 ```bash
 cat > test-push.apns << 'EOF'
@@ -442,7 +442,7 @@ xcrun simctl push booted com.your.bundle.id test-push.apns
 - ✅ Notification Service Extension processing
 - ✅ Notification Content Extension (custom UI)
 - ✅ Action handling and categories
-- ✅ APNs token registration and sandbox delivery (Apple silicon/T2, iOS 16+)
+- ✅ APNs token registration and sandbox delivery (Apple Silicon/T2, iOS 16+)
 - ❌ VoIP, Complication, File Provider, and other non-app push types via `simctl push` — only application remote notifications are supported
 - ❌ Real-device silent-push throttling and battery behaviour (the Simulator has no equivalent budget)
 - ❌ Live Activity push via `simctl push` — send it through the APNs sandbox instead
@@ -580,7 +580,7 @@ Before escalating push notification issues:
 - [ ] User authorized notifications, status = 2 (Step 4)
 - [ ] APNs environment matches build type (sandbox/production)
 - [ ] Focus mode not filtering notifications on test device
-- [ ] Tested on a physical device (the Simulator registers against the APNs sandbox on Apple silicon, but `simctl push` covers only app notifications)
+- [ ] Tested on a physical device (the Simulator registers against the APNs sandbox on Apple Silicon, but `simctl push` covers only app notifications)
 - [ ] For FCM: APNs auth key uploaded to Firebase Console
 - [ ] For silent push: background mode enabled, priority 5, no alert keys
 - [ ] For rich media: NSE bundle ID prefix matches host app, and serviceExtensionTimeWillExpire calls contentHandler so the attached media is delivered instead of dropped

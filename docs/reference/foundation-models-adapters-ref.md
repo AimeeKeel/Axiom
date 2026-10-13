@@ -12,7 +12,7 @@ Complete reference for the Adapter Training Toolkit (Python 3.11, build-time) an
 ## When to Use This Reference
 
 Use this reference when:
-- Setting up the Foundation Models Adapter Training Toolkit Python environment (Python 3.11, Apple silicon Mac ≥32 GB or Linux GPU)
+- Setting up the Foundation Models Adapter Training Toolkit Python environment (Python 3.11, Apple Silicon Mac ≥32 GB or Linux GPU)
 - Authoring the training dataset JSONL (basic chat-turn schema or the tool-calling extension)
 - Looking up `examples.train_adapter`, `examples.train_draft_model`, `examples.generate`, or `export.export_fmadapter` CLI signatures and hyperparameters
 - Looking up `SystemLanguageModel.Adapter` initializers, instance methods (`compile()`), and static lifecycle methods (`removeObsoleteAdapters()`, `compatibleAdapterIdentifiers(name:)`)
@@ -37,7 +37,7 @@ Questions developers ask that this reference answers:
 
 ## What's Covered
 
-- **Toolkit setup** – Hardware requirements (32 GB Apple silicon Mac OR Linux GPU), Python 3.11 (3.12/3.13 break the `coremltools` pin in `export/`), Apple Developer Program gating, conda/venv environment, the **sealed** `export/` folder (modifying it breaks runtime compatibility)
+- **Toolkit setup** – Hardware requirements (32 GB Apple Silicon Mac OR Linux GPU), Python 3.11 (3.12/3.13 break the `coremltools` pin in `export/`), Apple Developer Program gating, conda/venv environment, the **sealed** `export/` folder (modifying it breaks runtime compatibility)
 - **Dataset JSONL schema** – basic chat-turn `{"messages": [{"role": ..., "content": ...}]}` shape, and the tool-calling extension with required `id` / `type: "function"` / `function.name` / `function.arguments` fields on assistant turns
 - **Sample volume guidance** – Apple's explicit table (100-1,000 for basic, 5,000+ for complex; "quality over quantity")
 - **Training CLI** – `examples.train_adapter` with `--train-data`, `--eval-data`, `--epochs`, `--learning-rate`, `--batch-size`, `--checkpoint-dir`; LoRA rank-32 architecture (fixed by toolkit); target modules and trainable parameter ratio

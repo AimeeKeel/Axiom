@@ -7,7 +7,7 @@ This page owns the **Core AI** path. Core ML still exists for classic models —
 ## When to Use
 
 - Bringing a PyTorch model (LLM, SAM-style segmentation, custom architecture) to device via the Core AI format
-- Optimizing/quantizing a large model to fit on-device memory and run fast on Apple silicon
+- Optimizing/quantizing a large model to fit on-device memory and run fast on Apple Silicon
 - Loading and running a `.aimodel` from Swift (`AIModel`, `InferenceFunction`, `NDArray`)
 - A transformer decode loop that slows down over time → KV-cache via Core AI **states**
 - First-launch stalls from model **specialization**; planning model download/caching

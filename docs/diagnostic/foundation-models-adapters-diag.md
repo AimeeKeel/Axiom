@@ -50,7 +50,7 @@ The skill provides nine numbered diagnostic patterns, each with symptom, causes,
 | 6 | Tool calls never fire from trained adapter | Training data missing complete `tool_calls` schema (`id` / `type: "function"` / `function.name` / `function.arguments` as JSON-encoded string) |
 | 7 | Adapter consumes context window with trivial prompts | Verbose multi-paragraph system prompts in training data; adapter learns to expect them at inference time |
 | 8 | Accuracy drops after OS update | Silent base-model change with new system-model OS; per-OS-variant retrain is the documented workflow (FB18924722 tracks the version-pinning API gap) |
-| 9 | `coremltools.libmilstoragepython` missing | Python 3.12/3.13 (toolkit pins 3.11) or Linux export (export must run on Apple silicon Mac) |
+| 9 | `coremltools.libmilstoragepython` missing | Python 3.12/3.13 (toolkit pins 3.11) or Linux export (export must run on Apple Silicon Mac) |
 
 The skill also cross-references three general `@Generable` macro/schema issues to [Foundation Models Diagnostics](foundation-models-diag) Patterns 6a/6b/6c:
 

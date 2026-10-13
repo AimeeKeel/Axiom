@@ -34,7 +34,7 @@ Real questions developers ask that this skill answers:
 
 - **Decision discipline** – the rules for when adapter training is justified vs. when rungs 1-4 of the Approach Triage will solve the problem at a fraction of the cost
 - **Maintenance-contract framing** – year-1 vs year-2 cost (initial 1-2 weeks, retrains per OS minor, four-axis eval per retrain, per-locale eval, Background Assets integration)
-- **Hardware and entitlements** – 32 GB Apple silicon Mac or Linux GPU; Python 3.11 (the `coremltools` pin breaks on 3.12/3.13); Apple Developer Program for toolkit; `com.apple.developer.foundation-model-adapter` entitlement for deployment
+- **Hardware and entitlements** – 32 GB Apple Silicon Mac or Linux GPU; Python 3.11 (the `coremltools` pin breaks on 3.12/3.13); Apple Developer Program for toolkit; `com.apple.developer.foundation-model-adapter` entitlement for deployment
 - **Per-OS coverage strategy** – newest-OS-with-fallback vs per-OS variants; rejection of single-adapter-no-plan
 - **Dataset construction discipline** – sample volumes (100-1k basic, 5k+ complex); short consistent system messages; no verbose preambles
 - **Four-axis eval requirement** – quantitative, human grading, larger-model grading, safety; PFIGSCJK locale grouping (Portuguese, French, Italian, German, Spanish, Chinese-Simplified, Japanese, Korean)

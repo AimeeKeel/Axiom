@@ -632,7 +632,7 @@ Metal 4 (26 cycle) runs machine learning inside the render pipeline at three lev
 
 | Level | API | Use for |
 |-------|-----|---------|
-| Platform-integrated | MetalFX upscaling + denoising | Path-traced viewports, temporal upscaling — black-box, optimized per Apple silicon generation |
+| Platform-integrated | MetalFX upscaling + denoising | Path-traced viewports, temporal upscaling — black-box, optimized per Apple Silicon generation |
 | Command-buffer | MTL4 machine learning command encoder + `MTLPackage` | Run a trained network (e.g. neural tone mapper) in the same command buffer as compute/render — no context switch |
 | In-shader | TensorOps (MetalPerformancePrimitives, MSL) | Tiny task-specific networks (MLPs) inline in a shader; supports online training; auto-uses the neural accelerator on M5/A19 Pro GPUs |
 

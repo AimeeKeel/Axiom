@@ -59,7 +59,7 @@ python --version          # MUST be 3.11.x — record exact
 which python              # MUST be inside the active conda/venv env
 python -c "import coremltools; print(coremltools.__version__)"
                           # Must succeed; record version
-uname -m                  # arm64 expected for Apple silicon Mac export
+uname -m                  # arm64 expected for Apple Silicon Mac export
 ```
 
 ---
@@ -430,7 +430,7 @@ Or other `coremltools`-related import errors during `python -m export.export_fma
 **Causes**:
 
 1. Python version is 3.12 or 3.13 (toolkit `export/` pins `coremltools` versions only available on Python 3.11)
-2. Export running on Linux (the `export/` step requires Apple silicon Mac for the `coremltools` compilation path)
+2. Export running on Linux (the `export/` step requires Apple Silicon Mac for the `coremltools` compilation path)
 3. Active virtual environment is not the one used to `pip install -r requirements.txt`
 
 **Diagnosis**:
@@ -440,7 +440,7 @@ python --version
 # MUST report 3.11.x
 
 uname -m
-# arm64 on Apple silicon
+# arm64 on Apple Silicon
 
 which python
 # Should be inside the active conda/venv environment
@@ -452,13 +452,13 @@ python -c "import coremltools; print(coremltools.__version__)"
 **Fix**:
 
 ```bash
-# Recreate the environment with Python 3.11 on an Apple silicon Mac
+# Recreate the environment with Python 3.11 on an Apple Silicon Mac
 conda create -n fm-adapter python=3.11
 conda activate fm-adapter
 pip install -r requirements.txt
 ```
 
-Training and evaluation can run on Linux GPU machines; **export must run on Apple silicon Mac**.
+Training and evaluation can run on Linux GPU machines; **export must run on Apple Silicon Mac**.
 
 **Time cost**: 15-30 minutes (recreate environment, re-run export only — no retrain).
 

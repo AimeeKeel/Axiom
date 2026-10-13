@@ -78,7 +78,7 @@ Questions you can ask Claude that will draw from these skills:
 
 - **[iOS Apps on Mac](/skills/macos/ios-apps-on-mac)** – Designed for iPad vs Mac Catalyst, Mac App Store availability opt-out, Catalyst adoption checklist, runtime-detection traps
   - *"Should I ship my iPad app as Designed for iPad or build with Mac Catalyst?"*
-  - *"Why does my iOS app on Apple silicon report `isMacCatalystApp` as true?"*
+  - *"Why does my iOS app on Apple Silicon report `isMacCatalystApp` as true?"*
 
 - **[AppKit Modernization](/skills/macos/appkit-modernization)** – Control events, state restoration, status-item sessions, concentric corners, touch on macOS 27
   - *"What replaces my `mouseDown` override in a modern AppKit app?"*

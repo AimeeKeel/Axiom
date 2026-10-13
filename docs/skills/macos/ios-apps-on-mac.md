@@ -1,6 +1,6 @@
 # iOS Apps on Mac
 
-Guidance for the two migration paths that bring an existing iOS codebase to the Mac — running unmodified on Apple silicon ("Designed for iPad" / "Designed for iPhone") and Mac Catalyst — and for choosing deliberately between them and a native Mac target.
+Guidance for the two migration paths that bring an existing iOS codebase to the Mac — running unmodified on Apple Silicon ("Designed for iPad" / "Designed for iPhone") and Mac Catalyst — and for choosing deliberately between them and a native Mac target.
 
 ## When to Use
 
@@ -18,7 +18,7 @@ Use this skill when:
 - "Should I ship my iPad app as Designed for iPad or build with Mac Catalyst?"
 - "How do I opt my iOS app out of the Mac App Store?"
 - "How do I add a menu bar and toolbar to my Mac Catalyst app?"
-- "Why does my iOS app on Apple silicon report `isMacCatalystApp` as true?"
+- "Why does my iOS app on Apple Silicon report `isMacCatalystApp` as true?"
 - "What breaks when my iPhone app runs on a Mac?"
 - "Should I use Optimize Interface for Mac?"
 - "How do I support ⌘P printing in my Catalyst app?"

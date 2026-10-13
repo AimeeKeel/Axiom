@@ -782,7 +782,7 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-macos", routed_skills(
             "Should I add a Mac Catalyst destination or ship Designed for iPad?"))
         self.assertIn("axiom-macos", routed_skills(
-            "Why does my iOS app on Apple silicon report isMacCatalystApp true?"))
+            "Why does my iOS app on Apple Silicon report isMacCatalystApp true?"))
         self.assertIn("axiom-macos", routed_skills(
             "How do I build a multi-column table with TableColumn on iPad?"))
         self.assertIn("axiom-macos", routed_skills(
