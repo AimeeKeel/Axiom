@@ -11,9 +11,7 @@ all: build
 # no Makefile at all, so its binary was hand-built and shipped with the absolute
 # path embedded (Axiom-1z8m).
 build:
-	GOARCH=amd64 GOOS=darwin go build -trimpath -ldflags "-s -w" -o $(BINARY)-amd64 .
-	GOARCH=arm64 GOOS=darwin go build -trimpath -ldflags "-s -w" -o $(BINARY)-arm64 .
-	lipo -create -output $(BINARY) $(BINARY)-amd64 $(BINARY)-arm64
+	GOARCH=arm64 GOOS=darwin go build -trimpath -ldflags "-s -w" -o $(BINARY) .
 	@file $(BINARY)
 
 install: build
@@ -25,4 +23,4 @@ test:
 	go test -v ./...
 
 clean:
-	rm -f $(BINARY) $(BINARY)-amd64 $(BINARY)-arm64
+	rm -f $(BINARY)

@@ -1,6 +1,6 @@
 # xcproject
 
-Read-only Xcode project inspection, built with Swift 6.4 or newer. Axiom supports macOS 26 and newer. The universal binary reads `project.pbxproj` and Xcode's JSON5 `project.xcproj` inside the unchanged `.xcodeproj` container.
+Read-only Xcode project inspection, built with Swift 6.4 or newer. Axiom supports macOS 26 and newer. The arm64 binary reads `project.pbxproj` and Xcode's JSON5 `project.xcproj` inside the unchanged `.xcodeproj` container.
 
 ```sh
 make test
@@ -47,4 +47,4 @@ For OpenStep, follow `rootObject` into `objects`: `PBXProject.targets`, each tar
 
 ## Dependency license
 
-Apple's `xcode-project-format` is Apache-2.0 with the Swift runtime library exception. Its complete license and attribution are retained in `THIRD_PARTY_LICENSE.txt`; Axiom's own inspector code uses the repository's MIT license. The build pins the exact upstream revision, and the universal binary contains arm64 and x86_64 slices.
+Apple's `xcode-project-format` is Apache-2.0 with the Swift runtime library exception. Its complete license and attribution are retained in `THIRD_PARTY_LICENSE.txt`; Axiom's own inspector code uses the repository's MIT license. The build pins the exact upstream revision, and the binary is built for arm64 only.

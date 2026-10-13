@@ -1,6 +1,6 @@
 # Axiom CLI Tools
 
-Standalone command-line tools that ship with Axiom, built as universal macOS binaries. The existing console, crash, UI and profiling tools are separate, **zero-dependency** Go modules. New tools use Swift 6.4 or newer; `xcproject` pins Apple's `XcodeProjectFormat` library for structured JSON5 reads.
+Standalone command-line tools that ship with Axiom, built as arm64 macOS binaries. The existing console, crash, UI and profiling tools are separate, **zero-dependency** Go modules. New tools use Swift 6.4 or newer; `xcproject` pins Apple's `XcodeProjectFormat` library for structured JSON5 reads.
 
 | Tool        | Purpose                                                                         |
 | ----------- | ------------------------------------------------------------------------------- |

@@ -86,8 +86,7 @@ function run(command: string, args: string[], cwd: string, timeout = 300_000) {
 }
 
 function inspectFixtures(xcproject: string, cwd: string, problems: string[]) {
-  const rosetta = spawnSync("/usr/bin/arch", ["-x86_64", "/usr/bin/true"]).status === 0;
-  const architectures = [process.arch === "arm64" ? "arm64" : "x86_64", ...(process.arch === "arm64" && rosetta ? ["x86_64"] : [])];
+  const architectures = ["arm64"];
   const checked: string[] = [];
   for (const architecture of architectures) {
     for (const format of ["xcproj", "pbxproj"]) {

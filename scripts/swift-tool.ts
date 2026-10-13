@@ -243,7 +243,7 @@ export function checkCodexToolArtifacts(
             entries.some((entry) => entry.split(" ")[0] !== "100755")) ||
           entries[0].split(" ")[0] !== entries[1].split(" ")[0] ||
           // Blob SHAs from the same ls-files call; equal SHAs mean equal bytes,
-          // without reading ~65 MB of binaries through git show.
+          // without reading ~30 MB of binaries through git show.
           entries[0].split(" ")[1] !== entries[1].split(" ")[1]
         ) problems.push(`${generated} differs from canonical in the Git index`);
       }

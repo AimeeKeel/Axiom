@@ -30,7 +30,7 @@ Capability probes have five-second limits, result readers 30 seconds, and post-c
 
 Claude Code carries `bin/axbuild` in the canonical plugin; Codex carries the same executable in its generated package. Resolve the package path and check executable permission and `--help` before use. Pi discovers an installed helper on PATH; it does not bundle this executable. Cursor and MCP clients use their saved-log fallback until shell helper access is available.
 
-Build with Swift 6.4 or newer. `make install` builds arm64 and x86_64 for macOS 14 and records source and installed-binary hashes in `build-info/axbuild.json`. Axiom's supported runtime policy is macOS 26 or newer. Compilation target, supported runtime policy, and tested child toolchains are separate properties. The package has no third-party dependencies or license placeholder.
+Build with Swift 6.4 or newer. `make install` builds arm64 for macOS 14 and records source and installed-binary hashes in `build-info/axbuild.json`. Axiom's supported runtime policy is macOS 26 or newer. Compilation target, supported runtime policy, and tested child toolchains are separate properties. The package has no third-party dependencies or license placeholder.
 
 Pure Swift tests live beside source; controlled subprocess tests use `AXIOM_AXBUILD` to select a fresh executable. Real Xcode/CPU acceptance runs separately from the default unit suite.
 

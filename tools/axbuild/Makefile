@@ -7,10 +7,8 @@ build:
 	mkdir -p .build
 	node ../../scripts/swift-tool.ts snapshot axbuild > .build/build-inputs.json
 	xcrun swift build -c release --triple arm64-apple-macosx14.0 --scratch-path .build/arm64
-	xcrun swift build -c release --triple x86_64-apple-macosx14.0 --scratch-path .build/x86_64
-	lipo -create "$$(xcrun swift build -c release --triple arm64-apple-macosx14.0 --scratch-path .build/arm64 --show-bin-path)/$(BINARY)" "$$(xcrun swift build -c release --triple x86_64-apple-macosx14.0 --scratch-path .build/x86_64 --show-bin-path)/$(BINARY)" -output $(BINARY)
+	cp "$$(xcrun swift build -c release --triple arm64-apple-macosx14.0 --scratch-path .build/arm64 --show-bin-path)/$(BINARY)" $(BINARY)
 	lipo $(BINARY) -verify_arch arm64
-	lipo $(BINARY) -verify_arch x86_64
 	strip -S $(BINARY)
 	file $(BINARY)
 

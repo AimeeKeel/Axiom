@@ -7,9 +7,7 @@ BIN := $(OUTDIR)/$(BINARY)
 all: build
 
 build:
-	GOARCH=amd64 GOOS=darwin go build -trimpath -ldflags "-s -w" -o $(BINARY)-amd64 .
-	GOARCH=arm64 GOOS=darwin go build -trimpath -ldflags "-s -w" -o $(BINARY)-arm64 .
-	lipo -create -output $(BINARY) $(BINARY)-amd64 $(BINARY)-arm64
+	GOARCH=arm64 GOOS=darwin go build -trimpath -ldflags "-s -w" -o $(BINARY) .
 	@file $(BINARY)
 
 install: build
@@ -24,4 +22,4 @@ fuzz:
 	go test -fuzz=FuzzParseDescribeUI -fuzztime=60s
 
 clean:
-	rm -f $(BINARY) $(BINARY)-amd64 $(BINARY)-arm64
+	rm -f $(BINARY)

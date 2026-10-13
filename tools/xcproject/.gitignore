@@ -1,5 +1,3 @@
 .build/
 .swiftpm/
 /xcproject
-/xcproject-arm64
-/xcproject-x86_64

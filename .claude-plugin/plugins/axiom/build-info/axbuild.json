@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "inputs": {
-    "tools/axbuild/Makefile": "312f12f2c4823470e08eb54cb010cc052de6a90c85632f67f47588e92f4f89dc",
+    "tools/axbuild/Makefile": "e2308f872876c6af96d21baee928c2ab00f446c612d4b9a504813c7ed21ac908",
     "tools/axbuild/Package.swift": "5dae40dfacdbfdb5973562c1203fd1bdf6343664ec1dcbc78da8526605b2420b",
     "tools/axbuild/Sources/AxBuildCore/Domain.swift": "da916e4f67980e1a97aedd30b7a4d0161fd9fd506ca4db2ce5825fb8986dc5fc",
     "tools/axbuild/Sources/AxBuildCore/Invocation.swift": "12311e20f605732ace54bab5decf9bdf78ba31c9a51c0888e8f2e09c4743e615",
@@ -11,5 +11,5 @@
     "tools/axbuild/Sources/AxBuildCore/TestReaders.swift": "11b8889a4ead7d0f6422971c8d94edce72cb8734572f95717475a0b0e9161d79",
     "tools/axbuild/Sources/axbuild/main.swift": "921ed4e6198d785a98ad353ef0c23fd03dc1e9462c62d67388c3610bf6e63af3"
   },
-  "binary": "75498224eeb9003299b165c9d95295327860102c0f6a7df354950ff526de87d8"
+  "binary": "67d23da1fdc05bb51b8f0d853b676fec484099989ea49573f407a8725a1b2fe5"
 }

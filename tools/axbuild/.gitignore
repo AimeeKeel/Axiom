@@ -1,5 +1,3 @@
 .build/
 .swiftpm/
 /axbuild
-/axbuild-arm64
-/axbuild-x86_64
