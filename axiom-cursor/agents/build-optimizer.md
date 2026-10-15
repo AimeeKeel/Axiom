@@ -34,7 +34,7 @@ Scan the Xcode project and identify optimization opportunities in these categori
 
 **Check Debug configuration**:
 
-Follow `axiom-build (skills/build-performance.md)`, "Project selection and effective settings": discover both inner filenames at any depth, select the project/target/configuration/SDK explicitly, and distinguish declarations from a fresh Xcode effective-settings capture. `xcproject inspect` is read-only; an Xcode query needs authorized scope because it can resolve packages or write state. If no effective capture is permitted, label values declared/unverified. Never report the first grep hit as the selected Debug setting.
+Follow `axiom-build (skills/build-performance.md)`, "Project selection and effective settings": discover both inner filenames at any depth, select the project/target/configuration/SDK explicitly, and distinguish declarations from a fresh Xcode effective-settings capture. Check `command -v xcproject`. Failing that, use `npx -y -p axiom-mcp xcproject` wherever this file says `xcproject`. `xcproject inspect` is read-only; an Xcode query needs authorized scope because it can resolve packages or write state. If no effective capture is permitted, label values declared/unverified. Never report the first grep hit as the selected Debug setting.
 
 Scan for these settings in Debug configuration:
 - `SWIFT_COMPILATION_MODE` should be `singlefile` (incremental)

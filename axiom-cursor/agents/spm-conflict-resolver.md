@@ -36,7 +36,7 @@ Analyze Package.swift and Package.resolved to:
 
 ### Project Package Relationships
 
-Locate both inner filenames recursively, excluding dependency/cache directories. Check `command -v xcproject`. Then use `xcproject inspect --root .` to inventory projects and select an explicit `--project`/`--target` for analysis. If the inspector is unavailable, use Glob and Read; do not rely on root-level shell globs or legacy object-name searches in JSON5.
+Locate both inner filenames recursively, excluding dependency/cache directories. Check `command -v xcproject`. Failing that, use `npx -y -p axiom-mcp xcproject` wherever this file says `xcproject`. Then use `xcproject inspect --root .` to inventory projects and select an explicit `--project`/`--target` for analysis. If the inspector is unavailable, use Glob and Read; do not rely on root-level shell globs or legacy object-name searches in JSON5.
 
 Read complete structured values. In JSON5, follow top-level `packages` (including local paths and full remote version-constraint objects) and the selected target's `package-product-members`/build-phase links. Phase entries can be strings or objects. In OpenStep, follow `PBXProject.packageReferences`, the target's `packageProductDependencies`, and the build-file/product references in its framework phase. Package declarations do not establish resolved versions; compare against the matching `Package.resolved` and dependency graph. Structural inspection does not resolve packages.
 

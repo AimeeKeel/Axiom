@@ -15,7 +15,10 @@ The MCP server exposes Axiom's full catalog:
 - **{{ stats.agents }} agents**, whose instructions your assistant fetches with the `axiom_get_agent` tool and then follows
 - **{{ stats.commands }} commands** as MCP Prompts (structured workflows)
 - **`xclog`, `xcsym`, and `xcprof`** as MCP Tools, for console capture, crash symbolication, and CPU profiling on an Apple Silicon Mac with Xcode
+- **`xcproject`**, for inspecting Xcode projects. It has no MCP tool, so your assistant runs it in a shell as `npx -y -p axiom-mcp xcproject`
 - **Apple's documentation bundled inside Xcode**, searchable alongside Axiom's skills when Xcode is installed
+
+Two of Axiom's [tools](/tools/) aren't available over MCP. Without `axbuild`, your assistant saves build and test output to a log file and reads it. Without `xcui`, it can still send simulator input through AXe if you've installed it, but has no equivalent for `xcui`'s waits, assertions, accessibility settings, system dialogs, VoiceOver checks or resize sweeps.
 
 ## Prerequisites
 
@@ -121,6 +124,7 @@ Or use the CLI: `opencode mcp add` and follow the prompts.
 | `AXIOM_XCODE_PATH` | Path to an Xcode app | The one `xcode-select` points to | The Xcode whose bundled documentation and version the server reads |
 | `AXIOM_XCLOG_PATH`, `AXIOM_XCSYM_PATH`, `AXIOM_XCPROF_PATH` | File path | Bundled binary | Use a different `xclog`, `xcsym`, or `xcprof` binary |
 | `AXIOM_XCLOG_TIMEOUT`, `AXIOM_XCSYM_TIMEOUT`, `AXIOM_XCPROF_TIMEOUT` | Seconds | `120`, `120`, `300` | Time limit for each call to that tool; raise it for long recordings |
+| `AXIOM_FULL_READ_LIMIT` | Characters | `20000` | Size above which `axiom_read_skill` returns a skill's section list instead of its full text, unless the call names sections or passes `full: true`, or the skill has one section |
 
 ### Development Mode (Live Skills)
 

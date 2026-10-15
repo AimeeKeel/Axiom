@@ -28,7 +28,7 @@ The build-optimizer agent scans for common issues and provides immediate fixes. 
 
 ## Project selection and effective settings
 
-The `.xcodeproj` container holds `project.pbxproj` or JSON5 `project.xcproj`. Use Glob for both filenames at any depth and exclude dependency/cache folders. Check `command -v xcproject`. With `xcproject` available:
+The `.xcodeproj` container holds `project.pbxproj` or JSON5 `project.xcproj`. Use Glob for both filenames at any depth and exclude dependency/cache folders. Check `command -v xcproject`. Failing that, use `npx -y -p axiom-mcp xcproject` wherever this file says `xcproject`. With `xcproject` available:
 
 ```bash
 xcproject inspect --root .

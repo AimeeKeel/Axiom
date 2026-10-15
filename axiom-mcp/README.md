@@ -8,7 +8,7 @@ Model Context Protocol (MCP) server for Axiom's Apple-platform development skill
 - **Agents** — fetch any agent's instructions with `axiom_get_agent`, then follow them
 - **Commands** — structured workflows as MCP Prompts
 - **Command-line tools** — `xclog`, `xcsym`, and `xcprof` as MCP Tools, for console capture, crash symbolication, and profiling (Apple Silicon Mac with Xcode)
-- **`xcproject`** — a command the package installs alongside the server, for reading `project.pbxproj` and JSON5 `project.xcproj` files; it has no MCP tool
+- **`xcproject`** — a command the package installs alongside the server, for reading `project.pbxproj` and JSON5 `project.xcproj` files; it has no MCP tool, so your assistant runs it in a shell as `npx -y -p axiom-mcp xcproject`
 - **Apple's bundled documentation** — the guides and diagnostics inside Xcode, searchable alongside the skills when Xcode is installed
 - **Two modes** — production (the bundled snapshot, the default) or development (reads a plugin checkout)
 
@@ -116,6 +116,7 @@ Add to `~/.gemini/settings.json` (or `.gemini/settings.json` in a project):
 | `AXIOM_XCODE_PATH` | Path to an Xcode app | The one `xcode-select` points to | The Xcode whose bundled documentation and version the server reads |
 | `AXIOM_XCLOG_PATH`, `AXIOM_XCSYM_PATH`, `AXIOM_XCPROF_PATH` | File path | Bundled binary | Use a different `xclog`, `xcsym`, or `xcprof` binary |
 | `AXIOM_XCLOG_TIMEOUT`, `AXIOM_XCSYM_TIMEOUT`, `AXIOM_XCPROF_TIMEOUT` | Seconds | `120`, `120`, `300` | Time limit for each call to that tool; raise it for long recordings |
+| `AXIOM_FULL_READ_LIMIT` | Characters | `20000` | Size above which `axiom_read_skill` returns a skill's section list instead of its full text, unless the call names sections or passes `full: true`, or the skill has one section |
 
 ### Modes
 
@@ -202,6 +203,8 @@ A router's id is its name; a specialized skill's id is its router's name, two hy
 | `xcprof` profiling | `axiom_xcprof_doctor`, `axiom_xcprof_analyze`, `axiom_xcprof_compare`, `axiom_xcprof_record` | `record` captures a new trace |
 
 The `xclog`, `xcsym`, and `xcprof` tools run macOS arm64 binaries shipped inside the package (`dist/bin/`). **They need an Apple Silicon Mac with Xcode installed**; on other platforms they return an explanatory message instead of running.
+
+Two of Axiom's tools aren't in this package. Without `axbuild`, your assistant saves build and test output to a log file and reads it. Without `xcui`, it can still send simulator input through AXe if you've installed it, but has no equivalent for `xcui`'s waits, assertions, accessibility settings, system dialogs, VoiceOver checks or resize sweeps.
 
 **`axiom_xcprof_record` keeps its higher-risk modes gated.** It attaches to a process by default and always runs non-interactively. Launching a process (`launch`) requires `allowLaunch: true`, and system-wide capture (`allProcesses`) requires `allowAllProcesses: true`; without those flags the binary refuses. Recordings are always duration-bounded.
 
