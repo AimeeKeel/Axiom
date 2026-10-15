@@ -1,5 +1,5 @@
 /**
- * Pre-deploy check 1c: claude.ai and the Claude desktop app refuse to install a
+ * Pre-deploy check 1c: claude.ai and Claude Desktop refuse to install a
  * plugin that has a top-level bin/ ("Plugin contains a top-level bin/ directory"),
  * which is why the bundled tools live in plugins/axiom/tools/.
  *
@@ -35,7 +35,7 @@ export function resolvePluginBin({ binRel, onDisk, tracked, gitError }: PluginBi
     return {
       level: "error",
       kind: "on-disk",
-      message: `${binRel} exists (${onDisk}); claude.ai and the Claude desktop app refuse to install a plugin with a top-level bin/. Keep executables in plugins/axiom/tools/`,
+      message: `${binRel} exists (${onDisk}); claude.ai and Claude Desktop refuse to install a plugin with a top-level bin/. Keep executables in plugins/axiom/tools/`,
     };
   if (tracked === true)
     return {

@@ -58,7 +58,7 @@ Add to `.mcp.json` at the root of your project, or to `~/.copilot/mcp-config.jso
 
 VS Code still reads the older `.vscode/mcp.json` (with a top-level `servers` object), but marks it deprecated.
 
-### Claude desktop app
+### Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 

@@ -1,7 +1,7 @@
 /**
  * Tests for scripts/plugin-layout.ts (pre-deploy check 1c).
  *
- * claude.ai and the Claude desktop app refuse a plugin with a top-level bin/.
+ * claude.ai and Claude Desktop refuse a plugin with a top-level bin/.
  * Each case is one way a bin/ can survive the move to tools/, keyed by what
  * lstat sees on disk and what git has indexed (null when git is unavailable).
  */

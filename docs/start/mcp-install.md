@@ -5,7 +5,7 @@ const skills = stats.disciplineSkills + stats.referenceSkills + stats.diagnostic
 
 # MCP Server
 
-Axiom includes an MCP (Model Context Protocol) server that brings its Apple-platform development skills to any MCP-compatible AI coding tool — VS Code, the Claude desktop app, Cursor, Gemini CLI, OpenCode, and more.
+Axiom includes an MCP (Model Context Protocol) server that brings its Apple-platform development skills to any MCP-compatible AI coding tool — VS Code, Claude Desktop, Cursor, Gemini CLI, OpenCode, and more.
 
 ## What You Get
 
@@ -44,7 +44,7 @@ Add this to `~/.copilot/mcp-config.json` to use Axiom in every project, or to `.
 
 **MCP: Add Server** in the Command Palette walks you through the same setup. VS Code still reads the older `.vscode/mcp.json` and user-profile `mcp.json` files, which use a top-level `servers` object, but marks them deprecated.
 
-### Claude desktop app
+### Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 

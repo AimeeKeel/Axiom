@@ -12,7 +12,7 @@ Apple-platform development expertise for your coding assistant: <!--ax:routers--
 
 Then open `/plugin`, search for "axiom", and install it.
 
-**Claude app** – In your browser at claude.ai or in the Claude desktop app, open **Customize > Plugins**, select **Add > Add marketplace**, enter `CharlesWiltgen/Axiom`, and add the **axiom** plugin.
+**Claude app** – In your browser at claude.ai or in Claude Desktop, open **Customize > Plugins**, select **Add > Add marketplace**, enter `CharlesWiltgen/Axiom`, and add the **axiom** plugin.
 
 **Codex, Cursor, Pi, Xcode and MCP clients** – See the [install guides](https://charleswiltgen.github.io/Axiom/start/).
 

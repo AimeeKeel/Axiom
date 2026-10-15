@@ -31,7 +31,7 @@ Each assistant gets the same intent, but the surface differs. Codex has no `Read
 | Swift guardrails (`@State`, `@Relationship`) | ✓ block + warn | ✓ block + warn | ✓ advisory | ✓ advisory |
 | **Enablement** | automatic | install + `features.hooks = true` | automatic (needs Python 3) | the `axiom-pi` extension |
 
-- **Claude Code** – Bundled in the plugin; nothing to enable. Cowork in the Claude desktop app runs the hooks too; chat doesn't. See the [Claude app guide](/start/claude-app-install).
+- **Claude Code** – Bundled in the plugin; nothing to enable. Cowork in Claude Desktop runs the hooks too; chat doesn't. See the [Claude app guide](/start/claude-app-install).
 - **Codex** – Install the full plugin (`codex plugin marketplace add CharlesWiltgen/Axiom`, then `codex plugin add axiom@axiom-marketplace`), set `features.hooks = true`, and approve the trust prompt. See the [Codex guide](/start/codex-install).
 - **Cursor** – Registered by the Cursor plugin. See the [Cursor guide](/start/cursor-install#hooks).
 - **Pi** – Delivered by the `axiom-pi` extension (`pi install git:github.com/CharlesWiltgen/Axiom`). See the [Pi guide](/start/pi-install#commands-and-hooks).

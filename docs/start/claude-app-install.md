@@ -1,6 +1,6 @@
 # Claude App
 
-Add Axiom in your browser at claude.ai or in the Claude desktop app to use its skills in chat and the fuller plugin in Cowork. The plugin is saved to your Claude account, so it also reaches the Claude mobile app's chat and Claude Code on any machine where you sign in.
+Add Axiom in your browser at claude.ai or in Claude Desktop to use its skills in chat and the fuller plugin in Cowork. The plugin is saved to your Claude account, so it also reaches the Claude mobile app's chat and Claude Code on any machine where you sign in.
 
 ## What You Get
 
@@ -13,17 +13,17 @@ Each place you use your account loads a different part of the plugin:
 | <!--ax:agents-->42<!--/ax--> agents | No | Yes | Yes |
 | Hooks (session context, skill routing, write guardrails) | No | Yes | Yes |
 
-Axiom's command-line tools (`axbuild`, `xcproject`, `xclog`, `xcsym`, `xcui`, `xcprof`) are macOS programs for Apple Silicon. They need a session that runs commands on your Mac, which Claude Code does, including the Claude desktop app's Code tab. Chat never runs them. See [Tools](/tools/).
+Axiom's command-line tools (`axbuild`, `xcproject`, `xclog`, `xcsym`, `xcui`, `xcprof`) are macOS programs for Apple Silicon. They need a session that runs commands on your Mac, which Claude Code does, including Claude Desktop's Code tab. Chat never runs them. See [Tools](/tools/).
 
 ## Prerequisites
 
-- A Claude account. You add plugins in your browser or the Claude desktop app; the Claude mobile app can't add them. On Team and Enterprise plans, an Owner decides whether members can add their own marketplaces (see [Troubleshooting](#no-add-marketplace-option)).
-- For the agents and hooks: Cowork in the Claude desktop app, or Claude Code.
+- A Claude account. You add plugins in your browser or Claude Desktop; the Claude mobile app can't add them. On Team and Enterprise plans, an Owner decides whether members can add their own marketplaces (see [Troubleshooting](#no-add-marketplace-option)).
+- For the agents and hooks: Cowork in Claude Desktop, or Claude Code.
 - For the command-line tools: Claude Code on an Apple Silicon Mac.
 
 ## Installation
 
-1. Open [**Customize > Plugins**](https://claude.ai/customize/plugins) in claude.ai or the Claude desktop app.
+1. Open [**Customize > Plugins**](https://claude.ai/customize/plugins) in claude.ai or Claude Desktop.
 2. Select **Add > Add marketplace**, and enter `CharlesWiltgen/Axiom`.
 3. Find **axiom** among your plugins, open it, and select **Add**.
 

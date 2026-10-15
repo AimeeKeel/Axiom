@@ -32,7 +32,7 @@ Then search for "axiom" in the `/plugin` menu and install.
 
 ### Claude app (browser and desktop)
 
-In your browser at claude.ai or in the Claude desktop app, open **Customize > Plugins**, select **Add > Add marketplace** and enter `CharlesWiltgen/Axiom`, then add the **axiom** plugin. Chat loads the skills, Cowork adds the agents and hooks, and Claude Code picks the plugin up from your account. See the [Claude app guide](https://charleswiltgen.github.io/Axiom/start/claude-app-install).
+In your browser at claude.ai or in Claude Desktop, open **Customize > Plugins**, select **Add > Add marketplace** and enter `CharlesWiltgen/Axiom`, then add the **axiom** plugin. Chat loads the skills, Cowork adds the agents and hooks, and Claude Code picks the plugin up from your account. See the [Claude app guide](https://charleswiltgen.github.io/Axiom/start/claude-app-install).
 
 ### Cursor (native plugin)
 

@@ -253,7 +253,7 @@ try {
   error("directory-file-size", `could not list tracked plugin files: ${(e as Error).message}`);
 }
 
-// claude.ai and the Claude desktop app refuse to install a plugin that has a
+// claude.ai and Claude Desktop refuse to install a plugin that has a
 // top-level bin/; the verdict and its cases live in plugin-layout.ts.
 heading("1c. claude.ai Installability");
 try {

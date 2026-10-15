@@ -134,6 +134,6 @@ If the server starts and lists skills, the problem is in Xcode's MCP connection,
 ## What's Next
 
 - [View all skills →](/skills/) – Browse the complete skill catalog
-- [MCP Server guide →](/start/mcp-install) – Setup for other MCP clients (VS Code, the Claude desktop app, Cursor, Gemini CLI) and the server's environment variables
+- [MCP Server guide →](/start/mcp-install) – Setup for other MCP clients (VS Code, Claude Desktop, Cursor, Gemini CLI) and the server's environment variables
 - [Xcode MCP skills →](/skills/xcode-mcp/) – The other direction: letting your assistant drive Xcode through Xcode's own MCP server
 - [Example Workflows →](/start/workflows) – Step-by-step guides for common tasks

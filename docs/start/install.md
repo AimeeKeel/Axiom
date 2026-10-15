@@ -18,7 +18,7 @@ Then install the plugin:
 
 Verify with `/plugin` → "Manage and install" — Axiom should be listed.
 
-If you already added Axiom at claude.ai or in the Claude desktop app, Claude Code loads it as a synced plugin when a session starts. See [Claude App](/start/claude-app-install).
+If you already added Axiom at claude.ai or in Claude Desktop, Claude Code loads it as a synced plugin when a session starts. See [Claude App](/start/claude-app-install).
 
 ## Install for Codex
 
