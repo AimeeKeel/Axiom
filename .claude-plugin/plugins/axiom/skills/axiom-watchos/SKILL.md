@@ -9,11 +9,11 @@ license: MIT
 **You MUST use this skill for ANY watchOS-specific development including app structure, independent apps, Watch Connectivity, complications and Smart Stack widgets, controls, Live Activities on watch, background tasks, and ClockKit migration.**
 
 <!-- AXIOM_AUDITOR_INLINE_BEGIN — auto-maintained by scripts/build-inlined-auditors.ts; do not hand-edit -->
-> **Not on Claude Code?** Where this router says "Launch `some-auditor` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.
+> **Can't launch Axiom agents?** Where this router sends you to an agent, follow its procedure inline. Over MCP, `axiom_get_agent` returns it; elsewhere, read its file below, which needs only file search and read.
 >
 > Homed in another suite: `axiom-build/skills/modernization-helper.md`.
 >
-> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.
+> For any other agent, over MCP `axiom_get_agent` returns it too; run its xclog, xcsym and xcprof steps with the `axiom_xclog_*`, `axiom_xcsym_*` and `axiom_xcprof_*` tools. Elsewhere, search Axiom's skills for `skills/<agent>.md`; if there is none, do that work yourself with this suite's skills, using any Axiom tool on your `PATH`.
 <!-- AXIOM_AUDITOR_INLINE_END -->
 
 ## Quick Reference

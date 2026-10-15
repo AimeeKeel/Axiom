@@ -94,4 +94,15 @@ describe('tool names in shipped prose', () => {
 
     expect(unknown).toEqual([]);
   });
+
+  it('names only tool families the server registers when it writes a prefix as axiom_<prefix>_*', async () => {
+    const tools = [...(await registeredTools())];
+    const roots = ['docs', '.claude-plugin/plugins/axiom', 'axiom-cursor', 'axiom-codex'].map((d) => join(repo, d));
+    const extras = ['README.md', 'axiom-pi/README.md', 'axiom-mcp/src/instructions.ts'].map((f) => join(repo, f));
+    const prefixes = new Set([...roots.flatMap(markdownFiles), ...extras].flatMap((file) =>
+      [...readFileSync(file, 'utf8').matchAll(/(?<![a-z0-9])(axiom_[a-z_]*[a-z])_\*/g)].map((m) => m[1])));
+
+    expect({ checked: prefixes.size > 0, unknown: [...prefixes].filter((p) => !tools.some((t) => t.startsWith(`${p}_`))) })
+      .toEqual({ checked: true, unknown: [] });
+  });
 });

@@ -321,7 +321,9 @@ export interface RouterNoteTarget {
  * Scans the router SKILL.md AND its hand-written sub-skills: a reference inside
  * `axiom-watchos/skills/modernization.md` leaves a reader just as stranded as
  * one in a router. Generated files are excluded — they would otherwise make
- * every suite "reference" itself.
+ * every suite "reference" itself, and they are rewritten in the same build run.
+ * The router's own note is skipped too: its listed paths name their agents, so
+ * scanning it would keep an entry alive after the last real mention is gone.
  *
  * `suiteContents` maps suite name → list of file contents.
  */
@@ -332,8 +334,9 @@ export function deriveSuiteReferences(
   const agentNames = Object.keys(AUDITOR_HOMES);
   for (const [suite, files] of Object.entries(suiteContents)) {
     const found = new Set<string>();
-    for (const content of files) {
-      if (isGeneratedSubSkill(content)) continue;
+    for (const file of files) {
+      if (isGeneratedSubSkill(file)) continue;
+      const content = file.replace(new RegExp(`${escapeRegExp(NOTE_BEGIN)}[\\s\\S]*?${escapeRegExp(NOTE_END)}`), "");
       for (const agent of agentNames) {
         // `\b` is not enough: agent names contain hyphens, and `-` is a
         // non-word character, so /\bmemory-auditor\b/ happily matches inside
@@ -383,14 +386,19 @@ export function routerNoteTargets(
  * Render the note for one router.
  *
  * Deliberately states a RULE covering all ~119 "Launch `X` agent" sites rather
- * than rewriting each one: fewer edit points, no per-line drift, and it can be
- * honest that Bash-dependent agents have no inline equivalent instead of
- * implying every reference has one.
+ * than rewriting each one: fewer edit points, no per-line drift. It addresses
+ * readers by capability, not harness: anyone who can't launch agents (MCP
+ * clients, Pi, `npx skills` installs, Claude app chat) follows it, and Claude
+ * Code and Cowork skip it. The lists cover what this suite's own files name;
+ * agents named only in files elsewhere fall to the last line's general rule,
+ * since listing every agent reachable that way would list nearly all of them.
+ * MCP clients need their own branch because the MCP bundle omits the inlined
+ * files (isGeneratedSubSkill). Codex and Cursor replace this block in their builds.
  */
 export function renderRouterNote(target: RouterNoteTarget): string {
   const lines = [
     NOTE_BEGIN,
-    `> **Not on Claude Code?** Where this router says "Launch \`some-auditor\` agent", read that auditor's file in this suite and follow it inline — the same procedure, needing only file search and read.`,
+    "> **Can't launch Axiom agents?** Where this router sends you to an agent, follow its procedure inline. Over MCP, `axiom_get_agent` returns it; elsewhere, read its file below, which needs only file search and read.",
     ">",
   ];
   if (target.local.length > 0) {
@@ -407,7 +415,7 @@ export function renderRouterNote(target: RouterNoteTarget): string {
   }
   lines.push(
     ">",
-    "> Agents that need Bash — builds, tests, simulators, crash symbolication — stay Claude Code-only; there is no inline equivalent for those.",
+    "> For any other agent, over MCP `axiom_get_agent` returns it too; run its xclog, xcsym and xcprof steps with the `axiom_xclog_*`, `axiom_xcsym_*` and `axiom_xcprof_*` tools. Elsewhere, search Axiom's skills for `skills/<agent>.md`; if there is none, do that work yourself with this suite's skills, using any Axiom tool on your `PATH`.",
     NOTE_END,
   );
   return lines.join("\n");

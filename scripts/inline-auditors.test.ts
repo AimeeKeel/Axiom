@@ -334,6 +334,13 @@ describe("deriveSuiteReferences", () => {
     assert.equal(refs["axiom-performance"], undefined);
   });
 
+  // A listed path names its agent, so scanning the note would keep an entry alive
+  // after the last real mention of that agent is gone.
+  it("ignores the router's own note, so a stale entry drops out", () => {
+    const router = `# Router\n\n${renderRouterNote({ local: [], remote: [{ agent: "iap-auditor", suite: "axiom-integration" }] })}\n\n## Body\n\nLaunch \`memory-auditor\` agent.\n`;
+    assert.deepEqual(deriveSuiteReferences({ "axiom-shipping": [router] }), { "axiom-shipping": ["memory-auditor"] });
+  });
+
   it("omits suites that mention no auditor", () => {
     assert.deepEqual(deriveSuiteReferences({ "axiom-location": ["Maps and geofencing."] }), {});
   });
@@ -397,8 +404,24 @@ describe("renderRouterNote / upsertRouterNote", () => {
     assert.ok(note.includes("`axiom-integration/skills/iap-auditor.md`"));
   });
 
-  it("is honest that Bash-dependent agents have no inline equivalent", () => {
-    assert.match(note, /stay Claude Code-only/);
+  it("does not tell MCP or Pi readers that tool-running agents are Claude Code-only", () => {
+    assert.doesNotMatch(note, /Claude Code-only/);
+  });
+
+  it("sends MCP readers to axiom_get_agent and the MCP tool families, since the MCP bundle omits inlined auditor files, and everyone else to the listed files or the tools on their PATH", () => {
+    assert.equal(
+      note,
+      [
+        NOTE_BEGIN,
+        "> **Can't launch Axiom agents?** Where this router sends you to an agent, follow its procedure inline. Over MCP, `axiom_get_agent` returns it; elsewhere, read its file below, which needs only file search and read.",
+        ">",
+        "> Available here: `skills/memory-auditor.md`.",
+        "> Homed in another suite: `axiom-integration/skills/iap-auditor.md`.",
+        ">",
+        "> For any other agent, over MCP `axiom_get_agent` returns it too; run its xclog, xcsym and xcprof steps with the `axiom_xclog_*`, `axiom_xcsym_*` and `axiom_xcprof_*` tools. Elsewhere, search Axiom's skills for `skills/<agent>.md`; if there is none, do that work yourself with this suite's skills, using any Axiom tool on your `PATH`.",
+        NOTE_END,
+      ].join("\n"),
+    );
   });
 
   it("is wrapped in the auto-maintained markers", () => {
