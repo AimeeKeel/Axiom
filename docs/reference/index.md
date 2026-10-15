@@ -88,7 +88,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 
 ## Tools & Profiling
 
-The four Axiom-bundled CLIs (`xclog`, `xcprof`, `xcsym`, `xcui`) have their own [Tools](/tools/) section.
+Axiom's bundled tools (`axbuild`, `xclog`, `xcprof`, `xcproject`, `xcsym`, `xcui`) have their own [Tools](/tools/) section.
 
 | Skill | Description |
 |-------|-------------|

@@ -4,6 +4,7 @@ Standalone command-line tools that ship with Axiom, built as arm64 macOS binarie
 
 | Tool        | Purpose                                                                         |
 | ----------- | ------------------------------------------------------------------------------- |
+| `axbuild`   | Run a build or test; summarize errors and failed tests, keeping the full log    |
 | `xclog`     | Capture simulator/device console output as structured JSON                      |
 | `xcsym`     | Symbolicate and triage `.ips`, MetricKit, `.crash`, and `.xccrashpoint` crashes |
 | `xcui`      | Drive and assert on the simulator UI and accessibility tree                     |

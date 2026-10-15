@@ -1,13 +1,13 @@
 # Tools
 
-Axiom's command-line helpers, built for Apple Silicon Macs, capture build diagnostics, simulator logs, crash reports, Instruments traces, project structure and the live accessibility tree. Your assistant runs each helper from the installed plugin's `tools/` folder after checking that it works. In Claude Code, Axiom's session hook adds that folder to your `PATH`; in Codex, your assistant calls each helper by its full path; in Pi, you link them yourself ([Pi setup](/start/pi-install#command-line-helpers)). Cursor and other MCP clients reach xclog, xcsym and xcprof as tools of [Axiom's MCP server](/start/mcp-install).
+Axiom's command-line helpers, built for Apple Silicon Macs, capture build diagnostics, simulator logs, crash reports and Instruments traces, inspect project structure, and drive and check the simulator's UI and accessibility. Your assistant runs each helper from the installed plugin's `tools/` folder after checking that it works. In Claude Code, Axiom's session hook adds that folder to your `PATH`; in Codex, your assistant calls each helper by its full path; in Pi, you link them yourself ([Pi setup](/start/pi-install#command-line-helpers)). Cursor and other MCP clients reach xclog, xcsym and xcprof as tools of [Axiom's MCP server](/start/mcp-install), and, with a shell, run xcproject with `npx -y -p axiom-mcp xcproject`.
 
 ## Bundled tools
 
 | Tool | What it does |
 |------|--------------|
 | [**axbuild**](#axbuild) | Run `xcodebuild`, `swift build` or `swift test` and get a short JSON summary of errors and failed tests, while the full log and report are saved |
-| **xcproject** | Inspect Xcode project structure and read captured build settings without modifying the project |
+| [**xcproject**](#xcproject) | Inspect Xcode project structure and read captured build settings without modifying the project |
 | [**xclog**](/reference/xclog-ref) | Capture simulator and device console output (`print`, `os_log`, `Logger`) as structured JSON/JSONL |
 | [**xcprof**](/reference/xcprof-ref) | Record and analyze Instruments traces — CPU bottlenecks attributed to your own code, and a clear report of what it couldn't measure rather than a false "no findings" |
 | [**xcsym**](/reference/xcsym-ref) | Symbolicate and triage crash reports (`.ips`, MetricKit, legacy `.crash`, `.xccrashpoint`) with automatic dSYM discovery |
@@ -43,6 +43,24 @@ axbuild has been tested with Xcode 27.2 beta (27B5028f) and Swift 6.4 (6.4.0.34.
 
 Example prompt: "Run the tests and show me where the failing assertion is and what values it compared."
 
+## xcproject
+
+Use xcproject to see what an Xcode project declares: its targets, configurations, build settings, packages and build phases, in either project format (`project.pbxproj` or the JSON5 `project.xcproj`). It only reads files; it never runs Xcode or changes the project. As with axbuild, replace `<plugin-root>` below with the installed plugin's folder, or use the bare name in Claude Code.
+
+```sh
+"<plugin-root>/tools/xcproject" discover --root .
+"<plugin-root>/tools/xcproject" inspect --project App.xcodeproj --target App --configuration Debug
+"<plugin-root>/tools/xcproject" settings --project App.xcodeproj --input settings.json --target App --configuration Debug --sdk iphoneos --key SWIFT_COMPILATION_MODE
+```
+
+`inspect` reports what the project declares, including conditional settings and xcconfig references, never the value Xcode ends up using. For that value, `settings` reads a saved `xcodebuild -showBuildSettings -json` capture and checks that it matches the project, target, configuration and SDK you name. That `xcodebuild` query can resolve packages or write build state, so your assistant asks before running it.
+
+### Availability
+
+The Claude Code and Codex plugins include xcproject. In Pi, put it on your `PATH`. Cursor and other MCP clients with a shell run it from the MCP server's package with `npx -y -p axiom-mcp xcproject`; it has no MCP tool, so a client without a shell reads the project files instead.
+
+Example prompt: "Which targets in this project set SWIFT_COMPILATION_MODE, and what does Debug actually use?"
+
 ## How they fit in
 
 Each tool has a slash command that uses it and, where it makes sense, an agent that drives it:
@@ -56,7 +74,7 @@ Each tool has a slash command that uses it and, where it makes sense, an agent t
 | xcui | [`/axiom:ui`](/commands/testing/ui) | [simulator-tester](/agents/simulator-tester) |
 | xcproject | [`/axiom:status`](/commands/utility/status), [`/axiom:optimize-build`](/commands/build/optimize-build) | [build-optimizer](/agents/build-optimizer), [spm-conflict-resolver](/agents/spm-conflict-resolver) |
 
-You rarely call these directly — Axiom's skills and agents invoke them for you. The reference pages linked in [Bundled tools](#bundled-tools) document xclog, xcprof, xcsym and xcui for when you want to drive them yourself; axbuild is covered on this page.
+You rarely call these directly — Axiom's skills and agents invoke them for you. The reference pages linked in [Bundled tools](#bundled-tools) document xclog, xcprof, xcsym and xcui for when you want to drive them yourself; axbuild and xcproject are covered on this page.
 
 ## Related tools
 

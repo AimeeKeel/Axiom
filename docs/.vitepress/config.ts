@@ -61,8 +61,10 @@ export default withMermaid(defineConfig({
           text: 'Tools',
           items: [
             { text: 'Overview', link: '/tools/' },
+            { text: 'axbuild (Build & Test Capture)', link: '/tools/#axbuild' },
             { text: 'xclog (Console Capture)', link: '/reference/xclog-ref' },
             { text: 'xcprof (Trace Capture & Analysis)', link: '/reference/xcprof-ref' },
+            { text: 'xcproject (Project Inspection)', link: '/tools/#xcproject' },
             { text: 'xcsym (Crash Symbolication)', link: '/reference/xcsym-ref' },
             { text: 'xcui (Simulator UI & Accessibility)', link: '/reference/xcui-ref' }
           ]

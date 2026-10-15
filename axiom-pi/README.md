@@ -29,7 +29,7 @@ argument completions.
 
 - **Session ground truth** (`before_agent_start`) — injects the iOS/Xcode
   version behavioral rules (so the agent never claims iOS 26 "doesn't exist")
-  and lists which Axiom command-line tools (`axbuild`, `xclog`, `xcsym`, `xcui`, `xcprof`)
+  and lists which Axiom command-line tools (`axbuild`, `xcproject`, `xclog`, `xcsym`, `xcui`, `xcprof`)
   are on your `PATH`. Gated to Apple projects; override with
   `AXIOM_SESSION_CONTEXT=always|never`.
 - **Swift write guardrail** (`tool_result`) — flags `@State` declarations in

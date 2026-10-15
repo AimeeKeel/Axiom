@@ -99,7 +99,7 @@ import {
 import { parsePorcelain, resolveGoBinaryStaleness, resolveStaleness } from "./staleness.ts";
 import { classifyNpmFailure, npmErrorCode, npmInstallEnvironment, runNpmDryRun } from "./npm-resolution.ts";
 import { findDashViolations } from "./docs-dashes.ts";
-import { findMissingSidebarTargets, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, sidebarLinkTargets } from "./docs-lint.ts";
+import { findMissingSidebarTargets, findMissingTools, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, sidebarLinkTargets, TOOL_ROSTER_SURFACES } from "./docs-lint.ts";
 import { findIgnoredAuthoredFiles, resolvePluginBin } from "./plugin-layout.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
@@ -2169,6 +2169,18 @@ heading("12w. Plugin README Accuracy");
   const drift = findPluginReadmeDrift(fs.readFileSync(path.join(pluginDir, "README.md"), "utf8"), routers, commands, { tools, otherNames });
   for (const d of drift) error("plugin-readme", `.claude-plugin/plugins/axiom/README.md: ${d}`);
   if (drift.length === 0) console.log(`  ✓ plugin README names all ${routers.size} routers, ${commands.size} commands and ${tools.size} tools, and nothing retired`);
+}
+
+heading("12x. Tool Roster Coverage");
+{
+  const tools = new Set(fs.readdirSync(path.join(pluginDir, "tools")).filter((f) => !f.startsWith(".")));
+  let gaps = 0;
+  for (const rel of TOOL_ROSTER_SURFACES) {
+    const missing = findMissingTools(fs.readFileSync(path.join(root, rel), "utf8"), tools);
+    for (const t of missing) error("tool-roster", `${rel} never names ${t}; list it, or say why it is unavailable there`);
+    gaps += missing.length;
+  }
+  if (gaps === 0) console.log(`  ✓ ${TOOL_ROSTER_SURFACES.length} roster surfaces name all ${tools.size} tools`);
 }
 
 heading("12v. Docs Sidebar Targets");

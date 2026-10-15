@@ -11,10 +11,12 @@ Axiom gives AI coding assistants deep Apple OS development expertise — the kin
 - **42 agents** that autonomously scan for issues (memory leaks, concurrency violations, build problems)
 - **17 commands** for quick audits and diagnostics
 <!-- AXIOM_STATS_END -->
+- **axbuild** — a built-in build and test runner that saves the full log and gives AI assistants a short summary of errors and failed tests, so nothing is lost to truncated output
 - **xclog** — a built-in console capture tool that gives AI assistants access to simulator and device logs
 - **xcsym** — a built-in crash symbolication tool for `.ips`, MetricKit, and Apple's legacy `.crash` text crashes, with automatic dSYM discovery and pattern categorization
-- **xcui** — a built-in tool to drive and validate the simulator UI and accessibility (tap by accessibility ID, dump the accessibility tree, check VoiceOver and Dynamic Type)
+- **xcui** — a built-in tool to drive and validate the simulator UI and accessibility (tap by accessibility ID, wait for and assert on elements, check VoiceOver and Dynamic Type)
 - **xcprof** — a built-in tool to record and analyze CPU/performance traces (xctrace) without opening Instruments
+- **xcproject** — a built-in tool that reads Xcode project structure and build settings, in either project format, without modifying the project
 
 Every discipline skill is TDD-tested against real developer pressure scenarios. [Learn more about quality](https://charleswiltgen.github.io/Axiom/start/quality).
 

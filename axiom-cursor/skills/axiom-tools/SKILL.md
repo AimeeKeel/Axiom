@@ -38,6 +38,7 @@ For axbuild installation, report handling and saved-log fallback, read `axiom-bu
 | "How do I clean up the status bar for App Store screenshots?" / "How do I set the time to 9:41 and full bars?" | [skills/device-control-ref.md](skills/device-control-ref.md) (Status bar for screenshots) |
 | "Can I automate resize testing?" / "Does my layout hold across breakpoints?" | [skills/xcui-ref.md](skills/xcui-ref.md) (Resize sweeps) — `xcui resize sweep` |
 | "How do I drive `appResize` by hand?" | [skills/device-control-ref.md](skills/device-control-ref.md) (Resizable app sessions) |
+| "How do I inspect an Xcode project's targets or build settings?" / "What is xcproject?" | `axiom-build (skills/build-performance.md)` (Project selection and effective settings) |
 
 <!-- AXIOM_SESSION_START_BEGIN -->
 ## Using Axiom Skills
@@ -146,4 +147,4 @@ For the full tool map (Device Hub / devicectl / simctl / xcui vs mcpbridge, and 
 
 **Skills**: axiom-swiftui, axiom-concurrency, axiom-data, axiom-build, axiom-performance
 
-**Axiom tools**: `axbuild` (build/test diagnostics, `axiom-build`), `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips`, MetricKit, legacy `.crash` text files, and Xcode Organizer `.xccrashpoint` bundles, `skills/xcsym-ref.md`), `xcui` (scriptable sim UI & accessibility testing, `skills/xcui-ref.md`), `xcprof` (structured xctrace CPU & network profile analysis, `skills/xcprof-ref.md`)
+**Axiom tools**: `axbuild` (build/test diagnostics, `axiom-build`), `xclog` (simulator console capture, `skills/xclog-ref.md`), `xcsym` (crash symbolication for `.ips`, MetricKit, legacy `.crash` text files, and Xcode Organizer `.xccrashpoint` bundles, `skills/xcsym-ref.md`), `xcui` (scriptable sim UI & accessibility testing, `skills/xcui-ref.md`), `xcprof` (structured xctrace CPU & network profile analysis, `skills/xcprof-ref.md`), `xcproject` (read-only project and build-settings inspection, `axiom-build (skills/build-performance.md)`)

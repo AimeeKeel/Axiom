@@ -261,3 +261,26 @@ export function findPluginReadmeDrift(
   }
   return problems;
 }
+
+/**
+ * Pre-deploy check 12x. Axiom's tool roster is written by hand on these surfaces, and the
+ * two newest tools, axbuild and xcproject, were missing from most of them (Axiom-dyfi.3).
+ * The roster's source is the plugin's tools/ folder; each surface must name every tool in
+ * it, or say why that tool is unavailable there. The plugin README has its own table check (12w).
+ */
+export const TOOL_ROSTER_SURFACES = [
+  "README.md",
+  "docs/index.md",
+  "docs/.vitepress/config.ts",
+  "docs/tools/index.md",
+  "docs/reference/index.md",
+  "tools/README.md",
+  "docs/start/mcp-install.md",
+  ".claude-plugin/plugins/axiom/skills/axiom-tools/SKILL.md",
+  "axiom-pi/README.md",
+  "axiom-mcp/README.md",
+] as const;
+
+export function findMissingTools(content: string, tools: ReadonlySet<string>): string[] {
+  return [...tools].filter((t) => !new RegExp(`\\b${t}\\b`).test(content)).sort();
+}

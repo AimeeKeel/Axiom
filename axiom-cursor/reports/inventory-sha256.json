@@ -23,8 +23,8 @@
     },
     {
       "path": "agents/build-optimizer.md",
-      "sha256": "6430e41d974325fa3e00a0fe6414380ce3365ca5982c8c9e1dd29a2ea4e1cd21",
-      "bytes": 9666
+      "sha256": "ac54b3d3bf7a7b8182cd07a1a2c85f04dbfc72af9ecaa2f46fae093b22a0802c",
+      "bytes": 9783
     },
     {
       "path": "agents/camera-auditor.md",
@@ -138,8 +138,8 @@
     },
     {
       "path": "agents/spm-conflict-resolver.md",
-      "sha256": "666db8e0b521c6f80fea21f8e7861e12d94254df2cb2c90f6d61e67dc4bda946",
-      "bytes": 13249
+      "sha256": "6d6a438c249f64512e4e791f5434bc1084bd50de44042a2f7337c732e9563833",
+      "bytes": 13336
     },
     {
       "path": "agents/spritekit-auditor.md",
@@ -293,8 +293,8 @@
     },
     {
       "path": "commands/axiom-status.md",
-      "sha256": "2cd25af7e4b800f1e93270c804ba941008c24d0def5e7449df4045c067b08b94",
-      "bytes": 3773
+      "sha256": "2808802b075a3d5f79ce53d6f0a01dc3688b3139967129b7cb89e132b5a61cc6",
+      "bytes": 3860
     },
     {
       "path": "commands/axiom-test-simulator.md",
@@ -528,8 +528,8 @@
     },
     {
       "path": "skills/axiom-build/skills/build-performance.md",
-      "sha256": "b4d8352977b8ca90a767dade136ea5506dd6b1b9f1c14f1418ace9d5f8d47a69",
-      "bytes": 29871
+      "sha256": "f4291de38be40d5ee5e05a198c1f31f22bf41bed91770fd883fe0d6ee170b5c5",
+      "bytes": 29958
     },
     {
       "path": "skills/axiom-build/skills/lldb-ref.md",
@@ -1738,8 +1738,8 @@
     },
     {
       "path": "skills/axiom-tools/SKILL.md",
-      "sha256": "74fb9d9ba0c1b154feae67ee7c501a91183430fe243c18a46257f98338f6563f",
-      "bytes": 10011
+      "sha256": "17d993cd27b5abf5f59c7d7fafbd78886e47141b070c029e63904d4898ff7629",
+      "bytes": 10300
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
@@ -1914,7 +1914,7 @@
   ],
   "totals": {
     "files": 382,
-    "bytes": 7809782
+    "bytes": 7810449
   },
   "excludedMirrors": 30,
   "classes": {

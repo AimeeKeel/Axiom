@@ -10,7 +10,7 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { findMissingSidebarTargets, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, sidebarLinkTargets } from "./docs-lint.ts";
+import { findMissingSidebarTargets, findMissingTools, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, sidebarLinkTargets } from "./docs-lint.ts";
 
 const ROUTERS = new Set(["axiom-networking", "axiom-swiftui", "axiom-performance"]);
 const rules = (content: string) => lintDocPage(content, ROUTERS).map((f) => f.rule);
@@ -282,5 +282,15 @@ describe("findPluginReadmeDrift", () => {
     assert.deepEqual(findPluginReadmeDrift(base + "See **axiom-swiftui-nav**.\n", routers, commands, { otherNames: others }), [
       "unknown skill axiom-swiftui-nav",
     ]);
+  });
+});
+
+describe("findMissingTools", () => {
+  const tools = new Set(["xclog", "xcsym", "axbuild", "xcproject"]);
+  it("names each tool the surface never mentions, sorted", () => {
+    assert.deepEqual(findMissingTools("Use **xclog**, or see /reference/xcsym-ref.", tools), ["axbuild", "xcproject"]);
+  });
+  it("does not count a longer word that contains a tool's name", () => {
+    assert.deepEqual(findMissingTools("xclogger, axbuilds and myxcsym xcproject", tools), ["axbuild", "xclog", "xcsym"]);
   });
 });
