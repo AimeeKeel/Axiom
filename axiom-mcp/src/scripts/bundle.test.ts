@@ -15,9 +15,9 @@ import { XcprofTools } from '../tools/xcprof.js';
 
 describe('MCP tool binary coverage', () => {
   // The bundler copies exactly MCP_TOOL_BINARIES; assert that list matches the
-  // binaries the MCP tools actually resolve under bin/. The scan is shared with
+  // binaries the MCP tools actually resolve under the package's dist/bin/. The scan is shared with
   // pre-deploy step 12h (binary-coverage.ts) so the two guards can't drift.
-  it('MCP_TOOL_BINARIES matches the bin/<name> refs in src/tools/*.ts', () => {
+  it('MCP_TOOL_BINARIES matches the binaries src/tools/*.ts resolve', () => {
     const toolsDir = fileURLToPath(new URL('../tools', import.meta.url));
     const referenced = scanReferencedToolBinaries(toolsDir);
     expect([...referenced].sort()).toEqual([...MCP_TOOL_BINARIES].sort());

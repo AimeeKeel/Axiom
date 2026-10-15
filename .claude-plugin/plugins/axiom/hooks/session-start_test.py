@@ -467,7 +467,7 @@ class TestMissingVersionModules(_InApple):
 
 
 class TestBundledToolRoster(_InApple):
-    def test_roster_names_every_binary_in_bin(self):
+    def test_roster_names_every_binary_in_tools(self):
         plugin_root, fake_xcode = fake_install(self.root)
         open(os.path.join(plugin_root, "tools", "axprobe"), "w").close()
         c = context(run_in(self.project, {"AXIOM_XCODE_PATH": fake_xcode}, plugin_root))
@@ -483,7 +483,7 @@ class TestBundledToolRoster(_InApple):
         listed = [name for name in ("axbuild", "xcproject", *TRUNCATION_CHECKED_TOOLS) if name in roster]
         self.assertEqual(listed, ["axbuild", "xcproject"])
 
-    def test_roster_omitted_when_bin_is_empty(self):
+    def test_roster_omitted_when_tools_is_empty(self):
         plugin_root, fake_xcode = fake_install(self.root)
         for name in os.listdir(os.path.join(plugin_root, "tools")):
             os.remove(os.path.join(plugin_root, "tools", name))

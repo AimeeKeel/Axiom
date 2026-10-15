@@ -1,10 +1,11 @@
 /**
  * Single source of truth for the Go tool binaries the MCP server ships in
- * `dist/bin`. The bundler (`scripts/bundle.ts`) copies exactly these and
- * hard-fails if any is missing. Any MCP tool that `execFile`s `bin/<name>`
- * MUST list its binary here — the coverage test (`scripts/bundle.test.ts`)
- * and pre-deploy step 12h enforce that this list matches the `bin/<name>`
- * references across `src/tools/*.ts`, so the bundler can never silently drift
+ * `dist/bin`. The bundler (`scripts/bundle.ts`) copies these plus the
+ * `MCP_WORKFLOW_BINARIES` (together `MCP_PACKAGED_BINARIES`) and hard-fails if
+ * any is missing. Any MCP tool that resolves a binary under `dist/bin/` MUST
+ * list it here — the coverage test (`scripts/bundle.test.ts`) and pre-deploy
+ * step 12h enforce that this list matches the names `src/tools/*.ts` resolve
+ * (`resolveToolPath('<name>', …)`), so the bundler can never silently drift
  * from the tools that actually need a binary.
  *
  * `xcprof`, `xclog`, and `xcsym` are exposed over MCP. `xcui` is a Claude-Code-plugin

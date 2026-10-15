@@ -101,7 +101,7 @@ if os.environ.get("AXIOM_HARNESS") == "codex":
     # Name what this install actually ships, so a new helper is never left out.
     try:
         helpers = ", ".join(
-            sorted(n for n in os.listdir(os.path.join(plugin_root, "tools")) if not n.startswith("."))
+            sorted(n for n in os.listdir(tools_dir) if not n.startswith("."))
         )
     except OSError:
         helpers = "none found"
@@ -121,7 +121,7 @@ all relevant routers. Preserve the checks and safeguards in the loaded procedure
 Use only capabilities exposed by this session. Load auditor procedures as skills;
 execute them sequentially when collaboration is unavailable. If collaboration tools
 are present, respect their documented concurrency limits and the requested model.
-Resolve helper paths under `{plugin_root}/tools/` ({helpers}), checking
+Resolve helper paths under `{tools_dir}/` ({helpers}), checking
 existence, executable permission and a non-mutating help/version probe before use.
 Do not assume helpers are on PATH. Optional Xcode/MCP capabilities need detection.
 
@@ -188,7 +188,7 @@ if guide_count > 0 or diag_count > 0:
 # opaque "exec format error" / segfault on first call. xclog ships as a
 # ~3 MB arm64 binary; 1 MB is well below any plausible legitimate
 # size and well above what truncation produces.
-xclog_path = f"{plugin_root}/tools/xclog"
+xclog_path = os.path.join(tools_dir, "xclog")
 truncated_tools = set()  # flagged below; left out of the bundled-tool roster
 xclog_context = ""
 MIN_XCLOG_SIZE = 1_000_000
@@ -222,7 +222,7 @@ except OSError as error:
 # disk-full mid-write produces. Codesign failures aren't caught — that
 # would warrant a full subprocess probe; an Intel host is handled below,
 # before any tool is announced.
-xcsym_path = f"{plugin_root}/tools/xcsym"
+xcsym_path = os.path.join(tools_dir, "xcsym")
 xcsym_context = ""
 MIN_XCSYM_SIZE = 1_000_000
 # Wrap the probe in OSError handling — a filesystem error here would
@@ -252,7 +252,7 @@ except OSError as error:
 # Detect xcui binary. Same size-floor logic as xclog/xcsym (truncated
 # marketplace downloads keep the exec bit but fault on first call). xcui
 # ships as a multi-MB arm64 binary; 1 MB is well below legitimate size.
-xcui_path = f"{plugin_root}/tools/xcui"
+xcui_path = os.path.join(tools_dir, "xcui")
 xcui_context = ""
 MIN_XCUI_SIZE = 1_000_000
 try:
@@ -276,7 +276,7 @@ except OSError as error:
     pass
 
 # Detect xcprof binary. Same size-floor logic as the other bundled tools.
-xcprof_path = f"{plugin_root}/tools/xcprof"
+xcprof_path = os.path.join(tools_dir, "xcprof")
 xcprof_context = ""
 MIN_XCPROF_SIZE = 1_000_000
 try:
@@ -305,7 +305,7 @@ except OSError as error:
 # flagged as truncated above is left out: the roster says to run each with --help.
 try:
     bundled_tools = sorted(
-        n for n in os.listdir(os.path.join(plugin_root, "tools"))
+        n for n in os.listdir(tools_dir)
         if not n.startswith(".") and n not in truncated_tools
     )
 except OSError:

@@ -1990,10 +1990,11 @@ for (const problem of checkCodexToolArtifacts(root, stagedPaths.size > 0)) error
 
 heading("12h. MCP Tool Binary Coverage");
 
-// The MCP bundler (axiom-mcp/src/scripts/bundle.ts) copies exactly the binaries
-// in MCP_TOOL_BINARIES. Independently of the bundle build (step 13) and the
-// vitest coverage test (step 12), verify (a) the list matches the bin/<name> the
-// MCP tools actually resolve, and (b) each listed binary is a committed file in
+// The MCP bundler (axiom-mcp/src/scripts/bundle.ts) copies the binaries in
+// MCP_PACKAGED_BINARIES: MCP_TOOL_BINARIES plus the workflow binaries.
+// Independently of the bundle build (step 13) and the vitest coverage test
+// (step 12), verify (a) MCP_TOOL_BINARIES matches the binaries the MCP tools
+// resolve in the package's dist/bin/, and (b) each listed binary is a committed file in
 // plugins/axiom/tools/. Imports the list directly and shares the scanner with the
 // vitest test (src/scripts/binary-coverage.ts) so nothing can drift. axiom-gtqk.
 const mcpToolsDir = path.join(root, "axiom-mcp/src/tools");
@@ -2003,7 +2004,7 @@ const mcpMissingFromList = [...mcpReferenced].filter((b) => !mcpListed.has(b));
 const mcpUnusedInList = [...mcpListed].filter((b) => !mcpReferenced.has(b));
 const mcpMissingBinaries = [...MCP_PACKAGED_BINARIES].filter((b) => !fs.existsSync(path.join(pluginDir, "tools", b)));
 if (mcpMissingFromList.length) {
-  error("mcp-binary-coverage", `tools resolve bin/<name> not in MCP_TOOL_BINARIES (bundler won't ship them): ${mcpMissingFromList.join(", ")}`);
+  error("mcp-binary-coverage", `tools resolve dist/bin/<name> not in MCP_TOOL_BINARIES (bundler won't ship them): ${mcpMissingFromList.join(", ")}`);
 }
 if (mcpUnusedInList.length) {
   error("mcp-binary-coverage", `MCP_TOOL_BINARIES lists binaries no tool references: ${mcpUnusedInList.join(", ")}`);

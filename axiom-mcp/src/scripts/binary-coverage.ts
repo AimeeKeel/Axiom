@@ -4,7 +4,7 @@
  * `.ts` under bare-node type-stripping while vitest imports it as `./binary-coverage.js`.
  *
  * 1. `scanReferencedToolBinaries` — which Go tool binaries the MCP tools resolve under
- *    `bin/`, compared against `MCP_TOOL_BINARIES` (bundle.test.ts and pre-deploy 12h) to
+ *    the package's `dist/bin/`, compared against `MCP_TOOL_BINARIES` (bundle.test.ts and pre-deploy 12h) to
  *    catch a tool needing a binary the bundler won't ship, or a listed binary no tool uses.
  *    It matches a binary NAME written as a string literal at the resolve site:
  *      resolveToolPath('<name>', …)  — shared-helper form (xcprof/xclog/xcsym)
@@ -28,7 +28,7 @@ const RESOLVE_CALL = /resolveToolPath\(\s*['"`]([A-Za-z][\w-]*)['"`]/g;
 const SEGMENT_PAIR = /['"`]bin['"`]\s*,\s*['"`]([A-Za-z][\w-]*)['"`]/g;
 const PATH_LITERAL = /['"`](?:[^'"`]*\/)?bin\/([A-Za-z][\w-]*)['"`]/g;
 
-/** Names like `xcprof` that a tool module resolves under `bin/`. */
+/** Names like `xcprof` that a tool module resolves under the package's `dist/bin/`. */
 export function scanReferencedToolBinaries(toolsDir: string): Set<string> {
   const referenced = new Set<string>();
   for (const file of readdirSync(toolsDir)) {
