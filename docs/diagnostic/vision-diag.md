@@ -14,6 +14,13 @@ When Vision doesn't work, the problem is usually:
 
 **Always check environment and confidence BEFORE debugging code.**
 
+## Example Prompts
+
+- "Vision finds no hands in my camera frames. What should I check?"
+- "My face-detection boxes are drawn in the wrong place on screen"
+- "The UI freezes while my Vision request runs"
+- "Vision fails the first time it runs on iOS 27. Is a model still downloading?"
+
 ## Common Issues
 
 ### Subject Not Detected

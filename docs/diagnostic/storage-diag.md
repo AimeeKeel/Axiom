@@ -21,6 +21,13 @@ If you see:
 - Files inaccessible when device locked
 - Background tasks can't access files
 
+## Example Prompts
+
+- "Why do my downloaded files disappear a few weeks after users save them?"
+- "My background refresh gets a permission error reading a file when the phone is locked"
+- "Why is my app's iCloud backup over 1 GB?"
+- "Files I write to tmp are gone after a restart. Where should they go?"
+
 ## Decision Trees
 
 ### Files Disappeared

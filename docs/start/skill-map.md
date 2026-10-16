@@ -37,7 +37,7 @@ Axiom uses **progressive disclosure** — you never need to memorize skill names
 | **Shipping** | 2 discipline, 1 reference, 1 diagnostic, 2 agents, 1 commands |
 | **Xcode MCP** | 2 discipline, 1 reference |
 
-**Apple Docs** provides access to 20 official Apple guides and 32 Swift compiler diagnostics bundled in Xcode.
+**Apple Docs** provides access to the official Apple guides and Swift compiler diagnostics bundled in your installed Xcode.
 
 ## Counts
 
