@@ -8,14 +8,14 @@
  * it as `.ts` under bare-node type-stripping, and the MCP server as `./mcp-notes.js`.
  */
 
-const INLINE_NOTE = / \(MCP-only clients: ((?:`[^`\n]*`|[^)`\n])*)\)/g;
+const INLINE_NOTE = / \(MCP-only clients: ((?:`[^`\n]*`|\([^()\n]*\)|[^()`\n])*)\)/g;
 const LINE_NOTE = /^[ \t]*MCP-only clients: (.*)$/;
 
 /** The text without its notes, for harnesses that run the binaries or render their own MCP form. */
 export function stripMcpClientNotes(text: string): string {
   return text
     .replace(INLINE_NOTE, '')
-    .replace(/(^|\n\n)[ \t]*MCP-only clients: [^\n]*\n\n/g, '$1')
+    .replace(/(?<=^|\n\n)[ \t]*MCP-only clients: [^\n]*\n(?:\n|$)/g, '')
     .replace(/^[ \t]*MCP-only clients: [^\n]*\n?/gm, '');
 }
 
@@ -33,10 +33,10 @@ export interface NotedMcpTool {
 }
 
 interface NoteEntry { tool: string; given: string[]; omitted: string[] }
-interface Command { subcommand: string; cli: string; flags: string[]; envs: string[] }
+interface Command { subcommand: string; cli: string; hasArgs: boolean; flags: string[]; envs: string[] }
 
 const camel = (s: string) => s.toLowerCase().replace(/[-_]([a-z0-9])/g, (_m, c: string) => c.toUpperCase());
-const ENV_RUN = /((?:[A-Z_][A-Z0-9_]*=(?:"[^"]*"|'[^']*'|[^\s"']*)\s+)*)$/;
+const ENV_PREFIX = /^\s*(?:env\s+)?((?:[A-Z_][A-Z0-9_]*=(?:"[^"]*"|'[^']*'|(?:\$\([^)]*\)|[^\s"'])*)\s+)*)/;
 
 function noteEntries(body: string): NoteEntry[] {
   return body.split(/;\s+/).flatMap((entry) => {
@@ -44,26 +44,50 @@ function noteEntries(body: string): NoteEntry[] {
     if (!m) return [];
     const given: string[] = [];
     const omitted: string[] = [];
-    for (const p of (m[2] ?? '').matchAll(/(\bno )?`([A-Za-z]\w*)(?::[^`]*)?`/g)) (p[1] ? omitted : given).push(p[2]);
+    const params = m[2] ?? '';
+    let end = 0;
+    let lastOmitted = false;
+    for (const p of params.matchAll(/`([A-Za-z]\w*)(?::[^`]*)?`/g)) {
+      const gap = params.slice(end, p.index);
+      const isOmitted: boolean = /\bno\s*$/.test(gap) || (lastOmitted && /^\s*,?\s*(?:or\s+)?$/.test(gap));
+      (isOmitted ? omitted : given).push(p[1]);
+      lastOmitted = isOmitted;
+      end = p.index + p[0].length;
+    }
     return [{ tool: m[1], given, omitted }];
   });
 }
 
-/** The first wrapped command in `line`; with `atStart`, only one the line opens with (after env vars). */
-function commandIn(line: string, subcommands: Iterable<string>, atStart: boolean): Command | null {
-  let best: { at: number; subcommand: string } | null = null;
-  for (const subcommand of subcommands) {
-    const m = new RegExp(`(?:^|[\\s;&|(])(${subcommand})(?![\\w-])`).exec(line);
-    if (m && (!best || m.index < best.at)) best = { at: m.index + m[0].length - subcommand.length, subcommand };
+/** Split a shell line at `&&`, `||`, `;` and `|` outside quotes. */
+function shellSegments(line: string): string[] {
+  const segments: string[] = [];
+  let quote = '';
+  let start = 0;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) { if (c === quote) quote = ''; continue; }
+    if (c === '"' || c === "'") { quote = c; continue; }
+    if (c === ';' || c === '|' || (c === '&' && line[i + 1] === '&')) {
+      segments.push(line.slice(start, i));
+      if ((c === '|' && line[i + 1] === '|') || c === '&') i++;
+      start = i + 1;
+    }
   }
-  if (!best) return null;
-  const prefix = line.slice(0, best.at);
-  const envRun = prefix.match(ENV_RUN)?.[1] ?? '';
-  if (atStart && prefix.trim() !== envRun.trim()) return null;
-  const rest = line.slice(best.at);
-  const flags = [...rest.split(/\s--(?=\s|$)/)[0].matchAll(/(?:^|\s)--([a-z][a-z0-9-]*)/g)].map((f) => f[1]);
-  const envs = [...envRun.matchAll(/([A-Z_][A-Z0-9_]*)=/g)].map((e) => e[1]);
-  return { subcommand: best.subcommand, cli: `${envRun}${rest}`.trim(), flags, envs };
+  segments.push(line.slice(start));
+  return segments;
+}
+
+/** The wrapped commands a shell line or backticked span runs, one per segment that opens with one. */
+function commandsIn(line: string, subcommands: readonly string[]): Command[] {
+  return shellSegments(line).flatMap((segment) => {
+    const envRun = segment.match(ENV_PREFIX)?.[1] ?? '';
+    const rest = segment.slice(segment.match(ENV_PREFIX)?.[0].length ?? 0).trim();
+    const subcommand = subcommands.find((sub) => rest === sub || (rest.startsWith(sub) && /^[^\w-]/.test(rest.slice(sub.length))));
+    if (!subcommand) return [];
+    const flags = [...rest.split(/\s--(?=\s|$)/)[0].matchAll(/(?:^|\s)--([a-z][a-z0-9-]*)/g)].map((f) => f[1]);
+    const envs = [...envRun.matchAll(/([A-Z_][A-Z0-9_]*)=/g)].map((e) => e[1]);
+    return [{ subcommand, cli: `${envRun}${rest}`.trim(), hasArgs: rest !== subcommand, flags, envs }];
+  });
 }
 
 interface Fence { open: number; close: number }
@@ -87,10 +111,11 @@ function fencesIn(lines: string[]): Fence[] {
 /**
  * Disagreements between the notes in served agent or command text and the wrapped tools'
  * `listTools()` schemas. Every wrapped instruction (a backticked command with arguments, or a
- * fenced line) needs its own note, and a bare subcommand name needs some note naming its
- * tool. A note's params must exist and include the tool's required inputs (given, not
- * `no \`x\``), and every flag or binary-prefixed env var of the instruction it follows must
- * map to a param the note names, unless the server implies it.
+ * fenced line) needs its own note naming a wrapped tool, and a bare subcommand name needs some
+ * note naming its tool. A note's params must exist and include the tool's required inputs
+ * (given, not `no \`x\``), and every flag or binary-prefixed env var of the command it follows
+ * must map to a param the note names, unless the server implies it. One entry per tool covers
+ * all of that tool's commands in a block; otherwise entries pair with commands in order.
  */
 export function mcpClientNoteMismatches(
   text: string,
@@ -106,7 +131,7 @@ export function mcpClientNoteMismatches(
     families.add(m[1]);
     toolForSubcommand.set(`${m[1]} ${m[2].replace(/_/g, '-')}`, t.name);
   }
-  const subcommands = [...toolForSubcommand.keys()];
+  const subcommands = [...toolForSubcommand.keys()].sort((a, b) => b.length - a.length);
   const problems: string[] = [];
   const noted = new Set<string>();
   const ours = (tool: string) => families.has(tool.split('_')[1]);
@@ -145,6 +170,30 @@ export function mcpClientNoteMismatches(
     }
   };
 
+  // Check a note's entries against the commands it follows: one entry per tool covers all of
+  // that tool's commands; otherwise entries pair with commands in order.
+  const checkNote = (entries: NoteEntry[], commands: Command[]) => {
+    const wrapped = entries.filter((e) => ours(e.tool));
+    const others = entries.filter((e) => !ours(e.tool));
+    others.forEach((entry) => check(entry));
+    if (commands.length === 0) {
+      wrapped.forEach((entry) => check(entry));
+      return;
+    }
+    const toolOf = (c: Command) => toolForSubcommand.get(c.subcommand);
+    const perTool = [...new Set(commands.map(toolOf))].every((tool) => wrapped.filter((e) => e.tool === tool).length === 1)
+      && wrapped.every((e) => commands.some((c) => toolOf(c) === e.tool));
+    if (perTool) {
+      commands.forEach((c) => check(wrapped.find((e) => e.tool === toolOf(c))!, c));
+    } else if (commands.length === wrapped.length) {
+      wrapped.forEach((entry, n) => check(entry, commands[n]));
+    } else {
+      const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+      problems.push(`note after a block of ${plural(commands.length, 'command')} lists ${plural(wrapped.length, 'tool')}`);
+      wrapped.forEach((entry) => check(entry));
+    }
+  };
+
   const lines = text.split('\n');
   const fences = fencesIn(lines);
   const fenceAt = new Map<number, Fence>();
@@ -152,16 +201,16 @@ export function mcpClientNoteMismatches(
   const coveredFences = new Set<Fence>();
   const prose: string[] = [];
 
-  // Wrapped instructions in prose: backticked commands with arguments, keyed by line.
-  const spans: Array<{ line: number; end: number; command: Command; covered: boolean }> = [];
+  const spans: Array<{ line: number; end: number; commands: Command[]; instruction: boolean; covered: boolean }> = [];
   lines.forEach((line, i) => {
     if (fenceAt.has(i)) return;
     let stripped = line;
     for (const m of line.matchAll(/`([^`\n]+)`/g)) {
-      const command = commandIn(m[1], subcommands, true);
-      if (!command || command.cli === command.subcommand) continue;
-      spans.push({ line: i, end: m.index + m[0].length, command, covered: false });
-      stripped = stripped.replace(m[0], '');
+      const commands = commandsIn(m[1], subcommands);
+      if (commands.length === 0) continue;
+      const instruction = commands.some((c) => c.hasArgs);
+      spans.push({ line: i, end: m.index + m[0].length, commands, instruction, covered: false });
+      if (instruction) stripped = stripped.replace(m[0], '');
     }
     if (!LINE_NOTE.test(line)) prose.push(stripped);
   });
@@ -170,10 +219,14 @@ export function mcpClientNoteMismatches(
     if (fenceAt.has(i)) return;
     for (const m of line.matchAll(INLINE_NOTE)) {
       const span = spans.find((s) => s.line === i && s.end === m.index);
-      const bare = line.slice(0, m.index).match(/`([^`\n]+)`$/)?.[1];
-      const command = span?.command ?? (bare ? commandIn(bare, subcommands, true) ?? undefined : undefined);
+      const entries = noteEntries(m[1]);
+      if (span?.instruction && !entries.some((e) => ours(e.tool))) {
+        problems.push(`note for \`${span.commands[0].cli}\` names no wrapped tool`);
+        span.covered = true;
+        continue;
+      }
       if (span) span.covered = true;
-      for (const entry of noteEntries(m[1])) check(entry, command);
+      checkNote(entries, span?.commands ?? []);
     }
     const note = line.match(LINE_NOTE);
     if (!note) return;
@@ -185,35 +238,25 @@ export function mcpClientNoteMismatches(
     if (fence && fence.close === k) {
       coveredFences.add(fence);
       const body = lines.slice(fence.open + 1, fence.close).join('\n').replace(/\s*\\\n\s*/g, ' ').split('\n');
-      commands = body.flatMap((l) => commandIn(l, subcommands, false) ?? []);
+      commands = body.flatMap((l) => commandsIn(l, subcommands));
     } else if (k >= 0 && lines[k].trimStart().startsWith('|')) {
-      const rows = spans.filter((s) => s.line <= k && lines.slice(s.line, k + 1).every((l) => l.trimStart().startsWith('|')));
+      const rows = spans.filter((s) => s.instruction && !s.covered && s.line <= k
+        && lines.slice(s.line, k + 1).every((l) => l.trimStart().startsWith('|')));
       rows.forEach((s) => { s.covered = true; });
-      commands = rows.map((s) => s.command);
+      commands = rows.flatMap((s) => s.commands);
     }
-    const wrapped = entries.filter((e) => ours(e.tool));
     if (commands.length === 0) {
-      for (const entry of wrapped) problems.push(`note for \`${entry.tool}\` follows no command`);
-      entries.forEach((entry) => check(entry));
-      return;
+      for (const entry of entries.filter((e) => ours(e.tool))) problems.push(`note for \`${entry.tool}\` follows no command`);
     }
-    if (wrapped.length === 1 && commands.every((c) => toolForSubcommand.get(c.subcommand) === wrapped[0].tool)) {
-      commands.forEach((c) => check(wrapped[0], c));
-      return;
-    }
-    if (commands.length !== wrapped.length) {
-      const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
-      problems.push(`note after a block of ${plural(commands.length, 'command')} lists ${plural(wrapped.length, 'tool')}`);
-      entries.forEach((entry) => check(entry));
-      return;
-    }
-    wrapped.forEach((entry, n) => check(entry, commands[n]));
+    checkNote(entries, commands);
   });
 
-  for (const s of spans) if (!s.covered) problems.push(`\`${s.command.cli}\` has no MCP-only clients note`);
+  for (const s of spans) {
+    if (s.instruction && !s.covered) problems.push(`\`${s.commands.find((c) => c.hasArgs)!.cli}\` has no MCP-only clients note`);
+  }
   for (const f of fences) {
     if (coveredFences.has(f)) continue;
-    const first = lines.slice(f.open + 1, f.close).map((l) => commandIn(l, subcommands, false)).find(Boolean);
+    const first = lines.slice(f.open + 1, f.close).flatMap((l) => commandsIn(l, subcommands))[0];
     if (first) problems.push(`block with \`${first.cli}\` has no MCP-only clients note`);
   }
   const proseText = prose.join('\n');
