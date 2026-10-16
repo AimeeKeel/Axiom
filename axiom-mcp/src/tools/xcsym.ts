@@ -6,6 +6,7 @@ import {
   type BinaryExec,
   type BinaryExecResult,
   asStringArray,
+  failureText,
   isNonEmpty,
   makeDefaultExec,
   requireString,
@@ -91,7 +92,7 @@ export class XcsymTools implements BinaryToolProvider {
     return [
       {
         name: 'axiom_xcsym_crash',
-        description: 'Symbolicate and categorize one crash file end-to-end: parse, discover dSYMs, run atos, classify the cause. Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, legacy .crash, and .xccrashpoint bundles (auto-detected). Returns a JSON report. A non-zero exit reports dSYM matching, not failure (2=input not found or main-binary dSYM missing, 3=UUID mismatch, 4=arch mismatch — on the main binary, or on another image when the main binary could not be checked — 7=other images missing, or mismatched while the main binary matched); when a report was written it is still returned, followed by the exit code. macOS + Xcode only.',
+        description: 'Symbolicate and categorize one crash file end-to-end: parse, discover dSYMs, run atos, classify the cause. Accepts .ips (v1/v2), MetricKit MXCrashDiagnostic JSON, legacy .crash, and .xccrashpoint bundles (auto-detected). Returns a JSON report. Exits 3, 4 and 7 mean symbolication was incomplete, not that the tool failed (3=UUID mismatch, 4=arch mismatch — on the main binary, or on another image when the main binary could not be checked — 7=other images missing, or mismatched while the main binary matched); 2 means the input is missing, unreadable or unsupported, or the main-binary dSYM is missing; 1, 5, 6 and 8 are real failures (usage, tool, timeout, output). When a report was written it is still returned, followed by the exit code. macOS + Xcode only.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -172,7 +173,7 @@ export class XcsymTools implements BinaryToolProvider {
       },
       {
         name: 'axiom_xcsym_verify',
-        description: 'Verify that the discoverable dSYMs match each image in a crash file by UUID and architecture. Returns JSON; a non-zero exit flags missing or mismatched dSYMs (the report is still returned). macOS + Xcode only.',
+        description: 'Verify that the discoverable dSYMs match each image in a crash file by UUID and architecture. Returns JSON. Exits 3 (UUID mismatch), 4 (arch mismatch) and 7 (missing images) flag dSYM problems and still return the report; 2 means the input is missing, unreadable or unsupported; 1, 5, 6 and 8 are real failures (usage, tool, timeout, output). macOS + Xcode only.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -218,13 +219,9 @@ export class XcsymTools implements BinaryToolProvider {
     if (code === 0) {
       return text(stdout.trim() || '(xcsym produced no output)');
     }
-    const detail = stderr.trim() || stdout.trim() || `exited with status ${code}`;
     // crash/verify exit non-zero to signal dSYM-match completeness while still
     // emitting a full JSON report — surface that report, not just the code.
-    const body = stdout.trim()
-      ? `${stdout.trim()}\n\n(xcsym exit ${code}: ${stderr.trim() || 'see output above'})`
-      : `xcsym failed (exit ${code}): ${detail}`;
-    return text(body);
+    return failureText('xcsym', { stdout, stderr, code });
   }
 
   /**

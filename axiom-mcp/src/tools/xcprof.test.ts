@@ -70,9 +70,9 @@ describe('XcprofTools.callTool argv mapping', () => {
       trace: 'a.trace', startMs: 100, endMs: 700, hangThresholdMs: 300, userBinary: 'App', dsym: 'A.dSYM',
     });
     expect(calls[0]).toEqual([
-      'analyze', 'a.trace', '--json',
+      'analyze', '--json',
       '--start-ms', '100', '--end-ms', '700', '--hang-threshold-ms', '300',
-      '--user-binary', 'App', '--dsym', 'A.dSYM',
+      '--user-binary', 'App', '--dsym', 'A.dSYM', '--', 'a.trace',
     ]);
   });
 
@@ -86,7 +86,13 @@ describe('XcprofTools.callTool argv mapping', () => {
     await toolsWith(exec).callTool('axiom_xcprof_compare', {
       baseline: 'base.trace', current: 'cur.trace', failOnRegression: true, thresholdPct: 10,
     });
-    expect(calls[0]).toEqual(['compare', 'base.trace', 'cur.trace', '--fail-on-regression', '--threshold-pct', '10']);
+    expect(calls[0]).toEqual(['compare', '--fail-on-regression', '--threshold-pct', '10', '--', 'base.trace', 'cur.trace']);
+  });
+
+  it('passes leading-dash trace paths as positionals, not flags (axiom-miml)', async () => {
+    const { calls, exec } = recorder();
+    await toolsWith(exec).callTool('axiom_xcprof_compare', { baseline: '-base.trace', current: '-cur.trace' });
+    expect(calls[0]).toEqual(['compare', '--', '-base.trace', '-cur.trace']);
   });
 
   it('record attaches non-interactively by default', async () => {

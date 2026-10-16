@@ -80,31 +80,45 @@ describe.runIf(onMac)('XclogTools.callTool argv mapping', () => {
       target: 'MyApp', deviceUdid: '00001234', last: '10m', filter: 'error', maxLines: 100,
     });
     expect(calls[0]).toEqual([
-      'show', 'MyApp', '--device-udid', '00001234', '--last', '10m', '--filter', 'error', '--max-lines', '100',
+      'show', '--device-udid', '00001234', '--last', '10m', '--filter', 'error', '--max-lines', '100', '--', 'MyApp',
     ]);
   });
 
   it('launch injects a default --timeout when no bound is given', async () => {
     const { calls, exec } = recorder();
     await toolsWith(exec).callTool('axiom_xclog_launch', { bundleId: 'com.example.App' });
-    expect(calls[0]).toEqual(['launch', 'com.example.App', '--timeout', '30s']);
+    expect(calls[0]).toEqual(['launch', '--timeout', '30s', '--', 'com.example.App']);
   });
 
   it('launch honors an explicit timeout and does not double-bound', async () => {
     const { calls, exec } = recorder();
     await toolsWith(exec).callTool('axiom_xclog_launch', { bundleId: 'com.example.App', timeout: '5m' });
-    expect(calls[0]).toEqual(['launch', 'com.example.App', '--timeout', '5m']);
+    expect(calls[0]).toEqual(['launch', '--timeout', '5m', '--', 'com.example.App']);
   });
 
   it('attach with an explicit maxLines bound omits the fallback timeout', async () => {
     const { calls, exec } = recorder();
     await toolsWith(exec).callTool('axiom_xclog_attach', { target: '1234', maxLines: 50 });
-    expect(calls[0]).toEqual(['attach', '1234', '--max-lines', '50']);
+    expect(calls[0]).toEqual(['attach', '--max-lines', '50', '--', '1234']);
+  });
+
+  it('passes a leading-dash target as a positional, not a flag (axiom-miml)', async () => {
+    const { calls, exec } = recorder();
+    await toolsWith(exec).callTool('axiom_xclog_attach', { target: '-MyApp', maxLines: 5 });
+    expect(calls[0]).toEqual(['attach', '--max-lines', '5', '--', '-MyApp']);
   });
 
   it('throws when a required parameter is missing', async () => {
     const { exec } = recorder();
     await expect(toolsWith(exec).callTool('axiom_xclog_launch', {})).rejects.toThrow(/bundleId/);
+  });
+
+  it('keeps lines captured before a failure, then names the exit (Axiom-p89j)', async () => {
+    const stdout = '{"source":"os_log","text":"fixture-marker"}';
+    const stderr = 'xclog: log stream exited early (exit status 23); the output above is incomplete';
+    const { exec } = recorder({ code: 1, stdout, stderr });
+    const res = await toolsWith(exec).callTool('axiom_xclog_attach', { target: 'Fixture', timeout: '5s' });
+    expect(res.content[0].text).toBe(`${stdout}\n\n(xclog exit 1: ${stderr})`);
   });
 
   it('surfaces a non-zero exit with stderr detail', async () => {

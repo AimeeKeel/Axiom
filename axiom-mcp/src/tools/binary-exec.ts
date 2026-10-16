@@ -85,6 +85,16 @@ export function text(body: string): ToolResponse {
   return { content: [{ type: 'text', text: body }] };
 }
 
+/**
+ * Response for a non-zero exit. A tool that wrote output before failing (a
+ * partial capture, a report flagging incomplete symbolication) keeps it,
+ * followed by the exit code; otherwise the error text stands alone.
+ */
+export function failureText(tool: string, { stdout, stderr, code }: BinaryExecResult): ToolResponse {
+  if (stdout.trim()) return text(`${stdout.trim()}\n\n(${tool} exit ${code}: ${stderr.trim() || 'see output above'})`);
+  return text(`${tool} failed (exit ${code}): ${stderr.trim() || `exited with status ${code}`}`);
+}
+
 export function requireString(value: unknown, field: string): string {
   if (typeof value !== 'string' || value.trim() === '') {
     throw new Error(`Required parameter "${field}" must be a non-empty string`);

@@ -6,6 +6,7 @@ import {
   type BinaryExec,
   type BinaryExecResult,
   asStringArray,
+  failureText,
   isNonEmpty,
   makeDefaultExec,
   requireString,
@@ -184,10 +185,8 @@ export class XcprofTools implements BinaryToolProvider {
     if (code === 0) {
       return text(stdout.trim() || '(xcprof produced no output)');
     }
-    const detail = stderr.trim() || stdout.trim() || `exited with status ${code}`;
     // compare uses exit 3 for "regression found" — surface its JSON, not just the code.
-    const body = stdout.trim() ? `${stdout.trim()}\n\n(xcprof exit ${code}: ${stderr.trim() || 'see output above'})` : `xcprof failed (exit ${code}): ${detail}`;
-    return text(body);
+    return failureText('xcprof', { stdout, stderr, code });
   }
 
   /** Translate validated tool input into an xcprof argv. Throws on bad input. */
@@ -198,22 +197,24 @@ export class XcprofTools implements BinaryToolProvider {
 
       case 'axiom_xcprof_analyze': {
         const trace = requireString(args.trace, 'trace');
-        const argv = ['analyze', trace, '--json'];
+        const argv = ['analyze', '--json'];
         if (Number.isFinite(args.startMs)) argv.push('--start-ms', String(args.startMs));
         if (Number.isFinite(args.endMs)) argv.push('--end-ms', String(args.endMs));
         if (Number.isFinite(args.hangThresholdMs)) argv.push('--hang-threshold-ms', String(args.hangThresholdMs));
         if (isNonEmpty(args.userBinary)) argv.push('--user-binary', args.userBinary);
         if (isNonEmpty(args.dsym)) argv.push('--dsym', args.dsym);
+        argv.push('--', trace);
         return argv;
       }
 
       case 'axiom_xcprof_compare': {
         const baseline = requireString(args.baseline, 'baseline');
         const current = requireString(args.current, 'current');
-        const argv = ['compare', baseline, current];
+        const argv = ['compare'];
         if (args.failOnRegression === true) argv.push('--fail-on-regression');
         if (Number.isFinite(args.thresholdPct)) argv.push('--threshold-pct', String(args.thresholdPct));
         if (isNonEmpty(args.dsym)) argv.push('--dsym', args.dsym);
+        argv.push('--', baseline, current);
         return argv;
       }
 

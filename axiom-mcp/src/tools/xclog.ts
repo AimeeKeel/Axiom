@@ -5,6 +5,7 @@ import type { BinaryToolProvider, McpTool, ToolResponse } from './handler.js';
 import {
   type BinaryExec,
   type BinaryExecResult,
+  failureText,
   isNonEmpty,
   makeDefaultExec,
   requireString,
@@ -184,8 +185,7 @@ export class XclogTools implements BinaryToolProvider {
     if (code === 0) {
       return text(stdout.trim() || '(xclog produced no output)');
     }
-    const detail = stderr.trim() || stdout.trim() || `exited with status ${code}`;
-    return text(`xclog failed (exit ${code}): ${detail}`);
+    return failureText('xclog', { stdout, stderr, code });
   }
 
   /** Translate validated tool input into an xclog argv. Throws on bad input. */
@@ -197,26 +197,32 @@ export class XclogTools implements BinaryToolProvider {
         return argv;
       }
       case 'axiom_xclog_show': {
-        const argv = ['show', requireString(args.target, 'target')];
+        const target = requireString(args.target, 'target');
+        const argv = ['show'];
         if (isNonEmpty(args.device)) argv.push('--device', args.device);
         if (isNonEmpty(args.deviceUdid)) argv.push('--device-udid', args.deviceUdid);
         if (isNonEmpty(args.last)) argv.push('--last', args.last);
         pushCommonFilters(argv, args);
+        argv.push('--', target);
         return argv;
       }
       case 'axiom_xclog_launch': {
-        const argv = ['launch', requireString(args.bundleId, 'bundleId')];
+        const bundleId = requireString(args.bundleId, 'bundleId');
+        const argv = ['launch'];
         if (isNonEmpty(args.device)) argv.push('--device', args.device);
         if (isNonEmpty(args.output)) argv.push('--output', args.output);
         pushStreamBounds(argv, args);
         pushCommonFilters(argv, args);
+        argv.push('--', bundleId);
         return argv;
       }
       case 'axiom_xclog_attach': {
-        const argv = ['attach', requireString(args.target, 'target')];
+        const target = requireString(args.target, 'target');
+        const argv = ['attach'];
         if (isNonEmpty(args.device)) argv.push('--device', args.device);
         pushStreamBounds(argv, args);
         pushCommonFilters(argv, args);
+        argv.push('--', target);
         return argv;
       }
       default:
