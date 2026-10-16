@@ -2,6 +2,7 @@ import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { Loader } from '../loader/types.js';
 import type { SkillSection } from '../loader/parser.js';
 import { Logger } from '../config.js';
+import { mcpToolFooter } from './mcp-notes.js';
 
 export interface McpTool {
   name: string;
@@ -290,6 +291,7 @@ export class DynamicToolsHandler {
 
     const listSections = args.listSections === true;
     const parts: string[] = [];
+    const delivered: string[] = [];
 
     for (const skillReq of args.skills) {
       if (!skillReq.name || typeof skillReq.name !== 'string') {
@@ -347,6 +349,7 @@ export class DynamicToolsHandler {
       parts.push(`Type: ${result.skill.skillType} | ${result.content.length} chars`);
       parts.push('');
       parts.push(result.content);
+      delivered.push(result.content);
 
       if (result.skill.related && result.skill.related.length > 0) {
         parts.push('');
@@ -355,7 +358,13 @@ export class DynamicToolsHandler {
       parts.push('');
     }
 
+    const footer = mcpToolFooter(delivered.join('\n'), this.binaryToolNames());
+    if (footer) parts.push('---', footer);
     return { content: [{ type: 'text', text: parts.join('\n') }] };
+  }
+
+  private binaryToolNames(): string[] {
+    return this.binaryTools.flatMap((provider) => provider.listTools().map((tool) => tool.name));
   }
 
   // Validation errors (bad input) throw; not-found errors (valid input, missing data) return inline
@@ -377,6 +386,8 @@ export class DynamicToolsHandler {
     }
     lines.push('');
     lines.push(agent.content);
+    const footer = mcpToolFooter(agent.content, this.binaryToolNames());
+    if (footer) lines.push('', '---', footer);
 
     return { content: [{ type: 'text', text: lines.join('\n') }] };
   }

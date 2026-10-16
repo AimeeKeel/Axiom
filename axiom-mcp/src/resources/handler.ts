@@ -1,6 +1,7 @@
 import { Loader } from '../loader/types.js';
 import { Logger } from '../config.js';
 import { Skill } from '../loader/parser.js';
+import { mcpToolFooter } from '../tools/mcp-notes.js';
 
 /**
  * MCP Resource representation
@@ -19,7 +20,8 @@ export interface McpResource {
 export class ResourcesHandler {
   constructor(
     private loader: Loader,
-    private logger: Logger
+    private logger: Logger,
+    private binaryToolNames: string[] = [],
   ) {}
 
   /**
@@ -126,6 +128,7 @@ export class ResourcesHandler {
     header.push('---');
     header.push('');
 
-    return header.join('\n') + skill.content;
+    const footer = mcpToolFooter(skill.content, this.binaryToolNames);
+    return header.join('\n') + skill.content + (footer ? `\n\n---\n${footer}` : '');
   }
 }

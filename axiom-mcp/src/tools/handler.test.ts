@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { DynamicToolsHandler } from './handler.js';
+import { mcpToolFooter } from './mcp-notes.js';
+import { XcsymTools } from './xcsym.js';
 import type { Loader } from '../loader/types.js';
 import { Logger, type Config } from '../config.js';
 
@@ -474,5 +476,66 @@ describe('DynamicToolsHandler', () => {
 
       await expect(handler.callTool('unknown_tool', {})).rejects.toThrow('Unknown tool');
     });
+  });
+});
+
+describe('MCP tool footer on served text', () => {
+  const xcsym = new XcsymTools({ binaryPath: '' });
+
+  it('follows an agent that names a wrapped subcommand', async () => {
+    const loader = makeMockLoader({
+      getAgent: vi.fn().mockResolvedValue({ name: 'crash-analyzer', description: 'Crashes', content: 'Run `xcsym crash <file>`.' }),
+    });
+    const handler = new DynamicToolsHandler(loader, mockLogger, [xcsym]);
+
+    const text = (await handler.callTool('axiom_get_agent', { agent: 'crash-analyzer' })).content[0].text;
+
+    expect(text.endsWith(`Run \`xcsym crash <file>\`.\n\n---\n${mcpToolFooter('xcsym crash', xcsym.listTools().map((t) => t.name))}`)).toBe(true);
+  });
+
+  it('leaves an agent that names no wrapped subcommand unchanged', async () => {
+    const loader = makeMockLoader({
+      getAgent: vi.fn().mockResolvedValue({ name: 'build-fixer', description: 'Builds', content: 'Instructions here' }),
+    });
+    const handler = new DynamicToolsHandler(loader, mockLogger, [xcsym]);
+
+    const text = (await handler.callTool('axiom_get_agent', { agent: 'build-fixer' })).content[0].text;
+
+    expect(text).toBe('# Agent: build-fixer\nBuilds\n\nInstructions here');
+  });
+
+  it('follows a section-filtered skill read once, however many skills name a subcommand', async () => {
+    const loader = makeMockLoader({
+      getSkillSections: vi.fn().mockImplementation(async (name: string) => ({
+        skill: { name, skillType: 'reference', sections: [] },
+        content: 'Run `xcsym crash <file>`.',
+        sections: [{ heading: 'Crash', level: 2, startLine: 1, endLine: 2, charCount: 30 }],
+      })),
+    });
+    const handler = new DynamicToolsHandler(loader, mockLogger, [xcsym]);
+
+    const text = (await handler.callTool('axiom_read_skill', {
+      skills: [{ name: 'a', sections: ['Crash'] }, { name: 'b', sections: ['Crash'] }],
+    })).content[0].text;
+
+    expect(text.split('**Axiom MCP tools**').length - 1).toBe(1);
+  });
+
+  it('does not follow a section index, which carries no instructions', async () => {
+    const loader = makeMockLoader({
+      getSkillSections: vi.fn().mockResolvedValue({
+        skill: { name: 'big', skillType: 'reference', sections: [
+          { heading: 'A', level: 2, startLine: 1, endLine: 2, charCount: 15000 },
+          { heading: 'B', level: 2, startLine: 3, endLine: 4, charCount: 15000 },
+        ] },
+        content: `Run \`xcsym crash <file>\`. ${'x'.repeat(30000)}`,
+        sections: [],
+      }),
+    });
+    const handler = new DynamicToolsHandler(loader, mockLogger, [xcsym]);
+
+    const text = (await handler.callTool('axiom_read_skill', { skills: [{ name: 'big' }] })).content[0].text;
+
+    expect(text).not.toContain('**Axiom MCP tools**');
   });
 });

@@ -64,11 +64,12 @@ async function main() {
   }
 
   // Initialize handlers
-  const resourcesHandler = new ResourcesHandler(loader, logger);
-  const promptsHandler = new PromptsHandler(loader, logger);
   const xcprof = new XcprofTools({ binaryPath: resolveXcprofPath(config), logger });
   const xclog = new XclogTools({ binaryPath: resolveXclogPath(config), logger });
   const xcsym = new XcsymTools({ binaryPath: resolveXcsymPath(config), logger });
+  const binaryToolNames = [xcprof, xclog, xcsym].flatMap((p) => p.listTools().map((t) => t.name));
+  const resourcesHandler = new ResourcesHandler(loader, logger, binaryToolNames);
+  const promptsHandler = new PromptsHandler(loader, logger, binaryToolNames);
   const toolsHandler = new DynamicToolsHandler(loader, logger, [xcprof, xclog, xcsym]);
 
   // Create MCP server. axiom-mcp serves tools/resources/prompts dynamically
