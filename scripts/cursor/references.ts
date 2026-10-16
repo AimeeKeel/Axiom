@@ -186,7 +186,7 @@ export function assertHostClaimRewritesFired(): void {
     .map((rewrite) => rewrite.id);
   if (dead.length > 0) {
     throw new Error(
-      `Cursor host-claim or MCP-schema rewrite matched no canonical text (the canonical wording likely changed — update the pattern): ${dead.join(", ")}`,
+      `Cursor host-claim, MCP-workflow, or MCP-schema rewrite matched no canonical text (the canonical wording likely changed — update the pattern): ${dead.join(", ")}`,
     );
   }
 }
