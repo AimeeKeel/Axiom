@@ -283,8 +283,8 @@ Check result:
 ├─ Build failed → Delegate to build-fixer agent
 ├─ Tests passed → Report success
 └─ Tests failed:
-    ├─ Check for .ips crash artifacts → symbolicate them FIRST (see Phase 3)
-    │   └─ pattern_tag guides the fix (see Phase 3: "Did the Test Crash?")
+    ├─ Check for .ips crash artifacts → symbolicate them FIRST (Phase 3: "Did the Test Crash?")
+    │   └─ pattern_tag guides the fix
     ├─ Export failure attachments
     ├─ Read failure screenshot FIRST (multimodal analysis)
     ├─ Analyze error pattern:

@@ -246,7 +246,7 @@ Grep: @Suite\s+struct|@Suite\s*\(
 **Pattern 6 - Test-generated crashes**:
 ```
 Glob: ~/Library/Logs/DiagnosticReports/*.ips (modified since test run)
-# Symbolicate each one (run it, or ask for it — see Pattern 6) for pattern_tag + crashed frames
+# Read each, then get it symbolicated as Pattern 6 describes, for pattern_tag + crashed frames
 ```
 
 **Pattern 7 - Date assertions**:

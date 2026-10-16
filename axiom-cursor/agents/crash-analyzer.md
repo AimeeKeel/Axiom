@@ -43,12 +43,12 @@ The exit code narrows the triage path:
 | Exit | Meaning | Next step |
 |---|---|---|
 | 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |
-| 1 | Usage error, a hang report (`"error":"hang_report"`), or a non-fatal EXC_RESOURCE report (`"error":"non_fatal_resource"`) on stdout | Check the `error` key: route hangs to hang-diagnostics and CPU/wakeups warnings to `axiom-performance`; otherwise fix the invocation |
+| 1 | Usage error, a hang report (`"error":"hang_report"`), or a non-fatal EXC_RESOURCE report (`"error":"non_fatal_resource"`) on stdout | Check the `error` key: route hangs to hang-diagnostics and CPU/wakeups warnings to `axiom-performance`; otherwise fix the invocation. MCP-only clients: `xcsym failed (exit 1): timed out…` is the server's time limit, not a usage error; treat it as exit 6, retrying with `dsymPaths` and `noDefaults: true` when you know where the dSYMs live, else `noSpotlight: true` |
 | 2 | Main dSYM missing, input not found/unreadable, or unsupported input (`"error":"unsupported_format"` or `"empty_bundle"` on stdout) | Check the `error` key first; for a missing dSYM, locate the archive or pass its folder as `dsymPaths` |
 | 3 | Main UUID mismatch | Different build than the archive on disk — the `axiom_xcsym_find_dsym` MCP tool with structured inputs matching reference arguments `<uuid>` |
 | 4 | Main arch mismatch | Pass `arch` to `axiom_xcsym_find_dsym` (arm64 vs arm64e) |
 | 5 | Tool error (dwarfdump/atos/Spotlight failed, or an I/O error walking a bundle) | Real failure — read stderr |
-| 6 | Command timeout | Retry with `noSpotlight: true`; if still timing out, atos is the bottleneck. MCP-only clients: a server timeout arrives as `xcsym failed (exit 1): timed out…`, not exit 6; retry with `dsymPaths` and `noDefaults: true` |
+| 6 | Command timeout | Retry with `noSpotlight: true`; if still timing out, atos is the bottleneck |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
 | 8 | Output write error | Real failure — read the error text |
 

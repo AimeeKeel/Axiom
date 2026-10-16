@@ -67,14 +67,15 @@ Map the user's intent to a preset (or explicit instruments), then record. Record
 | SwiftUI / view updates / body | `xcprof record --instrument 'SwiftUI' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |
 | concurrency / actors / tasks | `xcprof record --instrument 'Swift Tasks' --instrument 'Swift Actors' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |
 | "find everything" | `xcprof record --preset full --attach '<app>'` (macOS) · `--preset full-ios` (device) |
+
 MCP-only clients: `axiom_xcprof_record` with the row's values as `preset`, `attach`, and `timeLimit` (a string such as `"10s"`), and each `--instrument` as one entry of the `instruments` array.
 
 Targets and their gates:
 
 - **Attach** (`--attach <pid|name>`) — the default; no gate. Prefer it whenever the app is already running.
-- **Launch from startup** — append `--allow-launch ... -- <app-path>` (add `--device "$BOOTED"` for a sim). `--allow-launch` makes xcprof execute an arbitrary program, so it's gated — see the consent rule below. (MCP-only clients: `axiom_xcprof_record` with `launch: ["<app-path>"]` and `allowLaunch: true`; for a sim add `device: "<sim name or UDID>"`, asking the user for it if you have no shell.)
+- **Launch from startup** — append `--allow-launch ... -- <app-path>` (add `--device "$BOOTED"` for a sim). `--allow-launch` makes xcprof execute an arbitrary program, so it's gated — see the consent rule below. (MCP-only clients: `axiom_xcprof_record` with `launch: ["<app-path>"]` and `allowLaunch: true`.)
 - **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target. `--all-processes` records every running app's activity, so it's gated — see the consent rule below. (MCP-only clients: `axiom_xcprof_record` with `allProcesses: true` and `allowAllProcesses: true`.)
-- Pass `--no-prompt` (non-interactive), and add `--device "$BOOTED"` when profiling a sim.
+- Pass `--no-prompt` (non-interactive), and add `--device "$BOOTED"` when profiling a sim (MCP-only clients: prompts are always off; pass `device: "<sim name or UDID>"`, asking the user for it if you have no shell).
 - When unsure, add `--dry-run` (MCP-only clients: `dryRun: true`) first to print the exact `xctrace` command without spawning anything.
 
 **Consent gate (hard rule).** `--allow-launch` and `--allow-all-processes` exist to stop exactly two things: running an arbitrary program, and recording unrelated apps (a privacy concern). Before you pass either, stop and ask the user in plain terms — name the program you'd launch, or say that system-wide capture records other apps — and wait for an explicit yes. Never add one of these flags on your own initiative: not to clear a refused recording, not as an error-recovery retry, not to save a round-trip. If the user hasn't agreed, use `--attach` instead. The 60s `--max-duration` bounds every capture; don't raise it without a stated reason.

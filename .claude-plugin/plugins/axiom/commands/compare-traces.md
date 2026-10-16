@@ -41,7 +41,7 @@ Diffs two Instruments `.trace` recordings with **xcprof compare** — function-l
    ```
    MCP-only clients: `axiom_xcprof_compare` with `baseline`, `current`, `failOnRegression: true`, and `thresholdPct: 5`; a regression shows as a trailing `(xcprof exit 3: …)` line.
 
-4. **Interpret honestly.** Report the regressions (sorted by severity = % delta × absolute time) and improvements. Note when frames were excluded for being unsymbolicated (pass `--dsym` for release builds). Deltas are percentage-points of CPU-cycle share — the only quantity comparable across two runs of different total work.
+4. **Interpret honestly.** Report the regressions (sorted by severity = % delta × absolute time) and improvements. Note when frames were excluded for being unsymbolicated (pass `--dsym` for release builds; MCP-only clients: `dsym`). Deltas are percentage-points of CPU-cycle share — the only quantity comparable across two runs of different total work.
 
 ## Flags
 
