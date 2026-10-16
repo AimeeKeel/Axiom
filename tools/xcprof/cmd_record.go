@@ -14,7 +14,8 @@ import (
 
 // defaultMaxDuration is the hard ceiling applied when the caller gives no
 // --max-duration. Every recording is bounded so an agent can't capture
-// unbounded (ADR-002 security gate; CLAUDE.md S-3).
+// unbounded (ADR-002 security gate: explain and bound any command with
+// side effects).
 const defaultMaxDuration = "60s"
 
 // recordExecGrace is added to the recording's time limit when sizing the exec
@@ -106,7 +107,7 @@ type recordSpec struct {
 
 // RecordReport is the structured output of `xcprof record`. The full command is
 // always echoed so a human or agent can see exactly what was (or would be) run
-// — transparency for a side-effecting operation (CLAUDE.md S-3).
+// — transparency for a side-effecting operation.
 type RecordReport struct {
 	Tool        string   `json:"tool"`
 	Version     string   `json:"version"`

@@ -810,7 +810,7 @@ for (const [label, relPath, rebuild] of VERSION_CARRYING_FILES) {
   // build-codex.ts rmSync's its output tree and rebuilds in place with no
   // staging, so a half-written manifest is a live failure mode. Report it as a
   // structured error naming the file rather than aborting the gate on a bare
-  // SyntaxError (CLAUDE.md E-2/E-4).
+  // SyntaxError: never swallow the error, and say which file and operation failed.
   try {
     const parsed = JSON.parse(fs.readFileSync(abs, "utf8"));
     if (typeof parsed.version === "string") versions[relPath] = parsed.version;
