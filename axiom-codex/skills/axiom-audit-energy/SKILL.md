@@ -256,7 +256,7 @@ Energy anti-patterns surface in the field as system terminations, not slow-drain
 xcsym crash --format=summary <path-to-ips>
 ```
 
-This agent only reads and searches, so it cannot run this: ask for the output in your result, or run it yourself if you are following this procedure inline.
+This agent only reads and searches, so it cannot run `xcsym crash`: ask for its output in your result, or run it yourself if you are following this procedure inline.
 
 Use the crashed-thread frames to pinpoint which Phase 1 background-activity owner is the culprit.
 

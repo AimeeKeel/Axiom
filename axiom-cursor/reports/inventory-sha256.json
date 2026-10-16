@@ -38,8 +38,8 @@
     },
     {
       "path": "agents/concurrency-auditor.md",
-      "sha256": "0eb1dff0fd43fb340b01e9a1876fb90fb394540e6dba2752f1370919ea61f23d",
-      "bytes": 15769
+      "sha256": "aa7f34611a4ec4802cebd3c2f51db299d5c29033dd5718d739f81800978a3f25",
+      "bytes": 15797
     },
     {
       "path": "agents/core-data-auditor.md",
@@ -58,8 +58,8 @@
     },
     {
       "path": "agents/energy-auditor.md",
-      "sha256": "15b6440813ffc7839ccbd3da0a68548c054ffd281e9607fd48f20d020aeef76a",
-      "bytes": 15185
+      "sha256": "73e311f29914bfb858a85ed7983d68e6e7d8d55da449c24aa52165bde40d3011",
+      "bytes": 15213
     },
     {
       "path": "agents/foundation-models-auditor.md",
@@ -98,8 +98,8 @@
     },
     {
       "path": "agents/memory-auditor.md",
-      "sha256": "19246904262c1fb2a52f00c4278e59bc34f59bcd741f36782589b5aff241d4be",
-      "bytes": 13708
+      "sha256": "ea4b61a64ae9d0ec3444b7973c612da561d394b9a77de6fee55a7603377c369e",
+      "bytes": 13736
     },
     {
       "path": "agents/modernization-helper.md",
@@ -1914,7 +1914,7 @@
   ],
   "totals": {
     "files": 382,
-    "bytes": 7818529
+    "bytes": 7818613
   },
   "excludedMirrors": 30,
   "classes": {

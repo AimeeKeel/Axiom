@@ -94,7 +94,7 @@ Patterns 1, 2, 3, 6, and 7 are unaffected — the compiler has nothing to say ab
 **Issue**: Crashes when UI modified from background threads
 **Fix**: Add `@MainActor` to class declaration
 **Note**: `UIViewController` and `UIView` subclasses are NOT findings — both classes are `NS_SWIFT_UI_ACTOR`, so every subclass inherits `@MainActor` without an annotation. SwiftUI Views are implicitly @MainActor too. Skip this pattern entirely when the target sets `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`: every unannotated class is already @MainActor there.
-**Field signal**: Crashes with xcsym `pattern_tag=swift_concurrency_violation` (fires on `_swift_task_isCurrentExecutor` in the exception subtype) almost always trace back to this anti-pattern. If the user has `.ips` artifacts, run `xcsym crash --format=summary <file>` (MCP-only clients: `axiom_xcsym_crash` with `file` and `format: "summary"`) and correlate the crashed frames with grep hits. This agent only reads and searches, so it cannot run that: ask for the output in your result, or run it yourself if you are following this procedure inline.
+**Field signal**: Crashes with xcsym `pattern_tag=swift_concurrency_violation` (fires on `_swift_task_isCurrentExecutor` in the exception subtype) almost always trace back to this anti-pattern. If the user has `.ips` artifacts, run `xcsym crash --format=summary <file>` (MCP-only clients: `axiom_xcsym_crash` with `file` and `format: "summary"`) and correlate the crashed frames with grep hits. This agent only reads and searches, so it cannot run `xcsym crash`: ask for its output in your result, or run it yourself if you are following this procedure inline.
 
 ### 2. Unsafe Task Self Capture (HIGH/HIGH)
 

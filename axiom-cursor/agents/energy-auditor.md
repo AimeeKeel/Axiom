@@ -268,7 +268,7 @@ Energy anti-patterns surface in the field as system terminations, not slow-drain
 Call the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--format=summary <path-to-ips>`.
 ```
 
-This agent only reads and searches, so it cannot run this: ask for the output in your result, or run it yourself if you are following this procedure inline.
+This agent only reads and searches, so it cannot run the `axiom_xcsym_crash` MCP tool: ask for its output in your result, or run it yourself if you are following this procedure inline.
 
 Use the crashed-thread frames to pinpoint which Phase 1 background-activity owner is the culprit.
 
