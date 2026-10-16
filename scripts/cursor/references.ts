@@ -148,7 +148,30 @@ const MCP_SCHEMA_REWRITES: ReadonlyArray<HostClaimRewrite> = [
   { id: "dry-run", pattern: /^- When unsure, add `--dry-run` first to print/gm, replacement: "- When unsure, set `dryRun: true` first to print" },
 ];
 
-const TRACKED_REWRITES: ReadonlyArray<HostClaimRewrite> = [...HOST_CLAIM_REWRITES, ...MCP_SCHEMA_REWRITES];
+// Workflow passages rewritten to their MCP form, tracked like the lists above so a pattern
+// that no longer matches the canonical wording fails the build.
+const MCP_WORKFLOW_REWRITES: ReadonlyArray<HostClaimRewrite> = [
+  { id: "dsym-paths-downloads", pattern: /`XCSYM_DSYM_PATHS=\/path\/to\/downloads xcsym crash <file>`/g, replacement: "the `axiom_xcsym_crash` MCP tool with `file: \"<file>\"` and `dsymPaths: \"/path/to/downloads\"`" },
+  { id: "doctor-check", pattern: /command -v xcprof\s*&&\s*xcprof doctor/g, replacement: "call the `axiom_xcprof_doctor` MCP tool" },
+  { id: "command-v-check", pattern: /command -v (?:xclog|xcsym|xcprof)\b/g, replacement: "confirm the required Axiom MCP tool is available" },
+  { id: "hand-parse-boundary", pattern: /Do not hand-parse `\.ips` JSON unless neither xcsym nor the `axiom_xcsym_crash` MCP tool is available\./g, replacement: CURSOR_MCP_MISSING_TOOL_BOUNDARY },
+  { id: "check-for-xcsym", pattern: /^1\. Check for xcsym:$/gm, replacement: "1. Use the `axiom_xcsym_crash` MCP tool:" },
+  { id: "export-trace-root", pattern: /^export XCPROF_TRACE_ROOT="\$\(mktemp -d\)"$/gm, replacement: "Use the MCP server's default trace sandbox, or pass a reviewed path in `output`." },
+  { id: "trace-root-contained", pattern: /Recording into `XCPROF_TRACE_ROOT` keeps traces contained\./g, replacement: "The MCP server's default trace sandbox keeps traces contained." },
+  { id: "cleanup-phase", pattern: /\(A safe, preview-first `xcprof cleanup` is a later xcprof phase\.\)/g, replacement: "(No cleanup MCP tool is exposed; leave trace deletion to explicit user action.)" },
+  { id: "record-preset-table", pattern: /`xcprof record --preset ([a-z-]+) --attach '<app>' --time-limit ([^`]+)`/g, replacement: "`axiom_xcprof_record` with `preset: \"$1\"`, `attach: \"<app>\"`, and `timeLimit: \"$2\"`" },
+  { id: "record-swiftui", pattern: /`xcprof record --instrument 'SwiftUI' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s`/g, replacement: "`axiom_xcprof_record` with `instruments: [\"SwiftUI\", \"CPU Profiler\"]`, `attach: \"<app>\"`, and `timeLimit: \"10s\"`" },
+  { id: "record-concurrency", pattern: /`xcprof record --instrument 'Swift Tasks' --instrument 'Swift Actors' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s`/g, replacement: "`axiom_xcprof_record` with `instruments: [\"Swift Tasks\", \"Swift Actors\", \"CPU Profiler\"]`, `attach: \"<app>\"`, and `timeLimit: \"10s\"`" },
+  { id: "record-preset-full", pattern: /`xcprof record --preset full --attach '<app>'`/g, replacement: "`axiom_xcprof_record` with `preset: \"full\"` and `attach: \"<app>\"`" },
+  { id: "preset-full-ios", pattern: /`--preset full-ios`/g, replacement: "`preset: \"full-ios\"`" },
+  { id: "launch-from-startup", pattern: /^- \*\*Launch from startup\*\*[^\n]*/gm, replacement: "- **Launch from startup** — call `axiom_xcprof_record` with `launch: [\"<app-path>\"]` and `allowLaunch: true`; add `device: \"<booted-udid>\"` for a simulator. Launch is gated, so follow the consent rule below." },
+  { id: "analyze-line", pattern: /^xcprof analyze "<trace>" --json$/gm, replacement: "Call the `axiom_xcprof_analyze` MCP tool with `trace: \"<trace>\"`." },
+  { id: "analyze-window", pattern: /`xcprof analyze "<trace>" --start-ms <start> --end-ms <end> --json`/g, replacement: "`axiom_xcprof_analyze` with `trace: \"<trace>\"`, `startMs: <milliseconds>`, and `endMs: <milliseconds>`" },
+  { id: "compare-intro", pattern: /Use `xcprof compare <baseline> <current> --json`/g, replacement: "Use `axiom_xcprof_compare` with `baseline: \"<baseline>\"` and `current: \"<current>\"`" },
+  { id: "compare-flags", pattern: /Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces\./g, replacement: "Set `failOnRegression: true` for CI gating, and pass `dsym: \"<path>\"` to symbolicate both traces." },
+];
+
+const TRACKED_REWRITES: ReadonlyArray<HostClaimRewrite> = [...HOST_CLAIM_REWRITES, ...MCP_WORKFLOW_REWRITES, ...MCP_SCHEMA_REWRITES];
 
 const hostClaimHits = new Map<string, number>(TRACKED_REWRITES.map((rewrite) => [rewrite.id, 0]));
 
@@ -192,25 +215,7 @@ function referenceCall(command: string, argumentsText: string, inline: boolean):
 
 /** Translate executable helper workflows used by agent and command prompts. */
 export function rewriteCursorMcpWorkflows(content: string): string {
-  let rewritten = rewriteCursorHostClaims(stripMcpClientNotes(content))
-    .replace(/`XCSYM_DSYM_PATHS=\/path\/to\/downloads xcsym crash <file>`/g, "the `axiom_xcsym_crash` MCP tool with `file: \"<file>\"` and `dsymPaths: \"/path/to/downloads\"`")
-    .replace(/command -v xcprof\s*&&\s*xcprof doctor/g, "call the `axiom_xcprof_doctor` MCP tool")
-    .replace(/command -v (?:xclog|xcsym|xcprof)\b/g, "confirm the required Axiom MCP tool is available")
-    .replace(/Do not hand-parse `\.ips` JSON unless neither xcsym nor the `axiom_xcsym_crash` MCP tool is available\./g, CURSOR_MCP_MISSING_TOOL_BOUNDARY)
-    .replace(/^1\. Check for xcsym:$/gm, "1. Use the `axiom_xcsym_crash` MCP tool:")
-    .replace(/^export XCPROF_TRACE_ROOT="\$\(mktemp -d\)"$/gm, "Use the MCP server's default trace sandbox, or pass a reviewed path in `output`.")
-    .replace(/Recording into `XCPROF_TRACE_ROOT` keeps traces contained\./g, "The MCP server's default trace sandbox keeps traces contained.")
-    .replace(/\(A safe, preview-first `xcprof cleanup` is a later xcprof phase\.\)/g, "(No cleanup MCP tool is exposed; leave trace deletion to explicit user action.)")
-    .replace(/`xcprof record --preset ([a-z-]+) --attach '<app>' --time-limit ([^`]+)`/g, "`axiom_xcprof_record` with `preset: \"$1\"`, `attach: \"<app>\"`, and `timeLimit: \"$2\"`")
-    .replace(/`xcprof record --instrument 'SwiftUI' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s`/g, "`axiom_xcprof_record` with `instruments: [\"SwiftUI\", \"CPU Profiler\"]`, `attach: \"<app>\"`, and `timeLimit: \"10s\"`")
-    .replace(/`xcprof record --instrument 'Swift Tasks' --instrument 'Swift Actors' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s`/g, "`axiom_xcprof_record` with `instruments: [\"Swift Tasks\", \"Swift Actors\", \"CPU Profiler\"]`, `attach: \"<app>\"`, and `timeLimit: \"10s\"`")
-    .replace(/`xcprof record --preset full --attach '<app>'`/g, "`axiom_xcprof_record` with `preset: \"full\"` and `attach: \"<app>\"`")
-    .replace(/`--preset full-ios`/g, "`preset: \"full-ios\"`")
-    .replace(/^- \*\*Launch from startup\*\*[^\n]*/gm, "- **Launch from startup** — call `axiom_xcprof_record` with `launch: [\"<app-path>\"]` and `allowLaunch: true`; add `device: \"<booted-udid>\"` for a simulator. Launch is gated, so follow the consent rule below.")
-    .replace(/^xcprof analyze "<trace>" --json$/gm, "Call the `axiom_xcprof_analyze` MCP tool with `trace: \"<trace>\"`.")
-    .replace(/`xcprof analyze "<trace>" --start-ms <start> --end-ms <end> --json`/g, "`axiom_xcprof_analyze` with `trace: \"<trace>\"`, `startMs: <milliseconds>`, and `endMs: <milliseconds>`")
-    .replace(/Use `xcprof compare <baseline> <current> --json`/g, "Use `axiom_xcprof_compare` with `baseline: \"<baseline>\"` and `current: \"<current>\"`")
-    .replace(/Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces\./g, "Set `failOnRegression: true` for CI gating, and pass `dsym: \"<path>\"` to symbolicate both traces.");
+  let rewritten = applyTrackedRewrites(rewriteCursorHostClaims(stripMcpClientNotes(content)), MCP_WORKFLOW_REWRITES);
 
   rewritten = applyTrackedRewrites(rewritten, MCP_SCHEMA_REWRITES);
   rewritten = rewritten.replace(

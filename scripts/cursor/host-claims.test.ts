@@ -5,6 +5,7 @@ import {
   assertHostClaimRewritesFired,
   resetHostClaimRewriteTracking,
   rewriteCursorInvocations,
+  rewriteCursorMcpWorkflows,
   rewriteCursorSkillReferences,
 } from "./references.ts";
 
@@ -16,6 +17,12 @@ test("a host-claim rewrite that matches no canonical prose fails the build", () 
     () => assertHostClaimRewritesFired(),
     /matched no canonical text/,
   );
+});
+
+test("an MCP workflow rewrite that matches no canonical text is named when the build fails", () => {
+  resetHostClaimRewriteTracking();
+  rewriteCursorMcpWorkflows("Do not hand-parse `.ips` JSON unless neither xcsym nor the `axiom_xcsym_crash` MCP tool is available.");
+  assert.throws(() => assertHostClaimRewritesFired(), (err: Error) => /\bpreset-full-ios\b/.test(err.message) && !/\bhand-parse-boundary\b/.test(err.message));
 });
 
 for (const name of ["xclog", "xcsym", "xcui", "xcprof"]) {
