@@ -238,7 +238,7 @@ xclog attach MyApp --human --no-color
 
 ## Error Behavior
 
-xclog prints errors to stderr and exits with code 1. Common errors:
+xclog prints errors to stderr and exits with code 1, or 2 for a flag it can't parse or an argument `list` doesn't take. Common errors:
 
 | Error | Cause | Fix |
 |-------|-------|-----|

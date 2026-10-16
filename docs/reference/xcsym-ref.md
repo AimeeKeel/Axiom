@@ -48,7 +48,7 @@ Questions you can ask your assistant that will draw from this reference:
 - **`anonymize` subcommand** – What it scrubs (bundle IDs, process, app, framework, and binary names, user paths, IP addresses, device names, account IDs, foreign UUIDs in freeform strings, identifying `.crash` header fields) and what it keeps (dSYM UUIDs, thread names, library identifiers, the structural fields symbolication depends on)
 - **Output schema** – The top-level JSON shape, with `pattern_tag`, `pattern_confidence`, `pattern_rule_id`, `pattern_reason`, `crashed_thread`, and `images` split into matched, mismatched, and missing
 - **Format tiers** – `summary` (~2 KB, warns past 4 KB), `standard` (~12 KB, warns past 50 KB), `full` (warns past 100 KB)
-- **Exit codes** – Codes shared by every subcommand (0, 1, 5, 6, 8) plus symbolication codes (2, 3, 4, 7) that differ by subcommand, including what code 7 means for `crash` versus `verify`
+- **Exit codes** – Codes shared by every subcommand (0, 1, 5, 6, 8) plus symbolication codes (2, 3, 4, 7) that differ by subcommand, including what code 7 means for `crash` versus `verify`, and the hang and resource-warning reports `crash` turns away with exit 1
 - **Pattern tag catalog** – The 20 tags `crash` can emit (19 rules plus `unclassified`) (`swift_forced_unwrap`, `swift_concurrency_violation`, `swift_fatal_error`, `zombie_or_heap_corruption`, `stack_overflow`, `bad_memory_access`, `illegal_instruction`, `exc_guard`, `objc_exception`, `main_thread_checker_violation`, `abort`, `watchdog_termination`, `user_force_quit`, `background_task_expired`, `data_protection_violation`, `code_signing_killed`, `jetsam_oom`, `cpu_resource_fatal`, `swiftui_update_loop`, `unclassified`), with their rule IDs and confidence levels
 - **dSYM discovery order** – The nine-step chain, with the `XCSYM_FRAMEWORK_SCAN_TIMEOUT` and `XCSYM_DSYM_PATHS` environment variables
 - **Hang and unsupported input** – The JSON rejections (`hang_report`, `unsupported_format`, `empty_bundle`), so your assistant can route on the error field instead of scraping stderr
@@ -64,7 +64,7 @@ This page documents the `xcsym-ref` skill in the `axiom-tools` suite. xcsym is A
 ## Key Concepts
 
 - **Start with `crash`** – It detects the format, finds dSYMs, runs `atos`, categorizes the crash, and emits JSON. Reach for `verify`, `resolve`, or `find-dsym` only when `crash` reports a specific problem.
-- **Exit codes carry the diagnosis** – Codes 2, 3, 4, and 7 say why symbolication was incomplete, so read them before assuming the tool failed. Codes 1, 5, 6, and 8 are real failures.
+- **Exit codes carry the diagnosis** – Codes 2, 3, 4, and 7 say why symbolication was incomplete, so read them before assuming the tool failed. Codes 5, 6, and 8 are real failures. Code 1 is a usage error, except from `crash` given a hang or a non-fatal CPU or wakeups report: it then returns JSON saying where to take the report instead.
 - **Size tiers protect context** – `standard`, the default, covers the full crashed thread. Use `summary` for a quick look and `full` only when you need every thread.
 - **Formats are detected automatically** – `.ips`, MetricKit JSON, and legacy `.crash` text need no flags. In an `.xccrashpoint` bundle, xcsym picks the most recently modified Filter and the raw `.crash` over `LocallySymbolicated/`.
 

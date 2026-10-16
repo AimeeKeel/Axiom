@@ -17,7 +17,7 @@ Use this reference when:
 - Targeting a specific simulator with `--device <udid>` or a physical device with `--device-udid <udid>`
 - Reading or writing `.axiom/preferences.yaml`, which saves the simulator and bundle ID between sessions
 - Understanding why `attach` skips `print()` output (it streams `os_log` only)
-- Diagnosing common errors (bad bundle ID, no booted simulator, invalid regex, invalid subsystem)
+- Diagnosing common errors (bad bundle ID, no booted simulator, invalid regex, invalid subsystem, a log stream that dies mid-capture)
 
 ## Example Prompts
 
@@ -46,7 +46,7 @@ Questions you can ask your assistant that will draw from this reference:
 - **Preferences file** – The `.axiom/preferences.yaml` schema (`simulator.device`, `deviceUDID`, `bundleId`), when to read and write it, and adding `.axiom/` to `.gitignore`
 - **Filtering** – `--filter` matches message text with a Go regular expression; filtering by level or another JSON field needs `jq`
 - **Common subsystems** – `com.apple.network`, `com.apple.coredata`, `com.apple.swiftui`, `com.apple.uikit`
-- **Errors** – xclog writes errors to stderr and exits with code 1; a table lists the common messages and their fixes
+- **Errors** – xclog writes errors to stderr and exits with code 1, or 2 for a flag it can't parse; a table lists the common messages and their fixes
 - **Workflows** – Step-by-step command sequences for a runtime crash and a silent failure
 
 ## Documentation Scope
