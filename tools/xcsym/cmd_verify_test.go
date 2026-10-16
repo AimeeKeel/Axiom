@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -113,5 +115,60 @@ func TestRunVerify_PartialMissing(t *testing.T) {
 	}
 	if got.Category != "partial" {
 		t.Errorf("category = %q, want partial\n%s", got.Category, buf.String())
+	}
+}
+
+// TestRunVerify_XccrashpointBundle guards Axiom-99ue: verify must walk into
+// an Organizer bundle the way crash does, instead of failing with
+// "is a directory", and report both the bundle and the .crash it chose.
+func TestRunVerify_XccrashpointBundle(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	ips, err := os.ReadFile(func() string { p, _, _ := writeCrashFixture(t); return p }())
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle := filepath.Join(t.TempDir(), "Sample.xccrashpoint")
+	makeXccrashpointWithIPS(t, bundle, ips)
+
+	var buf bytes.Buffer
+	code := runVerify(&buf, []string{"--dsym", "/bin/ls", "--no-cache", "--no-spotlight", "--no-defaults", bundle})
+	if code != 0 {
+		t.Fatalf("got exit %d, want 0\nstdout:\n%s", code, buf.String())
+	}
+	var out verifyOutput
+	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
+		t.Fatalf("json: %v\n%s", err, buf.String())
+	}
+	wantPath := filepath.Join(bundle, "Filters", "Filter_synth-1.0-Any", "Logs", "raw.crash")
+	if out.Category != "all_matched" || len(out.Images.Matched) != 1 ||
+		!strings.HasSuffix(out.Input.Bundle, "Sample.xccrashpoint") || !strings.HasSuffix(out.Input.Path, wantPath[len(filepath.Dir(bundle)):]) {
+		t.Fatalf("out = %+v; want all_matched, 1 match, Bundle …/Sample.xccrashpoint, Path …%s", out, wantPath[len(filepath.Dir(bundle)):])
+	}
+}
+
+func TestRunVerify_EmptyXccrashpointBundle(t *testing.T) {
+	bundle := filepath.Join(t.TempDir(), "Empty.xccrashpoint")
+	if err := os.MkdirAll(bundle, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+	old := os.Stderr
+	os.Stderr = w
+	t.Cleanup(func() { os.Stderr = old })
+
+	var buf bytes.Buffer
+	code := runVerify(&buf, []string{"--no-cache", "--no-spotlight", "--no-defaults", bundle})
+	if err := w.Close(); err != nil {
+		t.Fatalf("close pipe: %v", err)
+	}
+	stderr, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("read pipe: %v", err)
+	}
+	if code != 2 || buf.Len() != 0 || !strings.Contains(string(stderr), "Filters/Filter_*/Logs/*.crash") {
+		t.Fatalf("empty bundle: exit %d, stdout %q, stderr %q; want 2, no stdout, and the Organizer layout hint", code, buf.String(), stderr)
 	}
 }

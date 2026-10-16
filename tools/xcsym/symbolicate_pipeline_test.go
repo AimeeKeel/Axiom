@@ -337,3 +337,33 @@ func TestBuildFrameGroups_SkipsPresymbolicatedAndEmptyAddress(t *testing.T) {
 		t.Errorf("groups = %d, want 0 (pre-symbolicated + empty-address frames skipped)", len(g.refs))
 	}
 }
+
+// A MetricKit frame with no offsetIntoBinaryTextSegment carries only its
+// runtime address, and the image's slide is unknown, so atos can return a
+// wrong symbol for it with exit 0 (measured on a slid arm64 executable). Such
+// frames must stay raw and be reported, not sent to atos.
+func TestSymbolicateForTier_SkipsOffsetlessMetricKitFrames(t *testing.T) {
+	const uuid = "CCCCCCCC-0000-0000-0000-000000000003"
+	raw := &RawCrash{
+		UsedImages: []UsedImage{{UUID: uuid, Name: "App", Arch: "arm64", TextSegmentOffsets: true}},
+		Threads: []Thread{{Triggered: true, Frames: []Frame{
+			{Index: 0, Address: "0x1270", Image: "App", UUID: uuid, ImageOffset: 0x1270},
+			{Index: 1, Address: "0x100009abc", Image: "App", UUID: uuid},
+		}}},
+		CrashedIdx: 0,
+	}
+	d := NewDiscoverer(DiscovererOptions{ExplicitByUUID: map[string]string{uuid: "/bin/ls"}, SkipDefaults: true, SkipCache: true, SkipSpotlight: true})
+	old := resolveBatchFn
+	t.Cleanup(func() { resolveBatchFn = old })
+	var sent [][]string
+	resolveBatchFn = func(_ context.Context, _, _, loadAddr string, addresses []string) ([]*SymbolResult, error) {
+		sent = append(sent, append([]string{loadAddr}, addresses...))
+		return []*SymbolResult{{Symbol: "marker", Symbolicated: true}}, nil
+	}
+	warnings := SymbolicateForTier(context.Background(), raw, ImageStatus{}, d, TierFull)
+	wantWarnings := []string{"symbolicate: App (UUID " + uuid + ") — 1 frames have no __TEXT offset and were left unsymbolicated"}
+	if !reflect.DeepEqual(sent, [][]string{{"0x100000000", "0x100001270"}}) || raw.Threads[0].Frames[1].Symbolicated || !reflect.DeepEqual(warnings, wantWarnings) {
+		t.Fatalf("sent %v, frame 1 symbolicated %v, warnings %v; want only the offset frame sent rebased, frame 1 raw, and %v",
+			sent, raw.Threads[0].Frames[1].Symbolicated, warnings, wantWarnings)
+	}
+}

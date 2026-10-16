@@ -129,9 +129,10 @@ func buildRawCrashFromMetricKit(doc *mxCrashDoc) (*RawCrash, error) {
 				if _, seen := imgByUUID[uuid]; !seen {
 					imgByUUID[uuid] = len(raw.UsedImages)
 					raw.UsedImages = append(raw.UsedImages, UsedImage{
-						UUID: uuid,
-						Name: mf.BinaryName,
-						Arch: md.PlatformArchitecture,
+						UUID:               uuid,
+						Name:               mf.BinaryName,
+						Arch:               md.PlatformArchitecture,
+						TextSegmentOffsets: true,
 					})
 				}
 			}
@@ -356,20 +357,17 @@ func parseTerminationReason(reason string) Termination {
 	return t
 }
 
-// metrickitFrameAddress formats the frame address that the symbolicate
-// pipeline feeds to atos. MetricKit gives us offsetIntoBinaryTextSegment
-// (relative to the image's __TEXT start); pairing that with loadAddr=0
-// on the UsedImage lets atos compute `address - 0 = offset` and look up
-// the symbol without needing the original virtual base — which MetricKit
-// doesn't reliably provide. This intentionally differs from the .ips
-// path (where Frame.Address is absolute and loadAddr=base).
+// metrickitFrameAddress formats the frame address shown in output.
+// MetricKit gives us offsetIntoBinaryTextSegment (relative to the image's
+// __TEXT start), which is kept as-is for display; the symbolicate pipeline
+// rebases it via Frame.ImageOffset because atos cannot resolve a bare
+// offset for an image whose __TEXT starts above zero (Axiom-fz9w).
 func metrickitFrameAddress(f mxFrame) string {
 	off := jsonNumberInt(f.OffsetIntoBinaryTextSegment)
 	if off <= 0 {
-		// Fall back to the address field if offset is missing. Better than
-		// leaving the frame unaddressable; atos with loadAddr=0 and an
-		// absolute address usually fails to symbolicate cleanly but at
-		// least emits the raw address for display.
+		// Fall back to the address field if offset is missing, for display
+		// only: with the slide unknown, the symbolicate pipeline does not send
+		// such a frame to atos.
 		if s := f.Address.String(); s != "" {
 			if v, err := parseHexOrDec(s); err == nil {
 				return fmt.Sprintf("0x%x", v)

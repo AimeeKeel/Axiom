@@ -41,11 +41,14 @@ The exit code narrows the triage path:
 | Exit | Meaning | Next step |
 |---|---|---|
 | 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |
-| 2 | Main dSYM missing (or input not found/unreadable) | Locate the archive or set `XCSYM_DSYM_PATHS` to where it lives |
+| 1 | Usage error, a hang report (`"error":"hang_report"`), or a non-fatal EXC_RESOURCE report (`"error":"non_fatal_resource"`) on stdout | Check the `error` key: route hangs to hang-diagnostics and CPU/wakeups warnings to `axiom-performance`; otherwise fix the invocation |
+| 2 | Main dSYM missing, input not found/unreadable, or unsupported input (`"error":"unsupported_format"` or `"empty_bundle"` on stdout) | Check the `error` key first; for a missing dSYM, locate the archive or set `XCSYM_DSYM_PATHS` to where it lives |
 | 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` |
 | 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |
+| 5 | Tool error (dwarfdump/atos/Spotlight failed, or an I/O error walking a bundle) | Real failure — read stderr |
 | 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
+| 8 | Output write error | Real failure — check the `--output` path |
 
 **Stdin.** Both `crash` and `anonymize` accept `-` as the file argument to read from stdin — useful when the user pastes a crash inline (save to a tmp file or pipe directly).
 
@@ -144,7 +147,7 @@ Exit code is 3. The agent:
 
 ### Main dSYM missing (exit 2)
 
-Exit code is 2 and the crash parsed cleanly (no `"error":"hang_report"` on stdout). The agent:
+Exit code is 2 and the crash parsed cleanly (no `error` key on stdout — `unsupported_format` and `empty_bundle` also exit 2). The agent:
 1. Reads `images.missing[0].uuid` from the JSON — this is the main app's UUID.
 2. Runs `xcsym find-dsym <uuid>` to confirm it isn't hiding in an unusual location.
 3. If `find-dsym` also exits 2: no dSYM exists anywhere discoverable.
@@ -170,6 +173,7 @@ Exit 6 is environmental, not a bug in the crash file — don't ask the user for 
 
 Report to user and stop if:
 - xcsym stdout contains `"error":"hang_report"` (exit 1) — the input is a hang, not a crash; redirect to hang-diagnostics skill for single-hang investigation, or `triage-analyzer` for corpus/aggregate hang analysis
+- xcsym stdout contains `"error":"non_fatal_resource"` (exit 1) — a CPU or wakeups warning, not a crash; redirect to `axiom-performance`
 - Exit code is non-zero *and* the pattern tag is `unclassified` — the rule engine gave up; raw output is the best the tool can do
 - Crash file is truncated or unparseable — ask for a complete file
 - The user has **multiple grouped issues** from Sentry or App Store Connect (dozens of crashes, a corpus) rather than a single crash file — route to `triage-analyzer` agent or `/axiom:triage` instead; this agent handles one crash at a time

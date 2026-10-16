@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 )
 
 // SymbolicateForTier mutates raw.Threads so each Frame that has a resolvable
@@ -37,12 +38,33 @@ func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, 
 
 	g := buildFrameGroups(raw, threadIdxs)
 	var warnings []string
+	offsetless := make([]string, 0, len(g.offsetless))
+	for uuid := range g.offsetless {
+		offsetless = append(offsetless, uuid)
+	}
+	sort.Strings(offsetless)
+	for _, uuid := range offsetless {
+		name := g.imagesByUUID[uuid].Name
+		if name == "" {
+			name = "<unnamed>"
+		}
+		warnings = append(warnings, fmt.Sprintf(
+			"symbolicate: %s (UUID %s) — %d frames have no __TEXT offset and were left unsymbolicated",
+			name, uuid, g.offsetless[uuid]))
+	}
 	mismatched := make(map[string]string, len(images.Mismatched))
 	for _, image := range images.Mismatched {
 		mismatched[image.UUID] = image.Kind
 	}
 
-	for uuid, refs := range g.refs {
+	// Sorted so warnings come out in the same order on every run.
+	uuids := make([]string, 0, len(g.refs))
+	for uuid := range g.refs {
+		uuids = append(uuids, uuid)
+	}
+	sort.Strings(uuids)
+	for _, uuid := range uuids {
+		refs := g.refs[uuid]
 		addrs := g.addrs[uuid]
 		img, ok := g.imagesByUUID[uuid]
 		if !ok {
@@ -59,8 +81,7 @@ func SymbolicateForTier(ctx context.Context, raw *RawCrash, images ImageStatus, 
 			warnings = append(warnings, symbolicateWarning(uuid, img.Name, "discover", err, len(refs)))
 			continue
 		}
-		loadAddr := fmt.Sprintf("0x%x", img.LoadAddress)
-		results, err := resolveBatchFn(ctx, entry.Path, entry.Arch, loadAddr, addrs)
+		results, err := resolveBatchFn(ctx, entry.Path, entry.Arch, atosLoadAddress(img), addrs)
 		if err != nil {
 			warnings = append(warnings, symbolicateWarning(uuid, img.Name, "atos", err, len(refs)))
 			continue
@@ -132,6 +153,7 @@ type frameGroups struct {
 	refs         map[string][]frameRef // UUID → frame back-references
 	addrs        map[string][]string   // UUID → atos addresses (parallel to refs)
 	imagesByUUID map[string]UsedImage
+	offsetless   map[string]int // UUID → offset-addressed frames with no offset
 }
 
 // buildFrameGroups returns the per-UUID grouping the symbolicate pass feeds
@@ -145,6 +167,7 @@ func buildFrameGroups(raw *RawCrash, threadIdxs []int) frameGroups {
 		refs:         make(map[string][]frameRef),
 		addrs:        make(map[string][]string),
 		imagesByUUID: make(map[string]UsedImage),
+		offsetless:   make(map[string]int),
 	}
 	for _, img := range raw.UsedImages {
 		if img.UUID == "" {
@@ -169,11 +192,45 @@ func buildFrameGroups(raw *RawCrash, threadIdxs []int) frameGroups {
 			if f.Address == "" {
 				continue
 			}
+			// No __TEXT offset leaves only a runtime address whose slide is
+			// unknown; atos can name the wrong symbol for it with exit 0.
+			if g.imagesByUUID[f.UUID].TextSegmentOffsets && f.ImageOffset <= 0 {
+				g.offsetless[f.UUID]++
+				continue
+			}
 			g.refs[f.UUID] = append(g.refs[f.UUID], frameRef{ti, fi})
-			g.addrs[f.UUID] = append(g.addrs[f.UUID], f.Address)
+			g.addrs[f.UUID] = append(g.addrs[f.UUID], atosAddress(f, g.imagesByUUID[f.UUID]))
 		}
 	}
 	return g
+}
+
+// textOffsetLoadBase is the load address handed to atos for images whose
+// frames are __TEXT offsets. atos slides by (load address − the dSYM's
+// __TEXT vmaddr), so any nonzero base plus the offset lands on the right
+// symbol whatever the image's preferred address; `-l 0x0 <offset>` does
+// not, and returns executables' frames unresolved. Measured against real
+// arm64 and x86_64 executables and dylibs with __TEXT at 0x0, 0x10000000
+// and 0x100000000 (Axiom-fz9w).
+const textOffsetLoadBase uint64 = 0x100000000
+
+// atosLoadAddress is the -l value atos receives for img; atosAddress must
+// agree with it.
+func atosLoadAddress(img UsedImage) string {
+	if img.TextSegmentOffsets {
+		return fmt.Sprintf("0x%x", textOffsetLoadBase)
+	}
+	return fmt.Sprintf("0x%x", img.LoadAddress)
+}
+
+// atosAddress is the address atos receives for f. Offset-addressed frames
+// are rebased onto textOffsetLoadBase (buildFrameGroups drops those with no
+// offset); everything else passes through.
+func atosAddress(f Frame, img UsedImage) string {
+	if img.TextSegmentOffsets {
+		return fmt.Sprintf("0x%x", textOffsetLoadBase+uint64(f.ImageOffset))
+	}
+	return f.Address
 }
 
 // threadsForTier returns the indices of threads that should be symbolicated

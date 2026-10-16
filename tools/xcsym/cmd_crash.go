@@ -96,7 +96,7 @@ func runCrash(out io.Writer, args []string) int {
 					Error:   "empty_bundle",
 					Message: resolveErr.Error(),
 					Input:   path,
-					Routing: "Bundle is empty or doesn't follow the Xcode Organizer layout (Filters/Filter_*/Logs/*.crash). Point xcsym at a specific .crash file inside the bundle, or pull a fresh crash from the Organizer.",
+					Routing: emptyBundleRouting,
 				}, 2)
 			}
 			if resolveErr != nil {

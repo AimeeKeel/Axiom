@@ -29,6 +29,10 @@ import (
 
 const XccrashpointBundleSuffix = ".xccrashpoint"
 
+// emptyBundleRouting tells crash and verify users what to do with a bundle the
+// resolver can't walk.
+const emptyBundleRouting = "Bundle is empty or doesn't follow the Xcode Organizer layout (Filters/Filter_*/Logs/*.crash). Point xcsym at a specific .crash file inside the bundle, or pull a fresh crash from the Organizer."
+
 type xccrashpointResolveOptions struct {
 	// FilterMatch is a substring matched against the Filter_* directory name.
 	// Substring (not segment-anchored) so a user can pass a partial version

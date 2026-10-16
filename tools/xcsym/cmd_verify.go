@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -50,6 +51,20 @@ func runVerify(out io.Writer, args []string) int {
 		return 1
 	}
 	path := positionals[0]
+	bundlePath := ""
+	if IsXccrashpointPath(path) {
+		res, resolveErr := ResolveXccrashpoint(path, xccrashpointResolveOptions{})
+		if errors.Is(resolveErr, errNotXccrashpoint) {
+			fmt.Fprintf(os.Stderr, "verify: %v: %s\n%s\n", resolveErr, path, emptyBundleRouting)
+			return 2
+		}
+		if resolveErr != nil {
+			fmt.Fprintf(os.Stderr, "verify: resolve %s: %v\n", path, resolveErr)
+			return 5
+		}
+		bundlePath = res.BundlePath
+		path = res.CrashPath
+	}
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -96,7 +111,7 @@ func runVerify(out io.Writer, args []string) int {
 	result := verifyOutput{
 		Tool:     "xcsym",
 		Version:  version,
-		Input:    InputInfo{Path: path, Format: format},
+		Input:    InputInfo{Path: path, Format: format, Bundle: bundlePath},
 		Category: StatusCategory(status),
 		Images:   status,
 	}

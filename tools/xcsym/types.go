@@ -180,4 +180,8 @@ type UsedImage struct {
 	LoadAddress uint64
 	Size        uint64
 	Arch        string
+	// TextSegmentOffsets marks an image whose frames carry an offset into
+	// __TEXT rather than a runtime address (MetricKit), so the symbolicate
+	// pipeline rebases them before calling atos.
+	TextSegmentOffsets bool
 }
