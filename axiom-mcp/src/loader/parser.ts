@@ -91,6 +91,57 @@ export interface Agent {
 }
 
 /**
+ * Marks each line that is ordinary markdown, as opposed to a fence line or a
+ * line inside a fenced code block. A `#` comment in a bash block is not a
+ * heading, and a fence is not prose.
+ */
+export function outsideFences(lines: string[]): boolean[] {
+  // A fence closes only on its own character at no shorter a length, so a
+  // ```` block can quote a ``` one (CommonMark). An unclosed fence runs to the end.
+  let open: string | null = null;
+  return lines.map((line) => {
+    const marker = line.match(/^\s*(`{3,}|~{3,})/)?.[1];
+    if (open === null) {
+      if (marker === undefined) return true;
+      open = marker;
+      return false;
+    }
+    if (marker !== undefined && marker[0] === open[0] && marker.length >= open.length && line.trim() === marker) {
+      open = null;
+    }
+    return false;
+  });
+}
+
+/** Index of the `#` title line, ignoring `#` comments inside code blocks; -1 if none. */
+export function titleIndex(lines: string[], prose: boolean[]): number {
+  return lines.findIndex((line, i) => prose[i] && /^#\s+/.test(line));
+}
+
+/**
+ * The first prose line after a suite file's `#` title: skips headings, bold
+ * labels, tables, horizontal rules and code blocks. Shared by parseReferenceFile and the annotation
+ * generator so the two descriptions cannot drift.
+ */
+export function referenceDescription(content: string): string {
+  const lines = content.split('\n');
+  const prose = outsideFences(lines);
+  const title = titleIndex(lines, prose);
+  if (title < 0) return '';
+  for (let i = title + 1; i < lines.length; i++) {
+    if (!prose[i]) continue;
+    const trimmed = lines[i].trim();
+    if (trimmed === '') continue;
+    if (trimmed.startsWith('#')) continue;  // skip sub-headers, keep looking
+    if (trimmed.startsWith('|') || /^([-*_])\1{2,}$/.test(trimmed)) continue;  // skip table rows and horizontal rules
+    if (trimmed.startsWith('**') && trimmed.includes('**:')) continue;  // skip bold labels
+    if (trimmed.startsWith('**') && !trimmed.endsWith('**')) continue;  // skip bold-prefixed meta lines
+    return trimmed;
+  }
+  return '';
+}
+
+/**
  * Parse markdown content into sections based on ## headings.
  * Content before the first ## heading becomes the "_preamble" section.
  */
@@ -101,8 +152,10 @@ export function parseSections(content: string): SkillSection[] {
   let currentLevel = 0;
   let currentStart = 0;
 
+  const prose = outsideFences(lines);
+
   for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(/^(#{1,6})\s+(.+)$/);
+    const match = prose[i] ? lines[i].match(/^(#{1,6})\s+(.+)$/) : null;
     if (match && match[1].length <= 2) {
       // Close previous section
       if (currentHeading !== null || (i > 0 && sections.length === 0)) {
@@ -165,7 +218,11 @@ function inferSkillType(name: string, content?: string, isReferenceFile?: boolea
   if (name.endsWith('-diag')) return 'diagnostic';
   // Suite routers reference their skills/ directory — but reference files
   // also cross-reference siblings, so skip this check for reference files
-  if (!isReferenceFile && content && /skills\/\S+\.md/.test(content)) return 'router';
+  if (!isReferenceFile && content) {
+    const lines = content.split('\n');
+    const prose = outsideFences(lines);
+    if (lines.some((line, i) => prose[i] && /skills\/\S+\.md/.test(line))) return 'router';
+  }
   return 'discipline';
 }
 
@@ -270,22 +327,15 @@ export function parseAppleDoc(
   const prefix = docType === 'guide' ? 'apple-guide' : 'apple-diag';
   const name = `${prefix}-${slug}`;
 
-  // Extract title from first # heading
-  const titleMatch = content.match(/^#\s+(.+)$/m);
-  const title = titleMatch ? titleMatch[1].trim() : baseName.replace(/-/g, ' ');
-
-  // Extract description from first paragraph after the title
+  // Title from the first # heading, then the description from the first paragraph after it
   const lines = content.split('\n');
+  const prose = outsideFences(lines);
+  const titleAt = titleIndex(lines, prose);
+  const title = titleAt >= 0 ? lines[titleAt].replace(/^#\s+/, '').trim() : baseName.replace(/-/g, ' ');
   let description = '';
-  let pastTitle = false;
-  for (const line of lines) {
-    if (!pastTitle) {
-      if (line.match(/^#\s+/)) {
-        pastTitle = true;
-      }
-      continue;
-    }
-    const trimmed = line.trim();
+  for (let i = titleAt + 1; titleAt >= 0 && i < lines.length; i++) {
+    if (!prose[i]) continue;
+    const trimmed = lines[i].trim();
     if (trimmed === '') continue;
     if (trimmed.startsWith('#')) break;
     description = trimmed;
@@ -323,30 +373,11 @@ export function parseReferenceFile(
   const baseName = filename.replace(/\.md$/, '');
   const name = `${parentSuite}--${baseName}`;
 
-  // Extract title from first # heading
-  const titleMatch = content.match(/^#\s+(.+)$/m);
-  const title = titleMatch ? titleMatch[1].trim() : baseName.replace(/-/g, ' ');
-
-  // Extract description from first non-empty prose paragraph after the # title.
-  // Skips ## sub-headers and lines starting with ** (bold labels like **Core principle**).
   const lines = content.split('\n');
-  let description = '';
-  let pastTitle = false;
-  for (const line of lines) {
-    if (!pastTitle) {
-      if (line.match(/^#\s+/)) {
-        pastTitle = true;
-      }
-      continue;
-    }
-    const trimmed = line.trim();
-    if (trimmed === '') continue;
-    if (trimmed.startsWith('#')) continue;  // skip sub-headers, keep looking
-    if (trimmed.startsWith('**') && trimmed.includes('**:')) continue;  // skip bold labels
-    if (trimmed.startsWith('**') && !trimmed.endsWith('**')) continue;  // skip bold-prefixed meta lines
-    description = trimmed;
-    break;
-  }
+  const titleAt = titleIndex(lines, outsideFences(lines));
+  const title = titleAt >= 0 ? lines[titleAt].replace(/^#\s+/, '').trim() : baseName.replace(/-/g, ' ');
+
+  const description = referenceDescription(content);
 
   // Infer tags from filename components
   const tags = baseName
@@ -379,18 +410,27 @@ export function filterSkillSections(
   }
 
   const lines = skill.content.split('\n');
-  const matchedSections: SkillSection[] = [];
-  const contentParts: string[] = [];
+  const prose = outsideFences(lines);
+  const contains = (text: string, filter: string) => text.toLowerCase().includes(filter.toLowerCase());
+  const subheadings = (section: SkillSection) =>
+    lines.slice(section.startLine, section.endLine + 1).flatMap((line, k) => {
+      const sub = prose[section.startLine + k] ? line.match(/^#{3,6}\s+(.+)$/) : null;
+      return sub ? [sub[1]] : [];
+    });
 
-  for (const section of skill.sections) {
-    const matches = sectionNames.some(filter =>
-      section.heading.toLowerCase().includes(filter.toLowerCase()),
-    );
-    if (matches) {
-      matchedSections.push(section);
-      contentParts.push(lines.slice(section.startLine, section.endLine + 1).join('\n'));
-    }
+  // Each filter resolves on its own: a section heading first; failing that, a
+  // ### (or deeper) subheading, which returns the section containing it, since
+  // only # and ## start a section. Fenced lines are code, not subheadings.
+  const wanted = new Set<SkillSection>();
+  for (const filter of sectionNames) {
+    const byHeading = skill.sections.filter(section => contains(section.heading, filter));
+    const hits = byHeading.length > 0
+      ? byHeading
+      : skill.sections.filter(section => subheadings(section).some(sub => contains(sub, filter)));
+    for (const section of hits) wanted.add(section);
   }
+  const matchedSections = skill.sections.filter(section => wanted.has(section));
+  const contentParts = matchedSections.map(section => lines.slice(section.startLine, section.endLine + 1).join('\n'));
 
   return {
     skill,

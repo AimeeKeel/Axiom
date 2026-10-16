@@ -271,6 +271,30 @@ describe('DynamicToolsHandler', () => {
       expect(text).toContain('Filtered content about MainActor');
     });
 
+    // A filter that matched nothing used to return "(filtered: )" and 0 chars.
+    it('names the miss and lists the real sections when a filter matches nothing', async () => {
+      const loader = makeMockLoader({
+        getSkillSections: vi.fn().mockResolvedValue({
+          skill: {
+            name: 'axiom-concurrency', skillType: 'discipline',
+            sections: [
+              { heading: '_preamble', level: 0, startLine: 0, endLine: 0, charCount: 0 },
+              { heading: 'Actors', level: 2, startLine: 1, endLine: 5, charCount: 100 },
+              { heading: 'Sendable', level: 2, startLine: 6, endLine: 9, charCount: 80 },
+            ],
+          },
+          content: '',
+          sections: [],
+        }),
+      });
+      const handler = new DynamicToolsHandler(loader, mockLogger);
+
+      const result = await handler.callTool('axiom_read_skill', { skills: [{ name: 'axiom-concurrency', sections: ['Isolation'] }] });
+      const text = result.content[0].text;
+
+      expect([text.includes('(filtered: )'), text.includes('No section matched "Isolation"'), text.includes('Actors, Sendable')]).toEqual([false, true, true]);
+    });
+
     it('returns full content when no sections filter', async () => {
       const loader = makeMockLoader({
         getSkillSections: vi.fn().mockResolvedValue({

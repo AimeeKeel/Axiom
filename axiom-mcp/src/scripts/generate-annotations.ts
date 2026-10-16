@@ -17,7 +17,7 @@ import { readdir, readFile, writeFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import matter from 'gray-matter';
-import { isGeneratedSubSkill } from '../loader/parser.js';
+import { isGeneratedSubSkill, outsideFences, referenceDescription } from '../loader/parser.js';
 
 // --- Types ---
 
@@ -159,7 +159,7 @@ export function inferCategoryFromName(name: string): string {
   return 'General';
 }
 
-// --- Skill type inference (mirrors parser.ts inferSkillType) ---
+// --- Skill type inference (name-based only; parser.ts inferSkillType also detects routers from content) ---
 
 const SKILL_TYPE_OVERRIDES: Record<string, string> = {
   'axiom-apple-docs': 'router',
@@ -194,8 +194,10 @@ export function extractTags(
 
   // Also scan section headings from content (## headers contain framework terms)
   if (content) {
-    const headings = content.match(/^#{1,4}\s+(.+)$/gm);
-    if (headings) {
+    const lines = content.split('\n');
+    const prose = outsideFences(lines);
+    const headings = lines.filter((line, i) => prose[i] && /^#{1,4}\s+.+$/.test(line));
+    if (headings.length) {
       const headingText = headings.join(' ');
       // PascalCase from headings
       const pascalInHeadings = headingText.match(/\b[A-Z][a-z]+(?:[A-Z][a-z]*)+\b/g);
@@ -454,24 +456,7 @@ async function main() {
               const baseName = refFile.replace(/\.md$/, '');
               const refName = `${entry}--${baseName}`;
 
-              // Extract description from first prose paragraph after title
-              // (mirrors parser.ts parseReferenceFile — keep in sync)
-              const lines = refContent.split('\n');
-              let description = '';
-              let pastTitle = false;
-              for (const line of lines) {
-                if (!pastTitle) {
-                  if (line.match(/^#\s+/)) pastTitle = true;
-                  continue;
-                }
-                const trimmed = line.trim();
-                if (trimmed === '') continue;
-                if (trimmed.startsWith('#')) continue;
-                if (trimmed.startsWith('**') && trimmed.includes('**:')) continue;
-                if (trimmed.startsWith('**') && !trimmed.endsWith('**')) continue;
-                description = trimmed;
-                break;
-              }
+              const description = referenceDescription(refContent);
 
               const skillType = inferSkillType(refName);
               skills.set(refName, { name: refName, description, content: refContent, skillType, parentSuite: entry });

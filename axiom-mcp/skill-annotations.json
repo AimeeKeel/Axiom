@@ -320,7 +320,6 @@
     "category": "build",
     "tags": [
       "cocoapods",
-      "correct",
       "github",
       "none",
       "spm",
@@ -352,9 +351,7 @@
   },
   "axiom-build--lldb-ref": {
     "category": "build",
-    "tags": [
-      "gui"
-    ],
+    "tags": [],
     "related": [
       "axiom-build",
       "axiom-build--lldb"
@@ -1795,8 +1792,7 @@
   "axiom-macos--direct-distribution": {
     "category": "general",
     "tags": [
-      "dmg",
-      "rejected"
+      "dmg"
     ],
     "related": [
       "axiom-macos",
@@ -2172,7 +2168,6 @@
       "ceo",
       "dns",
       "forbidden",
-      "gmt",
       "http",
       "interpretation",
       "posix",
@@ -2363,7 +2358,6 @@
       "csr",
       "https",
       "nfc",
-      "two",
       "wwdr"
     ],
     "related": [
@@ -2455,7 +2449,6 @@
     "category": "performance",
     "tags": [
       "cli",
-      "gui",
       "mallocstacklogging",
       "metrickit",
       "photokit",
@@ -2528,7 +2521,6 @@
     "tags": [
       "ci",
       "cpu",
-      "same",
       "xml"
     ],
     "related": [
@@ -2606,7 +2598,6 @@
   "axiom-security--code-signing-ref": {
     "category": "general",
     "tags": [
-      "@example",
       "cli",
       "cms",
       "csr",
@@ -2770,9 +2761,7 @@
       "asc",
       "mcp",
       "metrickit",
-      "myapp",
       "testflight",
-      "usermanager",
       "uuid"
     ],
     "related": [
@@ -2785,8 +2774,7 @@
       "asc",
       "forbidden",
       "interpretation",
-      "ugc",
-      "yes"
+      "ugc"
     ],
     "related": [
       "axiom-shipping",
@@ -3026,7 +3014,6 @@
     "category": "ui",
     "tags": [
       "@observable",
-      "check",
       "forbidden",
       "foreach"
     ],
@@ -3307,10 +3294,7 @@
     "category": "general",
     "tags": [
       "json",
-      "llm",
-      "myapp",
-      "pid",
-      "then"
+      "pid"
     ],
     "related": [
       "axiom-tools"
@@ -3629,10 +3613,8 @@
       "cli",
       "fps",
       "hid",
-      "resort",
       "statictext",
       "textfield",
-      "then",
       "udid"
     ],
     "related": [

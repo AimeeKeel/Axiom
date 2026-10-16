@@ -126,7 +126,7 @@ export class DynamicToolsHandler {
                     sections: {
                       type: 'array',
                       items: { type: 'string' },
-                      description: 'Section headings to include (case-insensitive substring). The token-lean path.',
+                      description: 'Section headings to include (case-insensitive substring); a ### subheading returns the section containing it. The token-lean path.',
                     },
                     full: {
                       type: 'boolean',
@@ -324,6 +324,17 @@ export class DynamicToolsHandler {
         parts.push(`## ${result.skill.name} — Sections (large skill: ${result.content.length} chars > ${fullReadLimit()} limit; index shown to save context)`);
         parts.push(...sectionTocLines(result.skill.skillType, result.content.length, result.skill.sections));
         parts.push('Re-read with sections:["…"] for specific sections, or full:true for the entire skill.');
+        parts.push('');
+        continue;
+      }
+
+      if (scoped && result.sections.length === 0) {
+        const wanted = (skillReq.sections as string[]).map((name) => `"${name}"`).join(', ');
+        const available = result.skill.sections.filter((s) => s.level > 0).map((s) => s.heading);
+        parts.push(`## ${result.skill.name} — No section matched ${wanted}`);
+        parts.push(available.length > 0
+          ? `Sections: ${available.join(', ')}. Re-read with one of these, or full:true for the entire skill.`
+          : 'This skill has no sections. Re-read without sections, or with full:true.');
         parts.push('');
         continue;
       }

@@ -1,8 +1,35 @@
 import { describe, it, expect } from 'vitest';
-import { parseSections, parseSkill, parseCommand, parseAgent, parseAppleDoc, filterSkillSections, parseReferenceFile } from './parser.js';
+import { outsideFences, parseSections, parseSkill, parseCommand, parseAgent, parseAppleDoc, filterSkillSections, parseReferenceFile } from './parser.js';
 import type { Skill } from './parser.js';
 
+describe('outsideFences', () => {
+  // A fence closes only on its own character with at least its opening length,
+  // so a fence can quote another one (CommonMark).
+  it.each([
+    ['backtick fence', ['```', '# a', '```', 'b'], [false, false, false, true]],
+    ['~~~ is not closed by ```', ['~~~', '```', '# x', '~~~', 'y'], [false, false, false, false, true]],
+    ['four backticks wrap three', ['````md', '```swift', '# x', '```', '````', 'y'], [false, false, false, false, false, true]],
+    ['indented fence in a list item', ['- item', '  ```bash', '  # c', '  ```', 'z'], [true, false, false, false, true]],
+    ['an unclosed fence runs to the end', ['ok', '```', '# x'], [true, false, false]],
+  ])('%s', (_name, lines, expected) => {
+    expect(outsideFences(lines)).toEqual(expected);
+  });
+});
+
 describe('parseSections', () => {
+  // A bash comment in a fenced block is not a heading (Axiom-w4d0). Before the
+  // fix, 773 of the bundle's 5,260 sections began on such a line.
+  it('ignores # and ## lines inside ``` and ~~~ fences', () => {
+    const content = [
+      '# Title', 'Intro', '## Setup', '```bash', '# Check the log', '## not a heading', '```',
+      '~~~', '# also not', '~~~', '## Usage', 'Done',
+    ].join('\n');
+
+    expect(parseSections(content).map((s) => [s.heading, s.startLine, s.endLine])).toEqual([
+      ['Title', 0, 1], ['Setup', 2, 9], ['Usage', 10, 11],
+    ]);
+  });
+
   it('parses content with ## headings into sections', () => {
     const content = '## First\nContent one\n## Second\nContent two';
     const sections = parseSections(content);
@@ -83,6 +110,8 @@ Content here
     expect(parseSkill(base.replace('NAME', 'axiom-something-diag'), 'axiom-something-diag').skillType).toBe('diagnostic');
     expect(parseSkill(base.replace('NAME', 'axiom-using-axiom'), 'axiom-using-axiom').skillType).toBe('meta');
     expect(parseSkill(base.replace('NAME', 'axiom-regular'), 'axiom-regular').skillType).toBe('discipline');
+    // A skills/*.md path inside a code block is an example, not a routing table.
+    expect(parseSkill('---\nname: axiom-regular\ndescription: test\n---\n```\nsee skills/child.md\n```\n', 'axiom-regular').skillType).toBe('discipline');
   });
 
   it('falls back to filename when name not in frontmatter', () => {
@@ -149,6 +178,11 @@ Agent instructions here
 });
 
 describe('parseAppleDoc', () => {
+  it('takes the description from prose, not from a leading code block', () => {
+    const content = '# Guide\n\n```swift\n// sample\n```\n\nThe first real sentence.';
+    expect(parseAppleDoc(content, 'Guide.md', 'guide').description).toBe('The first real sentence.');
+  });
+
   it('parses Apple doc without frontmatter', () => {
     const content = '# Liquid Glass in SwiftUI\n\nLearn how to apply glass effects.\n\n## Getting Started\n\nFirst step here.';
     const skill = parseAppleDoc(content, 'LiquidGlass-SwiftUI.md', 'guide');
@@ -179,6 +213,27 @@ describe('parseAppleDoc', () => {
 });
 
 describe('filterSkillSections', () => {
+  // Clients filter by the subheadings they can see; only # and ## start a
+  // section, so a ### match returns the section that contains it.
+  it('returns the containing section when a filter matches only a ### subheading', () => {
+    const content = '## Certificates\n\n### Certificate Inspection\n\n```bash\n# View details\nopenssl x509 -in c.cer\n```\n\n## Profiles\n\nProfile text';
+    const skill = parseSkill(`---\nname: axiom-x\ndescription: d\n---\n${content}`, 'axiom-x');
+    const result = filterSkillSections(skill, ['certificate inspection']);
+    expect([result.sections.map((s) => s.heading), result.content.includes('openssl x509'), result.content.includes('Profile text')]).toEqual([['Certificates'], true, false]);
+  });
+
+  it('resolves each filter on its own: a heading match does not drop another filter\'s subheading match', () => {
+    const content = '## Certificates\n\n### Inspection\n\ntext\n\n## Profiles\n\nProfile text';
+    const skill = parseSkill(`---\nname: axiom-x\ndescription: d\n---\n${content}`, 'axiom-x');
+    expect(filterSkillSections(skill, ['profiles', 'inspection', 'inspection']).sections.map((s) => s.heading)).toEqual(['Certificates', 'Profiles']);
+  });
+
+  it('does not match a # comment inside a code block as a subheading', () => {
+    const content = '## Certificates\n\n```bash\n# View details\n```\n\n## Profiles\n\nProfile text';
+    const skill = parseSkill(`---\nname: axiom-x\ndescription: d\n---\n${content}`, 'axiom-x');
+    expect(filterSkillSections(skill, ['view details']).sections).toEqual([]);
+  });
+
   const skill: Skill = {
     name: 'test-skill',
     description: 'test',
@@ -231,6 +286,23 @@ describe('filterSkillSections', () => {
 });
 
 describe('parseReferenceFile', () => {
+  it('does not take a # comment in a code block as the title', () => {
+    const content = 'Intro sentence.\n\n```bash\n# not a title\n```\n';
+    expect(parseReferenceFile(content, 'audio-ref.md', 'axiom-media').description).not.toBe('not a title');
+  });
+
+  // Six suite files shipped "```swift" as their catalog description because the
+  // first line after the title's heading was a fence.
+  it('takes the description from prose, not from a leading code block', () => {
+    const content = '# Audio Reference\n\n## Quick Reference\n\n```swift\n# not prose\nlet x = 1\n```\n\nUse the session first.\n';
+    expect(parseReferenceFile(content, 'audio-ref.md', 'axiom-media').description).toBe('Use the session first.');
+  });
+
+  it('skips horizontal rules and table rows when looking for the description', () => {
+    const content = '# Migration\n\n---\n\n| From | To |\n|---|---|\n| A | B |\n\n***\n\nMove one call site at a time.\n';
+    expect(parseReferenceFile(content, 'migration.md', 'axiom-networking').description).toBe('Move one call site at a time.');
+  });
+
   it('parses frontmatter-free markdown into a Skill', () => {
     const content = `# Timer Patterns
 

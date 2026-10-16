@@ -64,6 +64,14 @@ describe('XcsymTools.listTools', () => {
     expect(byName.axiom_xcsym_anonymize.inputSchema.required).toEqual(['file']);
     expect(byName.axiom_xcsym_list_dsyms.inputSchema.required).toBeUndefined();
   });
+
+  // crash exits 1 with a JSON reject for hangs and non-fatal EXC_RESOURCE
+  // reports; a description that calls exit 1 usage-only invites a retry
+  // instead of following the routing.
+  it('says crash exit 1 can carry a routable reject', () => {
+    const description = byName.axiom_xcsym_crash.description ?? '';
+    expect(['hang_report', 'non_fatal_resource'].filter((e) => !description.includes(e))).toEqual([]);
+  });
 });
 
 describe('XcsymTools.handles', () => {
