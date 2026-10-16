@@ -29,6 +29,7 @@
  * edit) gives `[—-−]`, a silent RANGE U+2014–U+2212 matching ~510 code points. Escaping
  * makes the class order- and insertion-proof.
  */
+import { outsideFences } from "./inline-auditors.ts";
 const WRONG_SEP = "[\\-\\u2010\\u2011\\u2012\\u2014\\u2015\\u2212]";
 
 /**
@@ -60,8 +61,8 @@ export function isDashViolation(line: string): boolean {
  */
 export function findDashViolations(contents: string): number[] {
   const lines = contents.split("\n");
+  const prose = outsideFences(lines);
   const violations: number[] = [];
-  let inFence = false;
   let inFrontmatter = false;
 
   for (let i = 0; i < lines.length; i++) {
@@ -75,12 +76,7 @@ export function findDashViolations(contents: string): number[] {
       if (line.trim() === "---") inFrontmatter = false;
       continue;
     }
-    const trimmed = line.trim();
-    if (trimmed.startsWith("```") || trimmed.startsWith("~~~")) {
-      inFence = !inFence;
-      continue;
-    }
-    if (inFence) continue;
+    if (!prose[i]) continue;
 
     if (isDashViolation(line)) violations.push(i + 1);
   }

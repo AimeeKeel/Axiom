@@ -284,3 +284,34 @@ export const TOOL_ROSTER_SURFACES = [
 export function findMissingTools(content: string, tools: ReadonlySet<string>): string[] {
   return [...tools].filter((t) => !new RegExp(`\\b${t}\\b`).test(content)).sort();
 }
+
+/**
+ * 1-based lines where the fence structure breaks under CommonMark, which
+ * VitePress and the MCP server's parser follow: a fence opener with an info
+ * string inside an open fence of the same character that is no wider (the inner
+ * block's bare close ends the outer one, so everything after it renders and
+ * parses as the wrong thing; widen the outer fence), and a fence never closed
+ * (everything after it reads as code). A bare inner opener such as ``` quoted
+ * inside ```markdown cannot be told apart from a close, so it is not reported
+ * (Axiom-w4d0).
+ */
+export function nestedFenceViolations(markdown: string): number[] {
+  const violations: number[] = [];
+  let open: string | null = null;
+  let openLine = 0;
+  markdown.split("\n").forEach((line, i) => {
+    const m = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
+    if (!m) return;
+    const [, marker, rest] = m;
+    if (open === null) {
+      open = marker;
+      openLine = i + 1;
+      return;
+    }
+    if (marker[0] !== open[0] || marker.length < open.length) return;
+    if (rest.trim() === "") open = null;
+    else violations.push(i + 1);
+  });
+  if (open !== null) violations.push(openLine);
+  return violations;
+}

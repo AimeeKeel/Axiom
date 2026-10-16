@@ -421,15 +421,36 @@ export function renderRouterNote(target: RouterNoteTarget): string {
   return lines.join("\n");
 }
 
+/**
+ * Marks each line that is ordinary markdown, as opposed to a fence line or a
+ * line inside a fenced code block. A fence closes only on its own character at
+ * no shorter a length (CommonMark). A copy of axiom-mcp's `outsideFences`, kept
+ * here so this module stays import-free; a parity test holds the two together.
+ */
+export function outsideFences(lines: string[]): boolean[] {
+  let open: string | null = null;
+  return lines.map((line) => {
+    const marker = line.match(/^\s*(`{3,}|~{3,})/)?.[1];
+    if (open === null) {
+      if (marker === undefined) return true;
+      open = marker;
+      return false;
+    }
+    if (marker !== undefined && marker[0] === open[0] && marker.length >= open.length && line.trim() === marker) {
+      open = null;
+    }
+    return false;
+  });
+}
+
 /** Index of the first `## ` heading that is NOT inside a fenced code block. */
 export function firstTopLevelH2Index(content: string): number {
   const lines = content.split("\n");
-  let inFence = false;
+  const prose = outsideFences(lines);
   let offset = 0;
-  for (const line of lines) {
-    if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
-    else if (!inFence && /^## /.test(line)) return offset;
-    offset += line.length + 1;
+  for (let i = 0; i < lines.length; i++) {
+    if (prose[i] && /^## /.test(lines[i])) return offset;
+    offset += lines[i].length + 1;
   }
   return -1;
 }

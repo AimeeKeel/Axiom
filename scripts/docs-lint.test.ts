@@ -10,7 +10,7 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { findMissingSidebarTargets, findMissingTools, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, sidebarLinkTargets } from "./docs-lint.ts";
+import { findMissingSidebarTargets, findMissingTools, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, nestedFenceViolations, sidebarLinkTargets } from "./docs-lint.ts";
 
 const ROUTERS = new Set(["axiom-networking", "axiom-swiftui", "axiom-performance"]);
 const rules = (content: string) => lintDocPage(content, ROUTERS).map((f) => f.rule);
@@ -292,5 +292,29 @@ describe("findMissingTools", () => {
   });
   it("does not count a longer word that contains a tool's name", () => {
     assert.deepEqual(findMissingTools("xclogger, axbuilds and myxcsym xcproject", tools), ["axbuild", "xclog", "xcsym"]);
+  });
+});
+
+// A ``` block quoted inside a ``` block: CommonMark closes the outer one at the
+// inner block's bare ```, so the rest renders and parses as the wrong thing.
+// Ten files shipped this way, three of them docs pages (Axiom-w4d0).
+describe("nestedFenceViolations", () => {
+  // The inner close ends the outer fence, so the author's final ``` opens a new
+  // fence that never closes: both lines are reported.
+  it("flags an inner opener as wide as the open fence, and the fence it leaves open", () => {
+    assert.deepEqual(nestedFenceViolations("```markdown\nReport:\n```swift\nlet x = 1\n```\n```\n"), [3, 6]);
+  });
+
+  it("accepts an inner opener narrower than a wider outer fence", () => {
+    assert.deepEqual(nestedFenceViolations("````markdown\n```swift\nlet x = 1\n```\n````\n"), []);
+  });
+
+  // Everything after an unclosed fence reads as code, headings included.
+  it("flags a fence still open at the end of the file, at its opening line", () => {
+    assert.deepEqual(nestedFenceViolations("# T\n\n```bash\necho hi\n\n## Lost heading\n"), [3]);
+  });
+
+  it("ignores the other fence character and a bare closing fence", () => {
+    assert.deepEqual(nestedFenceViolations("~~~\n```swift\n~~~\n\n```\ncode\n```\n"), []);
   });
 });

@@ -99,7 +99,7 @@ import {
 import { parsePorcelain, resolveGoBinaryStaleness, resolveStaleness } from "./staleness.ts";
 import { classifyNpmFailure, npmErrorCode, npmInstallEnvironment, runNpmDryRun } from "./npm-resolution.ts";
 import { findDashViolations } from "./docs-dashes.ts";
-import { findMissingSidebarTargets, findMissingTools, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, sidebarLinkTargets, TOOL_ROSTER_SURFACES } from "./docs-lint.ts";
+import { findMissingSidebarTargets, findMissingTools, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, nestedFenceViolations, sidebarLinkTargets, TOOL_ROSTER_SURFACES } from "./docs-lint.ts";
 import { findIgnoredAuthoredFiles, resolvePluginBin } from "./plugin-layout.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
@@ -2200,6 +2200,33 @@ heading("12v. Docs Sidebar Targets");
   const nonLiteral = findNonLiteralSidebarLinks(configText);
   for (const link of nonLiteral) error("docs-sidebar", `docs/.vitepress/config.ts has \`${link}\`; write sidebar links as quoted absolute paths ('/start/install') so this check can resolve them`);
   if (missing.length + nonLiteral.length === 0) console.log("  ✓ every sidebar and nav link in docs/.vitepress/config.ts has a page git ships");
+}
+
+heading("12y. Nested Code Fences");
+// A ``` block quoted inside a ``` block closes the outer one early under
+// CommonMark, which VitePress and the MCP server's parser both follow, and an
+// unclosed fence turns the rest of the file into code: ten files rendered or
+// parsed wrong this way, three of them docs pages (Axiom-w4d0).
+{
+  const nested: string[] = [];
+  const walk = (dir: string): void => {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === ".vitepress" || entry.name === "node_modules") continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".md"))
+        for (const line of nestedFenceViolations(fs.readFileSync(full, "utf8")))
+          nested.push(`${path.relative(root, full)}:${line}`);
+    }
+  };
+  walk(pluginDir);
+  walk(path.join(root, "docs"));
+  for (const readme of ["README.md", "axiom-mcp/README.md", "axiom-pi/README.md", "tools/README.md"])
+    for (const line of nestedFenceViolations(fs.readFileSync(path.join(root, readme), "utf8")))
+      nested.push(`${readme}:${line}`);
+  if (nested.length === 0) console.log("  ✓ No code fence quotes another of the same width");
+  else for (const v of nested) error("nested-fence", `${v}: a fenced block opens inside one no wider, or a fence is never closed; widen the outer fence (\`\`\`\` around \`\`\`) or close it`);
 }
 
 // ── 12j. Doc Count-Marker Parity ──

@@ -9,6 +9,7 @@
  * touches the real agent files, so the suite is hermetic.
  */
 
+import { outsideFences as mcpOutsideFences } from "../axiom-mcp/src/loader/parser.ts";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -21,6 +22,7 @@ import {
   findInlineDrift,
   findRouterNoteDrift,
   firstTopLevelH2Index,
+  outsideFences,
   generatedMarkerFor,
   generatedSourceAgent,
   inlinedPathFor,
@@ -481,6 +483,13 @@ describe("firstTopLevelH2Index", () => {
     assert.equal(firstTopLevelH2Index(c), c.indexOf("## Real"));
   });
 
+  // A fence closes only on its own character at no shorter a length, so a
+  // ```` block can quote a ``` one without the inner close ending it.
+  it("skips headings inside a wider fence that quotes a narrower one", () => {
+    const c = "# T\n\n````md\n```\n## fake\n````\n\n## Real\n";
+    assert.equal(firstTopLevelH2Index(c), c.indexOf("## Real"));
+  });
+
   it("returns -1 when there is no top-level H2", () => {
     assert.equal(firstTopLevelH2Index("# T\n\nBody only.\n"), -1);
   });
@@ -626,4 +635,27 @@ describe("cross-package marker", () => {
     const mcpPrefix = mcpParser.match(/GENERATED_PREFIX = '([^']+)'/)?.[1];
     assert.equal(mcpPrefix, GENERATED_PREFIX);
   });
+});
+
+// inline-auditors keeps its own copy so it stays import-free (set-version.js and
+// the Codex/Cursor builders load it); the MCP server's parser owns the rule.
+describe("outsideFences parity with axiom-mcp's parser", () => {
+  const cases: string[][] = [
+    ["```", "# a", "```", "b"],
+    ["~~~", "```", "# x", "~~~", "y"],
+    ["````md", "```swift", "# x", "```", "````", "y"],
+    ["- item", "  ```bash", "  # c", "  ```", "z"],
+    ["ok", "```", "# x"],
+    ["```swift", "code", "```swift", "still code", "```", "prose"],
+    ["```", "code", "  ```swift", "more", "```", "prose"],
+    ["~~~", "```", "code", "```", "~~~", "prose"],
+    ["````", "```", "code", "```", "````", "prose"],
+    ["```", "code", "```   ", "prose"],
+    ["```", "code", "`````", "prose"],
+  ];
+  for (const lines of cases) {
+    it(JSON.stringify(lines), () => {
+      assert.deepEqual(outsideFences(lines), mcpOutsideFences(lines));
+    });
+  }
 });

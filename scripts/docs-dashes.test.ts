@@ -93,6 +93,13 @@ describe("findDashViolations — file-level scanning", () => {
     assert.deepEqual(findDashViolations(src), [4]);
   });
 
+  // A ```` block can quote a ``` one; the inner fence neither closes nor
+  // reopens the outer, so everything up to the ```` close stays illustrative.
+  it("keeps a wider fence open across a narrower inner fence", () => {
+    const src = ["````markdown", "```", "- **Inside** - ignored", "````", "- **Outside** - caught"].join("\n");
+    assert.deepEqual(findDashViolations(src), [5]);
+  });
+
   it("returns empty for a clean file", () => {
     const src = ["# Title", "", "- **Good** – yes", "- **Also good** – yes"].join("\n");
     assert.deepEqual(findDashViolations(src), []);
