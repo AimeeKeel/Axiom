@@ -61,7 +61,7 @@ Write each normalized issue as one JSONL line to a temp file (e.g., `/tmp/corpus
 ### 3. Run `axiom_xcsym_triage` MCP tool
 
 ```bash
-Call the `axiom_xcsym_triage` MCP tool with structured inputs matching reference arguments `--latest-version <latest_version> --os-floor <floor> --min-users <n> < /tmp/corpus.jsonl`.
+Call the `axiom_xcsym_triage` MCP tool with `file: "/tmp/corpus.jsonl"`, `latestVersion: "<latest_version>"`, `osFloor: "<floor>"`, and `minUsers: <n>`.
 ```
 
 Omit flags you don't have values for. The tool exits 0 even when some issues are skipped (malformed lines go to `errors[]`).
@@ -153,7 +153,7 @@ The flagship enrichment case: `data_protection_violation` (0xdead10cc) with SQLi
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Triage my Sentry crashes"

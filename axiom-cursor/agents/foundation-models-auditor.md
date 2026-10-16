@@ -458,7 +458,7 @@ For AI features gated by IAP: `iap-auditor` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my Foundation Models code for issues?"

@@ -158,7 +158,7 @@ If >50 findings in one category: show top 10 by readability impact, give the tot
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Simplify this Swift file"

@@ -58,7 +58,7 @@ If it is absent, you have two working options and should say which you took:
 
 `--strict` fails any step the device clamped. Without it a clamped sweep still exits `0` when the assertions pass, so an exit-code-only consumer reads "all breakpoints validated" for breakpoints that were never produced; the `clamped` count and a `note` say so either way.
 
-Exit `0` all sizes passed · `1` an assertion, screenshot, or (under `--strict`) a clamp failed · `2` environment error.
+Exit `0` all sizes passed · `1` an assertion, screenshot, or (under `--strict`) a clamp failed · `2` usage or environment error.
 
 Three `devicectl` failures are separated, because they need different fixes:
 
@@ -109,9 +109,9 @@ The switch row is AXe's documented behavior for `automatic` ("physical touch for
 
 ## Output & exit codes
 
-JSON by default (`tool`/`version` envelope); `--human` for prose. Exit: `0` pass · `1` assertion-fail/wait-timeout · `2` environment error · `8` output-write error.
+JSON by default (`tool`/`version` envelope); `--human` for prose. Exit: `0` pass · `1` assertion-fail/wait-timeout · `2` usage or environment error · `8` output-write error.
 
-> **CLI gotcha:** Go's flag parser stops at the first positional, so always put flags after the subcommand and use the all-flag forms shown above (`assert --id …`, not `assert <id> …`).
+Flags may come in any order after the subcommand. Subcommands other than the input verbs and `dialog pregrant` take no positional, so `assert <id>` exits `2` naming the unexpected argument; use the flag forms shown above (`assert --id …`).
 
 ## Resources
 

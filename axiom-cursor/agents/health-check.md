@@ -203,7 +203,7 @@ For test-specific issues: `test-failure-analyzer` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Run a health check on my project"

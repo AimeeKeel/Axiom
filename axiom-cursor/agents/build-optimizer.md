@@ -207,7 +207,7 @@ Generate a "Build Performance Optimization Report" with:
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "My builds are taking forever, can you help optimize?"

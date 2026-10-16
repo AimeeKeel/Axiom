@@ -268,7 +268,7 @@ For symbolicating `swift_concurrency_violation` crashes: `axiom-tools (skills/xc
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my code for Swift 6 concurrency issues?"

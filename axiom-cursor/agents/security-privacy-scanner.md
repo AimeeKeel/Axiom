@@ -302,7 +302,7 @@ For IAP-adjacent receipt security: Delegate to the `iap-auditor` subagent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my code for security issues?"

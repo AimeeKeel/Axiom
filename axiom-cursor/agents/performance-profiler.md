@@ -72,9 +72,9 @@ Targets and their gates:
 
 - **Attach** (`--attach <pid|name>`) — the default; no gate. Prefer it whenever the app is already running.
 - **Launch from startup** — call `axiom_xcprof_record` with `launch: ["<app-path>"]` and `allowLaunch: true`; add `device: "<booted-udid>"` for a simulator. Launch is gated, so follow the consent rule below.
-- **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target. `--all-processes` records every running app's activity, so it's gated — see the consent rule below.
-- Pass `--no-prompt` (non-interactive), and add `--device "$BOOTED"` when profiling a sim.
-- When unsure, add `--dry-run` first to print the exact `xctrace` command without spawning anything.
+- **System-wide** — `allProcesses: true` with `allowAllProcesses: true`, only when there's no single target. System-wide capture records every running app's activity, so it's gated — see the consent rule below.
+- Recording is always non-interactive over MCP; pass `device: "<booted-udid>"` when profiling a sim.
+- When unsure, set `dryRun: true` first to print the exact `xctrace` command without spawning anything.
 
 **Consent gate (hard rule).** `--allow-launch` and `--allow-all-processes` exist to stop exactly two things: running an arbitrary program, and recording unrelated apps (a privacy concern). Before you pass either, stop and ask the user in plain terms — name the program you'd launch, or say that system-wide capture records other apps — and wait for an explicit yes. Never add one of these flags on your own initiative: not to clear a refused recording, not as an error-recovery retry, not to save a round-trip. If the user hasn't agreed, use `--attach` instead. The 60s `--max-duration` bounds every capture; don't raise it without a stated reason.
 
@@ -142,7 +142,7 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ## Cleanup
 
-**Do not `rm -rf` trace directories** (the repository safety policy). Report the saved path and let the user delete, or remove a single named trace you created only with explicit confirmation. The MCP server's default trace sandbox keeps traces contained. (No cleanup MCP tool is exposed; leave trace deletion to explicit user action.)
+**Do not `rm -rf` trace directories** — deleting files is destructive and needs the user's say-so. Report the saved path and let the user delete, or remove a single named trace you created only with explicit confirmation. The MCP server's default trace sandbox keeps traces contained. (No cleanup MCP tool is exposed; leave trace deletion to explicit user action.)
 
 ## Comparison (before / after)
 
@@ -177,7 +177,7 @@ Use `axiom_xcprof_compare` with `baseline: "<baseline>"` and `current: "<current
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Profile my app's CPU usage"

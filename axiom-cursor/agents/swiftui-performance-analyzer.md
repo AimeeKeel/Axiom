@@ -270,7 +270,7 @@ For memory lifecycle issues: `axiom-performance (skills/memory-debugging.md)` sk
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "My SwiftUI app has janky scrolling, can you check for performance issues?"

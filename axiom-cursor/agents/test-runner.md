@@ -354,7 +354,7 @@ Tests complete
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Run my UI tests and show me what failed"

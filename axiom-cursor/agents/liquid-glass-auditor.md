@@ -349,7 +349,7 @@ For App Store submission requirements (deployment target updates): `axiom-shippi
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my app for Liquid Glass adoption opportunities?"

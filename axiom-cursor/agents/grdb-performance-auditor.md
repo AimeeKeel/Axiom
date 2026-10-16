@@ -348,7 +348,7 @@ For SQLiteData specifics: `axiom-data (skills/sqlitedata.md)` and `sqlitedata-re
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you audit my GRDB code for performance issues?"

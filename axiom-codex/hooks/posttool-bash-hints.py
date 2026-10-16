@@ -411,10 +411,10 @@ def main() -> int:
         return 0
 
     try:
-        from project_detect import resolve_context_decision
+        from project_detect import resolve_context_decision, session_cwd
 
         if not resolve_context_decision(
-            os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")
+            session_cwd(hook_diagnostics.record_exception), os.environ.get("AXIOM_SESSION_CONTEXT")
         ):
             return 0
     except Exception as error:

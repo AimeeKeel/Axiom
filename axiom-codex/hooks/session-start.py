@@ -65,13 +65,13 @@ if env_file and os.environ.get("AXIOM_HARNESS") != "codex" and os.path.isdir(too
     except OSError as error:
         hook_diagnostics.record_exception(error)
 
-from project_detect import resolve_context_decision
+from project_detect import resolve_context_decision, session_cwd
 
 # Project-type gate (GH #45): in non-Apple projects, skip the context injection
 # entirely (emit an empty SessionStart response). resolve_context_decision is
 # fail-open — it returns True (inject) on any detection error — so this can never
 # silently disable Axiom in a real Apple project. Override: AXIOM_SESSION_CONTEXT.
-if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+if not resolve_context_decision(session_cwd(hook_diagnostics.record_exception), os.environ.get("AXIOM_SESSION_CONTEXT")):
     print(json.dumps({}))
     sys.exit(0)
 

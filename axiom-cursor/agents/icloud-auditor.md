@@ -290,7 +290,7 @@ For sync callback queue safety: `axiom-concurrency`
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Check my iCloud integration"

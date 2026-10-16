@@ -220,8 +220,9 @@ Each row contains:
 ### Find Running Simulator Apps
 
 ```bash
-# List apps in booted simulator
-xcrun simctl spawn booted launchctl list | grep UIKitApplication
+# List apps in the simulator
+# $UDID: your simulator's UDID from `xcrun simctl list devices booted`. Not `booted`: with several up, it silently targets one of them
+xcrun simctl spawn $UDID launchctl list | grep UIKitApplication
 
 # Output format: PID  Status  com.apple.UIKitApplication:com.bundle.id[xxxx][rb-legacy]
 ```

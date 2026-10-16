@@ -159,7 +159,7 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 **Why flaky**: The surface-level failure ("test crashed") hides the actual root cause — and often points at the wrong file
 **Detection**: Test run produced an `.ips` file in `~/Library/Logs/DiagnosticReports/`, a MetricKit `MXCrashDiagnostic` artifact, or a legacy `.crash` text file
 
-**Before analyzing the Swift source, symbolicate the crash:**
+**Before analyzing the Swift source, read and symbolicate the crash.** Read the `.ips` first: v1 is one JSON object, v2 is a header line then a JSON body. Take `exception.type`/`subtype` and the crashed thread (`threads[faultingThread]`, else the one with `triggered: true`); its frames always carry `imageIndex`/`imageOffset`, and `symbol` may be missing. This agent only reads and searches, so it cannot run the commands below: if symbols are missing, finish what the `.ips` shows and ask for their output in your result. If you are following this procedure inline and can run shell commands, run them yourself.
 
 ```bash
 # List recent crashes
@@ -244,7 +244,7 @@ Grep: @Suite\s+struct|@Suite\s*\(
 **Pattern 6 - Test-generated crashes**:
 ```
 Glob: ~/Library/Logs/DiagnosticReports/*.ips (modified since test run)
-# Run xcsym crash --format=summary on each to get pattern_tag + crashed frames
+# Get xcsym crash --format=summary for each (run it, or ask for it — see Pattern 6) for pattern_tag + crashed frames
 ```
 
 **Pattern 7 - Date assertions**:

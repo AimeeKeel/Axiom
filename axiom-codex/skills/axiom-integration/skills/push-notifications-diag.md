@@ -433,7 +433,8 @@ cat > test-push.apns << 'EOF'
 }
 EOF
 
-xcrun simctl push booted com.your.bundle.id test-push.apns
+# $UDID: your simulator's UDID from `xcrun simctl list devices booted`. Not `booted`: with several up, it silently targets one of them
+xcrun simctl push $UDID com.your.bundle.id test-push.apns
 ```
 
 #### Simulator Limitations

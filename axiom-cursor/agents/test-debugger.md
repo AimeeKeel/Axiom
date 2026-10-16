@@ -350,7 +350,7 @@ For build issues: `build-fixer` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "My LoginTests are failing, help me fix them"

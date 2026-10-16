@@ -444,7 +444,7 @@ For SPM conflicts: `spm-conflict-resolver` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "My build is failing with BUILD FAILED but no error details"

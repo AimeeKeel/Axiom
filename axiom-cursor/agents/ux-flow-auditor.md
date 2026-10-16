@@ -276,7 +276,7 @@ For UX principles: `axiom-accessibility` (ux-flow-audit reference)
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Check my app for UX dead ends"

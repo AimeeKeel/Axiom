@@ -285,7 +285,7 @@ For @Query view performance: `swiftui-performance-analyzer` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my SwiftData code for issues?"

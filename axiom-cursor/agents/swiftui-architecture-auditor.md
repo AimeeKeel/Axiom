@@ -230,7 +230,7 @@ For local Swift cleanups inside view bodies: `swift-simplifier` agent (it does l
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Check my SwiftUI architecture for separation of concerns"

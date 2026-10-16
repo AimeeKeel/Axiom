@@ -43,13 +43,16 @@ The exit code narrows the triage path:
 | Exit | Meaning | Next step |
 |---|---|---|
 | 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |
-| 2 | Main dSYM missing (or input not found/unreadable) | Locate the archive or set `XCSYM_DSYM_PATHS` to where it lives |
+| 1 | Usage error, a hang report (`"error":"hang_report"`), or a non-fatal EXC_RESOURCE report (`"error":"non_fatal_resource"`) on stdout | Check the `error` key: route hangs to hang-diagnostics and CPU/wakeups warnings to `axiom-performance`; otherwise fix the invocation |
+| 2 | Main dSYM missing, input not found/unreadable, or unsupported input (`"error":"unsupported_format"` or `"empty_bundle"` on stdout) | Check the `error` key first; for a missing dSYM, locate the archive or pass its folder as `dsymPaths` |
 | 3 | Main UUID mismatch | Different build than the archive on disk — the `axiom_xcsym_find_dsym` MCP tool with structured inputs matching reference arguments `<uuid>` |
-| 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |
-| 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |
+| 4 | Main arch mismatch | Pass `arch` to `axiom_xcsym_find_dsym` (arm64 vs arm64e) |
+| 5 | Tool error (dwarfdump/atos/Spotlight failed, or an I/O error walking a bundle) | Real failure — read stderr |
+| 6 | Command timeout | Retry with `noSpotlight: true`; if still timing out, atos is the bottleneck |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
+| 8 | Output write error | Real failure — read the error text |
 
-**Stdin.** Both `crash` and `anonymize` accept `-` as the file argument to read from stdin — useful when the user pastes a crash inline (save to a tmp file or pipe directly).
+**Pasted crashes.** The MCP tools take file paths only, with no stdin: save pasted crash text to a file first.
 
 **Hang rejection.** `crash` exits 1 and writes `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}` to stdout when the input is a hang (`bug_type=298`). Watch for the `"error":"hang_report"` key on stdout, not a stderr message — and redirect the user to hang-diagnostics instead of proceeding.
 
@@ -121,7 +124,7 @@ If a required MCP tool is unavailable, stop and report that the Axiom MCP integr
 3. [Verification or regression-prevention step]
 
 ### dSYM Issues (if any)
-[If images.missing non-empty: list missing UUIDs and suggest the `axiom_xcsym_find_dsym` MCP tool with structured inputs matching reference arguments `<uuid>` or setting `--dsym-paths`]
+[If images.missing non-empty: list missing UUIDs and suggest the `axiom_xcsym_find_dsym` MCP tool with structured inputs matching reference arguments `<uuid>` or passing `dsymPaths`]
 [If images.mismatched non-empty: list mismatches with expected vs found UUID; suggest which archive to pull]
 ```
 
@@ -146,11 +149,11 @@ Exit code is 3. The agent:
 
 ### Main dSYM missing (exit 2)
 
-Exit code is 2 and the crash parsed cleanly (no `"error":"hang_report"` on stdout). The agent:
+Exit code is 2 and the crash parsed cleanly (no `error` key on stdout — `unsupported_format` and `empty_bundle` also exit 2). The agent:
 1. Reads `images.missing[0].uuid` from the JSON — this is the main app's UUID.
 2. Runs the `axiom_xcsym_find_dsym` MCP tool with structured inputs matching reference arguments `<uuid>` to confirm it isn't hiding in an unusual location.
 3. If `find-dsym` also exits 2: no dSYM exists anywhere discoverable.
-4. Reports: "No dSYM found for main UUID `<uuid>`. Options: (a) download the dSYM for this build from App Store Connect → Your App → TestFlight/App Store → Build → Download dSYMs, then re-run with the `axiom_xcsym_crash` MCP tool with `file: "<file>"` and `dsymPaths: "/path/to/downloads"`; (b) locate the `.xcarchive` for this build and point `XCSYM_DSYM_PATHS` at its `dSYMs/` directory; (c) if you didn't keep the archive and can't download it, the crash can't be symbolicated for this build — capture raw frames with the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--no-symbolicate` and triage by `pattern_tag` plus `image_offset`."
+4. Reports: "No dSYM found for main UUID `<uuid>`. Options: (a) download the dSYM for this build from App Store Connect → Your App → TestFlight/App Store → Build → Download dSYMs, then re-run with the `axiom_xcsym_crash` MCP tool with `file: "<file>"` and `dsymPaths: "/path/to/downloads"`; (b) locate the `.xcarchive` for this build and pass its `dSYMs/` directory as `dsymPaths`; (c) if you didn't keep the archive and can't download it, the crash can't be symbolicated for this build — capture raw frames with the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--no-symbolicate` and triage by `pattern_tag` plus `image_offset`."
 
 Do NOT confuse exit 2 with exit 3:
 - Exit 2 = no dSYM at all
@@ -163,7 +166,7 @@ Checking `images.missing` vs `images.mismatched` in the JSON disambiguates witho
 Exit code is 6 after a long wait (typically >30s on default settings). The agent:
 1. First-line retry: the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `<file> --no-spotlight --format=standard`. Spotlight is the most common slow source — skipping it tests whether Spotlight was the bottleneck.
 2. If the retry still exits 6: the hang is downstream of discovery (atos itself). Run the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `<file> --no-symbolicate` to get raw frames (image + offset) without atos.
-3. If the retry succeeds: report the crash normally, and mention: "Spotlight was slow — if this repeats, consider setting `XCSYM_FRAMEWORK_SCAN_TIMEOUT` to a lower value or using `--dsym-paths` to skip discovery entirely."
+3. If the retry succeeds: report the crash normally, and mention: "Spotlight was slow — if this repeats, consider passing `dsymPaths` with `noDefaults: true` to skip default discovery."
 4. Reports: "xcsym timed out on [Spotlight / atos]. [Retry outcome]. [Actionable next step based on which retry succeeded.]"
 
 Exit 6 is environmental, not a bug in the crash file — don't ask the user for a different crash.
@@ -172,6 +175,7 @@ Exit 6 is environmental, not a bug in the crash file — don't ask the user for 
 
 Report to user and stop if:
 - xcsym stdout contains `"error":"hang_report"` (exit 1) — the input is a hang, not a crash; redirect to hang-diagnostics skill for single-hang investigation, or `triage-analyzer` for corpus/aggregate hang analysis
+- xcsym stdout contains `"error":"non_fatal_resource"` (exit 1) — a CPU or wakeups warning, not a crash; redirect to `axiom-performance`
 - Exit code is non-zero *and* the pattern tag is `unclassified` — the rule engine gave up; raw output is the best the tool can do
 - Crash file is truncated or unparseable — ask for a complete file
 - The user has **multiple grouped issues** from Sentry or App Store Connect (dozens of crashes, a corpus) rather than a single crash file — route to `triage-analyzer` agent or `/axiom-triage` instead; this agent handles one crash at a time
@@ -190,7 +194,7 @@ Report to user and stop if:
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Analyze this crash log" [pastes crash report]

@@ -61,7 +61,7 @@ If the user's command arguments is "all" → Delegate to the `health-check` suba
 If the user's command arguments is a filename (contains `.swift`, `.m`, etc.) rather than an audit area name → treat it as a scoped audit request. Acknowledge you're selecting the most relevant audit(s) for that file, then analyze the file to pick appropriate auditor(s). Don't frame this as a user error — it's a valid shorthand.
 
 1. Look up the agent name from the table above
-2. delegate to that subagent using the Cursor subagent delegation with the matching subagent name
+2. Delegate to that subagent using the Cursor subagent delegation with the matching subagent name
 3. Pass the current directory path to the agent
 
 **Example:**

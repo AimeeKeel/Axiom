@@ -58,6 +58,10 @@ hook_diagnostics.begin("subagent-start")
 try:
     input_data = json.load(sys.stdin)
     agent_type = input_data.get("agent_type", "")
+    # A non-string agent_type is malformed input; treat it as an unknown agent
+    # rather than crashing in the skip checks below (Axiom-iu5v).
+    if not isinstance(agent_type, str):
+        agent_type = ""
 except Exception as error:
     hook_diagnostics.record_exception(error)
     print("{}")
@@ -76,9 +80,9 @@ _hook_dir = os.path.dirname(os.path.abspath(__file__))
 if _hook_dir not in sys.path:
     sys.path.insert(0, _hook_dir)
 try:
-    from project_detect import resolve_context_decision
+    from project_detect import resolve_context_decision, session_cwd
 
-    if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+    if not resolve_context_decision(session_cwd(hook_diagnostics.record_exception), os.environ.get("AXIOM_SESSION_CONTEXT")):
         print("{}")
         sys.exit(0)
 except Exception as error:

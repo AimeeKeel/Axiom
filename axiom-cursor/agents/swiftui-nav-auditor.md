@@ -259,7 +259,7 @@ For navigation patterns, debugging, and API reference: `axiom-swiftui` skill (na
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Check my SwiftUI navigation for correctness issues"

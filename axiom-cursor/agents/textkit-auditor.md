@@ -204,7 +204,7 @@ Using the TextKit Map from Phase 1 and your domain knowledge, check for what's *
 |----------|----------------|----------------|
 | Does the codebase detect TextKit 1 fallback — `textLayoutManager == nil` on UIKit, `willSwitchToNSLayoutManagerNotification` (AppKit)? | Silent TextKit 1 fallback | UIKit posts nothing when a text view falls back, so an unchecked `textLayoutManager` is the only signal; the inline Writing Tools experience is downgraded to the panel with no error or log |
 | For text views that handle Arabic/Hebrew/Thai/Indic input, does measurement use `enumerateTextLayoutFragments` rather than glyph APIs? | Glyph-API regression for international users | English text "works" with glyph counts; complex scripts produce off-by-multiple results that look like layout glitches |
-| Is `allowedWritingToolsResultOptions` set to match the editor's content model (plain / rich / list / table)? | Wrong-result-type pollution | Users get rich text inserted into a plain-text editor, or formatted lists in a code editor; they delete and retype |
+| Is `allowedWritingToolsResultOptions` set to match the editor's content model (plain / rich / list; `.table` on NSTextView only — UITextView throws for it)? | Wrong-result-type pollution | Users get rich text inserted into a plain-text editor, or formatted lists in a code editor; they delete and retype |
 | Are programmatic text mutations gated by `isWritingToolsActive` AND the `textViewWritingToolsWillBegin`/`textViewWritingToolsDidEnd` lifecycle? | Mid-session corruption | Autosave/format/sync triggers mid-generation; the partial result + the new mutation race |
 | For SwiftUI `UIViewRepresentable`/`NSViewRepresentable` wrappers around UITextView/NSTextView, are TextKit 2 properties forwarded (textLayoutManager, writingToolsBehavior)? | Wrapper drops TextKit 2 | The custom wrapper accidentally instantiates TextKit 1 paths, undoing all the TextKit 2 work in the wrapped class |
 | If the app's deployment target predates TextKit 2 or it ships a Catalyst build, is the TextKit 1 path behind `if #available(iOS 16, macOS 12, *)`? | Wrong-OS fallback | TextKit 2 arrives with `UITextView.textLayoutManager` (iOS 16+) and `NSTextView.textLayoutManager` (macOS 12+); below that there is nothing to prefer, and above it the gate is dead code hiding a fallback |
@@ -322,7 +322,7 @@ For saved-document file location and protection: `storage-auditor` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my text editor for TextKit issues?"

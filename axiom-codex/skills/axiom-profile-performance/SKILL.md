@@ -132,7 +132,7 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ## Cleanup
 
-**Do not `rm -rf` trace directories** (CLAUDE.md S-3). Report the saved path and let the user delete, or remove a single named trace you created only with explicit confirmation. Recording into `XCPROF_TRACE_ROOT` keeps traces contained. (A safe, preview-first `xcprof cleanup` is a later xcprof phase.)
+**Do not `rm -rf` trace directories** — deleting files is destructive and needs the user's say-so. Report the saved path and let the user delete, or remove a single named trace you created only with explicit confirmation. Recording into `XCPROF_TRACE_ROOT` keeps traces contained. (A safe, preview-first `xcprof cleanup` is a later xcprof phase.)
 
 ## Comparison (before / after)
 

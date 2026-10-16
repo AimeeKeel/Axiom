@@ -293,7 +293,7 @@ For SwiftData external-storage cleanup: `swiftdata-auditor` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Check my file storage usage"

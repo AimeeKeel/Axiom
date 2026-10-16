@@ -357,7 +357,7 @@ For saved capture file location and protection: `storage-auditor` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my camera code for issues?"

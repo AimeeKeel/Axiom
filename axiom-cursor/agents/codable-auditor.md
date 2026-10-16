@@ -282,7 +282,7 @@ For Network.framework `Coder` protocol: `axiom-networking` skill
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my Codable code for issues?"

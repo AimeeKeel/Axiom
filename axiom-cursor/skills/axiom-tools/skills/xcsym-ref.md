@@ -90,7 +90,7 @@ xcsym verify <file> --no-cache
 xcsym verify <file> --no-spotlight
 ```
 
-Reports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong.
+Reports which images are matched, mismatched (UUID or arch), and missing. Use when `crash` exits non-zero to pinpoint *which* dSYM is wrong. Takes the same inputs as `crash`, `.xccrashpoint` bundles included: it makes the default `.crash` pick (verify takes neither `--filter` nor `--prefer-locally-symbolicated`) and reports the bundle in `input.bundle`.
 
 ### resolve — Single-Address Resolution
 
@@ -256,7 +256,7 @@ Exit codes are subcommand-specific. Usage errors, tool errors, timeouts, and out
 
 | Code | Meaning |
 |---|---|
-| 2 | Input not found / unreadable / unsupported format |
+| 2 | Input not found / unreadable / unsupported format, or an empty `.xccrashpoint` bundle (message on stderr) |
 | 3 | Any image has a UUID mismatch with an explicitly-overridden dSYM |
 | 4 | Any image has an arch-slice mismatch with its dSYM |
 | 7 | Any missing images (with or without matches — NOT "main matched + others missing") |
@@ -268,15 +268,19 @@ Exit codes are subcommand-specific. Usage errors, tool errors, timeouts, and out
 | 0 | Match — dSYM located |
 | 2 | Miss — nothing found across every discovery source |
 
-**`list-dsyms`, `resolve`, `anonymize`:** success/failure only (0/1/5/6/8); no symbolication-specific codes.
+**`resolve`:** 2 = the `--dsym` path does not exist; otherwise success/failure only (0/1/5/6/8).
 
-On hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}`. Route the user to hang-diagnostics when you see `"error":"hang_report"`.
+**`anonymize`:** 2 = input not found or unreadable; otherwise 0/1/5/8.
+
+**`list-dsyms`:** success/failure only (0/1/5/8); no symbolication-specific codes.
+
+On hang input (`bug_type=298`), `crash` exits 1 after writing a JSON reject to stdout of shape `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}`. Route the user to hang-diagnostics when you see `"error":"hang_report"`. A non-fatal EXC_RESOURCE report (CPU or wakeups warning) gets the same exit 1 with `"error":"non_fatal_resource"`: route it to `axiom-performance`.
 
 On unsupported input (anything that isn't `.ips`, MetricKit, Apple `.crash` text, or a `.xccrashpoint` bundle), `crash` exits 2 after writing `{"tool":"xcsym","error":"unsupported_format","message":"...","input":"...","routing":"..."}` to stdout. The routing field names the accepted formats.
 
 A `.xccrashpoint` directory that exists but doesn't contain `Filters/Filter_*/Logs/*.crash` is a **distinct** error — `crash` exits 2 with `{"error":"empty_bundle","routing":"..."}`. Agents should route the two cases separately: `unsupported_format` means the user gave xcsym the wrong file type; `empty_bundle` means the bundle is right but corrupt or stripped (re-export from Xcode Organizer).
 
-If the resolver hits a real I/O error walking the bundle (permission denied, stale NFS handle, etc.), `crash` exits 5 (tool error) rather than mislabeling the bundle as empty.
+If the resolver hits a real I/O error walking the bundle (permission denied, stale NFS handle, etc.), `crash` and `verify` exit 5 (tool error) rather than mislabeling the bundle as empty.
 
 ## Pattern Tag Catalog
 

@@ -331,3 +331,20 @@ test("forced-foreground exclusion reaches the emitted frontmatter, not just the 
     "emitted frontmatter must agree with the report",
   );
 });
+
+test("rendered agents give only instructions the MCP tool schemas can follow (Axiom-dyfi.8)", () => {
+  const transformed = new Map(loadCursorSource(process.cwd()).agents.map((agent) => [
+    agent.name,
+    transformAgent(agent, "full").file.content,
+  ]));
+  const contradictions: Record<string, RegExp[]> = {
+    "crash-analyzer": [/`XCSYM_[A-Z_]+`/, /Pass `--arch`/, /Retry with `--no-spotlight`/, /accept `-` as the file argument/, /setting `--dsym-paths`/, /`XCSYM_FRAMEWORK_SCAN_TIMEOUT`/, /check the `--output` path/],
+    "triage-analyzer": [/< \/tmp\/corpus\.jsonl/],
+    "performance-profiler": [/Pass `--no-prompt`/, /`--all-processes --allow-all-processes`/, /add `--dry-run`/],
+  };
+  for (const [agent, patterns] of Object.entries(contradictions)) {
+    const content = transformed.get(agent);
+    assert.ok(content, agent);
+    for (const pattern of patterns) assert.doesNotMatch(content, pattern, `${agent}: ${pattern}`);
+  }
+});

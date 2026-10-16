@@ -260,7 +260,7 @@ For UX flow accessibility: `axiom-accessibility` (ux-flow-audit reference)
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my app for accessibility issues?"

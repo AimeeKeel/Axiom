@@ -85,7 +85,7 @@ MyView: @self, @identity, __count changed.
 
 @identity
   - The view's identity changed — its persistent state was recycled for a new instance of the same type
-  - This is the marker for the state-reset symptom in Root Cause 3, not "@self"
+  - Every view's first logged line includes it (`PrivateStateView: @self, @identity, __count changed.` at first appearance), so a reset prints the same line. It marks the state-reset symptom in Root Cause 3 only for a view that was already on screen
 
 _count  /  __count
   - A @State property changed. The name printed is the property's physical name, so an internal `@State var count` reports `_count` and `@State private var count` reports `__count`
@@ -879,8 +879,8 @@ DetailView(item: item)
 ```swift
 var body: some View {
     let _ = Self._printChanges()
-    // "@identity changed" in this line means the view came back as a new instance
-    // with recycled state — see Root Cause 3
+    // "@identity" for a view that was already on screen means it came back as a new
+    // instance with recycled state — see Root Cause 3 (a first appearance prints it too)
 }
 ```
 

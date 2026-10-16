@@ -5,7 +5,7 @@ export const CURSOR_INVOCATION_REWRITES: ReadonlyArray<[RegExp, string]> = [
   [/`\/axiom:([a-z0-9-]+)`/g, "`/axiom-$1`"],
   [/\b(?:Automatically\s+)?Launch(?:es|ed|ing)?\s+the\s+\*\*([a-z0-9-]+)\*\*\s+agent\b/gi, "Delegate to the **$1** subagent"],
   [/\b(?:Automatically\s+)?Launch(?:es|ed|ing)?\s+(?:the\s+)?`([a-z0-9-]+)`\s+agent\b/gi, "Delegate to the `$1` subagent"],
-  [/\b(?:Automatically\s+)?Launch(?:es|ed|ing)?\s+(?:the\s+)?(?!(?:that|each|appropriate|corresponding|specific)\b)([a-z0-9-]+)\s+agent\b/gi, "Delegate to the `$1` subagent"],
+  [/\b(?:Automatically\s+)?Launch(?:es|ed|ing)?\s+(?:the\s+)?(?!(?:the|an|a|this|that|each|appropriate|corresponding|specific)\b)([a-z0-9-]+)\s+agent\b/gi, "Delegate to the `$1` subagent"],
   [/\bTaskOutput tool\b/g, "subagent completion results"],
   [/\bTaskOutput\b/g, "the returned subagent result"],
   [/\bTask tool\b/g, "Cursor subagent delegation"],
@@ -25,7 +25,12 @@ export const CURSOR_INVOCATION_REWRITES: ReadonlyArray<[RegExp, string]> = [
   [/\blaunching agents\b/gi, "delegating to subagents"],
   [/\blaunch(?:es|ed|ing)? that specific audit agent\b/gi, "delegate to that specific audit subagent"],
   [/\blaunch(?:es|ed|ing)? the (appropriate|corresponding|specific) agent(?:\(s\)|s)?\b/gi, "delegate to the $1 subagent(s)"],
-  [/\blaunch(?:es|ed|ing)? (that|each|the) agent\b/gi, "delegate to $1 subagent"],
+  // Lowercase only: a capitalized "Launch the Agent" is Apple's run-agent heading, not delegation.
+  [/\blaunching (this|that|each|the) agent\b/g, "delegating to $1 subagent"],
+  [/\blaunched (this|that|each|the) agent\b/g, "delegated to $1 subagent"],
+  [/\blaunches (this|that|each|the) agent\b/g, "delegates to $1 subagent"],
+  [/\blaunch (this|that|each|the) agent\b/g, "delegate to $1 subagent"],
+  [/\bLaunch (that|each) agent\b/g, "Delegate to $1 subagent"],
   [/\blaunch ALL of them\b/g, "delegate to all of them"],
   [/\bauditors were launched\b/gi, "auditors were delegated to"],
   [/\bAskUserQuestion tool\b/g, "ask the user directly"],
@@ -121,27 +126,54 @@ const HOST_CLAIM_REWRITES: ReadonlyArray<HostClaimRewrite> = [
   { id: "xcui-bundled-bullet", pattern: /- \*\*xcui\*\*: bundled —/g, replacement: "- **xcui**: external —" },
 ];
 
-const hostClaimHits = new Map<string, number>(HOST_CLAIM_REWRITES.map((rewrite) => [rewrite.id, 0]));
+/**
+ * CLI-only mechanics that the MCP tool schemas express as inputs: environment
+ * variables, raw flags and stdin (Axiom-dyfi.8). Harness-neutral, so it can move
+ * with the shared workflow rewrite planned in Axiom-dyfi.1. Tracked like the
+ * host-claim rewrites, so a pattern the canonical wording outgrows fails the build.
+ */
+const MCP_SCHEMA_REWRITES: ReadonlyArray<HostClaimRewrite> = [
+  { id: "dsym-paths-env", pattern: /set `XCSYM_DSYM_PATHS` to where it lives/g, replacement: "pass its folder as `dsymPaths`" },
+  { id: "dsym-paths-archive", pattern: /point `XCSYM_DSYM_PATHS` at its `dSYMs\/` directory/g, replacement: "pass its `dSYMs/` directory as `dsymPaths`" },
+  { id: "find-dsym-arch", pattern: /Pass `--arch` to `find-dsym` \(arm64 vs arm64e\)/g, replacement: "Pass `arch` to `axiom_xcsym_find_dsym` (arm64 vs arm64e)" },
+  { id: "timeout-no-spotlight", pattern: /Retry with `--no-spotlight`;/g, replacement: "Retry with `noSpotlight: true`;" },
+  { id: "output-path", pattern: /Real failure — check the `--output` path/g, replacement: "Real failure — read the error text" },
+  { id: "stdin", pattern: /^\*\*Stdin\.\*\* Both `crash` and `anonymize` accept `-` as the file argument[^\n]*$/gm, replacement: "**Pasted crashes.** The MCP tools take file paths only, with no stdin: save pasted crash text to a file first." },
+  { id: "dsym-paths-flag", pattern: /setting `--dsym-paths`/g, replacement: "passing `dsymPaths`" },
+  { id: "scan-timeout-env", pattern: /consider setting `XCSYM_FRAMEWORK_SCAN_TIMEOUT` to a lower value or using `--dsym-paths` to skip discovery entirely/g, replacement: "consider passing `dsymPaths` with `noDefaults: true` to skip default discovery" },
+  { id: "triage-stdin", pattern: /^xcsym triage --latest-version <latest_version> --os-floor <floor> --min-users <n> < \/tmp\/corpus\.jsonl$/gm, replacement: "Call the `axiom_xcsym_triage` MCP tool with `file: \"/tmp/corpus.jsonl\"`, `latestVersion: \"<latest_version>\"`, `osFloor: \"<floor>\"`, and `minUsers: <n>`." },
+  { id: "all-processes", pattern: /^- \*\*System-wide\*\* — `--all-processes --allow-all-processes`, only when there's no single target\. `--all-processes` records/gm, replacement: "- **System-wide** — `allProcesses: true` with `allowAllProcesses: true`, only when there's no single target. System-wide capture records" },
+  { id: "no-prompt", pattern: /^- Pass `--no-prompt` \(non-interactive\), and add `--device "\$BOOTED"` when profiling a sim\.$/gm, replacement: "- Recording is always non-interactive over MCP; pass `device: \"<booted-udid>\"` when profiling a sim." },
+  { id: "dry-run", pattern: /^- When unsure, add `--dry-run` first to print/gm, replacement: "- When unsure, set `dryRun: true` first to print" },
+];
+
+const TRACKED_REWRITES: ReadonlyArray<HostClaimRewrite> = [...HOST_CLAIM_REWRITES, ...MCP_SCHEMA_REWRITES];
+
+const hostClaimHits = new Map<string, number>(TRACKED_REWRITES.map((rewrite) => [rewrite.id, 0]));
 
 export function resetHostClaimRewriteTracking(): void {
-  for (const rewrite of HOST_CLAIM_REWRITES) hostClaimHits.set(rewrite.id, 0);
+  for (const rewrite of TRACKED_REWRITES) hostClaimHits.set(rewrite.id, 0);
 }
 
 /** Fail the build when a host-claim rewrite matched nothing across the whole corpus. */
 export function assertHostClaimRewritesFired(): void {
-  const dead = HOST_CLAIM_REWRITES
+  const dead = TRACKED_REWRITES
     .filter((rewrite) => (hostClaimHits.get(rewrite.id) ?? 0) === 0)
     .map((rewrite) => rewrite.id);
   if (dead.length > 0) {
     throw new Error(
-      `Cursor host-claim rewrite matched no canonical text (the canonical wording likely changed — update the pattern): ${dead.join(", ")}`,
+      `Cursor host-claim or MCP-schema rewrite matched no canonical text (the canonical wording likely changed — update the pattern): ${dead.join(", ")}`,
     );
   }
 }
 
 function rewriteCursorHostClaims(content: string): string {
+  return applyTrackedRewrites(content, HOST_CLAIM_REWRITES);
+}
+
+function applyTrackedRewrites(content: string, rewrites: ReadonlyArray<HostClaimRewrite>): string {
   let rewritten = content;
-  for (const rewrite of HOST_CLAIM_REWRITES) {
+  for (const rewrite of rewrites) {
     const before = rewritten;
     rewritten = rewritten.replace(rewrite.pattern, rewrite.replacement);
     if (rewritten !== before) hostClaimHits.set(rewrite.id, (hostClaimHits.get(rewrite.id) ?? 0) + 1);
@@ -166,7 +198,6 @@ export function rewriteCursorMcpWorkflows(content: string): string {
     .replace(/Do not hand-parse `\.ips` JSON unless xcsym is unavailable\./g, CURSOR_MCP_MISSING_TOOL_BOUNDARY)
     .replace(/^1\. Check for xcsym:$/gm, "1. Use the `axiom_xcsym_crash` MCP tool:")
     .replace(/^export XCPROF_TRACE_ROOT="\$\(mktemp -d\)"$/gm, "Use the MCP server's default trace sandbox, or pass a reviewed path in `output`.")
-    .replace(/CLAUDE\.md S-3/g, "the repository safety policy")
     .replace(/Recording into `XCPROF_TRACE_ROOT` keeps traces contained\./g, "The MCP server's default trace sandbox keeps traces contained.")
     .replace(/\(A safe, preview-first `xcprof cleanup` is a later xcprof phase\.\)/g, "(No cleanup MCP tool is exposed; leave trace deletion to explicit user action.)")
     .replace(/`xcprof record --preset ([a-z-]+) --attach '<app>' --time-limit ([^`]+)`/g, "`axiom_xcprof_record` with `preset: \"$1\"`, `attach: \"<app>\"`, and `timeLimit: \"$2\"`")
@@ -180,6 +211,7 @@ export function rewriteCursorMcpWorkflows(content: string): string {
     .replace(/Use `xcprof compare <baseline> <current> --json`/g, "Use `axiom_xcprof_compare` with `baseline: \"<baseline>\"` and `current: \"<current>\"`")
     .replace(/Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces\./g, "Set `failOnRegression: true` for CI gating, and pass `dsym: \"<path>\"` to symbolicate both traces.");
 
+  rewritten = applyTrackedRewrites(rewritten, MCP_SCHEMA_REWRITES);
   rewritten = rewritten.replace(
     new RegExp(`\\\`(${MCP_COMMAND_PATTERN})([^\\\`\\n]*)\\\``, "gi"),
     (_inline, command: string, argumentsText: string) => referenceCall(command, argumentsText, true),

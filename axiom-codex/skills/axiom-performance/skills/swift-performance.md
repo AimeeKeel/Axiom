@@ -984,12 +984,11 @@ func writeHeader(to output: inout OutputRawSpan) {
 
 Use for building byte arrays, binary serialization, image pixel data. Apple's Swift Binary Parsing library (apple/swift-binary-parsing) is built entirely on Span types.
 
-### Temporary Allocation `OS27`
+### Temporary Allocation
 
-`withTemporaryAllocation(of:capacity:)` / `(byteCount:alignment:)` is the safe successor to `withUnsafeTemporaryAllocation`: same scoped, stack-or-heap temporary storage, but the closure receives an `OutputSpan`/`OutputRawSpan` instead of a raw buffer pointer. New in the 27 SDKs and back-deployed through `@_alwaysEmitIntoClient`, so the generated code runs on older OSes.
+`withTemporaryAllocation(of:capacity:)` / `(byteCount:alignment:)` is the safe successor to `withUnsafeTemporaryAllocation`: same scoped, stack-or-heap temporary storage, but the closure receives an `OutputSpan`/`OutputRawSpan` instead of a raw buffer pointer. It needs the Xcode 27 toolchain, not an OS 27 runtime: the SDK declares it (and `OutputSpan`/`OutputRawSpan`) available from iOS 12.2/macOS 10.14.4, and `@_alwaysEmitIntoClient` emits it into your binary. No `@available` gate.
 
 ```swift
-@available(anyAppleOS 27, *)
 func fill(keeping capacity: Int) -> Int {
     withTemporaryAllocation(of: Int.self, capacity: capacity) { buffer in
         for i in 0..<capacity { buffer.append(i) }

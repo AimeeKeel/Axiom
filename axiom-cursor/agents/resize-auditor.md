@@ -310,7 +310,7 @@ For the migration content behind every fix: `axiom-uikit` skill (skills/uikit-mo
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Audit my app for screen resizing support"

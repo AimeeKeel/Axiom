@@ -264,6 +264,20 @@ def is_apple_project(start: str) -> bool:
         return True  # fail-open: never misclassify an Apple project as non-Apple
 
 
+def session_cwd(on_error=None) -> str:
+    """The working directory, or "" when it can't be read (deleted directory).
+
+    "" makes detection fail open while the AXIOM_SESSION_CONTEXT override still
+    applies, so every hook treats an unreadable cwd the same way.
+    """
+    try:
+        return os.getcwd()
+    except OSError as error:
+        if on_error is not None:
+            on_error(error)
+        return ""
+
+
 def resolve_context_decision(cwd: str, override: str | None) -> bool:
     """Return True to inject Axiom context, False to skip.
 

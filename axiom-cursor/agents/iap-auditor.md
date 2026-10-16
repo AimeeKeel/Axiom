@@ -328,7 +328,7 @@ For security of receipt validation: Delegate to the `security-privacy-scanner` s
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you review my in-app purchase implementation?"

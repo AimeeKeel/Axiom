@@ -578,7 +578,7 @@ Is view using @EnvironmentObject?
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "How do I migrate from ObservableObject to @Observable?"

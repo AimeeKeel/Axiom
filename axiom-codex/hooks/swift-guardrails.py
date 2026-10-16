@@ -256,7 +256,8 @@ def check_relationship(lines: list[str]) -> list[tuple[int, str]]:
 _STATE_REASON = (
     "Swift guardrail: @State properties must have an explicit access level "
     "(use @State private var) so child views can't fork the source of truth. Fix the "
-    "flagged @State line(s) before continuing; any advisories follow in additionalContext."
+    "flagged @State line(s) before continuing; any advisories follow in additionalContext. "
+    "@Previewable @State in a #Preview is already exempt: it needs no fix or axiom-ignore."
 )
 
 
@@ -338,9 +339,9 @@ def main() -> None:
         hook_diagnostics.record_exception(error)
         sys.exit(0)  # never fail the edit
     try:
-        from project_detect import resolve_context_decision
+        from project_detect import resolve_context_decision, session_cwd
 
-        if not resolve_context_decision(os.getcwd(), os.environ.get("AXIOM_SESSION_CONTEXT")):
+        if not resolve_context_decision(session_cwd(hook_diagnostics.record_exception), os.environ.get("AXIOM_SESSION_CONTEXT")):
             return
     except Exception as error:
         hook_diagnostics.record_exception(error)

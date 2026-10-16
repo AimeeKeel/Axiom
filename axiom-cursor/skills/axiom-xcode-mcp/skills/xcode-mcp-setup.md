@@ -223,7 +223,7 @@ gets a time-boxed grant even when you click "Always allow" — matching `approve
 that is not a bug. For unattended use, either run a signed agent binary or accept the
 `--unsafe-always-allow-all-agents` tradeoff described in Step 1.
 
-## Letting Xcode Delegate to the `the` subagent (`run-agent`)
+## Letting Xcode Launch the Agent (`run-agent`)
 
 Instead of wiring the agent yourself (Step 2), have Xcode launch it *with Xcode's own configuration* — resolved binary path, auth tokens, environment, and the Xcode MCP tools, all injected for you. `run-agent` connects to the running Xcode (same `MCP_XCODE_PID` auto-detection as the bridge), fetches the agent's config, then `exec`s the agent with full terminal access.
 

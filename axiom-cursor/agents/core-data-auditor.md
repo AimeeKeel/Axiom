@@ -261,7 +261,7 @@ For thread safety patterns: `axiom-concurrency` skill
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my Core Data code for safety issues?"

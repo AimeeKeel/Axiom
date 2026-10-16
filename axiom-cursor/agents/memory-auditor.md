@@ -264,7 +264,7 @@ For symbolicating field crashes (jetsam, heap corruption): `axiom-tools (skills/
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my code for memory leaks?"

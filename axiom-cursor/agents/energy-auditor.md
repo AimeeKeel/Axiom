@@ -279,7 +279,7 @@ For symbolicating CPU/background/watchdog terminations: `axiom-tools (skills/xcs
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my app for battery drain issues?"

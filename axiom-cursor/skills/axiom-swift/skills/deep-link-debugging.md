@@ -122,9 +122,10 @@ extension URL {
 **Usage**:
 ```bash
 # From simulator
-xcrun simctl openurl booted "debug://settings"
-xcrun simctl openurl booted "debug://profile?id=123"
-xcrun simctl openurl booted "debug://reset"
+# $UDID: your simulator's UDID from `xcrun simctl list devices booted`. Not `booted`: with several up, it silently targets one of them
+xcrun simctl openurl $UDID "debug://settings"
+xcrun simctl openurl $UDID "debug://profile?id=123"
+xcrun simctl openurl $UDID "debug://reset"
 ```
 
 **First run**: the first `openurl` for a scheme raises an `Open in "<YourApp>"?` alert and delivers nothing until you accept it — see **First Run Approval**.
@@ -212,16 +213,16 @@ enum Destination: Hashable {
 **Usage**:
 ```bash
 # Navigate to settings
-xcrun simctl openurl booted "debug://settings"
+xcrun simctl openurl $UDID "debug://settings"
 
 # Navigate to recipe #42
-xcrun simctl openurl booted "debug://recipe?id=42"
+xcrun simctl openurl $UDID "debug://recipe?id=42"
 
 # Navigate to recipe #42 edit screen
-xcrun simctl openurl booted "debug://recipe-edit?id=42"
+xcrun simctl openurl $UDID "debug://recipe-edit?id=42"
 
 # Pop to root
-xcrun simctl openurl booted "debug://reset"
+xcrun simctl openurl $UDID "debug://reset"
 ```
 
 ---
@@ -273,13 +274,13 @@ extension DebugRouter {
 **Usage**:
 ```bash
 # Test login error state
-xcrun simctl openurl booted "debug://login-error"
+xcrun simctl openurl $UDID "debug://login-error"
 
 # Test empty recipe list
-xcrun simctl openurl booted "debug://recipe-empty"
+xcrun simctl openurl $UDID "debug://recipe-empty"
 
 # Test network error handling
-xcrun simctl openurl booted "debug://recipe-error"
+xcrun simctl openurl $UDID "debug://recipe-error"
 ```
 
 ---
@@ -344,7 +345,7 @@ Use your app's bundle identifier. Every `openurl` for that scheme then delivers 
 
 ```bash
 # 1. Navigate to screen (first run: approve the scheme once — see First Run Approval)
-xcrun simctl openurl booted "debug://settings"
+xcrun simctl openurl $UDID "debug://settings"
 
 # 2. Wait for navigation
 sleep 1
@@ -398,11 +399,11 @@ Use `#if DEBUG` to ensure code is stripped from release builds.
 xcrun simctl boot "iPhone 17"
 
 # Launch app
-xcrun simctl launch booted com.example.YourApp
+xcrun simctl launch $UDID com.example.YourApp
 
 # Test each deep link
-xcrun simctl openurl booted "debug://settings"
-xcrun simctl openurl booted "debug://profile?id=123"
+xcrun simctl openurl $UDID "debug://settings"
+xcrun simctl openurl $UDID "debug://profile?id=123"
 ```
 
 ---
@@ -519,7 +520,7 @@ Before using debug deep links in automated workflows:
 
 **After** (with debug deep links):
 1. Build app → 30 seconds
-2. Run: `xcrun simctl openurl booted "debug://recipe-edit?id=42"`
+2. Run: `xcrun simctl openurl $UDID "debug://recipe-edit?id=42"`
 3. Run: `/axiom-screenshot`
 4. Claude analyzes screenshot and confirms layout fix
 5. Make change if needed, rebuild → repeat from step 2
@@ -589,10 +590,10 @@ case "test-scenario":
 **Usage**:
 ```bash
 # Test premium user with empty recipe list
-xcrun simctl openurl booted "debug://test-scenario?user=premium&recipes=empty"
+xcrun simctl openurl $UDID "debug://test-scenario?user=premium&recipes=empty"
 
 # Test slow network with error handling
-xcrun simctl openurl booted "debug://test-scenario?network=slow&recipes=error"
+xcrun simctl openurl $UDID "debug://test-scenario?network=slow&recipes=error"
 ```
 
 ---
@@ -629,9 +630,9 @@ case "screenshot":
 **Usage**:
 ```bash
 # Navigate to login screen with error state, wait, then screenshot
-xcrun simctl openurl booted "debug://screenshot?screen=login&state=error"
+xcrun simctl openurl $UDID "debug://screenshot?screen=login&state=error"
 sleep 2
-xcrun simctl io booted screenshot login-error.png
+xcrun simctl io $UDID screenshot login-error.png
 ```
 
 ---

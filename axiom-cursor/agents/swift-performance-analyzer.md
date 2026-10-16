@@ -264,7 +264,7 @@ For behavior-preserving clarity simplification: `swift-simplifier` agent (defer 
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you check my Swift code for performance issues?"

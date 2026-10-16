@@ -356,7 +356,7 @@ For flaky test diagnosis: `test-failure-analyzer` agent
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "Can you audit my tests for issues?"

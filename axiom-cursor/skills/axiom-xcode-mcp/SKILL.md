@@ -48,7 +48,7 @@ Use this skill when:
 - Multi-Xcode targeting (`MCP_XCODE_PID`)
 - Schema compliance issues with strict clients
 - Giving external agents access to Xcode (Intelligence settings gate)
-- Delegate to the `an` subagent via Xcode config (`xcrun mcpbridge run-agent`)
+- Launching an agent via Xcode config (`xcrun mcpbridge run-agent`)
 - Exporting Xcode's skill bundles (`xcrun agent skills export`)
 - Extending Xcode's agent (per-agent config files, MCP servers, plug-ins)
 

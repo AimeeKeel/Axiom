@@ -458,7 +458,7 @@ Product → Swift Packages → Trust & Enable Package Plugin
 
 ## Invocation Examples
 
-Prompts that should Delegate to the `this` subagent:
+Prompts that should delegate to this subagent:
 
 <example>
 user: "SPM won't resolve my dependencies"

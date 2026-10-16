@@ -356,8 +356,10 @@ That is the complete set in Xcode 27.2's `.xcprivacy` schema — five categories
 **"Collected"** means data is transmitted off-device and accessible beyond what is needed to service the current request. On-device-only processing is NOT collection.
 
 **"Tracking"** means:
-- Linking user/device data from your app with third-party data for advertising or measurement, OR
+- Linking user/device data from your app with data from other companies' apps, websites, or offline properties for targeted advertising or advertising measurement, OR
 - Sharing user/device data with a data broker
+
+Not tracking: first-party analytics or ads based solely on your own company's data, when no tracking as defined above occurs; linkage done solely on-device whose result never leaves the device identifiably; sharing with a broker solely for fraud detection, fraud prevention, or security; sharing with a consumer reporting agency for a credit determination. A fraud/security use doesn't exempt other tracking by the app or its SDKs. Full rules: `axiom-integration (skills/privacy-ux.md)` Part 3.
 
 ### App Tracking Transparency (ATT)
 
