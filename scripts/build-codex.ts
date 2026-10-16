@@ -14,6 +14,7 @@ import { translateHooksToCodex, shouldCopyHookScript } from './codex-hooks.js';
 import { adaptHealthCheckForCodex } from './codex-auditors.js';
 import { isGeneratedSubSkill, parseAgentTools } from './inline-auditors.ts';
 import { checkCodexOutput, isShippedSubSkillFile } from './codex-output.js';
+import { stripMcpClientNotes } from '../axiom-mcp/src/tools/mcp-notes.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(__filename));
@@ -599,9 +600,10 @@ for (const file of agentFiles) {
     '---',
     // Agent-skills cite sibling agents and /axiom: commands the same way routers do,
     // and Codex has neither — so they need the same translation.
+    // Codex runs the bundled binaries, so the MCP-only clients notes are noise there.
     bashNote + rewriteAgentInvokesForCodex(agentName === 'health-check'
-      ? adaptHealthCheckForCodex(body.trim(), [...sourceAgentNames])
-      : body.trim()),
+      ? adaptHealthCheckForCodex(stripMcpClientNotes(body.trim()), [...sourceAgentNames])
+      : stripMcpClientNotes(body.trim())),
     '',
   ].join('\n');
 

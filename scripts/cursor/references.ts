@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { VirtualFile } from "./types.ts";
+import { stripMcpClientNotes } from "../../axiom-mcp/src/tools/mcp-notes.ts";
 
 export const CURSOR_INVOCATION_REWRITES: ReadonlyArray<[RegExp, string]> = [
   [/`\/axiom:([a-z0-9-]+)`/g, "`/axiom-$1`"],
@@ -191,11 +192,11 @@ function referenceCall(command: string, argumentsText: string, inline: boolean):
 
 /** Translate executable helper workflows used by agent and command prompts. */
 export function rewriteCursorMcpWorkflows(content: string): string {
-  let rewritten = rewriteCursorHostClaims(content)
+  let rewritten = rewriteCursorHostClaims(stripMcpClientNotes(content))
     .replace(/`XCSYM_DSYM_PATHS=\/path\/to\/downloads xcsym crash <file>`/g, "the `axiom_xcsym_crash` MCP tool with `file: \"<file>\"` and `dsymPaths: \"/path/to/downloads\"`")
     .replace(/command -v xcprof\s*&&\s*xcprof doctor/g, "call the `axiom_xcprof_doctor` MCP tool")
     .replace(/command -v (?:xclog|xcsym|xcprof)\b/g, "confirm the required Axiom MCP tool is available")
-    .replace(/Do not hand-parse `\.ips` JSON unless xcsym is unavailable\./g, CURSOR_MCP_MISSING_TOOL_BOUNDARY)
+    .replace(/Do not hand-parse `\.ips` JSON unless neither xcsym nor the `axiom_xcsym_crash` MCP tool is available\./g, CURSOR_MCP_MISSING_TOOL_BOUNDARY)
     .replace(/^1\. Check for xcsym:$/gm, "1. Use the `axiom_xcsym_crash` MCP tool:")
     .replace(/^export XCPROF_TRACE_ROOT="\$\(mktemp -d\)"$/gm, "Use the MCP server's default trace sandbox, or pass a reviewed path in `output`.")
     .replace(/Recording into `XCPROF_TRACE_ROOT` keeps traces contained\./g, "The MCP server's default trace sandbox keeps traces contained.")

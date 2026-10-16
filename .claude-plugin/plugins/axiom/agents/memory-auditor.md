@@ -250,6 +250,7 @@ If the user has `.ips`, MetricKit, or legacy `.crash` text artifacts from the fi
 ```bash
 xcsym crash --format=summary <path-to-ips>
 ```
+MCP-only clients: `axiom_xcsym_crash` with `file` and `format: "summary"`.
 
 Use the `crashed_thread.frames` to localize which owner class needs deeper Phase 1 ownership mapping.
 

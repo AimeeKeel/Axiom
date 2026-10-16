@@ -7,14 +7,15 @@ disable-model-invocation: true
 # Profile Performance
 
 Launches the **performance-profiler** agent to record and analyze performance traces using the `xcprof` CLI (record → analyze), no Instruments GUI required.
+MCP-only clients: follow the agent's instructions from `axiom_get_agent` with `agent: "performance-profiler"`.
 
 ## What It Does
 
 The agent will:
 1. Detect available simulators and running apps
 2. Help you select what to profile
-3. Record a trace with `xcprof record` — preset-based, bounded by `--max-duration`, and gated (launch / system-wide capture require explicit opt-in)
-4. Analyze it with `xcprof analyze --json` — back-references resolved, system frames filtered, work attributed to user code
+3. Record a trace with `xcprof record` (MCP-only clients: `axiom_xcprof_record`) — preset-based, bounded by `--max-duration`, and gated (launch / system-wide capture require explicit opt-in)
+4. Analyze it with `xcprof analyze --json` (MCP-only clients: `axiom_xcprof_analyze` with `trace`) — back-references resolved, system frames filtered, work attributed to user code
 5. Report findings with an honest per-family support matrix (so an unmeasured family is never reported as clean) and recommendations
 
 ## Supported Instruments

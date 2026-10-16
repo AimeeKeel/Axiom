@@ -281,7 +281,7 @@ Check result:
 ├─ Build failed → Delegate to build-fixer agent
 ├─ Tests passed → Report success
 └─ Tests failed:
-    ├─ Check for .ips crash artifacts → run `axiom_xcsym_crash` MCP tool --format=summary FIRST
+    ├─ Check for .ips crash artifacts → symbolicate them FIRST (see Phase 3)
     │   └─ pattern_tag guides the fix (see Phase 3: "Did the Test Crash?")
     ├─ Export failure attachments
     ├─ Read failure screenshot FIRST (multimodal analysis)

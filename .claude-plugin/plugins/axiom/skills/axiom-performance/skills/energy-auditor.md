@@ -256,6 +256,7 @@ Energy anti-patterns surface in the field as system terminations, not slow-drain
 ```bash
 xcsym crash --format=summary <path-to-ips>
 ```
+MCP-only clients: `axiom_xcsym_crash` with `file` and `format: "summary"`.
 
 Use the crashed-thread frames to pinpoint which Phase 1 background-activity owner is the culprit.
 

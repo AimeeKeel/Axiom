@@ -169,6 +169,7 @@ ls -lt ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
 # Full triage in one call (reads pattern_tag, crashed-thread frames, dSYM matches)
 xcsym crash --format=summary <path-to-ips>
 ```
+MCP-only clients: `axiom_xcsym_crash` with `file` and `format: "summary"`.
 
 Use the returned `pattern_tag` to route the fix:
 
@@ -245,7 +246,7 @@ Grep: @Suite\s+struct|@Suite\s*\(
 **Pattern 6 - Test-generated crashes**:
 ```
 Glob: ~/Library/Logs/DiagnosticReports/*.ips (modified since test run)
-# Get xcsym crash --format=summary for each (run it, or ask for it — see Pattern 6) for pattern_tag + crashed frames
+# Symbolicate each one (run it, or ask for it — see Pattern 6) for pattern_tag + crashed frames
 ```
 
 **Pattern 7 - Date assertions**:

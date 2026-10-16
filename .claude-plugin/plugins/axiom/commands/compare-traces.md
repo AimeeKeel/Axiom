@@ -16,7 +16,7 @@ Diffs two Instruments `.trace` recordings with **xcprof compare** — function-l
 
 ## Steps
 
-1. **Verify the tool.** `command -v xcprof && xcprof doctor`. If that finds nothing, use `<plugin-root>/tools/xcprof` wherever this file says `xcprof`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of a loaded Axiom skill (load `axiom-tools` if none is); on Codex, it is the plugin root named in Axiom's startup context. If `xcprof` is still absent, the Axiom install is stale — tell the user to update Axiom.
+1. **Verify the tool.** `command -v xcprof && xcprof doctor` (MCP-only clients: `axiom_xcprof_doctor`; skip the `command -v` check and use the `axiom_xcprof_*` tools named below). If that finds nothing, use `<plugin-root>/tools/xcprof` wherever this file says `xcprof`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of a loaded Axiom skill (load `axiom-tools` if none is); on Codex, it is the plugin root named in Axiom's startup context. If `xcprof` is still absent and no `axiom_xcprof_doctor` MCP tool is available, the Axiom install is stale — tell the user to update Axiom.
 
 2. **Get two traces.** Either the user already has `baseline.trace` + `current.trace`, or capture them. Both recordings MUST exercise the **same workload** (same UI flow / benchmark), or the deltas measure workload differences, not regressions:
    ```bash
@@ -28,15 +28,18 @@ Diffs two Instruments `.trace` recordings with **xcprof compare** — function-l
    xcprof record --preset cpu --attach MyApp --time-limit 15s --no-prompt \
      --output "$XCPROF_TRACE_ROOT/current.trace"
    ```
+   MCP-only clients: `axiom_xcprof_record` with `preset: "cpu"`, `attach: "MyApp"`, `timeLimit: "15s"`, and no `output`, once for the baseline and once for the current run; skip the `export` (you can't set the server's environment) and keep the trace path each call returns.
 
 3. **Compare.** Default output is compact JSON; add `--human` to read it:
    ```bash
    xcprof compare baseline.trace current.trace --human
    ```
+   MCP-only clients: `axiom_xcprof_compare` with the two returned paths as `baseline` and `current`.
    For a CI gate, add `--fail-on-regression` (exit 3 when any function's inclusive CPU share rose ≥ `--threshold-pct`, default 5):
    ```bash
    xcprof compare baseline.trace current.trace --fail-on-regression --threshold-pct 5
    ```
+   MCP-only clients: `axiom_xcprof_compare` with `baseline`, `current`, `failOnRegression: true`, and `thresholdPct: 5`; a regression shows as a trailing `(xcprof exit 3: …)` line.
 
 4. **Interpret honestly.** Report the regressions (sorted by severity = % delta × absolute time) and improvements. Note when frames were excluded for being unsymbolicated (pass `--dsym` for release builds). Deltas are percentage-points of CPU-cycle share — the only quantity comparable across two runs of different total work.
 

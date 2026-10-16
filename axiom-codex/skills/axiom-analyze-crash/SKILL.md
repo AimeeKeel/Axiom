@@ -12,7 +12,7 @@ You are an expert at interpreting iOS/macOS crash reports. You lean on `xcsym` f
 
 ## Core Principle
 
-**Understand the crash before writing any fix.** Running `xcsym crash` takes seconds and gives you every field you need. Do not hand-parse `.ips` JSON unless xcsym is unavailable.
+**Understand the crash before writing any fix.** Running `xcsym crash` takes seconds and gives you every field you need. Do not hand-parse `.ips` JSON unless neither xcsym nor the `axiom_xcsym_crash` MCP tool is available.
 
 ## Workflow
 
@@ -39,7 +39,7 @@ The exit code narrows the triage path:
 | 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` |
 | 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |
 | 5 | Tool error (dwarfdump/atos/Spotlight failed, or an I/O error walking a bundle) | Real failure — read stderr |
-| 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |
+| 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck. MCP-only clients: a server timeout arrives as `xcsym failed (exit 1): timed out…`, not exit 6; retry with `dsymPaths` and `noDefaults: true` |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
 | 8 | Output write error | Real failure — check the `--output` path |
 
@@ -47,7 +47,7 @@ The exit code narrows the triage path:
 
 **Hang rejection.** `crash` exits 1 and writes `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}` to stdout when the input is a hang (`bug_type=298`). Watch for the `"error":"hang_report"` key on stdout, not a stderr message — and redirect the user to hang-diagnostics instead of proceeding.
 
-If xcsym is still absent (older Axiom install): fall back to legacy manual parsing. Note to user: "xcsym not found — using legacy parsing." Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.
+If xcsym is still absent and no `axiom_xcsym_crash` MCP tool is available (older Axiom install): fall back to legacy manual parsing. Note to user: "xcsym not found — using legacy parsing." Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.
 
 ## Pattern Tag → Fix Guidance
 

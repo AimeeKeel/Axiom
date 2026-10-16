@@ -19,7 +19,7 @@ You are an expert at interpreting iOS/macOS crash reports. You lean on `xcsym` f
 
 ## Core Principle
 
-**Understand the crash before writing any fix.** Running `xcsym crash` takes seconds and gives you every field you need. Do not hand-parse `.ips` JSON unless xcsym is unavailable.
+**Understand the crash before writing any fix.** Running `xcsym crash` takes seconds and gives you every field you need. Do not hand-parse `.ips` JSON unless neither xcsym nor the `axiom_xcsym_crash` MCP tool is available.
 
 ## Workflow
 
@@ -28,13 +28,15 @@ You are an expert at interpreting iOS/macOS crash reports. You lean on `xcsym` f
 ```bash
 command -v xcsym
 ```
+MCP-only clients: skip this check and use the `axiom_xcsym_*` tools named below.
 
 If that finds nothing, use `<plugin-root>/tools/xcsym` wherever this file says `xcsym`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of your preloaded `axiom-tools` skill; on Codex, it is the plugin root named in Axiom's startup context. If present, run:
 ```bash
 xcsym crash <file> --format=standard
 ```
+MCP-only clients: `axiom_xcsym_crash` with `file` and `format: "standard"`.
 
-Interpret the JSON directly. The `pattern_tag` field tells you the crash category (see table below). The `images.missing` and `images.mismatched` arrays tell you about dSYM problems. Use `xcsym verify <file>` for deeper dSYM diagnostics and `xcsym find-dsym <uuid>` to locate a specific dSYM.
+Interpret the JSON directly. The `pattern_tag` field tells you the crash category (see table below). The `images.missing` and `images.mismatched` arrays tell you about dSYM problems. Use `xcsym verify <file>` (MCP-only clients: `axiom_xcsym_verify` with `file`) for deeper dSYM diagnostics and `xcsym find-dsym <uuid>` (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid`) to locate a specific dSYM.
 
 The exit code narrows the triage path:
 
@@ -42,19 +44,20 @@ The exit code narrows the triage path:
 |---|---|---|
 | 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |
 | 1 | Usage error, a hang report (`"error":"hang_report"`), or a non-fatal EXC_RESOURCE report (`"error":"non_fatal_resource"`) on stdout | Check the `error` key: route hangs to hang-diagnostics and CPU/wakeups warnings to `axiom-performance`; otherwise fix the invocation |
-| 2 | Main dSYM missing, input not found/unreadable, or unsupported input (`"error":"unsupported_format"` or `"empty_bundle"` on stdout) | Check the `error` key first; for a missing dSYM, locate the archive or set `XCSYM_DSYM_PATHS` to where it lives |
-| 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` |
-| 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) |
+| 2 | Main dSYM missing, input not found/unreadable, or unsupported input (`"error":"unsupported_format"` or `"empty_bundle"` on stdout) | Check the `error` key first; for a missing dSYM, locate the archive or set `XCSYM_DSYM_PATHS` to where it lives (MCP-only clients: `axiom_xcsym_crash` with `file` and `dsymPaths`) |
+| 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid`) |
+| 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid` and `arch`) |
 | 5 | Tool error (dwarfdump/atos/Spotlight failed, or an I/O error walking a bundle) | Real failure — read stderr |
-| 6 | Command timeout | Retry with `--no-spotlight`; if still timing out, atos is the bottleneck |
+| 6 | Command timeout | Retry with `--no-spotlight` (MCP-only clients: `axiom_xcsym_crash` with `file` and `noSpotlight: true`); if still timing out, atos is the bottleneck. MCP-only clients: a server timeout arrives as `xcsym failed (exit 1): timed out…`, not exit 6; retry with `dsymPaths` and `noDefaults: true` |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
 | 8 | Output write error | Real failure — check the `--output` path |
 
 **Stdin.** Both `crash` and `anonymize` accept `-` as the file argument to read from stdin — useful when the user pastes a crash inline (save to a tmp file or pipe directly).
+MCP-only clients: there is no stdin; save pasted crash text to a file and pass its absolute path as `file`.
 
 **Hang rejection.** `crash` exits 1 and writes `{"tool":"xcsym","error":"hang_report","message":"...","input":"...","routing":"..."}` to stdout when the input is a hang (`bug_type=298`). Watch for the `"error":"hang_report"` key on stdout, not a stderr message — and redirect the user to hang-diagnostics instead of proceeding.
 
-If xcsym is still absent (older Axiom install): fall back to legacy manual parsing. Note to user: "xcsym not found — using legacy parsing." Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.
+If xcsym is still absent and no `axiom_xcsym_crash` MCP tool is available (older Axiom install): fall back to legacy manual parsing. Note to user: "xcsym not found — using legacy parsing." Read the `.ips` JSON, extract `exception.type`, `exception.subtype`, `termination.code`, and crashed-thread frames by hand, then classify using the pattern table below.
 
 ## Pattern Tag → Fix Guidance
 
@@ -122,7 +125,7 @@ If xcsym is still absent (older Axiom install): fall back to legacy manual parsi
 3. [Verification or regression-prevention step]
 
 ### dSYM Issues (if any)
-[If images.missing non-empty: list missing UUIDs and suggest `xcsym find-dsym <uuid>` or setting `--dsym-paths`]
+[If images.missing non-empty: list missing UUIDs and suggest `xcsym find-dsym <uuid>` (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid`) or setting `--dsym-paths`]
 [If images.mismatched non-empty: list mismatches with expected vs found UUID; suggest which archive to pull]
 ```
 
@@ -132,7 +135,7 @@ If xcsym is still absent (older Axiom install): fall back to legacy manual parsi
 
 User pastes a `.ips`. The agent:
 1. Saves it to a temp path.
-2. Runs `xcsym crash /tmp/crash.ips --format=standard`.
+2. Runs `xcsym crash /tmp/crash.ips --format=standard` (MCP-only clients: `axiom_xcsym_crash` with `file: "/tmp/crash.ips"` and `format: "standard"`).
 3. Reads `pattern_tag` → `swift_forced_unwrap`.
 4. Reads the first frame of `crashed_thread` → `ContentView.body.getter`.
 5. Reports: "Force-unwrap in `ContentView.body.getter` at line X. The pattern is consistent across all 3 frames. Fix: replace the `!` with `guard let` for the optional that becomes `nil`."
@@ -140,18 +143,18 @@ User pastes a `.ips`. The agent:
 ### dSYM UUID mismatch (exit 3)
 
 Exit code is 3. The agent:
-1. Runs `xcsym verify <file>` for the full per-image breakdown.
+1. Runs `xcsym verify <file>` (MCP-only clients: `axiom_xcsym_verify` with `file`) for the full per-image breakdown.
 2. Extracts the expected UUID from the output.
-3. Runs `xcsym find-dsym <uuid>` to see if a matching dSYM exists anywhere.
+3. Runs `xcsym find-dsym <uuid>` (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid`) to see if a matching dSYM exists anywhere.
 4. Reports: "Your archive's UUID doesn't match the crash. Either you shipped a different build, or the archive was rebuilt. Download the dSYM for UUID `…` from App Store Connect."
 
 ### Main dSYM missing (exit 2)
 
 Exit code is 2 and the crash parsed cleanly (no `error` key on stdout — `unsupported_format` and `empty_bundle` also exit 2). The agent:
 1. Reads `images.missing[0].uuid` from the JSON — this is the main app's UUID.
-2. Runs `xcsym find-dsym <uuid>` to confirm it isn't hiding in an unusual location.
+2. Runs `xcsym find-dsym <uuid>` (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid`) to confirm it isn't hiding in an unusual location.
 3. If `find-dsym` also exits 2: no dSYM exists anywhere discoverable.
-4. Reports: "No dSYM found for main UUID `<uuid>`. Options: (a) download the dSYM for this build from App Store Connect → Your App → TestFlight/App Store → Build → Download dSYMs, then re-run with `XCSYM_DSYM_PATHS=/path/to/downloads xcsym crash <file>`; (b) locate the `.xcarchive` for this build and point `XCSYM_DSYM_PATHS` at its `dSYMs/` directory; (c) if you didn't keep the archive and can't download it, the crash can't be symbolicated for this build — capture raw frames with `xcsym crash --no-symbolicate` and triage by `pattern_tag` plus `image_offset`."
+4. Reports: "No dSYM found for main UUID `<uuid>`. Options: (a) download the dSYM for this build from App Store Connect → Your App → TestFlight/App Store → Build → Download dSYMs, then re-run with `XCSYM_DSYM_PATHS=/path/to/downloads xcsym crash <file>` (MCP-only clients: `axiom_xcsym_crash` with `file` and `dsymPaths: "/path/to/downloads"`); (b) locate the `.xcarchive` for this build and point `XCSYM_DSYM_PATHS` at its `dSYMs/` directory (MCP-only clients: pass it as `dsymPaths`); (c) if you didn't keep the archive and can't download it, the crash can't be symbolicated for this build — capture raw frames with `xcsym crash --no-symbolicate` (MCP-only clients: `axiom_xcsym_crash` with `file` and `noSymbolicate: true`) and triage by `pattern_tag` plus `image_offset`."
 
 Do NOT confuse exit 2 with exit 3:
 - Exit 2 = no dSYM at all
@@ -162,9 +165,9 @@ Checking `images.missing` vs `images.mismatched` in the JSON disambiguates witho
 ### Command timeout (exit 6)
 
 Exit code is 6 after a long wait (typically >30s on default settings). The agent:
-1. First-line retry: `xcsym crash <file> --no-spotlight --format=standard`. Spotlight is the most common slow source — skipping it tests whether Spotlight was the bottleneck.
-2. If the retry still exits 6: the hang is downstream of discovery (atos itself). Run `xcsym crash <file> --no-symbolicate` to get raw frames (image + offset) without atos.
-3. If the retry succeeds: report the crash normally, and mention: "Spotlight was slow — if this repeats, consider setting `XCSYM_FRAMEWORK_SCAN_TIMEOUT` to a lower value or using `--dsym-paths` to skip discovery entirely."
+1. First-line retry: `xcsym crash <file> --no-spotlight --format=standard` (MCP-only clients: `axiom_xcsym_crash` with `file`, `noSpotlight: true`, and `format: "standard"`). Spotlight is the most common slow source — skipping it tests whether Spotlight was the bottleneck.
+2. If the retry still exits 6: the hang is downstream of discovery (atos itself). Run `xcsym crash <file> --no-symbolicate` (MCP-only clients: `axiom_xcsym_crash` with `file` and `noSymbolicate: true`) to get raw frames (image + offset) without atos.
+3. If the retry succeeds: report the crash normally, and mention: "Spotlight was slow — if this repeats, consider setting `XCSYM_FRAMEWORK_SCAN_TIMEOUT` to a lower value or using `--dsym-paths` to skip discovery entirely (MCP-only clients: pass `dsymPaths` with `noDefaults: true`)."
 4. Reports: "xcsym timed out on [Spotlight / atos]. [Retry outcome]. [Actionable next step based on which retry succeeded.]"
 
 Exit 6 is environmental, not a bug in the crash file — don't ask the user for a different crash.

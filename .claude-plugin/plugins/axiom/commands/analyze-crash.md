@@ -7,6 +7,7 @@ disable-model-invocation: true
 # Analyze Crash Log
 
 Launches the **crash-analyzer** agent to parse crash reports and identify the root cause.
+MCP-only clients: follow the agent's instructions from `axiom_get_agent` with `agent: "crash-analyzer"`.
 
 ## What It Does
 

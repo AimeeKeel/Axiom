@@ -20,21 +20,23 @@ You profile apps headlessly and turn the result into an honest, actionable repor
 
 ## Core Principle
 
-**Measure honestly, then attribute to user code.** `xcprof` never reports "no findings" when it means "couldn't measure" — it emits a per-family support matrix (`available` / `partial` / `not_exportable` / `not_present`). Read that matrix before you call anything clean. And never hand-grep exported XML: `xcprof analyze --json` has already resolved the `id`/`ref` back-references that defeat `grep` and filtered system frames from app code.
+**Measure honestly, then attribute to user code.** `xcprof` never reports "no findings" when it means "couldn't measure" — it emits a per-family support matrix (`available` / `partial` / `not_exportable` / `not_present`). Read that matrix before you call anything clean. And never hand-grep exported XML: `xcprof analyze --json` (MCP-only clients: `axiom_xcprof_analyze` with `trace`) has already resolved the `id`/`ref` back-references that defeat `grep` and filtered system frames from app code.
 
 ## Prerequisites
 
 ```bash
 command -v xcprof && xcprof doctor
 ```
+MCP-only clients: `axiom_xcprof_doctor`; skip the `command -v` check and use the `axiom_xcprof_*` tools named below.
 
-`doctor` verifies `xcrun xctrace` and counts instruments/devices — exit `0` ready, `2` if xctrace is missing. If `command -v xcprof` finds nothing, use `<plugin-root>/tools/xcprof` wherever this file says `xcprof`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of your preloaded Axiom skill; on Codex, it is the plugin root named in Axiom's startup context. If `xcprof` is still absent (an install older than xcprof), tell the user to update Axiom and fall back to the raw CLI documented in `axiom-performance (skills/xctrace-ref.md)` — do **not** re-introduce a grep-the-XML pipeline.
+`doctor` verifies `xcrun xctrace` and counts instruments/devices — exit `0` ready, `2` if xctrace is missing. If `command -v xcprof` finds nothing, use `<plugin-root>/tools/xcprof` wherever this file says `xcprof`: on Claude Code, `<plugin-root>` is two levels above the `Base directory for this skill:` path of your preloaded Axiom skill; on Codex, it is the plugin root named in Axiom's startup context. If `xcprof` is still absent and no `axiom_xcprof_doctor` MCP tool is available (an install older than xcprof), tell the user to update Axiom and fall back to the raw CLI documented in `axiom-performance (skills/xctrace-ref.md)` — do **not** re-introduce a grep-the-XML pipeline.
 
 Record into a session sandbox so traces are contained and the output gate is satisfied:
 
 ```bash
 export XCPROF_TRACE_ROOT="$(mktemp -d)"
 ```
+MCP-only clients: skip this, since you can't set the server's environment; leave `output` unset and each record call returns the trace path it wrote.
 
 ## Workflow
 
@@ -65,14 +67,15 @@ Map the user's intent to a preset (or explicit instruments), then record. Record
 | SwiftUI / view updates / body | `xcprof record --instrument 'SwiftUI' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |
 | concurrency / actors / tasks | `xcprof record --instrument 'Swift Tasks' --instrument 'Swift Actors' --instrument 'CPU Profiler' --attach '<app>' --time-limit 10s` |
 | "find everything" | `xcprof record --preset full --attach '<app>'` (macOS) · `--preset full-ios` (device) |
+MCP-only clients: `axiom_xcprof_record` with the row's values as `preset`, `attach`, and `timeLimit` (a string such as `"10s"`), and each `--instrument` as one entry of the `instruments` array.
 
 Targets and their gates:
 
 - **Attach** (`--attach <pid|name>`) — the default; no gate. Prefer it whenever the app is already running.
-- **Launch from startup** — append `--allow-launch ... -- <app-path>` (add `--device "$BOOTED"` for a sim). `--allow-launch` makes xcprof execute an arbitrary program, so it's gated — see the consent rule below.
-- **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target. `--all-processes` records every running app's activity, so it's gated — see the consent rule below.
+- **Launch from startup** — append `--allow-launch ... -- <app-path>` (add `--device "$BOOTED"` for a sim). `--allow-launch` makes xcprof execute an arbitrary program, so it's gated — see the consent rule below. (MCP-only clients: `axiom_xcprof_record` with `launch: ["<app-path>"]` and `allowLaunch: true`; for a sim add `device: "<sim name or UDID>"`, asking the user for it if you have no shell.)
+- **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target. `--all-processes` records every running app's activity, so it's gated — see the consent rule below. (MCP-only clients: `axiom_xcprof_record` with `allProcesses: true` and `allowAllProcesses: true`.)
 - Pass `--no-prompt` (non-interactive), and add `--device "$BOOTED"` when profiling a sim.
-- When unsure, add `--dry-run` first to print the exact `xctrace` command without spawning anything.
+- When unsure, add `--dry-run` (MCP-only clients: `dryRun: true`) first to print the exact `xctrace` command without spawning anything.
 
 **Consent gate (hard rule).** `--allow-launch` and `--allow-all-processes` exist to stop exactly two things: running an arbitrary program, and recording unrelated apps (a privacy concern). Before you pass either, stop and ask the user in plain terms — name the program you'd launch, or say that system-wide capture records other apps — and wait for an explicit yes. Never add one of these flags on your own initiative: not to clear a refused recording, not as an error-recovery retry, not to save a round-trip. If the user hasn't agreed, use `--attach` instead. The 60s `--max-duration` bounds every capture; don't raise it without a stated reason.
 
@@ -83,6 +86,7 @@ Targets and their gates:
 ```bash
 xcprof analyze "<trace>" --json
 ```
+MCP-only clients: `axiom_xcprof_analyze` with `trace`.
 
 Consume the structured fields — do not grep:
 
@@ -94,8 +98,8 @@ Consume the structured fields — do not grep:
 
 Two refinements:
 
-- **Hang window** — if a stall shows near t≈Xs, re-scope without re-recording: `xcprof analyze "<trace>" --start-ms <start> --end-ms <end> --json`.
-- **Stripped/release build** (`0x…` frame names) — pass `--dsym <path>`, or rely on UUID auto-discovery; unresolved frames stay raw and are flagged, never invented.
+- **Hang window** — if a stall shows near t≈Xs, re-scope without re-recording: `xcprof analyze "<trace>" --start-ms <start> --end-ms <end> --json` (MCP-only clients: `axiom_xcprof_analyze` with `trace`, `startMs`, and `endMs`).
+- **Stripped/release build** (`0x…` frame names) — pass `--dsym <path>` (MCP-only clients: `dsym`), or rely on UUID auto-discovery; unresolved frames stay raw and are flagged, never invented.
 
 For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), report the CPU portion from the JSON and tell the user to open the trace in Instruments for the instrument-specific view: `open "<trace>"`.
 
@@ -144,14 +148,14 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ## Comparison (before / after)
 
-Use `xcprof compare <baseline> <current> --json` to diff two traces. It reports per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame as `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (default 5) as a regression. Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces. Record the baseline and current under the same workload — `compare` assumes a like-for-like capture. See `/axiom:compare-traces` and `axiom-performance (skills/trace-comparison.md)`.
+Use `xcprof compare <baseline> <current> --json` (MCP-only clients: `axiom_xcprof_compare` with `baseline` and `current`) to diff two traces. It reports per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame as `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (default 5) as a regression. Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces (MCP-only clients: `failOnRegression`, `thresholdPct`, `dsym`). Record the baseline and current under the same workload — `compare` assumes a like-for-like capture. See `/axiom:compare-traces` and `axiom-performance (skills/trace-comparison.md)`.
 
 ## Error handling
 
 | Symptom | Cause | Fix |
 |---|---|---|
 | `doctor` exits 2 | xctrace missing | Install Xcode command-line tools |
-| record refused (exit 2) | a security gate wasn't passed | for launch / all-processes, **get the user's explicit consent first**, then add `--allow-launch` / `--allow-all-processes` (see the consent gate) — never bypass on your own; for an output-sandbox refusal, keep the capture under `XCPROF_TRACE_ROOT` |
+| record refused (exit 2) | a security gate wasn't passed | for launch / all-processes, **get the user's explicit consent first**, then add `--allow-launch` / `--allow-all-processes` (see the consent gate) — never bypass on your own; for an output-sandbox refusal, keep the capture under `XCPROF_TRACE_ROOT` (MCP-only clients: leave `output` unset; to write elsewhere, ask the user before retrying with `allowExternalOutput: true`) |
 | `--time-limit` refused | exceeds `--max-duration` | raise `--max-duration` only if a longer capture is genuinely needed — it's the bound that keeps captures finite |
 | record `ok:false`, no trace | attach target not found / device wrong | re-run target discovery; confirm the app is running |
 | every family `not_present` | wrong preset for the question | re-record with the matching preset |
