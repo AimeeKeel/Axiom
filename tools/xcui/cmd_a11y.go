@@ -104,7 +104,7 @@ func runA11ySet(out io.Writer, args []string) int {
 	app := fs.String("app", "", "bundle id to relaunch so the setting takes effect")
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return 2
 	}
 	if *toggle == "" || *value == "" {
@@ -195,7 +195,7 @@ func runA11yReset(out io.Writer, args []string) int {
 	fs.SetOutput(os.Stderr)
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return 2
 	}
 	ctx := context.Background()

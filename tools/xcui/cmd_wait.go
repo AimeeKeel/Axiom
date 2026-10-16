@@ -51,7 +51,7 @@ func runWait(out io.Writer, args []string) int {
 	poll := fs.Duration("poll", 250*time.Millisecond, "poll interval")
 	udidFlag := fs.String("udid", "", "target simulator UDID (default: booted)")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return 2
 	}
 

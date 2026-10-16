@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"io"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -57,4 +59,56 @@ func TestParseInterspersedRejectsUnknownFlag(t *testing.T) {
 	if _, err := parseInterspersed(fs, []string{"file.txt", "--bogus"}); err == nil {
 		t.Fatal("expected an error for an undefined flag, got nil")
 	}
+}
+
+// Axiom-8qam: subcommands that take no positionals must keep every flag and
+// reject a stray token, instead of stopping at it and silently dropping the
+// flags that follow (which used to surface as "--id is required").
+func TestFlagOnlySubcommandsRejectStrayArgument(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		run  func(io.Writer, []string) int
+		args []string
+	}{
+		{"assert", runAssert, []string{"stray", "--id", "foo", "--udid", "x"}},
+		{"wait", runWait, []string{"stray", "--for-element", "foo", "--udid", "x"}},
+		{"doctor", runDoctor, []string{"stray", "--udid", "x"}},
+		{"a11y set", runA11ySet, []string{"stray", "--toggle", "bold", "--value", "on"}},
+		{"a11y reset", runA11yReset, []string{"stray", "--udid", "x"}},
+		{"voiceover traverse", runVoiceOverTraverse, []string{"stray", "--udid", "x"}},
+		{"voiceover assert", runVoiceOverAssert, []string{"stray", "--sequence", "s.json"}},
+		{"resize sweep", runResizeSweep, []string{"stray", "--strict"}},
+		{"dialog allow", func(w io.Writer, a []string) int { return runDialogTap(w, "allow", a) }, []string{"stray", "--udid", "x"}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			stderr := captureStderr(t, func() {
+				if code := c.run(io.Discard, c.args); code != 2 {
+					t.Errorf("exit = %d, want 2", code)
+				}
+			})
+			if !strings.Contains(stderr, `unexpected argument "stray"`) {
+				t.Errorf("stderr = %q, want it to name the stray argument", stderr)
+			}
+		})
+	}
+}
+
+func captureStderr(t *testing.T, fn func()) string {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := os.Stderr
+	os.Stderr = w
+	fn()
+	os.Stderr = old
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	b, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 )
@@ -72,4 +73,20 @@ func main() {
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n\n%s", os.Args[1], usage)
 		os.Exit(2)
 	}
+}
+
+// parseFlags parses a subcommand that takes no positionals. Flags may come in
+// any order, and a stray token is a usage error rather than the point where
+// fs.Parse stops and silently drops every flag after it (Axiom-8qam).
+func parseFlags(fs *flag.FlagSet, args []string) error {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
+		return err
+	}
+	if len(positionals) > 0 {
+		err := fmt.Errorf("%s: unexpected argument %q", fs.Name(), positionals[0])
+		fmt.Fprintln(fs.Output(), err)
+		return err
+	}
+	return nil
 }

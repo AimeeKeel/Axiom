@@ -11,7 +11,7 @@ Reference for `xcui`, the simulator testing tool bundled with Axiom, which lets 
 
 Use this reference when:
 - Looking up the flags for `xcui doctor`, `wait`, `assert`, `a11y set`, `a11y reset`, `dialog`, `voiceover`, and `resize sweep`
-- Interpreting an exit code (`0` pass, `1` assertion failure or wait timeout, `2` environment error, `8` output-write error)
+- Interpreting an exit code (`0` pass, `1` assertion failure or wait timeout, `2` usage or environment error, `8` output-write error)
 - Checking which accessibility toggles `a11y set` supports and how each is applied (native `simctl ui`, or `defaults write` plus a relaunch)
 - Handling a system permission alert in a test, either by tapping the right button (`dialog accept` or `dismiss`) or by granting the permission in advance so the alert never appears (`dialog pregrant`)
 - Validating VoiceOver announcements and focus order without capturing audio (`voiceover traverse` and `voiceover assert`)
@@ -46,8 +46,8 @@ Questions you can ask your assistant that will draw from this reference:
 - **Input verbs** – `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, and `screenshot` forward to AXe with the same flags, output, and exit code. `xcui` adds `--udid` when you omit it and exactly one simulator is booted, and adds `--tap-style physical` to `tap` when you pass no style. Prefer `xcui tap` to `axe tap`: it sets `DEVELOPER_DIR` for you, so it keeps working under an Xcode whose SimulatorKit AXe can't load on its own. Only `axe describe-ui` (the raw tree `xcui` parses) and AXe's streaming verbs are called directly; if `xcui doctor` reports an `axe_developer_dir`, prefix those with `DEVELOPER_DIR=<value>`, which is rarely needed since AXe 1.8.0 finds SimulatorKit in Xcode 27 on its own
 - **Tap styles** – A measured table of which SwiftUI targets each AXe tap style (`automatic`, `simulator`, `physical`) actually activates, why a tap that does nothing still prints ✓, and why selectors tap the accessibility frame rather than the visible pixels
 - **`resize sweep` subcommand** – Needs an OS 27 simulator or device. It drives a resizable-app session across the breakpoints in `--sizes` and checks each one, in one JSON envelope: it holds the session and tears it down (even on SIGINT or SIGTERM), writes a PNG per breakpoint with `--screenshot-dir`, runs an accessibility check with `--assert-id`, fails on a clamped size with `--strict`, reports actual against requested size with an `honored` flag, retries each assertion through post-resize flakiness, and separates the three `appResize` CoreDeviceErrors (1001, 24001, 24004) into distinct fixes
-- **Output envelope and exit codes** – One compact JSON object with `tool` and `version` first; every subcommand accepts `--human` for prose. Exit `0` pass, `1` assertion failure or wait timeout, `2` environment error, `8` output-write error
-- **Command-line grammar gotcha** – Go's flag parser stops at the first positional argument, so always use the all-flag forms (`assert --id …`, not `assert <id> …`)
+- **Output envelope and exit codes** – One compact JSON object with `tool` and `version` first; every subcommand accepts `--human` for prose. Exit `0` pass, `1` assertion failure or wait timeout, `2` usage or environment error, `8` output-write error
+- **Command-line grammar** – Flags may come in any order after the subcommand. Apart from the input verbs and `dialog pregrant`, subcommands take no positional argument, so `assert <id>` fails with exit `2` and names the unexpected argument; write `assert --id …`
 
 ## Accessibility Toggles
 

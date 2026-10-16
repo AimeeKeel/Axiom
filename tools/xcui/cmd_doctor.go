@@ -30,7 +30,7 @@ func runDoctor(out io.Writer, args []string) int {
 	install := fs.Bool("install", false, "if AXe is missing and brew is present, install it via brew")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
 	udidFlag := fs.String("udid", "", "report this UDID instead of auto-resolving the booted sim")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return 2
 	}
 	ctx := context.Background()

@@ -180,7 +180,7 @@ func runResizeSweep(out io.Writer, args []string) int {
 	shotDir := fs.String("screenshot-dir", "", "write a PNG of the Resizable display per size")
 	strict := fs.Bool("strict", false, "fail a step whose actual size differs from the requested one")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return 2
 	}
 
