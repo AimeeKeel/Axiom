@@ -1,6 +1,9 @@
 package main
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+)
 
 // parseInterspersed parses fs while allowing flags and positional arguments to
 // appear in any order. The stdlib flag package stops at the first positional, so
@@ -39,4 +42,20 @@ func parseInterspersed(fs *flag.FlagSet, args []string) ([]string, error) {
 		rest = rest[1:]
 	}
 	return append(positionals, afterDash...), nil
+}
+
+// parseFlags parses a subcommand that takes no positionals. Flags may come in
+// any order, and a stray token is a usage error rather than the point where
+// fs.Parse stops and silently drops every flag after it (Axiom-8qam).
+func parseFlags(fs *flag.FlagSet, args []string) error {
+	positionals, err := parseInterspersed(fs, args)
+	if err != nil {
+		return err
+	}
+	if len(positionals) > 0 {
+		err := fmt.Errorf("%s: unexpected argument %q", fs.Name(), positionals[0])
+		fmt.Fprintln(fs.Output(), err)
+		return err
+	}
+	return nil
 }

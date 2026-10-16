@@ -28,7 +28,7 @@ func runDoctor(out io.Writer, args []string) int {
 	fs := flag.NewFlagSet("doctor", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	human := fs.Bool("human", false, "human-readable output")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return 2
 	}
 	ctx := context.Background()

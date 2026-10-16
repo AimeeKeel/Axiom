@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -123,4 +125,39 @@ func TestRunListDsyms_FindsBundle(t *testing.T) {
 	if b.Source != "env" {
 		t.Errorf("source = %q, want env", b.Source)
 	}
+}
+
+// TestListDsymsRejectsStrayArgument guards the Axiom-8qam class: the stdlib
+// parser stops at the first positional, so `list-dsyms stray --source bogus`
+// used to drop --source and scan every root with exit 0.
+func TestListDsymsRejectsStrayArgument(t *testing.T) {
+	var out bytes.Buffer
+	stderr := captureStderr(t, func() {
+		if code := runListDsyms(&out, []string{"stray", "--source", "bogus"}); code != 1 {
+			t.Errorf("exit = %d, want 1", code)
+		}
+	})
+	if out.Len() != 0 || !strings.Contains(stderr, `list-dsyms: unexpected argument "stray"`) {
+		t.Errorf("stdout has %d bytes, stderr = %q; want no report and the stray argument named", out.Len(), stderr)
+	}
+}
+
+func captureStderr(t *testing.T, fn func()) string {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := os.Stderr
+	os.Stderr = w
+	fn()
+	os.Stderr = old
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	b, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
 }

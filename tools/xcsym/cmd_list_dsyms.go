@@ -48,7 +48,7 @@ func runListDsyms(out io.Writer, args []string) int {
 	source := fs.String("source", "all", "which sources to scan: archives|deriveddata|downloads|toolchain|frameworks|env|all")
 	dsymPaths := fs.String("dsym-paths", "", "extra dSYM search roots (colon-separated)")
 	human := fs.Bool("human", false, "human-readable output instead of JSON")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return 1
 	}
 

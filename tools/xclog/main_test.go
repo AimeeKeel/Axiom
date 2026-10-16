@@ -628,3 +628,35 @@ func TestCaptureReportsLogStreamFailure(t *testing.T) {
 		})
 	}
 }
+
+// TestListRejectsStrayArgument guards the Axiom-8qam class: `list` parsed with
+// the stdlib parser, which stops at the first positional, so `list stray
+// --device <udid>` dropped --device and listed the booted simulator instead.
+func TestListRejectsStrayArgument(t *testing.T) {
+	dir := t.TempDir()
+	marker := filepath.Join(dir, "xcrun-ran")
+	script := "#!/bin/sh\ntouch '" + marker + "'\nexit 0\n"
+	if err := os.WriteFile(filepath.Join(dir, "xcrun"), []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv("AXIOM_XCLOG_TEST_CLI", "1")
+	t.Setenv("AXIOM_XCLOG_TEST_ARGS", `["list","stray","--device","fixture-udid"]`)
+	output, err := exec.Command(os.Args[0], "-test.run=^TestXclogCLIHelper$").CombinedOutput()
+	exit, ok := err.(*exec.ExitError)
+	_, ranErr := os.Stat(marker)
+	if !ok || exit.ExitCode() != 2 || !strings.Contains(string(output), `list: unexpected argument "stray"`) || ranErr == nil {
+		t.Fatalf("list stray --device: error %v, output %q; want exit 2 naming the stray argument, without running xcrun", err, output)
+	}
+}
+
+// TestListHelpExitsZero pins `xclog list --help` at exit 0: the npm package
+// smoke test and the Codex doctor probe it to prove the binary runs.
+func TestListHelpExitsZero(t *testing.T) {
+	t.Setenv("AXIOM_XCLOG_TEST_CLI", "1")
+	t.Setenv("AXIOM_XCLOG_TEST_ARGS", `["list","--help"]`)
+	output, err := exec.Command(os.Args[0], "-test.run=^TestXclogCLIHelper$").CombinedOutput()
+	if err != nil || !strings.Contains(string(output), "-device") {
+		t.Fatalf("list --help: error %v, output %q; want exit 0 with the flag usage", err, output)
+	}
+}

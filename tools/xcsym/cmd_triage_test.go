@@ -106,3 +106,13 @@ func TestRunTriage_EmptyArraysNotNull(t *testing.T) {
 		t.Errorf("clusters marshaled as null:\n%s", s)
 	}
 }
+
+// TestRunTriageWithStdin_RejectsBadFlags guards the test seam against the
+// discarded parse error it used to have: a bad flag value must fail like the
+// real entry point (exit 1) rather than run with default thresholds.
+func TestRunTriageWithStdin_RejectsBadFlags(t *testing.T) {
+	var out bytes.Buffer
+	if code := runTriageWithStdin(&out, []string{"--min-users", "not-a-number"}, strings.NewReader("")); code != 1 || out.Len() != 0 {
+		t.Errorf("exit = %d, stdout has %d bytes; want 1 and no report", code, out.Len())
+	}
+}

@@ -55,7 +55,9 @@ func runTriageWithStdin(out io.Writer, args []string, in io.Reader) int {
 	latest := fs.String("latest-version", "", "")
 	osFloor := fs.String("os-floor", "", "")
 	minUsers := fs.Int("min-users", 0, "")
-	_ = fs.Parse(args)
+	if err := parseFlags(fs, args); err != nil {
+		return 1
+	}
 	th := Thresholds{LatestVersion: *latest, OSFloor: *osFloor, MinUsers: *minUsers}
 	return runTriageCore(out, in, th)
 }

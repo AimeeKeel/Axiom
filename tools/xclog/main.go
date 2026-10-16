@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -237,9 +238,14 @@ func main() {
 	// list doesn't require a target argument
 	if subcmd == "list" {
 		cfg := Config{}
-		fs := flag.NewFlagSet("list", flag.ExitOnError)
+		fs := flag.NewFlagSet("list", flag.ContinueOnError)
+		fs.SetOutput(os.Stderr)
 		registerFlags(fs, &cfg)
-		fs.Parse(os.Args[2:])
+		if err := parseFlags(fs, os.Args[2:]); errors.Is(err, flag.ErrHelp) {
+			os.Exit(0)
+		} else if err != nil {
+			os.Exit(2)
+		}
 		runList(&cfg)
 		return
 	}
