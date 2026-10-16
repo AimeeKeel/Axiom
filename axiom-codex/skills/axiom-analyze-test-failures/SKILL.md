@@ -261,7 +261,7 @@ For each match:
 
 ## Output Format
 
-```markdown
+````markdown
 # Test Failure Analysis Results
 
 ## Summary
@@ -346,7 +346,7 @@ swift test --filter "TestName" --maximum-repetitions 100
 | `@MainActor` | Test accesses UI types |
 | `.serialized` | Tests share singleton/file/database |
 | Instance properties | Any test data that changes |
-```
+````
 
 ## Severity Definitions
 

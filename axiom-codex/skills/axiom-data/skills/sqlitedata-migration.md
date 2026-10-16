@@ -1,6 +1,8 @@
 
 # Migrating from SwiftData to SQLiteData
 
+When moving from SwiftData to SQLiteData pays off (large-dataset performance, CloudKit record sharing), how SwiftData patterns map to SQLiteData, and how to move existing user data across without losing it.
+
 ## When to Switch
 
 ```
