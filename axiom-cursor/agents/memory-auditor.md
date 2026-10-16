@@ -253,6 +253,8 @@ If the user has `.ips`, MetricKit, or legacy `.crash` text artifacts from the fi
 Call the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--format=summary <path-to-ips>`.
 ```
 
+This agent only reads and searches, so it cannot run this: ask for the output in your result, or run it yourself if you are following this procedure inline.
+
 Use the `crashed_thread.frames` to localize which owner class needs deeper Phase 1 ownership mapping.
 
 ## Related

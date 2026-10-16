@@ -243,6 +243,8 @@ xcsym crash --format=summary <path-to-ips>
 ```
 MCP-only clients: `axiom_xcsym_crash` with `file` and `format: "summary"`.
 
+This agent only reads and searches, so it cannot run this: ask for the output in your result, or run it yourself if you are following this procedure inline.
+
 Use the `crashed_thread.frames` to localize which owner class needs deeper Phase 1 ownership mapping.
 
 ## Related
