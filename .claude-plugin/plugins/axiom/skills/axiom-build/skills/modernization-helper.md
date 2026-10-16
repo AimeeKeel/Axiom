@@ -364,7 +364,7 @@ Grep: completionHandler:
 
 ## Output Format
 
-```markdown
+````markdown
 # Modernization Analysis Results
 
 ## Summary
@@ -496,7 +496,7 @@ After migration:
 2. Test view updates (properties should still trigger UI refresh)
 3. Test bindings (TextField, Toggle still work)
 4. Test environment injection
-```
+````
 
 ## When No Migration Needed
 

@@ -26,7 +26,7 @@ Scan for Codable anti-patterns and JSON serialization issues that cause silent d
 
 ## Example Output
 
-```markdown
+````markdown
 ## Codable Audit Results
 
 ### Summary
@@ -67,7 +67,7 @@ Scan for Codable anti-patterns and JSON serialization issues that cause silent d
 1. **Immediate**: Fix all HIGH severity issues (silent failures, injection risks)
 2. **This sprint**: Address MEDIUM severity (technical debt, potential bugs)
 3. **Backlog**: Clean up LOW severity (code quality improvements)
-```
+````
 
 ## Usage Tips
 

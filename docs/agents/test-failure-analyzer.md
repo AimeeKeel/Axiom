@@ -35,7 +35,7 @@ Diagnoses WHY tests fail, especially intermittent/flaky failures in Swift Testin
 
 ## Example Output
 
-```markdown
+````markdown
 # Test Failure Analysis Results
 
 ## Summary
@@ -59,7 +59,7 @@ Diagnoses WHY tests fail, especially intermittent/flaky failures in Swift Testin
 - `Tests/CacheTests.swift:12` – `static var testCache`
   - **Root cause**: Parallel tests mutate same collection
   - **Fix**: Use instance property instead
-```
+````
 
 ## Verification
 
