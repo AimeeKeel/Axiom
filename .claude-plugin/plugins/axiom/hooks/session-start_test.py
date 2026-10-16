@@ -149,6 +149,22 @@ class TestSessionStartGate(unittest.TestCase):
                 pass
             self.assertFalse(has_context(run_in(d)))
 
+    def test_deleted_working_directory_fails_open(self):
+        # Axiom-w0b: os.getcwd() raises FileNotFoundError when the session's directory
+        # was deleted. The gate is fail-open, so the hook must still inject, not crash.
+        with tempfile.TemporaryDirectory() as parent:
+            gone = os.path.join(parent, "gone")
+            os.mkdir(gone)
+            env = os.environ.copy()
+            for key in ("AXIOM_SESSION_CONTEXT", "AXIOM_HARNESS", "AXIOM_XCODE_PATH", "DEVELOPER_DIR", "CLAUDE_ENV_FILE"):
+                env.pop(key, None)
+            out = subprocess.run(
+                ["/bin/sh", "-c", 'cd "$1" && rmdir "$1" && exec "$2" "$3" "$4"', "sh", gone, sys.executable, HOOK, PLUGIN_ROOT],
+                env=env, capture_output=True, text=True, timeout=15,
+            )
+            self.assertEqual(out.returncode, 0, out.stderr)
+            self.assertTrue(has_context(json.loads(out.stdout or "{}")), out.stderr)
+
     def test_override_always_injects_in_plain_dir(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertTrue(has_context(run_in(d, {"AXIOM_SESSION_CONTEXT": "always"})))

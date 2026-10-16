@@ -416,6 +416,17 @@ class TestIsAppleProject(unittest.TestCase):
         self.assertNotIn(os.path.abspath("."), roots)
 
 
+class TestSessionCwd(unittest.TestCase):
+    def test_deleted_cwd_returns_empty_and_reports_the_error(self):
+        # Axiom-w0b: every hook reads the cwd through this, so a deleted working
+        # directory fails open with the override still applied, never a crash.
+        errors = []
+        with mock.patch.object(pd.os, "getcwd", side_effect=FileNotFoundError(2, "gone")):
+            got = pd.session_cwd(errors.append)
+            decisions = (pd.resolve_context_decision(got, None), pd.resolve_context_decision(got, "never"))
+        self.assertEqual((got, len(errors), decisions), ("", 1, (True, False)))
+
+
 class TestResolveContextDecision(unittest.TestCase):
     def test_never_skips_even_in_apple_dir(self):
         with tempfile.TemporaryDirectory() as d:

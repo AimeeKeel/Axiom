@@ -166,6 +166,14 @@ class TestFalsePositiveHardening(unittest.TestCase):
             body = '#Preview {\n    @Previewable @State var isOn = false\n    Toggle("x", isOn: $isOn)\n}\n'
             self.assertFalse(blocks(claude_stdin(write_swift(d, body))))
 
+    def test_state_block_reason_says_previewable_is_exempt(self):
+        # Axiom-rsd: without this, agents add redundant axiom-ignore comments to the
+        # @Previewable @State lines beside a real finding. Only @Previewable is exempt.
+        with tempfile.TemporaryDirectory() as d:
+            body = "struct V {\n    @State var count = 0\n}\n"
+            reason = json.loads(run_hook(claude_stdin(write_swift(d, body))).stdout)["reason"]
+            self.assertIn("@Previewable @State in a #Preview is already exempt", reason)
+
     def test_previewable_attribute_on_own_line_does_not_block(self):
         # @Previewable may sit on the attribute line above @State — still local scope.
         with tempfile.TemporaryDirectory() as d:

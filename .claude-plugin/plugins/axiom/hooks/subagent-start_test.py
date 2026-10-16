@@ -87,6 +87,15 @@ class TestSubagentStartInjection(unittest.TestCase):
         ctx = injected_context("some-new-ios-agent")
         self.assertIn("axiom-", ctx)
 
+    def test_non_string_agent_type_is_treated_as_unknown(self):
+        # Axiom-iu5v: the skip checks assumed a string, so null/number/list/object
+        # agent_type values crashed the hook with exit 1. They inject like any
+        # unrecognized agent type.
+        for value in (None, 7, ["general-purpose"], {"name": "x"}):
+            with self.subTest(agent_type=value):
+                ctx = run_hook({"agent_type": value}).get("hookSpecificOutput", {}).get("additionalContext", "")
+                self.assertIn("axiom-", ctx)
+
     def test_event_name_is_subagent_start(self):
         payload = run_hook({"agent_type": "general-purpose"})
         self.assertEqual(
