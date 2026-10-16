@@ -538,17 +538,16 @@ textView.writingToolsBehavior = .default
 
 ```swift
 // Plain text only
-textView.writingToolsResultOptions = [.plainText]
+textView.allowedWritingToolsResultOptions = [.plainText]
 
 // Rich text
-textView.writingToolsResultOptions = [.richText]
+textView.allowedWritingToolsResultOptions = [.richText]
 
-// Rich text + tables
-textView.writingToolsResultOptions = [.richText, .table]
-
-// Rich text + lists
-textView.writingToolsResultOptions = [.richText, .list]
+// Rich text + lists (.list implies .richText)
+textView.allowedWritingToolsResultOptions = [.list]
 ```
+
+`.table` (implies `.richText`) is for `NSTextView` only: `UITextView` throws an exception when `allowedWritingToolsResultOptions` includes it.
 
 ### Protected Ranges
 

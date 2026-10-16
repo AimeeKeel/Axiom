@@ -63,7 +63,7 @@ SwiftUI view issue after basic troubleshooting?
 │
 ├─ View not updating?
 │  ├─ Basic check: Add Self._printChanges() temporarily
-│  │  ├─ Shows "@identity" → Persistent state was recycled for a new instance
+│  │  ├─ Shows "@identity" for a view that already appeared → Persistent state was recycled for a new instance
 │  │  │  └─ Pattern D3: View Identity Investigation
 │  │  ├─ Shows "@self" → The view value itself changed
 │  │  │  └─ Pattern D1: Analyze what caused view recreation
@@ -133,18 +133,18 @@ struct MyView: View {
 # One line per body call: the causes are comma-joined on it, and the line ends with a period
 
 # Scenario 1: view value changed
-MyView: @self changed
+MyView: @self changed.
 → Parent passed new MyView instance
 → Check parent code - what triggered recreation?
 
 # Scenario 2: state property changed
-MyView: _count changed
+MyView: _count changed.
 → A dynamic property of this body changed, reported by its physical name:
 → `@State var count` prints `_count`, `@State private var count` prints `__count`
 → Expected if you modified count
 
 # Scenario 3: environment value changed
-MyView: _scheme changed
+MyView: _scheme changed.
 → The @Environment property that changed, by its own physical name
 → An @Observable object read from the environment reports \Model.property
 → Pattern D4: Check environment dependencies
@@ -152,6 +152,7 @@ MyView: _scheme changed
 # Scenario 4: identity changed
 MyView: @self, @identity, __count changed.
 → @identity means the view's persistent state was recycled for a new instance of the same type
+→ Only for a view that already appeared: its first logged line always includes @identity, so a reset reads exactly like a first appearance — check whether the view was already on screen
 → Pattern D3: View identity investigation
 
 # Scenario 5: nothing logged

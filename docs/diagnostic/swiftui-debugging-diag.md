@@ -46,7 +46,7 @@ Read the output, one line per body call:
 - `@self changed` → The parent passed a new instance of the view; check what made the parent recreate it
 - `_count changed` → That dynamic property changed, reported by its stored name (`@State var count` prints `_count`)
 - An environment property's name → An environment value changed; continue with D4
-- `@identity` in the line → The view's state was recycled for a new instance; continue with D3
+- `@identity` for a view that is already on screen → The view's state was recycled for a new instance; continue with D3 (a view's first appearance prints `@identity` too, so it means nothing there)
 - Nothing logged → The body isn't being called; continue with D3
 
 Remove the call before committing.
