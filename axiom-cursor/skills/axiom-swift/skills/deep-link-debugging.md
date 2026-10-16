@@ -15,6 +15,8 @@ Use when:
 - Universal links or App Clips
 - Complex routing architectures
 
+**`$UDID` in every command below** is the target simulator's UDID from `xcrun simctl list devices` (add `booted` to list only running ones). Never the literal `booted`: with several simulators up, it silently targets one of them. The first `openurl` on each simulator needs the scheme approved — see **First Run Approval**.
+
 ## Example Prompts
 
 #### 1. "Claude Code can't navigate to specific screens for testing"
@@ -122,7 +124,6 @@ extension URL {
 **Usage**:
 ```bash
 # From simulator
-# $UDID: your simulator's UDID from `xcrun simctl list devices booted`. Not `booted`: with several up, it silently targets one of them
 xcrun simctl openurl $UDID "debug://settings"
 xcrun simctl openurl $UDID "debug://profile?id=123"
 xcrun simctl openurl $UDID "debug://reset"
@@ -395,8 +396,14 @@ Use `#if DEBUG` to ensure code is stripped from release builds.
 ### Step 4: Test Deep Links
 
 ```bash
-# Boot simulator (see `xcrun simctl list devices available` for names and UDIDs)
-xcrun simctl boot "iPhone 17"
+# Boot by UDID (pick one from `xcrun simctl list devices available`)
+xcrun simctl boot $UDID
+
+# Install a Debug build (Release strips the scheme and #if DEBUG removes the handler; `simctl launch` does not install)
+xcrun simctl install $UDID path/to/YourApp.app
+
+# First run on this simulator: pre-approve the debug scheme here, before launching,
+# or the first openurl raises an alert and delivers nothing — see First Run Approval
 
 # Launch app
 xcrun simctl launch $UDID com.example.YourApp

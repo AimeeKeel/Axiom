@@ -255,7 +255,7 @@ cat deps.json | jq '.dependencies[].dependencies[] | .name' | sort | uniq -c | s
 
 ## Output Format
 
-```markdown
+````markdown
 # SPM Dependency Analysis
 
 ## Summary
@@ -381,11 +381,11 @@ swift test
 # Check for warnings
 swift build 2>&1 | grep -i warning
 ```
-```
+````
 
 ## When No Issues Found
 
-```markdown
+````markdown
 # SPM Dependency Analysis
 
 ## Summary
@@ -409,7 +409,7 @@ No conflicts detected.
   ```bash
   swift package diagnose-api-breaking-changes
   ```
-```
+````
 
 ## Common SPM Commands Reference
 

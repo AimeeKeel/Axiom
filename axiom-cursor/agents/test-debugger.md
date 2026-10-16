@@ -214,7 +214,7 @@ XCTAssertTrue(resultLabel.waitForExistence(timeout: 5))
 3. **Apply edit** using Edit tool
 4. **Log the change** for verification
 
-```markdown
+````markdown
 ## Proposed Fix
 
 **File**: `LoginTests.swift:47`
@@ -227,7 +227,7 @@ XCTAssertTrue(resultLabel.waitForExistence(timeout: 5))
 ```
 
 Shall I apply this fix?
-```
+````
 
 ## Phase 6: Verify Fix
 

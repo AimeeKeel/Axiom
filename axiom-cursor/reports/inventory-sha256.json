@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "8720735cc99339c8ace7563111c5da21e337562c2232f0755f3a80aabb3e667a",
+      "sha256": "5c262c16afca1d9681a489ccaadaa5f9307f4a433ebbd79854ee9f48f1a3b1cf",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "ca07f275df58a80cc80c9e3a0ad65159ce0881ca31ba8917a60aee1ace67c93a",
+      "sha256": "0aae363302c5cdce3381d600a21aa6bac1608b1b0920b5c580d0c049596772e5",
       "bytes": 3314
     },
     {
@@ -103,8 +103,8 @@
     },
     {
       "path": "agents/modernization-helper.md",
-      "sha256": "8d9efb5313d35a9368b7356e9143a11a8997a012c245cdae97d9420a85f2b3ee",
-      "bytes": 16172
+      "sha256": "df99cd1b3c8b9e3e3770b9ffa90d86c67f3da29ef92fc0dea679962582795ac0",
+      "bytes": 16174
     },
     {
       "path": "agents/networking-auditor.md",
@@ -138,8 +138,8 @@
     },
     {
       "path": "agents/spm-conflict-resolver.md",
-      "sha256": "43d2c89094223de52af534152780bdb981f9c87a6dc178104c62218c37c90104",
-      "bytes": 13330
+      "sha256": "cc08ae983fb8fe9fc855e6ef075e52c4bb37241b8bce1926a36aff4725ef3fff",
+      "bytes": 13334
     },
     {
       "path": "agents/spritekit-auditor.md",
@@ -188,13 +188,13 @@
     },
     {
       "path": "agents/test-debugger.md",
-      "sha256": "cbf7a46455949d183c42a8fcb79eb534a2ed3cf6ce24e4230e0418f5d8512207",
-      "bytes": 13766
+      "sha256": "b7ab6a28b592985a3272d9dc0d01fd7adadf7173a97813b909cc62ff1cd5d8f1",
+      "bytes": 13768
     },
     {
       "path": "agents/test-failure-analyzer.md",
-      "sha256": "cb054c98ca1e9a9fce60d9debc49854471039b3aafff4e9cf959b52a2c188b68",
-      "bytes": 17065
+      "sha256": "3652028a64da673892fe58c57838811b9e039e10f544a42470fe3b6fd82b9bff",
+      "bytes": 17067
     },
     {
       "path": "agents/test-runner.md",
@@ -658,8 +658,8 @@
     },
     {
       "path": "skills/axiom-data/skills/sqlitedata-migration.md",
-      "sha256": "29c42dead4fece88d678dd360ae31008952ba0179de6705dadda2adb296fee7c",
-      "bytes": 9742
+      "sha256": "2c86766857df156d8be399d4b8ce590edf710df848647da0044443f85d371f46",
+      "bytes": 9950
     },
     {
       "path": "skills/axiom-data/skills/sqlitedata-ref.md",
@@ -673,8 +673,8 @@
     },
     {
       "path": "skills/axiom-data/skills/storage-diag.md",
-      "sha256": "1417b7f4ec06308268054643752c7f2d58ecec1af59a1a3d20e5444e17f2bdf9",
-      "bytes": 15282
+      "sha256": "827b57691e17131db5ed87b6b1d8e68a62cb3a1ff9b655099dd45407ed14e92b",
+      "bytes": 15284
     },
     {
       "path": "skills/axiom-data/skills/storage-management-ref.md",
@@ -1313,8 +1313,8 @@
     },
     {
       "path": "skills/axiom-networking/skills/networking-migration.md",
-      "sha256": "89eaa36f521ef3f6134063b0c0440f663adef30a21def7febbc0470495914985",
-      "bytes": 8791
+      "sha256": "a0022f7ffd2e6f889b29d28ac90492e1aa3898aaaed86321028affa2a1646e42",
+      "bytes": 9022
     },
     {
       "path": "skills/axiom-payments/SKILL.md",
@@ -1578,8 +1578,8 @@
     },
     {
       "path": "skills/axiom-swift/skills/deep-link-debugging.md",
-      "sha256": "bedae2d60439689429d6450b449232e92215834da0a3cc577505b2e736d771ca",
-      "bytes": 17873
+      "sha256": "a82b5db8aec393883594a398392bbe4dac278de8a15c74479fe04fbc9896af81",
+      "bytes": 18387
     },
     {
       "path": "skills/axiom-swift/skills/ownership-conventions.md",
@@ -1753,8 +1753,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/xclog-ref.md",
-      "sha256": "3b10a51533c698dd027f39b48ff567c4beed2b98e43515e1e0187a018029f0cb",
-      "bytes": 12930
+      "sha256": "7880a4f2e42e91f2072f9e402640667a000dee4845519f20deead34a03fcf7b2",
+      "bytes": 12997
     },
     {
       "path": "skills/axiom-tools/skills/xcprof-ref.md",
@@ -1914,7 +1914,7 @@
   ],
   "totals": {
     "files": 382,
-    "bytes": 7816895
+    "bytes": 7817927
   },
   "excludedMirrors": 30,
   "classes": {

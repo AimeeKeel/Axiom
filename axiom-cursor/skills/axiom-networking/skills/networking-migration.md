@@ -1,6 +1,8 @@
 
 # Network Framework Migration Guides
 
+Three migrations, each with a worked example: BSD sockets to NWConnection, NWConnection to NetworkConnection (iOS 26+), and URLSession StreamTask to NetworkConnection, plus SCNetworkReachability to NWPathMonitor and when to stay with URLSession.
+
 ## Do I Need to Migrate?
 
 ```
@@ -56,7 +58,7 @@ What networking API are you using?
 ### Example migration
 
 #### Before (BSD Sockets)
-```c
+```swift
 // BEFORE — Blocking, manual DNS, error-prone
 var hints = addrinfo()
 hints.ai_family = AF_INET
@@ -65,8 +67,8 @@ hints.ai_socktype = SOCK_STREAM
 var results: UnsafeMutablePointer<addrinfo>?
 getaddrinfo("example.com", "443", &hints, &results)
 
-let sock = socket(results.pointee.ai_family, results.pointee.ai_socktype, 0)
-connect(sock, results.pointee.ai_addr, results.pointee.ai_addrlen) // BLOCKS
+let sock = socket(results!.pointee.ai_family, results!.pointee.ai_socktype, 0)
+connect(sock, results!.pointee.ai_addr, results!.pointee.ai_addrlen) // BLOCKS
 
 let data = "Hello".data(using: .utf8)!
 data.withUnsafeBytes { ptr in
@@ -98,7 +100,6 @@ connection.start(queue: .main)
 ```
 
 ### Benefits
-- 20 lines → 10 lines
 - No manual DNS, no blocking, no unsafe pointers
 - Automatic Happy Eyeballs, proxy support, WiFi Assist
 
