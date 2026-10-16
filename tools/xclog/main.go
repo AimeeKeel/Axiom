@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -285,6 +286,12 @@ func main() {
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		interrupted.Store(true)
+	}()
 
 	// Apply --timeout if set
 	if cfg.Timeout > 0 {
@@ -467,6 +474,7 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 	lines := make(chan LogLine, 256)
 	var wg sync.WaitGroup
 	var cmds []*exec.Cmd
+	var watch logStreamWatch
 
 	// Launch with --console for stdout/stderr capture
 	simctl := launchCommand(ctx, bundleID, cfg)
@@ -558,6 +566,7 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 		go func() {
 			defer wg.Done()
 			streamOSLogNDJSON(logStdout, lines, cfg)
+			watch.ended(ctx)
 		}()
 	}
 
@@ -569,13 +578,18 @@ func runLaunch(ctx context.Context, cancel context.CancelFunc, bundleID string, 
 	}()
 
 	writeLines(ctx, lines, cfg, out)
+	watch.stopping.Store(true)
 	cleanup(cmds)
+	if err := watch.failure(logCmd); err != nil {
+		fatal("%v", err)
+	}
 }
 
 func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cfg *Config, out io.Writer) {
 	waitForSimulatorBoot(ctx, cfg.Device)
 	lines := make(chan LogLine, 256)
 	var wg sync.WaitGroup
+	var watch logStreamWatch
 
 	predicate := ""
 	if pid, err := strconv.Atoi(target); err == nil {
@@ -610,6 +624,7 @@ func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cf
 	go func() {
 		defer wg.Done()
 		streamOSLogNDJSON(logStdout, lines, cfg)
+		watch.ended(ctx)
 	}()
 
 	go func() {
@@ -618,7 +633,44 @@ func runAttach(ctx context.Context, cancel context.CancelFunc, target string, cf
 	}()
 
 	writeLines(ctx, lines, cfg, out)
+	watch.stopping.Store(true)
 	cleanup([]*exec.Cmd{logCmd})
+	if err := watch.failure(logCmd); err != nil {
+		fatal("%v", err)
+	}
+}
+
+// logStreamWatch records whether the log stream's output ended before
+// xclog stopped it (--timeout, a signal or --max-lines). Only then is the
+// stream's exit status its own failure rather than the result of xclog's
+// SIGTERM, so a dead stream fails the capture instead of exiting 0 with
+// whatever arrived first (Axiom-p89j).
+// interrupted records that xclog itself received SIGINT or SIGTERM. A terminal
+// Ctrl-C reaches the whole process group, so the stream can stop first, by
+// signal or by exit code; either way that is the user's stop, not a failure.
+var interrupted atomic.Bool
+
+type logStreamWatch struct {
+	stopping  atomic.Bool
+	selfEnded atomic.Bool
+}
+
+func (w *logStreamWatch) ended(ctx context.Context) {
+	w.selfEnded.Store(ctx.Err() == nil && !w.stopping.Load())
+}
+
+// failure reports a stream that ended on its own with a non-zero status.
+// Call it only after cleanup has waited for cmd.
+func (w *logStreamWatch) failure(cmd *exec.Cmd) error {
+	if !w.selfEnded.Load() || interrupted.Load() || cmd.ProcessState == nil || cmd.ProcessState.Success() {
+		return nil
+	}
+	// The stream died of the signal before xclog's own handler ran.
+	if ws, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok && ws.Signaled() &&
+		(ws.Signal() == syscall.SIGINT || ws.Signal() == syscall.SIGTERM) {
+		return nil
+	}
+	return fmt.Errorf("log stream exited early (%s); the output above is incomplete", cmd.ProcessState)
 }
 
 func runShow(ctx context.Context, target string, cfg *Config, out io.Writer) error {
@@ -868,6 +920,7 @@ func cleanup(cmds []*exec.Cmd) {
 		case <-waitDone:
 		case <-time.After(2 * time.Second):
 			cmd.Process.Kill()
+			<-waitDone
 		}
 	}
 }

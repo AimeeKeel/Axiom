@@ -556,3 +556,75 @@ func FuzzStreamOSLogNDJSON(f *testing.F) {
 		}
 	})
 }
+
+// fakeSimctl writes an xcrun stand-in whose `log stream` behavior is
+// streamBody, so a capture's outcome can be driven without a simulator.
+func fakeSimctl(t *testing.T, streamBody string) {
+	t.Helper()
+	dir := t.TempDir()
+	script := `#!/bin/sh
+case "$*" in
+"simctl list devices -j") echo '{"devices":{"fixture-runtime":[{"udid":"fixture-udid","state":"Booted"}]}}'; exit 0 ;;
+simctl\ launch*) echo "org.example.fixture: 4242"; exec sleep 30 ;;
+*" log stream "*) ` + streamBody + ` ;;
+esac
+exit 0
+`
+	if err := os.WriteFile(filepath.Join(dir, "xcrun"), []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+}
+
+// runXclogCLI runs xclog's main in a subprocess and returns its exit code,
+// stdout and stderr.
+func runXclogCLI(t *testing.T, args ...string) (int, string, string) {
+	t.Helper()
+	encoded, err := json.Marshal(args)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=^TestXclogCLIHelper$")
+	cmd.Env = append(os.Environ(), "AXIOM_XCLOG_TEST_CLI=1", "AXIOM_XCLOG_TEST_ARGS="+string(encoded))
+	var stdout, stderr strings.Builder
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	err = cmd.Run()
+	code := 0
+	if exit, ok := err.(*exec.ExitError); ok {
+		code = exit.ExitCode()
+	} else if err != nil {
+		t.Fatal(err)
+	}
+	return code, stdout.String(), stderr.String()
+}
+
+const fixtureNDJSONLine = `{"eventMessage":"fixture-marker","timestamp":"2026-10-15 12:00:00.000000-0700","messageType":"Default","processImagePath":"/Fixture","subsystem":"","category":""}`
+
+// Axiom-p89j: a log stream that dies on its own is a failed capture, even
+// after it delivered lines; stopping it at --timeout or --max-lines is not.
+func TestCaptureReportsLogStreamFailure(t *testing.T) {
+	failing := `echo '` + fixtureNDJSONLine + `'; echo fixture-log-stream-failed >&2; exit 23`
+	steady := `echo '` + fixtureNDJSONLine + `'; echo '` + fixtureNDJSONLine + `'; exec sleep 30`
+	for _, test := range []struct {
+		name, stream string
+		args         []string
+		wantCode     int
+		wantStderr   string
+	}{
+		{"attach, stream fails", failing, []string{"attach", "Fixture", "--device", "fixture-udid", "--timeout", "10s"}, 1, "xclog: log stream exited early (exit status 23)"},
+		{"launch, stream fails", failing, []string{"launch", "org.example.fixture", "--device", "fixture-udid", "--timeout", "4s"}, 1, "xclog: log stream exited early (exit status 23)"},
+		{"attach, stream killed by SIGINT", `echo '` + fixtureNDJSONLine + `'; kill -INT $$`, []string{"attach", "Fixture", "--device", "fixture-udid", "--timeout", "10s"}, 0, ""},
+		{"attach, Ctrl-C to xclog and stream", `echo '` + fixtureNDJSONLine + `'; sleep 0.3; kill -INT $PPID; sleep 0.2; exit 130`, []string{"attach", "Fixture", "--device", "fixture-udid", "--timeout", "10s"}, 0, ""},
+		{"attach, stopped at timeout", steady, []string{"attach", "Fixture", "--device", "fixture-udid", "--timeout", "1s"}, 0, ""},
+		{"attach, stopped at max-lines", steady, []string{"attach", "Fixture", "--device", "fixture-udid", "--timeout", "10s", "--max-lines", "1"}, 0, ""},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fakeSimctl(t, test.stream)
+			code, stdout, stderr := runXclogCLI(t, test.args...)
+			if code != test.wantCode || !strings.Contains(stdout, "fixture-marker") || !strings.Contains(stderr, test.wantStderr) {
+				t.Fatalf("exit %d, stdout %q, stderr %q; want exit %d, the captured marker on stdout, and %q on stderr",
+					code, stdout, stderr, test.wantCode, test.wantStderr)
+			}
+		})
+	}
+}

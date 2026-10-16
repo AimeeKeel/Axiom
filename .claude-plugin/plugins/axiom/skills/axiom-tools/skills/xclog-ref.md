@@ -19,7 +19,7 @@ xclog has two front-ends over the same engine — the CLI and MCP tools; use whi
 | `xclog show <name-or-pid>` | `axiom_xclog_show` | `target` | `--device`→`device`, `--device-udid`→`deviceUdid`, `--last`→`last`, `--max-lines`→`maxLines`, `--filter`→`filter`, `--subsystem`→`subsystem` |
 | `xclog list` | `axiom_xclog_list` | — | `--device`→`device` |
 
-Over MCP each call blocks until it returns, so before calling `launch` or `attach`, tell the user to reproduce the issue during the capture. `launch` and `attach` stop at `timeout` or `maxLines`; with neither, the server adds a 30s timeout, and it ends any call at 120s, so keep `timeout` below that. Pass `output` to `launch` to keep the lines on disk; `attach` has no `output`. `show` reads the `last` window and takes no `timeout`. Results are JSON (no `--human` or `--no-color`); a failure comes back as `xclog failed (exit N): …` text. Pass absolute paths: relative ones resolve against the MCP server's working directory, not the project.
+Over MCP each call blocks until it returns, so before calling `launch` or `attach`, tell the user to reproduce the issue during the capture. `launch` and `attach` stop at `timeout` or `maxLines`; with neither, the server adds a 30s timeout, and it ends any call at 120s, so keep `timeout` below that. Pass `output` to `launch` to keep the lines on disk; `attach` has no `output`. `show` reads the `last` window and takes no `timeout`. Results are JSON (no `--human` or `--no-color`). A failure with no output comes back as `xclog failed (exit N): …` text; when lines were captured first (for example, the log stream died mid-capture), they come back followed by an `(xclog exit N: …)` line, and the capture is incomplete. Pass absolute paths: relative ones resolve against the MCP server's working directory, not the project.
 
 ## When to Use
 
@@ -246,6 +246,7 @@ xclog prints errors to stderr and exits with code 1. Common errors:
 | `could not parse PID from simctl output` | App failed to launch | Check the app builds and runs in the simulator |
 | `invalid filter regex` | Bad `--filter` pattern | Check Go regex syntax (similar to RE2) |
 | `invalid subsystem` | Subsystem contains spaces or special characters | Use reverse-DNS format: `com.example.MyApp` (alphanumeric, dots, underscores, hyphens only) |
+| `log stream exited early (…)` | The `log` subprocess died on its own mid-capture; lines printed before it are kept, the rest are missing | Read the `log` error above it on stderr; check the simulator is still booted, then rerun |
 
 ## Interpreting Output
 
