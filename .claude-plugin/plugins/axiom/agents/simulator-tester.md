@@ -89,14 +89,14 @@ fi
 
 ### 1. Screenshot Capture
 ```bash
-xcrun simctl io booted screenshot /tmp/screenshot-$(date +%s).png
+xcrun simctl io $UDID screenshot /tmp/screenshot-$(date +%s).png
 ```
 **Use for**: Visual fixes, layout issues, error states, documentation
 
 ### 2. Video Recording
 ```bash
 # Start recording in background
-xcrun simctl io booted recordVideo /tmp/recording.mov &
+xcrun simctl io $UDID recordVideo /tmp/recording.mov &
 RECORDING_PID=$!
 sleep 2  # Wait for recording to start
 
@@ -109,8 +109,8 @@ kill -INT $RECORDING_PID
 
 ### 3. Location Simulation
 ```bash
-xcrun simctl location booted set 37.7749 -122.4194  # San Francisco
-xcrun simctl location booted clear  # Clear location
+xcrun simctl location $UDID set 37.7749 -122.4194  # San Francisco
+xcrun simctl location $UDID clear  # Clear location
 ```
 **Common coords**: SF `37.7749 -122.4194`, NYC `40.7128 -74.0060`, London `51.5074 -0.1278`
 
@@ -122,33 +122,33 @@ cat > /tmp/push.json << 'EOF'
 EOF
 
 # Send push
-xcrun simctl push booted com.example.YourApp /tmp/push.json
+xcrun simctl push $UDID com.example.YourApp /tmp/push.json
 ```
 
 ### 5. Permission Management
 ```bash
 # Grant permissions
-xcrun simctl privacy booted grant location-always com.example.YourApp
-xcrun simctl privacy booted grant photos com.example.YourApp
-xcrun simctl privacy booted grant camera com.example.YourApp
+xcrun simctl privacy $UDID grant location-always com.example.YourApp
+xcrun simctl privacy $UDID grant photos com.example.YourApp
+xcrun simctl privacy $UDID grant camera com.example.YourApp
 
 # Revoke or reset
-xcrun simctl privacy booted revoke location com.example.YourApp
-xcrun simctl privacy booted reset all com.example.YourApp
+xcrun simctl privacy $UDID revoke location com.example.YourApp
+xcrun simctl privacy $UDID reset all com.example.YourApp
 ```
 **Available**: `location-always`, `location-when-in-use`, `photos`, `camera`, `microphone`, `contacts`, `calendar`
 
 ### 6. Deep Link Navigation
 ```bash
-xcrun simctl openurl booted myapp://settings/profile
-xcrun simctl openurl booted "https://example.com/product/123"
+xcrun simctl openurl $UDID myapp://settings/profile
+xcrun simctl openurl $UDID "https://example.com/product/123"
 ```
 
 ### 7. App Lifecycle
 ```bash
-xcrun simctl launch booted com.example.YourApp
-xcrun simctl terminate booted com.example.YourApp
-xcrun simctl install booted /path/to/YourApp.app
+xcrun simctl launch $UDID com.example.YourApp
+xcrun simctl terminate $UDID com.example.YourApp
+xcrun simctl install $UDID /path/to/YourApp.app
 ```
 
 ### 8. Status Bar Override (for screenshots)
@@ -202,7 +202,7 @@ The full verified catalog — `info displays`, `settings appearance`, `simulate 
 ### 10. Log Capture
 ```bash
 # Stream logs for specific app
-xcrun simctl spawn booted log stream --predicate 'subsystem == "com.example.YourApp"' --style compact
+xcrun simctl spawn $UDID log stream --predicate 'subsystem == "com.example.YourApp"' --style compact
 
 # Check recent crash logs
 ls -lt "$HOME/Library/Logs/DiagnosticReports/"*.crash 2>/dev/null | head -5
@@ -211,14 +211,14 @@ ls -lt "$HOME/Library/Logs/DiagnosticReports/"*.crash 2>/dev/null | head -5
 ### 11. App Inventory & Diagnostics
 ```bash
 # List all installed apps on booted simulator
-xcrun simctl listapps booted
+xcrun simctl listapps $UDID
 
 # Get app container path (useful for inspecting sandbox)
-xcrun simctl get_app_container booted com.example.YourApp data
-xcrun simctl get_app_container booted com.example.YourApp app
+xcrun simctl get_app_container $UDID com.example.YourApp data
+xcrun simctl get_app_container $UDID com.example.YourApp app
 
 # Get detailed app info
-xcrun simctl appinfo booted com.example.YourApp
+xcrun simctl appinfo $UDID com.example.YourApp
 
 # Comprehensive system diagnostics (no archive = faster)
 xcrun simctl diagnose --no-archive
@@ -234,7 +234,7 @@ xcrun simctl clone <source-udid> "Test Variant - Dark Mode"
 xcrun simctl list runtimes -j | jq '.runtimes[] | {name, identifier, isAvailable}'
 
 # Add CA certificate for proxy testing
-xcrun simctl keychain booted add-root-cert /path/to/ca.pem
+xcrun simctl keychain $UDID add-root-cert /path/to/ca.pem
 ```
 
 ### 13. UI Automation with AXe (preflighted via `xcui doctor`)
@@ -429,7 +429,7 @@ xcrun simctl diagnose -X --all-logs
 1. **Leave affected simulator booted** — More information collected from booted devices
 2. **Enable verbose logging first** — For hard-to-reproduce issues:
    ```bash
-   xcrun simctl logverbose booted enable
+   xcrun simctl logverbose $UDID enable
    # Reboot simulator, reproduce issue, then run diagnose
    xcrun simctl diagnose
    ```

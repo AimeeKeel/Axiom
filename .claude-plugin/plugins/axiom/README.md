@@ -69,7 +69,7 @@ Ask your question; your assistant loads the router that matches it, and the rout
 | `/axiom:profile` | Run automated performance profiling via xcprof (launches performance-profiler agent) |
 | `/axiom:resolve-deps` | Diagnose and resolve Swift Package Manager dependency conflicts (launches spm-conflict-resolver agent) |
 | `/axiom:run-tests` | Run XCUITests and parse results using the test-runner agent |
-| `/axiom:screenshot` | Capture screenshot from booted iOS Simulator |
+| `/axiom:screenshot` | Capture screenshot from a booted iOS Simulator |
 | `/axiom:status` | Project health dashboard - shows environment status and suggests improvements |
 | `/axiom:test-simulator` | Launch simulator testing agent for test scenarios and visual verification |
 | `/axiom:triage` | Triage a corpus of production crashes/hangs from Sentry or App Store Connect — classify, cluster into families, and flag suspension/idle-runloop false-positives |

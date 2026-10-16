@@ -146,19 +146,21 @@ After applying fixes, verify in simulator with visual confirmation.
 ```bash
 # 1. Boot simulator (if not already)
 xcrun simctl boot "iPhone 16 Pro"
+# $UDID: the UDID of the iPhone 16 Pro you just booted, from `xcrun simctl list devices booted`. Not `booted`: with several up, it silently targets one of them
 
-# 2. Build and install app
+# 2. Build for that device, then install (`xcodebuild build` does not install)
 "$AXBUILD" xcodebuild build -workspace YourApp.xcworkspace -scheme YourScheme \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+  -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath build
+xcrun simctl install $UDID build/Build/Products/Debug-iphonesimulator/YourApp.app
 
 # 3. Launch app
-xcrun simctl launch booted com.your.bundleid
+xcrun simctl launch $UDID com.your.bundleid
 
 # 4. Wait for UI to stabilize
 sleep 2
 
 # 5. Capture screenshot
-xcrun simctl io booted screenshot /tmp/verify-build-$(date +%s).png
+xcrun simctl io $UDID screenshot /tmp/verify-build-$(date +%s).png
 ```
 
 ### Using Axiom Tools
@@ -183,9 +185,9 @@ Use when:
 
 **Pro tip**: If you have debug deep links (see `axiom-swift (skills/deep-link-debugging.md)` skill), you can navigate directly to the screen that was broken:
 ```bash
-xcrun simctl openurl booted "debug://problem-screen"
+xcrun simctl openurl $UDID "debug://problem-screen"
 sleep 1
-xcrun simctl io booted screenshot /tmp/fix-verification.png
+xcrun simctl io $UDID screenshot /tmp/fix-verification.png
 ```
 
 ## Decision Tree

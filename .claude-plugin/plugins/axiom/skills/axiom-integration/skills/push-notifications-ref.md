@@ -822,7 +822,8 @@ curl \
 ### Simulator Push
 
 ```bash
-xcrun simctl push booted com.example.app payload.json
+# $UDID: your simulator's UDID from `xcrun simctl list devices booted`. Not `booted`: with several up, it silently targets one of them
+xcrun simctl push $UDID com.example.app payload.json
 ```
 
 ### Simulator Payload File

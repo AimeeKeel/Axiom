@@ -111,11 +111,13 @@ extension URL {
 
 ```bash
 # Navigate to settings
-xcrun simctl openurl booted "debug://settings"
+xcrun simctl openurl <UDID> "debug://settings"
 
 # Navigate to a profile with a parameter
-xcrun simctl openurl booted "debug://profile?id=12345"
+xcrun simctl openurl <UDID> "debug://profile?id=12345"
 ```
+
+Use your simulator's UDID from `xcrun simctl list devices booted`. The shortcut `booted` works when one simulator is running, but with several it picks one for you, and the command can still report success against the wrong device.
 
 The first time you open a `debug://` URL on a simulator, an alert asks to open it in your app. `openurl` still exits 0 while the alert is up, so tap **Open** once by hand, or ask your assistant to pre-approve the scheme.
 

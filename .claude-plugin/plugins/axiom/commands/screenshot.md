@@ -1,6 +1,6 @@
 ---
 name: screenshot
-description: Capture screenshot from booted iOS Simulator
+description: Capture screenshot from a booted iOS Simulator
 disable-model-invocation: true
 ---
 
@@ -10,7 +10,7 @@ Take a screenshot of the currently booted iOS Simulator and display it for analy
 
 ## What This Does
 
-1. Checks if a simulator is booted
+1. Finds the booted simulator's UDID (asks which one when several are booted)
 2. Captures screenshot to timestamped file
 3. Displays the screenshot (Claude is multimodal!)
 4. Returns the file path for reference
@@ -18,7 +18,7 @@ Take a screenshot of the currently booted iOS Simulator and display it for analy
 ## Usage
 
 Simply run this command and Claude will:
-- Execute: `xcrun simctl io booted screenshot /tmp/axiom-screenshot-<timestamp>.png`
+- Execute: `xcrun simctl io <UDID> screenshot /tmp/axiom-screenshot-<timestamp>.png`, with the UDID from `xcrun simctl list devices booted`. Not `booted`: with several simulators up, it silently captures one of them, even a tvOS one
 - Read and display the screenshot
 - Analyze what's visible in the screenshot
 

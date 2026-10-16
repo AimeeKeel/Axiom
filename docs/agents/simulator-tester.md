@@ -64,8 +64,8 @@ You ask: "Take a screenshot to verify the login button fix". The agent:
 
 You ask: "Test my app with location set to San Francisco". The agent:
 
-1. Sets the location: `xcrun simctl location booted set 37.7749 -122.4194`
-2. Grants location permission: `xcrun simctl privacy booted grant location-always <bundle-id>`
+1. Sets the location: `xcrun simctl location <UDID> set 37.7749 -122.4194`
+2. Grants location permission: `xcrun simctl privacy <UDID> grant location-always <bundle-id>`
 3. Launches the app
 4. Takes a screenshot of the map view
 5. Verifies that the location marker appears at San Francisco's coordinates
@@ -75,7 +75,7 @@ You ask: "Test my app with location set to San Francisco". The agent:
 You ask: "Send a test push notification and screenshot the result". The agent:
 
 1. Writes a test payload file
-2. Sends the push: `xcrun simctl push booted <bundle-id> payload.json`
+2. Sends the push: `xcrun simctl push <UDID> <bundle-id> payload.json`
 3. Waits for the notification to appear
 4. Captures a screenshot showing it
 5. Checks the logs to confirm your app handled it
