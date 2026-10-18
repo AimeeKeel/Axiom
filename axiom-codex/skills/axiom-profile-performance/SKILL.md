@@ -60,7 +60,7 @@ Map the user's intent to a preset (or explicit instruments), then record. Record
 
 Targets and their gates:
 
-- **Attach** (`--attach <pid|name>`) — the default; no gate. Prefer it whenever the app is already running.
+- **Attach** — `--attach <pid|name>`, the default; no gate. Prefer it whenever the app is already running.
 - **Launch from startup** — append `--allow-launch ... -- <app-path>` (add `--device "$BOOTED"` for a sim). `--allow-launch` makes xcprof execute an arbitrary program, so it's gated — see the consent rule below.
 - **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target. `--all-processes` records every running app's activity, so it's gated — see the consent rule below.
 - Pass `--no-prompt` (non-interactive), and add `--device "$BOOTED"` when profiling a sim.
@@ -124,7 +124,7 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ### Recommendations
 1. Highest-impact fix, tied to a specific frame/family
-2. Next investigation step (e.g. re-scope a hang window, add `--dsym`)
+2. Next investigation step (e.g. re-scope a hang window, or symbolicate a stripped build with its dSYM)
 
 ### Next steps
 - Open in Instruments for deeper / unparsed views: `open "<trace>"`

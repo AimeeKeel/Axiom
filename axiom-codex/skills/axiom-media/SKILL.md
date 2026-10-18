@@ -41,6 +41,7 @@ license: MIT
 | SharePlay coordinated playback, AVDelegatingPlaybackCoordinator, custom-engine sync | See `skills/shareplay-playback.md` |
 | SharePlay session lifecycle, activation, non-media state | Use axiom-integration (`skills/shareplay.md`) instead |
 | Now Playing metadata, remote commands | See `skills/now-playing.md` |
+| Siri playing content in your audio app ("play X in MyApp", like/add-to-playlist by voice) | **Use `axiom-integration` (`skills/siri-audio.md`)** — Audio schema domain + SiriKit media |
 | Animated lock-screen artwork (iOS 26+) | See `skills/now-playing.md` Pattern 8 |
 | NowPlaying framework (`import NowPlaying`, Swift-native `MediaSession`, `OS27`) | See `skills/now-playing.md` (NowPlaying Framework section) |
 | Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes, AVSystemRouting (`iOS27`, likely EU-gated) | See `skills/system-media-routing.md` |
@@ -89,6 +90,7 @@ digraph media {
 6. On-device face grouping (cluster faces into people across a library) or video highlights / key-frame detection? → `skills/media-intelligence.md` (`OS27`)
 7. Haptics? → `skills/haptics.md`
 8. Now Playing / remote commands? → `skills/now-playing.md`, `skills/now-playing-carplay.md`, `skills/now-playing-musickit.md`
+8a. Siri playback in your audio app ("play X in MyApp")? → **axiom-integration** (`skills/siri-audio.md`); Siri's "pause"/"next"/"what song is this?" stay here (remote commands + now-playing metadata)
 9. Reading the user's Apple Music **library** (enumerate songs/playlists, library identity, sync)? → `skills/music-library.md` — a different problem from playback; read it before any library walk
 10. Cast / route media to non-AirPlay devices (Google Cast/Chromecast, DLNA) as system routes? → `skills/system-media-routing.md` (`iOS27`, likely EU-gated)
 11. Screen capture / recording / streaming the screen or your own app (ScreenCaptureKit)? → `skills/screen-capture.md` (`OS27` — new on iOS/iPadOS/tvOS/visionOS 27)

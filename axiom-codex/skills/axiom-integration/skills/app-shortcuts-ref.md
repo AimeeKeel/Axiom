@@ -685,6 +685,8 @@ Once implemented, your App Shortcuts are available in:
 - Try simpler phrases — brief and easy to say aloud
 - Avoid complex grammar or rare words
 
+**If the phrase falls through to a web or Maps result but tapping the shortcut works:** the user declined the per-app "Turn on [App] shortcuts with Siri?" opt-in. That consent is TCC-backed and separate from SiriKit — App Shortcuts never need `INPreferences.requestSiriAuthorization`, and `INPreferences.siriAuthorizationStatus()` "checks the legacy SiriKit authorization status" (Apple DTS), so it reports `.authorized` regardless. No API reports the opt-in; don't gate UI on `siriAuthorizationStatus()`. One forum report (iOS 18.6 / watchOS 26.6): the per-app Siri setting on iOS restored voice invocation, and reinstalling the app did not reset the decision, though DTS expected deletion to clear it.
+
 ---
 
 ### Test Spotlight Discovery
