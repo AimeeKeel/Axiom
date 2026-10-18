@@ -23,6 +23,8 @@ flowchart LR
         background_processing["background-processing"]:::discipline
         push_notifications["push-notifications"]:::discipline
         shazamkit["ShazamKit"]:::discipline
+        siri_audio["siri-audio"]:::discipline
+        siri_notes_reminders["siri-notes-reminders"]:::discipline
         core_location["core-location"]:::discipline
         haptics["haptics"]:::discipline
         localization["localization"]:::discipline
@@ -32,6 +34,8 @@ flowchart LR
 
     subgraph skills_r["References"]
         app_intents_ref["app-intents-ref"]:::reference
+        siri_audio_ref["siri-audio-ref"]:::reference
+        app_schemas_ref["app-schemas-ref"]:::reference
         storekit_ref["StoreKit reference"]:::reference
         avfoundation_ref["avfoundation-ref"]:::reference
         extensions_widgets_ref["extensions-widgets-ref"]:::reference
@@ -92,6 +96,32 @@ Audio recognition and custom audio matching:
 **When to use** Adding song recognition, building audio-synced experiences, creating custom audio catalogs, managing Shazam library
 
 **Requirements** iOS 15+ (SHSession), iOS 17+ (SHManagedSession, SHLibrary)
+
+---
+
+### [Siri for Audio Apps](./siri-audio)
+
+Making "play X in MyApp" work with every kind of Siri:
+- **Audio schema domain** – Song, album, artist, playlist, podcast, audiobook, radio, and other audio entities, plus the `playAudio` intent (iOS 27)
+- **Search resolution** – An `IntentValueQuery` over `AudioSearch` that survives Siri's phrasing
+- **SiriKit media** – `INPlayMediaIntent` for classic Siri (no Siri AI), with its authorization rules
+- **Now Playing commands** – How "pause", "next", and "what song is this?" reach your app
+- **Diagnostics** – "I can't play that", "hasn't added support for that with Siri", and cold-start failures
+
+**When to use** Adding Siri playback, liking, or add-to-playlist to a music, podcast, audiobook, or radio app, or debugging Siri requests that don't play
+
+---
+
+### [Siri for Notes, Lists, and Reminders Apps](./siri-notes-reminders)
+
+Moving a notes, list, or to-do app off the SiriKit Lists and Notes intents that iOS 27 deprecates:
+- **Notes and Reminders schema domains** – The schemas Siri AI uses, and how each old SiriKit intent maps to them
+- **What to keep** – The SiriKit Intents extension for Apple Watch, iOS 26 users, and classic Siri, and where App Shortcuts fit
+- **Build failures** – Required parameters, file content types, and return values the new schemas demand
+
+**When to use** Seeing SiriKit Lists or Notes deprecation warnings, or adding "create a reminder" or "add to my note" to your app
+
+**Requirements** iOS 27+ (Audio schemas), iOS 14+ (in-app SiriKit media)
 
 ---
 

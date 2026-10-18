@@ -44,6 +44,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**alarmkit-ref**](./alarmkit-ref) | AlarmKit API — alarm scheduling, authorization, Live Activity integration (iOS 26+) |
 | [**app-discoverability**](/skills/integration/app-discoverability) | Discoverability strategy — App Intents, App Shortcuts, Core Spotlight, NSUserActivity for Spotlight and Siri |
 | [**app-intents-ref**](./app-intents-ref) | App Intents framework — AppIntent, AppEntity, parameters, queries, Siri, Apple Intelligence, Shortcuts, Spotlight |
+| [**app-schemas-ref**](./app-schemas-ref) | App Intents schema domains — every domain's required intent parameters, return types, entity properties, enum cases, and deprecated schemas, from a build census |
 | [**app-shortcuts-ref**](./app-shortcuts-ref) | App Shortcuts — AppShortcutsProvider, suggested phrases, Siri/Spotlight availability, debugging |
 | [**avfoundation-ref**](./avfoundation-ref) | AVFoundation audio APIs — AVAudioSession, AVAudioEngine, bit-perfect DAC, iOS 26+ spatial audio, ASAF/APAC |
 | [**background-processing-ref**](./background-processing-ref) | Background processing API — BGTaskScheduler, BGAppRefreshTask, BGProcessingTask, BGContinuedProcessingTask |
@@ -63,6 +64,7 @@ Comprehensive guides and documentation for Apple platform development. Reference
 | [**photo-library-ref**](./photo-library-ref) | Photo Library API — PHPickerViewController, PhotosPicker, PHAsset, photo selection patterns |
 | [**privacy-ux**](/skills/integration/privacy-ux) | Privacy manifests and permission UX — just-in-time permissions, App Tracking Transparency, Required Reason APIs |
 | [**push-notifications-ref**](./push-notifications-ref) | Push notifications — APNs HTTP/2, UserNotifications framework, silent push, rich media, service extensions |
+| [**siri-audio-ref**](./siri-audio-ref) | Siri for audio apps — Audio schema shapes (required members, parameters, enum cases), `AudioSearch`, SiriKit media setup and authorization, metadata build errors |
 | [**storekit-ref**](./storekit-ref) | StoreKit 2 API — Product, Transaction, subscription management, receipts, testing |
 
 ## Computer Vision

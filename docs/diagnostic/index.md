@@ -23,6 +23,7 @@ Systematic diagnostics for production issues with mandatory workflows and pressu
 | [**networking-diag**](./networking-diag) | Connection timeouts, TLS failures, data arrival issues — Network.framework diagnostics with production crisis defense |
 | [**push-notifications-diag**](./push-notifications-diag) | Notifications not arriving, token registration failed, works in dev not production, silent push throttled, rich media missing — push notification diagnostics with delivery log analysis |
 | [**realitykit-diag**](./realitykit-diag) | Entity loading failures, physics issues, rendering problems — RealityKit diagnostics |
+| [**siri-audio-diag**](./siri-audio-diag) | Siri says "I can't play that" or "hasn't added support for that with Siri", can't find items by name, or works only while the app is open — Siri playback diagnostics for audio apps |
 | [**spritekit-diag**](./spritekit-diag) | Physics contacts not firing, frame drops, tunneling, coordinate confusion — SpriteKit diagnostics |
 | [**storage-diag**](./storage-diag) | Files disappeared, backup too large, file access errors — systematic local storage diagnostics with production crisis defense |
 | [**swiftdata-migration-diag**](./swiftdata-migration-diag) | SwiftData migration crashes, relationship preservation failures, device vs simulator issues — schema migration diagnostics with testing workflows |

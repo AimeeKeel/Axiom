@@ -28,6 +28,7 @@ import {
   measureFootprints,
 } from "./always-on-footprint.ts";
 import { SHARED_SECTIONS, checkSharedSections } from "./shared-sections.ts";
+import { type Census, CENSUS_FILE, GENERATED_END, GENERATED_START, interfaceDrift, readInterface, REFERENCE_FILE, renderSchemaReference, replaceGeneratedSection } from "./app-schemas.ts";
 import { checkCodexOutput } from "./codex-output.js";
 import {
   NPM_PACKAGE,
@@ -1667,6 +1668,64 @@ if (sharedSectionErrors.length === 0) {
   console.log(
     `  ✓ ${SHARED_SECTIONS.length} shared section(s), ${copies} generated copies, all matching their source`,
   );
+}
+
+// ── 12d-quater. App Schema Census ──
+//
+// app-schemas-ref.md is rendered from scripts/app-schemas.json, a build census of every
+// App Intents schema. Fails when the reference was edited without the census (or the
+// reverse), when the census still has rows its control build rejected, or when the installed
+// iphoneos SDK of the census's own version lists different schemas. A newer SDK with different
+// schemas warns: a new Xcode landed and `node scripts/app-schemas.ts census` has not run.
+// Tests: scripts/app-schemas.test.ts.
+
+heading("12d-quater. App Schema Census");
+
+{
+  const census: Census = JSON.parse(fs.readFileSync(CENSUS_FILE, "utf8"));
+  const reference = fs.readFileSync(REFERENCE_FILE, "utf8");
+  const rendered = replaceGeneratedSection(reference, renderSchemaReference(census));
+  let failed = false;
+  if (rendered === undefined) {
+    failed = true;
+    error("app-schemas", `app-schemas-ref.md lacks the generated-section markers "${GENERATED_START}" and "${GENERATED_END}"; restore them, then run node scripts/app-schemas.ts`);
+  } else if (rendered !== reference) {
+    failed = true;
+    error("app-schemas", "app-schemas-ref.md does not match scripts/app-schemas.json; run node scripts/app-schemas.ts");
+  }
+  if (census.unconfirmed.length > 0) {
+    failed = true;
+    error("app-schemas", `${census.unconfirmed.length} census row(s) failed the control build: ${census.unconfirmed[0]}`);
+  }
+  let installed: ReturnType<typeof readInterface>;
+  try {
+    installed = readInterface();
+  } catch (e) {
+    // A new SDK can add a domain the parser rejects; that, like drift, waits for the census.
+    let version = "";
+    try {
+      version = execFileSync("xcrun", ["--sdk", "iphoneos", "--show-sdk-version"], { encoding: "utf8" }).trim();
+    } catch {}
+    const message = `could not read the installed iphoneos ${version || "(unknown version)"} SDK's AppIntents schemas (${(e as Error).message}); update scripts/app-schemas.ts, then run node scripts/app-schemas.ts census`;
+    if (census.sdk === `iphoneos ${version}`) {
+      failed = true;
+      error("app-schemas", message);
+    } else warn("app-schemas", message);
+  }
+  const drift = installed ? interfaceDrift(installed.decls, census) : [];
+  // Same SDK version and different schemas means the census is wrong. A different version
+  // means a new Xcode landed: warn, so installing a beta does not block every commit.
+  if (drift.length > 0) {
+    const message = `installed iphoneos ${installed!.sdkVersion} SDK differs from the ${census.sdk} census (${drift.slice(0, 3).join("; ")}); run node scripts/app-schemas.ts census`;
+    if (census.sdk === `iphoneos ${installed!.sdkVersion}`) {
+      failed = true;
+      error("app-schemas", message);
+    } else warn("app-schemas", message);
+  }
+  if (!failed) {
+    const sdkNote = !installed ? "; installed SDK not compared" : drift.length > 0 ? "; installed SDK drift is a warning" : " and the installed SDK";
+    console.log(`  ✓ schema census (${census.sdk}) matches its reference${sdkNote}`);
+  }
 }
 
 // ── 12e. README Stats-Block Parity ──

@@ -372,6 +372,28 @@ class TestPositiveRouting(unittest.TestCase):
         self.assertIn("axiom-integration", routed_skills(
             "My VoIP app gets killed — how do I report a CallKit call from a PushKit push?"))
 
+    def test_integration_siri_audio_without_the_word_siri(self):
+        self.assertIn("axiom-integration", routed_skills(
+            "How do I handle INPlayMediaIntent in my music app?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "What should values(for: AudioSearch) return for .unspecified?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Which parameters does @AppIntent(schema: .audio.playAudio) require?"))
+        self.assertNotIn("axiom-integration", routed_skills(
+            "entity.playAudio(resource) is silent in RealityKit"))
+
+    def test_integration_sirikit_lists_and_notes(self):
+        self.assertIn("axiom-integration", routed_skills(
+            "INAddTasksIntent is deprecated in iOS 27, what replaces it?"))
+        self.assertIn("axiom-integration", routed_skills(
+            "My INCreateNoteIntent handler shows a deprecation warning"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Port my INSetTaskAttributeIntent and INSnoozeTasksIntent handling"))
+        self.assertIn("axiom-integration", routed_skills(
+            "Missing required property 'list' from AppSchemaEntity 'reminders.reminder'"))
+        self.assertNotIn("axiom-integration", routed_skills(
+            "My todo list view does not scroll smoothly"))
+
     def test_integration_shareplay(self):
         self.assertIn("axiom-integration", routed_skills(
             "How do I add SharePlay to my app?"))

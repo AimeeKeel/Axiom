@@ -1283,7 +1283,29 @@
       "won"
     ],
     "related": [
-      "axiom-integration"
+      "axiom-integration",
+      "axiom-integration--app-schemas-ref"
+    ]
+  },
+  "axiom-integration--app-schemas-ref": {
+    "category": "integration",
+    "tags": [
+      "appschema",
+      "appintent(schema:)",
+      "appentity(schema:)",
+      "appenum(schema:)",
+      "schema-domains",
+      "extractappintentsmetadata",
+      "notes",
+      "reminders",
+      "calendar",
+      "shortcuts"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--app-intents-ref",
+      "axiom-integration--siri-audio-ref",
+      "axiom-integration--siri-notes-reminders"
     ]
   },
   "axiom-integration--app-shortcuts-ref": {
@@ -1636,6 +1658,84 @@
     "related": [
       "axiom-integration",
       "axiom-integration--shareplay"
+    ]
+  },
+  "axiom-integration--siri-audio": {
+    "category": "integration",
+    "tags": [
+      "siri",
+      "playaudio",
+      "audiosearch",
+      "sirikit",
+      "inplaymediaintent",
+      "music",
+      "podcast",
+      "audiobook"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--siri-audio-diag",
+      "axiom-integration--siri-audio-ref",
+      "axiom-media--now-playing"
+    ]
+  },
+  "axiom-integration--siri-audio-diag": {
+    "category": "integration",
+    "tags": [
+      "siri",
+      "audiosearch",
+      "intentvaluequery",
+      "inplaymediaintent",
+      "entitystringquery",
+      "appintentstesting",
+      "cold-start"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--siri-audio",
+      "axiom-integration--siri-audio-ref"
+    ]
+  },
+  "axiom-integration--siri-audio-ref": {
+    "category": "integration",
+    "tags": [
+      "audioitem",
+      "audiosearch",
+      "mediaintents",
+      "sirikit",
+      "inplaymediaintent",
+      "playaudio",
+      "warmupaudioqueue",
+      "unionvalue",
+      "inpreferences",
+      "nssiriusagedescription"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--siri-audio",
+      "axiom-integration--siri-audio-diag",
+      "axiom-integration--app-schemas-ref"
+    ]
+  },
+  "axiom-integration--siri-notes-reminders": {
+    "category": "integration",
+    "tags": [
+      "sirikit",
+      "inaddtasksintent",
+      "increatenoteintent",
+      "insettaskattributeintent",
+      "reminders",
+      "notes",
+      "to-do",
+      "lists",
+      "watchos"
+    ],
+    "related": [
+      "axiom-integration",
+      "axiom-integration--app-schemas-ref",
+      "axiom-integration--app-shortcuts-ref",
+      "axiom-integration--siri-audio",
+      "axiom-integration--eventkit"
     ]
   },
   "axiom-integration--storekit-ref": {

@@ -134,6 +134,7 @@ Skills are the Apple-platform guidance Axiom gives your assistant, which loads t
 | [**apple-docs-research**](/skills/integration/apple-docs-research) | Researching Apple frameworks, getting WWDC transcripts, using sosumi.ai |
 | [**app-discoverability**](/skills/integration/app-discoverability) | App Intents, App Shortcuts, Core Spotlight, and `NSUserActivity` for Spotlight and Siri suggestions |
 | [**app-intents-ref**](/reference/app-intents-ref) | Siri, Apple Intelligence, Shortcuts, Spotlight integration (iOS 16+) |
+| [**app-schemas-ref**](/reference/app-schemas-ref) | The required parameters, properties, enum cases, and return types of every App Intents schema, generated from the iOS 27 SDK |
 | [**app-shortcuts-ref**](/reference/app-shortcuts-ref) | App Shortcuts, instant Siri availability, suggested phrases |
 | [**avfoundation-ref**](/reference/avfoundation-ref) | `AVAudioSession`, `AVAudioEngine`, bit-perfect DAC output, iOS 26+ spatial audio capture |
 | [**background-processing**](/skills/integration/background-processing) | `BGTaskScheduler`, background `URLSession`, `BGContinuedProcessingTask` (iOS 26+) |
@@ -155,6 +156,8 @@ Skills are the Apple-platform guidance Axiom gives your assistant, which loads t
 | [**networking-diag**](/diagnostic/networking-diag) | Connection timeouts, TLS failures, data not arriving, performance issues |
 | [**now-playing**](/skills/integration/now-playing) | Now Playing metadata, Lock Screen and Control Center integration, remote commands |
 | [**photo-library**](/skills/integration/photo-library) | `PHPickerViewController`, `PhotosPicker`, photo selection and access |
+| [**siri-audio**](/skills/integration/siri-audio) | Siri playback in audio apps — the Audio schema domain (iOS 27), SiriKit media for classic Siri, and Now Playing commands |
+| [**siri-notes-reminders**](/skills/integration/siri-notes-reminders) | Siri in notes, list, and to-do apps — moving from the deprecated SiriKit Lists and Notes intents to the Notes and Reminders schemas (iOS 27) |
 | [**storekit-ref**](/reference/storekit-ref) | Complete StoreKit 2 API reference, including the iOS 18.4, iOS 26.4, and OS 27 additions |
 | [**tvos**](/skills/integration/tvos) | tvOS development — focus engine, top shelf, platform differences |
 

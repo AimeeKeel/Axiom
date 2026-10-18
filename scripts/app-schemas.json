@@ -1,0 +1,5678 @@
+{
+  "xcode": "Xcode 27.1 (27A9275)",
+  "sdk": "iphoneos 27.1",
+  "domains": [
+    {
+      "name": "audio",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "addToLibrary",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "audioEntity",
+              "type": "AudioItem",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addToPlaylist",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "audioEntity",
+              "type": "AudioItem",
+              "optional": false
+            },
+            {
+              "name": "playlist",
+              "type": ".audio.playlist",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "createStation",
+          "available": "OS27",
+          "parameters": []
+        },
+        {
+          "name": "playAudio",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "audioEntity",
+              "type": "AudioItem",
+              "optional": false
+            },
+            {
+              "name": "playbackAttributes",
+              "type": "Set<.audio.playbackAttributes>",
+              "optional": false
+            },
+            {
+              "name": "queueLocation",
+              "type": ".audio.queueInsertionLocation",
+              "optional": true
+            },
+            {
+              "name": "warmupAudioQueueResult",
+              "type": ".audio.warmupAudioQueueResult",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "recognizeAudio",
+          "available": "OS27",
+          "parameters": [],
+          "returns": "[AudioItem]"
+        },
+        {
+          "name": "updateAudioAffinity",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "affinityState",
+              "type": ".audio.affinityState",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": "AudioItem",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "warmupAudioQueue",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "audioEntity",
+              "type": "AudioItem",
+              "optional": false
+            },
+            {
+              "name": "playbackAttributes",
+              "type": "Set<.audio.playbackAttributes>",
+              "optional": false
+            }
+          ],
+          "returns": ".audio.warmupAudioQueueResult"
+        }
+      ],
+      "entities": [
+        {
+          "name": "album",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "artistName",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "artists",
+              "type": "[.audio.artist]",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "universalProductCode",
+              "type": "String",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "algorithmicRadioStation",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "curatedForMe",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "ambientSound",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "artist",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "audiobook",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "author",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "genre",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "narrator",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "publisher",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "purchaseDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "releaseDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "seriesTitle",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "classicalMusicRecording",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "artistName",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "artists",
+              "type": "[.audio.artist]",
+              "optional": false
+            },
+            {
+              "name": "composerName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "composers",
+              "type": "[.audio.artist]",
+              "optional": false
+            },
+            {
+              "name": "internationalStandardRecordingCode",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "liveRadioStation",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "providerName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "newsBrief",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "date",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "provider",
+              "type": ".audio.newsProvider",
+              "optional": true
+            },
+            {
+              "name": "providerName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "newsProvider",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "playlist",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "createdByMe",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "curatedForMe",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "owner",
+              "type": "Owner",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "podcastCollection",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "podcastEpisode",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "duration",
+              "type": "Double",
+              "optional": true
+            },
+            {
+              "name": "releaseDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "show",
+              "type": ".audio.podcastShow",
+              "optional": true
+            },
+            {
+              "name": "showName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "podcastShow",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "showDescription",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "radioShow",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "radioShowEpisode",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "releaseDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "show",
+              "type": ".audio.radioShow",
+              "optional": true
+            },
+            {
+              "name": "showName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "song",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "album",
+              "type": ".audio.album",
+              "optional": true
+            },
+            {
+              "name": "albumTitle",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "artistName",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "artists",
+              "type": "[.audio.artist]",
+              "optional": false
+            },
+            {
+              "name": "composerName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "composers",
+              "type": "[.audio.artist]",
+              "optional": false
+            },
+            {
+              "name": "internationalStandardRecordingCode",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "songCollection",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "warmupAudioQueueResult",
+          "available": "OS27",
+          "properties": []
+        }
+      ],
+      "enums": [
+        {
+          "name": "activity",
+          "available": "OS27",
+          "cases": [
+            "barbecuing",
+            "beachDay",
+            "cleaning",
+            "commuting",
+            "cooking",
+            "cycling",
+            "dance",
+            "dining",
+            "driving",
+            "focusing",
+            "gaming",
+            "gardening",
+            "hiit",
+            "indoorActivity",
+            "meditating",
+            "outdoorActivity",
+            "partying",
+            "reading",
+            "relaxing",
+            "roadTrip",
+            "rowing",
+            "running",
+            "showering",
+            "sleeping",
+            "strength",
+            "studying",
+            "traveling",
+            "walking",
+            "working",
+            "workoutHighIntensity",
+            "workoutLowIntensity",
+            "workoutMediumIntensity",
+            "yoga"
+          ]
+        },
+        {
+          "name": "affinityState",
+          "available": "OS27",
+          "cases": [
+            "dislike",
+            "like",
+            "unset"
+          ]
+        },
+        {
+          "name": "appViewIdentifier",
+          "available": "OS27",
+          "cases": [
+            "nowPlaying"
+          ]
+        },
+        {
+          "name": "invocationSource",
+          "available": "OS27",
+          "cases": [
+            "suggestedByApp",
+            "userInitiated"
+          ]
+        },
+        {
+          "name": "playbackAttributes",
+          "available": "OS27",
+          "cases": [
+            "repeat",
+            "shuffle"
+          ]
+        },
+        {
+          "name": "queueInsertionLocation",
+          "available": "OS27",
+          "cases": [
+            "next",
+            "tail"
+          ]
+        }
+      ],
+      "unions": {
+        "AudioItem": [
+          ".audio.song",
+          ".audio.album",
+          ".audio.artist",
+          ".audio.playlist",
+          ".audio.songCollection",
+          ".audio.classicalMusicRecording",
+          ".audio.liveRadioStation",
+          ".audio.algorithmicRadioStation",
+          ".audio.radioShowEpisode",
+          ".audio.radioShow",
+          ".audio.podcastShow",
+          ".audio.podcastEpisode",
+          ".audio.podcastCollection",
+          ".audio.audiobook",
+          ".audio.ambientSound",
+          ".audio.newsBrief",
+          ".audio.newsProvider"
+        ],
+        "Owner": [
+          "IntentPerson",
+          "String"
+        ]
+      },
+      "singleCase": {
+        "AudioItem": "yes",
+        "Owner": "yes"
+      }
+    },
+    {
+      "name": "calendar",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "createEvent",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "attendees",
+              "type": "[.calendar.attendee]",
+              "optional": false
+            },
+            {
+              "name": "calendar",
+              "type": ".calendar.calendar",
+              "optional": false
+            },
+            {
+              "name": "endDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "isAllDay",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "location",
+              "type": "EventLocation",
+              "optional": true
+            },
+            {
+              "name": "note",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "recurrence",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "startDate",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ],
+          "returns": ".calendar.event"
+        },
+        {
+          "name": "deleteEvent",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "entity",
+              "type": ".calendar.event",
+              "optional": false
+            },
+            {
+              "name": "span",
+              "type": ".calendar.eventSpan",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "updateEvent",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "attendees",
+              "type": "[.calendar.attendee]",
+              "optional": true
+            },
+            {
+              "name": "calendar",
+              "type": ".calendar.calendar",
+              "optional": true
+            },
+            {
+              "name": "endDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "event",
+              "type": ".calendar.event",
+              "optional": false
+            },
+            {
+              "name": "isAllDay",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "location",
+              "type": "EventLocation",
+              "optional": true
+            },
+            {
+              "name": "note",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "recurrence",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "span",
+              "type": ".calendar.eventSpan",
+              "optional": true
+            },
+            {
+              "name": "startDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ],
+          "returns": ".calendar.event"
+        }
+      ],
+      "entities": [
+        {
+          "name": "attendee",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "isAttendanceOptional",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "person",
+              "type": "IntentPerson",
+              "optional": false
+            },
+            {
+              "name": "status",
+              "type": ".calendar.attendeeStatus",
+              "optional": true
+            },
+            {
+              "name": "type",
+              "type": ".calendar.attendeeType",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "calendar",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "event",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "alarms",
+              "type": "[EventAlarm]",
+              "optional": false
+            },
+            {
+              "name": "attendees",
+              "type": "[.calendar.attendee]",
+              "optional": false
+            },
+            {
+              "name": "calendar",
+              "type": ".calendar.calendar",
+              "optional": false
+            },
+            {
+              "name": "endDate",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "isAllDay",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "location",
+              "type": "EventLocation",
+              "optional": true
+            },
+            {
+              "name": "note",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "organizers",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "recurrence",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "startDate",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "status",
+              "type": ".calendar.eventStatus",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "travelTime",
+              "type": "Duration",
+              "optional": true
+            },
+            {
+              "name": "virtualLocation",
+              "type": "URL",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "attendeeStatus",
+          "available": "OS27",
+          "cases": [
+            "accepted",
+            "declined",
+            "tentative"
+          ]
+        },
+        {
+          "name": "attendeeType",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "eventSpan",
+          "available": "OS27",
+          "cases": [
+            "all",
+            "future",
+            "this"
+          ]
+        },
+        {
+          "name": "eventStatus",
+          "available": "OS27",
+          "cases": [
+            "cancelled",
+            "confirmed",
+            "tentative"
+          ]
+        }
+      ],
+      "unions": {
+        "EventAlarm": [
+          "Duration",
+          "Date"
+        ],
+        "EventLocation": [
+          "GeoToolbox.PlaceDescriptor",
+          "String"
+        ]
+      },
+      "singleCase": {
+        "EventAlarm": "yes",
+        "EventLocation": "yes"
+      }
+    },
+    {
+      "name": "camera",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "openInCaptureMode",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".camera.captureMode",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "setDevice",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "device",
+              "type": ".camera.captureDevice",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "startCapture",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "captureMode",
+              "type": ".camera.captureMode",
+              "optional": false
+            },
+            {
+              "name": "device",
+              "type": ".camera.captureDevice",
+              "optional": true
+            },
+            {
+              "name": "timerDuration",
+              "type": ".camera.captureDuration",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "stopCapture",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": []
+        },
+        {
+          "name": "switchDevice",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": []
+        }
+      ],
+      "entities": [],
+      "enums": [
+        {
+          "name": "captureDevice",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "captureDuration",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "captureMode",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "clock",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "cancelTimer",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.clock.timer]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "createAlarm",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "canSnooze",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "label",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "recurrenceDays",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "time",
+              "type": "DateComponents",
+              "optional": false
+            }
+          ],
+          "returns": ".clock.alarm"
+        },
+        {
+          "name": "createTimer",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "duration",
+              "type": "Duration",
+              "optional": false
+            },
+            {
+              "name": "isSleepTimer",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "label",
+              "type": "String",
+              "optional": true
+            }
+          ],
+          "returns": ".clock.timer"
+        },
+        {
+          "name": "deleteAlarm",
+          "available": "OS27",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.clock.alarm]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "dismissAlarm",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "alarm",
+              "type": ".clock.alarm",
+              "optional": false
+            }
+          ],
+          "returns": ".clock.alarm"
+        },
+        {
+          "name": "lapStopwatch",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "stopwatch",
+              "type": ".clock.stopwatch",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "pauseTimer",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "timer",
+              "type": ".clock.timer",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "resetStopwatch",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "stopwatch",
+              "type": ".clock.stopwatch",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "resumeTimer",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "timer",
+              "type": ".clock.timer",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "snoozeAlarm",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "alarm",
+              "type": ".clock.alarm",
+              "optional": false
+            },
+            {
+              "name": "duration",
+              "type": "Duration",
+              "optional": false
+            }
+          ],
+          "returns": ".clock.alarm"
+        },
+        {
+          "name": "startStopwatch",
+          "available": "OS27",
+          "parameters": [],
+          "returns": ".clock.stopwatch"
+        },
+        {
+          "name": "stopStopwatch",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "stopwatch",
+              "type": ".clock.stopwatch",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateAlarm",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "alarm",
+              "type": ".clock.alarm",
+              "optional": false
+            },
+            {
+              "name": "allowsSnooze",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "isEnabled",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "label",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "recurrenceDays",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "time",
+              "type": "DateComponents",
+              "optional": true
+            }
+          ],
+          "returns": ".clock.alarm"
+        },
+        {
+          "name": "updateTimer",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "duration",
+              "type": "Duration",
+              "optional": true
+            },
+            {
+              "name": "isSleepTimer",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "label",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "timer",
+              "type": ".clock.timer",
+              "optional": false
+            }
+          ],
+          "returns": ".clock.timer"
+        }
+      ],
+      "entities": [
+        {
+          "name": "alarm",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "canSnooze",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "isEnabled",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "label",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "recurrenceDays",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "time",
+              "type": "DateComponents",
+              "optional": false
+            },
+            {
+              "name": "triggerState",
+              "type": ".clock.alarmTriggerState",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "stopwatch",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "laps",
+              "type": "[Duration]",
+              "optional": false
+            },
+            {
+              "name": "pauseTime",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "startTime",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "state",
+              "type": ".clock.stopwatchState",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "timer",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "duration",
+              "type": "Duration",
+              "optional": false
+            },
+            {
+              "name": "durationRemaining",
+              "type": "Duration",
+              "optional": false
+            },
+            {
+              "name": "isSleepTimer",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "label",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "state",
+              "type": ".clock.timerState",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "alarmTriggerState",
+          "available": "OS27",
+          "cases": [
+            "firing",
+            "none",
+            "snoozed"
+          ]
+        },
+        {
+          "name": "stopwatchState",
+          "available": "OS27",
+          "cases": [
+            "paused",
+            "running"
+          ]
+        },
+        {
+          "name": "timerState",
+          "available": "OS27",
+          "cases": [
+            "firing",
+            "paused",
+            "running",
+            "undefined"
+          ]
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "mail",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "archiveMail",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.mail.message]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "createDraft",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "account",
+              "type": ".mail.account",
+              "optional": true
+            },
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "bcc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "body",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "cc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "subject",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "to",
+              "type": "[IntentPerson]",
+              "optional": false
+            }
+          ],
+          "returns": ".mail.draft"
+        },
+        {
+          "name": "deleteDraft",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.mail.draft]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "deleteMail",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.mail.message]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "forwardMail",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "account",
+              "type": ".mail.account",
+              "optional": true
+            },
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "bcc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "body",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "cc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "subject",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".mail.message",
+              "optional": false
+            },
+            {
+              "name": "to",
+              "type": "[IntentPerson]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openDraft",
+          "available": "OS27",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".mail.draft",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openMessage",
+          "available": "OS27",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".mail.message",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "replyMail",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "account",
+              "type": ".mail.account",
+              "optional": true
+            },
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "bcc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "body",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "cc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "isReplyAll",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "subject",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".mail.message",
+              "optional": false
+            },
+            {
+              "name": "to",
+              "type": "[IntentPerson]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "saveDraft",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".mail.draft",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "sendDraft",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "sendLaterDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".mail.draft",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateDraft",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "account",
+              "type": ".mail.account",
+              "optional": true
+            },
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": true
+            },
+            {
+              "name": "bcc",
+              "type": "[IntentPerson]",
+              "optional": true
+            },
+            {
+              "name": "body",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "cc",
+              "type": "[IntentPerson]",
+              "optional": true
+            },
+            {
+              "name": "subject",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".mail.draft",
+              "optional": false
+            },
+            {
+              "name": "to",
+              "type": "[IntentPerson]",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "updateMail",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "isFlagged",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "isJunk",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "isRead",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "mailbox",
+              "type": ".mail.mailbox",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": "[.mail.message]",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "account",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "emailAddress",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "draft",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "account",
+              "type": ".mail.account",
+              "optional": false
+            },
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "bcc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "body",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "cc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "subject",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "to",
+              "type": "[IntentPerson]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "mailbox",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "account",
+              "type": ".mail.account",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "message",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "account",
+              "type": ".mail.account",
+              "optional": false
+            },
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "bcc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "body",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "category",
+              "type": ".mail.category",
+              "optional": true
+            },
+            {
+              "name": "cc",
+              "type": "[IntentPerson]",
+              "optional": false
+            },
+            {
+              "name": "dateReceived",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "dateSent",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "isFlagged",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "isJunk",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "isRead",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "mailbox",
+              "type": ".mail.mailbox",
+              "optional": false
+            },
+            {
+              "name": "sender",
+              "type": "IntentPerson",
+              "optional": false
+            },
+            {
+              "name": "subject",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "to",
+              "type": "[IntentPerson]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "thread",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "description",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "messages",
+              "type": "[.mail.message]",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "category",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "maps",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "reportIncident",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "incident",
+              "type": ".maps.incident",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "shareETA",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "person",
+              "type": "IntentPerson",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "startNavigation",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "destinations",
+              "type": "[MapsLocation]",
+              "optional": false
+            },
+            {
+              "name": "origin",
+              "type": "MapsLocation",
+              "optional": false
+            },
+            {
+              "name": "preferences",
+              "type": "Set<.maps.navigationPreferences>",
+              "optional": false
+            },
+            {
+              "name": "transportationType",
+              "type": ".maps.transportType",
+              "optional": false
+            }
+          ],
+          "returns": ".maps.navigationSession",
+          "warnings": [
+            "App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'. Fix-it: `extension .maps.place: IntentValueQuery { func values(for input: [GeoToolbox.PlaceDescriptor]) async throws -> [.maps.place] }`"
+          ]
+        },
+        {
+          "name": "stopNavigation",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "navigation",
+              "type": ".maps.navigationSession",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "stopShareETA",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "person",
+              "type": "IntentPerson",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "updateNavigationWaypoints",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "navigation",
+              "type": ".maps.navigationSession",
+              "optional": false
+            },
+            {
+              "name": "waypoints",
+              "type": "[MapsLocation]",
+              "optional": false
+            }
+          ],
+          "returns": ".maps.navigationSession"
+        }
+      ],
+      "entities": [
+        {
+          "name": "currentLocation",
+          "available": "OS27",
+          "properties": []
+        },
+        {
+          "name": "navigationSession",
+          "available": "OS27",
+          "conformance": "UniqueAppEntity",
+          "properties": [
+            {
+              "name": "estimatedArrivalDate",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "preferences",
+              "type": "[.maps.navigationPreferences]",
+              "optional": false
+            },
+            {
+              "name": "transportationType",
+              "type": ".maps.transportType",
+              "optional": false
+            },
+            {
+              "name": "waypoints",
+              "type": "[MapsLocation]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "operatingHours",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "friday",
+              "type": "[.maps.operatingTimeRange]",
+              "optional": false
+            },
+            {
+              "name": "monday",
+              "type": "[.maps.operatingTimeRange]",
+              "optional": false
+            },
+            {
+              "name": "saturday",
+              "type": "[.maps.operatingTimeRange]",
+              "optional": false
+            },
+            {
+              "name": "sunday",
+              "type": "[.maps.operatingTimeRange]",
+              "optional": false
+            },
+            {
+              "name": "thursday",
+              "type": "[.maps.operatingTimeRange]",
+              "optional": false
+            },
+            {
+              "name": "tuesday",
+              "type": "[.maps.operatingTimeRange]",
+              "optional": false
+            },
+            {
+              "name": "wednesday",
+              "type": "[.maps.operatingTimeRange]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "operatingTimeRange",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "endTime",
+              "type": "DateComponents",
+              "optional": false
+            },
+            {
+              "name": "startTime",
+              "type": "DateComponents",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "place",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "amenities",
+              "type": "[String]",
+              "optional": false
+            },
+            {
+              "name": "categories",
+              "type": "[String]",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "operatingHours",
+              "type": ".maps.operatingHours",
+              "optional": true
+            },
+            {
+              "name": "operatingStatus",
+              "type": ".maps.operatingStatus",
+              "optional": true
+            },
+            {
+              "name": "phoneNumber",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "place",
+              "type": "GeoToolbox.PlaceDescriptor",
+              "optional": false
+            },
+            {
+              "name": "priceRange",
+              "type": ".maps.priceRange",
+              "optional": true
+            },
+            {
+              "name": "ratings",
+              "type": "[.maps.rating]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "rating",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "count",
+              "type": "Int",
+              "optional": true
+            },
+            {
+              "name": "descriptor",
+              "type": ".maps.ratingDescriptor",
+              "optional": false
+            },
+            {
+              "name": "provider",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "value",
+              "type": "Double",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "amenity",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "incident",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "navigationPreferences",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "operatingStatus",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "priceRange",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "ratingDescriptor",
+          "available": "OS27",
+          "cases": [
+            "percentage"
+          ]
+        },
+        {
+          "name": "transportType",
+          "available": "OS27",
+          "cases": []
+        }
+      ],
+      "unions": {
+        "MapsLocation": [
+          ".maps.place",
+          ".maps.currentLocation"
+        ]
+      },
+      "singleCase": {
+        "MapsLocation": "yes"
+      }
+    },
+    {
+      "name": "messages",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "draftMessage",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false,
+              "contentTypes": [
+                "public.audio",
+                "public.image",
+                "public.item"
+              ]
+            },
+            {
+              "name": "audioMessage",
+              "type": "IntentFile",
+              "optional": true,
+              "contentTypes": [
+                "public.audio"
+              ]
+            },
+            {
+              "name": "content",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "destination",
+              "type": "MessageDestination",
+              "optional": true
+            },
+            {
+              "name": "links",
+              "type": "[URL]",
+              "optional": false
+            },
+            {
+              "name": "locations",
+              "type": "[GeoToolbox.PlaceDescriptor]",
+              "optional": false
+            },
+            {
+              "name": "scheduledDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "subject",
+              "type": "AttributedString",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "editSentMessage",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "content",
+              "type": "AttributedString",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": ".messages.message",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "sendMessage",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false,
+              "contentTypes": [
+                "public.audio",
+                "public.image",
+                "public.item"
+              ]
+            },
+            {
+              "name": "audioMessage",
+              "type": "IntentFile",
+              "optional": true,
+              "contentTypes": [
+                "public.audio"
+              ]
+            },
+            {
+              "name": "content",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "destination",
+              "type": "MessageDestination",
+              "optional": false
+            },
+            {
+              "name": "links",
+              "type": "[URL]",
+              "optional": false
+            },
+            {
+              "name": "locations",
+              "type": "[GeoToolbox.PlaceDescriptor]",
+              "optional": false
+            },
+            {
+              "name": "scheduledDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "subject",
+              "type": "AttributedString",
+              "optional": true
+            }
+          ],
+          "returns": "[.messages.message]"
+        },
+        {
+          "name": "setMessageReadStatus",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "isRead",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": ".messages.message",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "unsendMessage",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "message",
+              "type": ".messages.message",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "conversation",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "attributes",
+              "type": "Set<.messages.conversationAttribute>",
+              "optional": false
+            },
+            {
+              "name": "conversationName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "dateLastActive",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "displayName",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "isRead",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "previewText",
+              "type": "AttributedString",
+              "optional": false
+            },
+            {
+              "name": "recipients",
+              "type": "[.messages.messagePerson]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "customAttachment",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "description",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "sourceName",
+              "type": "AttributedString",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "message",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "attributes",
+              "type": "Set<.messages.messageAttribute>",
+              "optional": false
+            },
+            {
+              "name": "audioMessage",
+              "type": "IntentFile",
+              "optional": true
+            },
+            {
+              "name": "author",
+              "type": ".messages.messagePerson",
+              "optional": false
+            },
+            {
+              "name": "body",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "conversation",
+              "type": ".messages.conversation",
+              "optional": false
+            },
+            {
+              "name": "customAttachments",
+              "type": "[.messages.customAttachment]",
+              "optional": false
+            },
+            {
+              "name": "date",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "isRead",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "links",
+              "type": "[LinkPresentation.LinkMetadata]",
+              "optional": false
+            },
+            {
+              "name": "locations",
+              "type": "[GeoToolbox.PlaceDescriptor]",
+              "optional": false
+            },
+            {
+              "name": "messageEffect",
+              "type": ".messages.messageEffect",
+              "optional": true
+            },
+            {
+              "name": "messageType",
+              "type": ".messages.messageType",
+              "optional": false
+            },
+            {
+              "name": "notificationIdentifier",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "reaction",
+              "type": "ReadReaction",
+              "optional": true
+            },
+            {
+              "name": "referencedMessage",
+              "type": ".messages.message",
+              "optional": true
+            },
+            {
+              "name": "subject",
+              "type": "AttributedString",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "messagePerson",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "person",
+              "type": "IntentPerson",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "conversationAttribute",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "customReaction",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "messageAttribute",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "messageEffect",
+          "available": "OS27",
+          "cases": []
+        },
+        {
+          "name": "messageType",
+          "available": "OS27",
+          "cases": [
+            "unspecified"
+          ]
+        }
+      ],
+      "unions": {
+        "MessageDestination": [
+          "[IntentPerson]",
+          ".messages.messagePerson",
+          "[.messages.messagePerson]"
+        ],
+        "ReadReaction": [
+          ".messages.customReaction",
+          "AttributedString"
+        ]
+      },
+      "singleCase": {
+        "MessageDestination": "yes",
+        "ReadReaction": "yes"
+      }
+    },
+    {
+      "name": "notes",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "appendText",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "content",
+              "type": "AttributedString",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".notes.note",
+              "optional": false
+            }
+          ],
+          "returns": ".notes.note"
+        },
+        {
+          "name": "createNote",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false,
+              "contentTypes": [
+                "public.item"
+              ]
+            },
+            {
+              "name": "content",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "folder",
+              "type": ".notes.folder",
+              "optional": true
+            },
+            {
+              "name": "isPinned",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "AttributedString",
+              "optional": false
+            }
+          ],
+          "returns": ".notes.note"
+        },
+        {
+          "name": "updateNote",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": true,
+              "contentTypes": [
+                "public.item"
+              ]
+            },
+            {
+              "name": "folder",
+              "type": ".notes.folder",
+              "optional": true
+            },
+            {
+              "name": "isPinned",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".notes.note",
+              "optional": false
+            }
+          ],
+          "returns": ".notes.note"
+        }
+      ],
+      "entities": [
+        {
+          "name": "account",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "folder",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "account",
+              "type": ".notes.account",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "parentFolder",
+              "type": ".notes.folder",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "note",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "attachments",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "content",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "creationDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "folder",
+              "type": ".notes.folder",
+              "optional": true
+            },
+            {
+              "name": "isPinned",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "modificationDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "AttributedString",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "phone",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "startCall",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "audioVisualMode",
+              "type": ".phone.audioVisualMode",
+              "optional": false
+            },
+            {
+              "name": "destination",
+              "type": "CallDestination",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "phonePerson",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "person",
+              "type": "IntentPerson",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "audioVisualMode",
+          "available": "OS27",
+          "cases": [
+            "audio",
+            "video"
+          ]
+        }
+      ],
+      "unions": {
+        "CallDestination": [
+          ".phone.phonePerson",
+          "[.phone.phonePerson]"
+        ]
+      },
+      "singleCase": {
+        "CallDestination": "yes"
+      }
+    },
+    {
+      "name": "photos",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "addAssetsToAlbum",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "album",
+              "type": ".photos.album",
+              "optional": false
+            },
+            {
+              "name": "assets",
+              "type": "[.photos.asset]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "cleanupPhoto",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "copyEdits",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "createAlbum",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ],
+          "returns": ".photos.album"
+        },
+        {
+          "name": "createAssets",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "files",
+              "type": "[IntentFile]",
+              "optional": false
+            }
+          ],
+          "returns": "[.photos.asset]"
+        },
+        {
+          "name": "crop",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "deleteAlbum",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.photos.album]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "deleteAssets",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.photos.asset]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "duplicateAssets",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.photos.asset]",
+              "optional": false
+            }
+          ],
+          "returns": "[.photos.asset]"
+        },
+        {
+          "name": "editAsset",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "asset",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openAlbum",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.album",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openAsset",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "deprecated": "27; use .system.open",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "pasteEdits",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": "[.photos.asset]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "postToSharedAlbum",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "assets",
+              "type": "[.photos.asset]",
+              "optional": true
+            },
+            {
+              "name": "comment",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "files",
+              "type": "[IntentFile]",
+              "optional": true
+            },
+            {
+              "name": "sharedAlbum",
+              "type": ".photos.album",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "removeAssetsFromAlbum",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "album",
+              "type": ".photos.album",
+              "optional": false
+            },
+            {
+              "name": "assets",
+              "type": "[.photos.asset]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "search",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "deprecated": "27; use .system.searchInApp",
+          "conformance": "ShowInAppSearchResultsIntent",
+          "parameters": [
+            {
+              "name": "criteria",
+              "type": "StringSearchCriteria",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "setDepth",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            },
+            {
+              "name": "value",
+              "type": "Double",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "setExposure",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            },
+            {
+              "name": "value",
+              "type": "Double",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "setFilter",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "filterType",
+              "type": ".photos.filterType",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "setRotation",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "direction",
+              "type": ".photos.rotationDirection",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "setSaturation",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            },
+            {
+              "name": "value",
+              "type": "Double",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "setWarmth",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            },
+            {
+              "name": "value",
+              "type": "Double",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "straighten",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "toggleDepth",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "isEnabled",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "toggleSuggestedEdits",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "isEnabled",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".photos.asset",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateAlbum",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".photos.album",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateAsset",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "isFavorite",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "isHidden",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": "[.photos.asset]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateRecognizedPerson",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "isFavorite",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".photos.recognizedPerson",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "album",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "albumType",
+              "type": ".photos.albumType",
+              "optional": false
+            },
+            {
+              "name": "creationDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "asset",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "aperture",
+              "type": "Double",
+              "optional": true
+            },
+            {
+              "name": "assetType",
+              "type": ".photos.assetType",
+              "optional": true
+            },
+            {
+              "name": "creationDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "exposure",
+              "type": "Double",
+              "optional": true
+            },
+            {
+              "name": "filter",
+              "type": ".photos.filterType",
+              "optional": true
+            },
+            {
+              "name": "hasSuggestedEdits",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "isFavorite",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "isHidden",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "isPortraitModeEnabled",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "location",
+              "type": "GeoToolbox.PlaceDescriptor",
+              "optional": true
+            },
+            {
+              "name": "saturation",
+              "type": "Double",
+              "optional": true
+            },
+            {
+              "name": "warmth",
+              "type": "Double",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "recognizedPerson",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "isFavorite",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "albumType",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "assetType",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "filterType",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "rotationDirection",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "reminders",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "createList",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "type",
+              "type": ".reminders.listType",
+              "optional": false
+            }
+          ],
+          "returns": ".reminders.list"
+        },
+        {
+          "name": "createReminder",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "dueDate",
+              "type": "DateComponents",
+              "optional": true
+            },
+            {
+              "name": "images",
+              "type": "[IntentFile]",
+              "optional": false,
+              "contentTypes": [
+                "public.image"
+              ]
+            },
+            {
+              "name": "isFlagged",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "list",
+              "type": ".reminders.list",
+              "optional": true
+            },
+            {
+              "name": "locationTrigger",
+              "type": ".reminders.locationTrigger",
+              "optional": true
+            },
+            {
+              "name": "note",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "recurrence",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "section",
+              "type": ".reminders.section",
+              "optional": true
+            },
+            {
+              "name": "tags",
+              "type": "Set<String>",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "urls",
+              "type": "[URL]",
+              "optional": false
+            }
+          ],
+          "returns": ".reminders.reminder"
+        },
+        {
+          "name": "createSection",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "list",
+              "type": ".reminders.list",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ],
+          "returns": ".reminders.section"
+        },
+        {
+          "name": "deleteReminders",
+          "available": "OS27",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.reminders.reminder]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateReminder",
+          "available": "OS27",
+          "parameters": [
+            {
+              "name": "dueDate",
+              "type": "DateComponents",
+              "optional": true
+            },
+            {
+              "name": "isCompleted",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "isFlagged",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "list",
+              "type": ".reminders.list",
+              "optional": true
+            },
+            {
+              "name": "locationTrigger",
+              "type": ".reminders.locationTrigger",
+              "optional": true
+            },
+            {
+              "name": "note",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "recurrence",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "tags",
+              "type": "Set<String>",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".reminders.reminder",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "urls",
+              "type": "[URL]",
+              "optional": true
+            }
+          ],
+          "returns": ".reminders.reminder"
+        }
+      ],
+      "entities": [
+        {
+          "name": "group",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "lists",
+              "type": "[.reminders.list]",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "type",
+              "type": ".reminders.listType",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "locationTrigger",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "event",
+              "type": ".reminders.locationTriggerEvent",
+              "optional": false
+            },
+            {
+              "name": "place",
+              "type": "GeoToolbox.PlaceDescriptor",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "reminder",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "completionDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "creationDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "dueDate",
+              "type": "DateComponents",
+              "optional": true
+            },
+            {
+              "name": "isCompleted",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "isFlagged",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "list",
+              "type": ".reminders.list",
+              "optional": false
+            },
+            {
+              "name": "locationTrigger",
+              "type": ".reminders.locationTrigger",
+              "optional": true
+            },
+            {
+              "name": "note",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "recurrence",
+              "type": "Calendar.RecurrenceRule",
+              "optional": true
+            },
+            {
+              "name": "tags",
+              "type": "Set<String>",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "urls",
+              "type": "[URL]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "section",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "list",
+              "type": ".reminders.list",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "listType",
+          "available": "OS27",
+          "cases": [
+            "standard"
+          ]
+        },
+        {
+          "name": "locationTriggerEvent",
+          "available": "OS27",
+          "cases": [
+            "arrive",
+            "depart"
+          ]
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "system",
+      "tier": "primary",
+      "intents": [
+        {
+          "name": "open",
+          "available": "OS27",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": "AppEntity",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "search",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "deprecated": "27; use .system.searchInApp",
+          "conformance": "ShowInAppSearchResultsIntent",
+          "parameters": [
+            {
+              "name": "criteria",
+              "type": "StringSearchCriteria",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "searchInApp",
+          "available": "OS27",
+          "conformance": "ShowInAppSearchResultsIntent",
+          "parameters": [
+            {
+              "name": "criteria",
+              "type": "StringSearchCriteria",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "assistant",
+      "tier": "single",
+      "intents": [
+        {
+          "name": "activate",
+          "available": "iOS 26.2+; not macOS/visionOS",
+          "parameters": [],
+          "statics": [
+            "static let supportedModes: IntentModes = .foreground"
+          ]
+        }
+      ],
+      "entities": [],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "visualIntelligence",
+      "tier": "single",
+      "intents": [
+        {
+          "name": "semanticContentSearch",
+          "available": "iOS 26+, macOS 27+; not visionOS",
+          "parameters": [
+            {
+              "name": "semanticContent",
+              "type": "VisualIntelligence.SemanticContentDescriptor",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "books",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "navigatePage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "direction",
+              "type": ".books.navigationDirection",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".books.book",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openBook",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".books.book",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "playAudiobook",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "deprecated": "27; use .audio.playAudio",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".books.audiobook",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "search",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "deprecated": "27; use .system.searchInApp",
+          "conformance": "ShowInAppSearchResultsIntent",
+          "parameters": [
+            {
+              "name": "criteria",
+              "type": "StringSearchCriteria",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateCharacterSpacing",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "changeOperation",
+              "type": ".books.relativeCharacterSpacingChange",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".books.settings",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateFontSize",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "changeOperation",
+              "type": ".books.relativeFontChange",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".books.settings",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateLineSpacing",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "changeOperation",
+              "type": ".books.relativeLineSpacingChange",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".books.settings",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateSettings",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "font",
+              "type": ".books.font",
+              "optional": true
+            },
+            {
+              "name": "isAllowMultipleColumns",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "isTextJustified",
+              "type": "Bool",
+              "optional": true
+            },
+            {
+              "name": "pageNavigationSetting",
+              "type": ".books.pageNavigationSetting",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".books.settings",
+              "optional": false
+            },
+            {
+              "name": "theme",
+              "type": ".books.theme",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "updateWordSpacing",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "changeOperation",
+              "type": ".books.relativeWordSpacingChange",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".books.settings",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "audiobook",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "author",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "genre",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "purchaseDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "seriesTitle",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "book",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "author",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "genre",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "purchaseDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "seriesTitle",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "settings",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "font",
+              "type": ".books.font",
+              "optional": false
+            },
+            {
+              "name": "fontSize",
+              "type": ".books.fontSize",
+              "optional": false
+            },
+            {
+              "name": "isAllowMultipleColumns",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "isTextJustified",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "pageNavigationSetting",
+              "type": ".books.pageNavigationSetting",
+              "optional": false
+            },
+            {
+              "name": "theme",
+              "type": ".books.theme",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "contentType",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "font",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "fontSize",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "navigationDirection",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "pageNavigationSetting",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "relativeCharacterSpacingChange",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "relativeFontChange",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "relativeLineSpacingChange",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "relativeWordSpacingChange",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "theme",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "browser",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "bookmarkTab",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "tab",
+              "type": ".browser.tab",
+              "optional": false
+            }
+          ],
+          "returns": ".browser.bookmark"
+        },
+        {
+          "name": "bookmarkURL",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": false
+            }
+          ],
+          "returns": ".browser.bookmark"
+        },
+        {
+          "name": "clearHistory",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "timeFrame",
+              "type": ".browser.clearHistoryTimeFrame",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "closeTabs",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": "[.browser.tab]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "closeWindows",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": "[.browser.window]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "createTab",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "isPrivate",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": true
+            }
+          ],
+          "returns": ".browser.tab"
+        },
+        {
+          "name": "createWindow",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "isPrivate",
+              "type": "Bool",
+              "optional": false
+            }
+          ],
+          "returns": ".browser.window"
+        },
+        {
+          "name": "deleteBookmarks",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.browser.bookmark]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "findOnPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "searchPhrase",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "tab",
+              "type": ".browser.tab",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openBookmark",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "tab",
+              "type": ".browser.tab",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".browser.bookmark",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openURLInTab",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "tab",
+              "type": ".browser.tab",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "search",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "deprecated": "27; use .system.searchInApp",
+          "conformance": "ShowInAppSearchResultsIntent",
+          "parameters": [
+            {
+              "name": "criteria",
+              "type": "StringSearchCriteria",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "switchTab",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".browser.tab",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "bookmark",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "readingListItem",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "tab",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "isPrivate",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "tabGroup",
+          "available": "OS27",
+          "properties": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "window",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "isPrivate",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "tabs",
+              "type": "[.browser.tab]",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "clearHistoryTimeFrame",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "files",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "createFolder",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "fileName",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".files.file",
+              "optional": false
+            }
+          ],
+          "returns": ".files.file"
+        },
+        {
+          "name": "deleteFiles",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.files.file]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "moveFiles",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "destinationFolder",
+              "type": ".files.file",
+              "optional": false
+            },
+            {
+              "name": "entities",
+              "type": "[.files.file]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openFile",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".files.file",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "renameFile",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "newName",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".files.file",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "file",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "FileEntity",
+          "properties": [
+            {
+              "name": "creationDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "fileModificationDate",
+              "type": "Date",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "journal",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "createAudioEntry",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": []
+        },
+        {
+          "name": "createEntry",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "entryDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "location",
+              "type": "GeoToolbox.PlaceDescriptor",
+              "optional": true
+            },
+            {
+              "name": "mediaItems",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": "AttributedString",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ],
+          "returns": ".journal.entry"
+        },
+        {
+          "name": "deleteEntry",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.journal.entry]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "search",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "deprecated": "27; use .system.searchInApp",
+          "conformance": "ShowInAppSearchResultsIntent",
+          "parameters": [
+            {
+              "name": "criteria",
+              "type": "StringSearchCriteria",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateEntry",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "entryDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "location",
+              "type": "GeoToolbox.PlaceDescriptor",
+              "optional": true
+            },
+            {
+              "name": "mediaItems",
+              "type": "[IntentFile]",
+              "optional": true
+            },
+            {
+              "name": "message",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".journal.entry",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "entry",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "entryDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "location",
+              "type": "GeoToolbox.PlaceDescriptor",
+              "optional": true
+            },
+            {
+              "name": "mediaItems",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "message",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "presentation",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "addAudioToSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "audio",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.audio"
+              ]
+            },
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addCommentToSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "comment",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addImageToSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "image",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.image"
+              ]
+            },
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addTextBoxToSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": false
+            },
+            {
+              "name": "text",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addVideoToSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": false
+            },
+            {
+              "name": "video",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.movie"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "addWebVideoToSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "create",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "template",
+              "type": ".presentation.template",
+              "optional": true
+            }
+          ],
+          "returns": ".presentation.document"
+        },
+        {
+          "name": "createSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "presentation",
+              "type": ".presentation.document",
+              "optional": false
+            },
+            {
+              "name": "slideLayout",
+              "type": "String",
+              "optional": true
+            }
+          ],
+          "returns": ".presentation.slide"
+        },
+        {
+          "name": "deleteSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.presentation.slide]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "open",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".presentation.document",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openSlide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "setSlideTitle",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "startPlayback",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "presentation",
+              "type": ".presentation.document",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".presentation.slide",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "stopPlayback",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "presentation",
+              "type": ".presentation.document",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".presentation.document",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "document",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "slide",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "presentation",
+              "type": ".presentation.document",
+              "optional": false
+            },
+            {
+              "name": "slideIndex",
+              "type": "Int",
+              "optional": true
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "template",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "reader",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "deletePages",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.reader.page]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "enhanceDocuments",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": "[.reader.document]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "insertPages",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "files",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "isAfter",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "page",
+              "type": ".reader.page",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openDocument",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "files",
+              "type": "[IntentFile]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".reader.page",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "resizeDocuments",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "documents",
+              "type": "[.reader.document]",
+              "optional": false
+            },
+            {
+              "name": "height",
+              "type": "Double",
+              "optional": true
+            },
+            {
+              "name": "width",
+              "type": "Double",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "rotateDocuments",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "documents",
+              "type": "[.reader.document]",
+              "optional": false
+            },
+            {
+              "name": "isClockwise",
+              "type": "Bool",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "rotatePages",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "isClockwise",
+              "type": "Bool",
+              "optional": false
+            },
+            {
+              "name": "pages",
+              "type": "[.reader.page]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "searchDocuments",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "criteria",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "documents",
+              "type": "[.reader.document]",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "document",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "height",
+              "type": "Int",
+              "optional": true
+            },
+            {
+              "name": "kind",
+              "type": ".reader.documentKind",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "width",
+              "type": "Int",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "page",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "label",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "documentKind",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "spreadsheet",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "addAudioToSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "audio",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.audio"
+              ]
+            },
+            {
+              "name": "target",
+              "type": ".spreadsheet.sheet",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addCommentToSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "comment",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".spreadsheet.sheet",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addImageToSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "image",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.image"
+              ]
+            },
+            {
+              "name": "target",
+              "type": ".spreadsheet.sheet",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addTextBoxToSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".spreadsheet.sheet",
+              "optional": false
+            },
+            {
+              "name": "text",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addVideoToSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".spreadsheet.sheet",
+              "optional": false
+            },
+            {
+              "name": "video",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.movie"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "addWebVideoToSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".spreadsheet.sheet",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "create",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "template",
+              "type": ".spreadsheet.template",
+              "optional": true
+            }
+          ],
+          "returns": ".spreadsheet.document"
+        },
+        {
+          "name": "createSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "spreadsheet",
+              "type": ".spreadsheet.document",
+              "optional": false
+            }
+          ],
+          "returns": ".spreadsheet.sheet"
+        },
+        {
+          "name": "delete",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.spreadsheet.document]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "deleteSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.spreadsheet.sheet]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "open",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".spreadsheet.document",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".spreadsheet.sheet",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".spreadsheet.document",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateSheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "position",
+              "type": "Int",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".spreadsheet.sheet",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "document",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "sheet",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            },
+            {
+              "name": "sheetIndex",
+              "type": "Int",
+              "optional": false
+            },
+            {
+              "name": "spreadsheet",
+              "type": ".spreadsheet.document",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "template",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "whiteboard",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "createBoard",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ],
+          "returns": ".whiteboard.board"
+        },
+        {
+          "name": "createItem",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "itemType",
+              "type": ".whiteboard.itemType",
+              "optional": true
+            },
+            {
+              "name": "mediaItems",
+              "type": "[IntentFile]",
+              "optional": false
+            },
+            {
+              "name": "target",
+              "type": ".whiteboard.board",
+              "optional": false
+            },
+            {
+              "name": "text",
+              "type": "AttributedString",
+              "optional": true
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "deleteBoard",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.whiteboard.board]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "deleteItem",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "DeleteIntent",
+          "parameters": [
+            {
+              "name": "entities",
+              "type": "[.whiteboard.item]",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openBoard",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".whiteboard.board",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "updateBoard",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".whiteboard.board",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "updateItem",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "color",
+              "type": ".whiteboard.color",
+              "optional": true
+            },
+            {
+              "name": "label",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": ".whiteboard.item",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "board",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "creationDate",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "lastModificationDate",
+              "type": "Date",
+              "optional": false
+            },
+            {
+              "name": "title",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "height",
+              "type": "Double",
+              "optional": true
+            },
+            {
+              "name": "label",
+              "type": "String",
+              "optional": true
+            },
+            {
+              "name": "type",
+              "type": ".whiteboard.itemType",
+              "optional": false
+            },
+            {
+              "name": "width",
+              "type": "Double",
+              "optional": true
+            },
+            {
+              "name": "x",
+              "type": "Double",
+              "optional": false
+            },
+            {
+              "name": "y",
+              "type": "Double",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [
+        {
+          "name": "color",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        },
+        {
+          "name": "itemType",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "cases": []
+        }
+      ],
+      "unions": {},
+      "singleCase": {}
+    },
+    {
+      "name": "wordProcessor",
+      "tier": "shortcuts",
+      "intents": [
+        {
+          "name": "addAudioToPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "audio",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.audio"
+              ]
+            },
+            {
+              "name": "target",
+              "type": ".wordProcessor.page",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addImageToPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "image",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.image"
+              ]
+            },
+            {
+              "name": "target",
+              "type": ".wordProcessor.page",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addTextBoxToPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".wordProcessor.page",
+              "optional": false
+            },
+            {
+              "name": "text",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "addVideoToPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".wordProcessor.page",
+              "optional": false
+            },
+            {
+              "name": "video",
+              "type": "IntentFile",
+              "optional": false,
+              "contentTypes": [
+                "public.movie"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "addWebVideoToPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".wordProcessor.page",
+              "optional": false
+            },
+            {
+              "name": "url",
+              "type": "URL",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "create",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "template",
+              "type": ".wordProcessor.template",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "createPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".wordProcessor.document",
+              "optional": false
+            },
+            {
+              "name": "template",
+              "type": "String",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "open",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".wordProcessor.document",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "openPage",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "conformance": "OpenIntent",
+          "parameters": [
+            {
+              "name": "target",
+              "type": ".wordProcessor.page",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "name": "document",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "creationDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "modificationDate",
+              "type": "Date",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "page",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "document",
+              "type": ".wordProcessor.document",
+              "optional": false
+            },
+            {
+              "name": "pageIndex",
+              "type": "Int",
+              "optional": false
+            }
+          ]
+        },
+        {
+          "name": "template",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
+          "properties": [
+            {
+              "name": "name",
+              "type": "String",
+              "optional": false
+            }
+          ]
+        }
+      ],
+      "enums": [],
+      "unions": {},
+      "singleCase": {}
+    }
+  ],
+  "unconfirmed": []
+}

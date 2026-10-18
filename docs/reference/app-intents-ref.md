@@ -55,7 +55,7 @@ Questions you can ask your assistant that will draw from this reference:
 
 ### App Schemas
 - `@AppEntity`, `@AppIntent`, and `@AppEnum(schema:)` macros, which replace the deprecated `@Assistant…` macros
-- System schema domains: debuted in iOS 18; the 27 cycle adds Audio, Calendar, Clock, Maps, Messages, Notes, Phone, Reminders, ImageGeneration, and AppStore
+- System schema domains, grouped by Apple's three tiers: primary domains for Apple Intelligence and Siri (the 27 cycle adds Audio, Calendar, Clock, Maps, Messages, Notes, Phone, and Reminders), single-purpose domains (Visual Intelligence, Assistant), and Shortcuts-specific domains such as Books, Files, and Spreadsheet
 - Xcode schema-completeness build errors with fix-its (iOS 27)
 - Cross-app content: on-screen annotations and `Transferable` export
 

@@ -21,7 +21,12 @@ license: MIT
 
 | Symptom / Task | Reference |
 |----------------|-----------|
-| Siri, App Intents, entity queries | See `skills/app-intents-ref.md` |
+| Siri, App Intents, entity queries (audio apps → `skills/siri-audio.md`) | See `skills/app-intents-ref.md` |
+| Siri playback in an audio app ("play X in MyApp"), `.audio.*` schemas, `AudioSearch`, `INPlayMediaIntent` | See `skills/siri-audio.md` |
+| Audio schema members, parameters, enum cases, build errors; SiriKit media setup and authorization | See `skills/siri-audio-ref.md` |
+| Any schema domain's required parameters, properties, enum cases, return types, deprecated schemas; `Missing required parameter`/`property` and other schema build errors | See `skills/app-schemas-ref.md` |
+| Notes, to-do, or list app and Siri — SiriKit Lists/Notes (`INAddTasksIntent`, `INCreateNoteIntent`) deprecated in 27, `.notes.*`/`.reminders.*` schemas, watchOS | See `skills/siri-notes-reminders.md` |
+| Siri audio playback fails — "I can't play that", "hasn't added support for that with Siri", works only while the app is open, duplicate results | See `skills/siri-audio-diag.md` |
 | App Shortcuts, phrases, Spotlight | See `skills/app-shortcuts-ref.md` |
 | App discoverability strategy | See `skills/app-discoverability.md` |
 | Core Spotlight indexing | See `skills/core-spotlight-ref.md` |
@@ -35,7 +40,7 @@ license: MIT
 | StoreKit 2 API reference | See `skills/storekit-ref.md` |
 | Commitment billing plans, subscription bundles/suites, group/volume subscriptions, retention offers, offer codes | See `skills/storekit-ref.md` |
 | In-game content (Unity plug-ins, asset packs + IAP) | See `skills/in-app-purchases.md`, `skills/background-assets.md` |
-| Calendar events, reminders (EventKit) | See `skills/eventkit.md` |
+| The system Calendar and Reminders stores (EventKit) | See `skills/eventkit.md` |
 | EventKit API reference | See `skills/eventkit-ref.md` |
 | Contacts, contact picker | See `skills/contacts.md` |
 | Contacts API reference | See `skills/contacts-ref.md` |
@@ -75,12 +80,15 @@ digraph integration {
 
     start -> what;
     what -> "skills/app-intents-ref.md" [label="Siri / App Intents"];
+    what -> "skills/siri-audio.md" [label="Siri playback in\nan audio app"];
+    what -> "skills/app-schemas-ref.md" [label="schema domain\nshape / build error"];
+    what -> "skills/siri-notes-reminders.md" [label="Siri in a notes /\nlist / to-do app"];
     what -> "skills/app-shortcuts-ref.md" [label="Shortcuts / phrases"];
     what -> "skills/app-discoverability.md" [label="discoverability\nstrategy"];
     what -> "skills/extensions-widgets.md" [label="widgets /\nControl Center"];
     what -> "skills/live-activities.md" [label="Live Activities /\nDynamic Island"];
     what -> "skills/in-app-purchases.md" [label="IAP / subscriptions"];
-    what -> "skills/eventkit.md" [label="calendar / reminders"];
+    what -> "skills/eventkit.md" [label="system Calendar /\nReminders store"];
     what -> "skills/contacts.md" [label="contacts"];
     what -> "skills/localization.md" [label="localization"];
     what -> "skills/privacy-ux.md" [label="privacy / permissions"];
@@ -97,6 +105,9 @@ digraph integration {
 ```
 
 1. Siri / App Intents / entity queries? → `skills/app-intents-ref.md`
+1a. Audio app and Siri — "play X in MyApp", Audio schema domain, `AudioSearch`, SiriKit `INPlayMediaIntent`? → `skills/siri-audio.md`; exact shapes `skills/siri-audio-ref.md`; Siri won't play `skills/siri-audio-diag.md`
+1b. Adopting any `@AppIntent(schema:)`/`@AppEntity(schema:)`/`@AppEnum(schema:)`, or a schema build error? → `skills/app-schemas-ref.md` (every domain's required shape; migrating SiriKit Lists/Notes → 1c)
+1c. Notes/lists/to-do app and Siri, or SiriKit Lists/Notes deprecation warnings? → `skills/siri-notes-reminders.md`
 2. App Shortcuts / phrases? → `skills/app-shortcuts-ref.md`
 3. App discoverability / Spotlight strategy? → `skills/app-discoverability.md`, `skills/core-spotlight-ref.md`
 3a. LLM search over your app's index (SpotlightSearchTool, LanguageModelSession tool-calling)? → `skills/core-spotlight-ref.md`
@@ -104,7 +115,7 @@ digraph integration {
 4a. Live Activities / Dynamic Island / push-to-start / broadcast? → `skills/live-activities.md`, `skills/live-activities-ref.md`
 5. In-app purchases / StoreKit? → `skills/in-app-purchases.md`, `skills/storekit-ref.md`
 5a. Subscription billing plans (12-month commitment), bundles/suites, group/volume purchasing, retention offers, offer-code redemption? → `skills/storekit-ref.md`
-6. Calendar / reminders / EventKit? → `skills/eventkit.md`, `skills/eventkit-ref.md`
+6. The system Calendar or Reminders store (EventKit)? → `skills/eventkit.md`, `skills/eventkit-ref.md`. Siri for your own app's reminders or notes → 1c
 7. Contacts / contact picker? → `skills/contacts.md`, `skills/contacts-ref.md`
 8. Localization mechanics (String Catalogs, plurals, RTL)? → `skills/localization.md`
 8a. Localization research (Apple terminology, glossary, pseudolocalization, TMS)? → `skills/localization-research-ref.md`
@@ -127,6 +138,10 @@ digraph integration {
 **Widget + data sync** (widget not showing updated data):
 - Widget timeline not refreshing → **stay here** (extensions-widgets)
 - SwiftData/Core Data not shared with extension → **also invoke axiom-data** (App Groups)
+
+**Siri + audio playback** ("play X in MyApp", "pause", "what song is this?"):
+- Audio schemas, `AudioSearch` resolution, SiriKit `INPlayMediaIntent` → **stay here** (siri-audio)
+- Player, Now Playing session, remote commands, `appEntityIdentifiers` on now-playing content → **also invoke axiom-media** (skills/now-playing.md)
 
 **App Intents + security** (lock-screen intent risk, prompt injection via Siri):
 - Intent/schema API surface → **stay here** (app-intents-ref)
