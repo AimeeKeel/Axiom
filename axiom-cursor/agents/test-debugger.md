@@ -92,7 +92,7 @@ Before running UI-failure pattern recognition, check whether the test produced a
 ls -lt ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
 
 # Full triage — pattern_tag + symbolicated crashed thread in one call
-Call the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--format=summary <path-to-ips>`.
+Call `axiom_xcsym_crash` with `file` and `format: "summary"`.
 ```
 
 Feed the returned `pattern_tag` to the fix plan:

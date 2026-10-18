@@ -61,7 +61,7 @@ Write each normalized issue as one JSONL line to a temp file (e.g., `/tmp/corpus
 ### 3. Run `axiom_xcsym_triage` MCP tool
 
 ```bash
-Call the `axiom_xcsym_triage` MCP tool with `file: "/tmp/corpus.jsonl"`, `latestVersion: "<latest_version>"`, `osFloor: "<floor>"`, and `minUsers: <n>`.
+Call `axiom_xcsym_triage` with `file: "/tmp/corpus.jsonl"`, `latestVersion`, `osFloor`, and `minUsers` (there is no stdin).
 ```
 
 Omit flags you don't have values for. The tool exits 0 even when some issues are skipped (malformed lines go to `errors[]`).

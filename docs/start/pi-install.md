@@ -4,7 +4,7 @@ Axiom installs into [Pi](https://pi.dev/) — the minimal, open-source terminal 
 
 ## What You Get
 
-Axiom's full skill catalog — <!--ax:skills-->280<!--/ax--> skills covering:
+Axiom's full skill catalog — <!--ax:skills-->285<!--/ax--> skills covering:
 
 - **SwiftUI** – layout, navigation, animations, performance, architecture, debugging
 - **Data** – SwiftData, Core Data, GRDB, CloudKit, migrations, Codable
@@ -16,7 +16,7 @@ Axiom's full skill catalog — <!--ax:skills-->280<!--/ax--> skills covering:
 - **Apple Intelligence** – Foundation Models, on-device AI, CoreML
 - **Accessibility** – VoiceOver, Dynamic Type, WCAG compliance
 
-Pi keeps only the router *descriptions* in context and loads each router's full instructions — and the <!--ax:skills-->280<!--/ax--> skills beneath them — on demand ([progressive disclosure](https://pi.dev/docs/latest/skills)). That's the same two-layer routing Axiom is built around, so the catalog costs few tokens.
+Pi keeps only the router *descriptions* in context and loads each router's full instructions — and the <!--ax:skills-->285<!--/ax--> skills beneath them — on demand ([progressive disclosure](https://pi.dev/docs/latest/skills)). That's the same two-layer routing Axiom is built around, so the catalog costs few tokens.
 
 ## Prerequisites
 
@@ -142,7 +142,7 @@ Pi consumes Axiom's skills natively, and `pi install` adds the [commands and hoo
 
 | Feature | Claude Code | Pi |
 |---------|-------------|----|
-| Skills | Full catalog | Full catalog — the routers load the <!--ax:skills-->280<!--/ax--> skills on demand |
+| Skills | Full catalog | Full catalog — the routers load the <!--ax:skills-->285<!--/ax--> skills on demand |
 | Agents | <!--ax:agents-->42<!--/ax--> autonomous auditors | Not supported — Pi has no sub-agent system |
 | Commands | <!--ax:commands-->17<!--/ax--> `/axiom:*` commands | `/axiom-*` — included with `pi install` |
 | Hooks | Session + tool hooks | Included with `pi install` |

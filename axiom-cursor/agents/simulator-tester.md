@@ -367,7 +367,7 @@ ls -t ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
 If any file's mtime is within the test-run window, run:
 
 ```bash
-Call the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--format=summary <path>`.
+Call `axiom_xcsym_crash` with `file` and `format: "summary"`.
 ```
 
 Include the structured crash summary in the test-failure report (pattern_tag, exception type, top frames, and dSYM status). If xcsym returns `{"error":"hang_report"}` on stdout (exit 1), the `.ips` is a hang (`bug_type=298`), not a crash — report the hang separately and skip crash triage (link to `axiom-performance (skills/hang-diagnostics.md)`). See `axiom-tools (skills/xcsym-ref.md)` for full xcsym usage and the exit-code table.

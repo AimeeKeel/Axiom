@@ -8,7 +8,7 @@ Each place you use your account loads a different part of the plugin:
 
 | Part of Axiom | Chat (browser, desktop, mobile) | Cowork (desktop app) | Claude Code (terminal, IDE, desktop app Code tab) |
 |---------------|-----------------------------|----------------------|----------------------------------------------|
-| <!--ax:routers-->27<!--/ax--> skill routers and the <!--ax:skills-->280<!--/ax--> skills beneath them | Yes | Yes | Yes |
+| <!--ax:routers-->27<!--/ax--> skill routers and the <!--ax:skills-->285<!--/ax--> skills beneath them | Yes | Yes | Yes |
 | <!--ax:commands-->17<!--/ax--> commands | Applied as skills when they fit | Yes, as `/axiom:<command>` | Yes |
 | <!--ax:agents-->42<!--/ax--> agents | No | Yes | Yes |
 | Hooks (session context, skill routing, write guardrails) | No | Yes | Yes |

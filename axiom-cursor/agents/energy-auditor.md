@@ -265,7 +265,7 @@ Energy anti-patterns surface in the field as system terminations, not slow-drain
 | `jetsam_oom` | Background memory growth — often a timer/animation retaining state across backgrounding |
 
 ```bash
-Call the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--format=summary <path-to-ips>`.
+Call `axiom_xcsym_crash` with `file` and `format: "summary"`.
 ```
 
 This agent only reads and searches, so it cannot run the `axiom_xcsym_crash` MCP tool: ask for its output in your result, or run it yourself if you are following this procedure inline.

@@ -1347,11 +1347,21 @@ struct SendMessageIntent {
 
 ### Available domains
 
-| iOS 18 domains | Added in the 27 cycle `OS27` |
-|---|---|
-| Books, Browser, Camera, Files, Journal, Mail, Photos, Presentation, Reader, Spreadsheet, System, Whiteboard, WordProcessor | Audio, Calendar, Clock, Maps, Messages, Notes, Phone, Reminders, ImageGeneration, AppStore |
+Apple groups the domains in three tiers. It documents the primary domains as making actions available to Apple Intelligence and Siri, and the Shortcuts-specific domains as making them available in the Shortcuts app.
 
-(VisualIntelligence arrived in the 26 cycle, Assistant in 26.2. Discover each domain's exact schemas via Xcode autocomplete on `.<domain>.`)
+| Tier | Domains | Since |
+|---|---|---|
+| Primary — Apple Intelligence and Siri | Audio, Calendar, Clock, Maps, Messages, Notes, Phone, Reminders | `OS27` |
+| | Camera | iOS 18+, macOS 15+, visionOS 2+ |
+| | Mail, Photos, System (in-app search) | iOS 18+, macOS 15+, visionOS 2+, with schemas added in `OS27` |
+| Single-purpose | Visual Intelligence (camera search results) | iOS 26+, macOS 27+; not visionOS |
+| | Assistant (side-button launch of a voice app, Japan) | iOS 26.2+; not macOS/visionOS |
+| Shortcuts-specific | Books, Files, Journal, Presentation, Reader, Spreadsheet, Whiteboard, WordProcessor | iOS 18+, macOS 15+, visionOS 2+ |
+| | Browser | iOS 18+, macOS 15+, visionOS 2+, with schemas added in `OS27` |
+
+No domain exists on watchOS or tvOS. Every schema's required members, parameters, return types, enum cases and deprecations, plus the schema build errors and their fixes: `skills/app-schemas-ref.md`. Moving a SiriKit Lists/Notes app to the Notes and Reminders domains: `skills/siri-notes-reminders.md`. Xcode autocompletes the schemas of a domain on `.<domain>.`.
+
+**Audio**: every schema's required members, parameters, enum cases, the `AudioItem` union, `AudioSearch` resolution, and the SiriKit media path that Siri without Apple Intelligence still uses — `skills/siri-audio-ref.md` (approach: `skills/siri-audio.md`).
 
 ### Xcode schema-completeness errors `OS27`
 
@@ -1460,7 +1470,7 @@ let count: Int = try result.value
 | Metadata 400: "… is not present" | Wrong bundle ID |
 | Execution 206: "requested value for parameter '…' … AutoConfirmingPerformDelegate" | A required parameter is empty: a misspelled label, or an entity string or identifier that matched nothing. The error names the parameter that's missing, not the label you typed |
 | Error text `castingFailed(elementType:targetType:)` | The wrong type in a typed read. With `"NSNull"`: an unreadable property kind, a nil value read as non-optional, or a property read from a `makeReference` entity. With `"AppEnumSpecification"`: read the enum as `AnyAppEnum` |
-| `LNPerformQueryErrorDomain` 10002 | `allEntities()` on a query that isn't `EnumerableEntityQuery` |
+| `LNPerformQueryErrorDomain` 10002 | A query capability the type lacks — read the message: `allEntities()` on a query that isn't `EnumerableEntityQuery`, or `entities(matching:)` on one that isn't `EntityStringQuery` ("Type does not support EntityStringQuery") |
 | `LNConnectionErrorDomain` 1014 "timeout" | `run()` gives up after 30 s. Keep setup and seeding intents short |
 
 Apple's docs have two errors. The article's `definitions.intent[…]` is `intents`, and the `AnyTransientAppEntity` doc comment's `withProperties(…)` is `makeEntity(…)`.
@@ -1829,7 +1839,7 @@ struct TaskListQuery: EntityQuery, EntityStringQuery {
 
 **Docs**: /appintents, /appintents/appintent, /appintents/appentity, /appintents/appschema, /appintents/adopting-app-intents-to-support-system-experiences, /appintents/apple-intelligence-and-siri-ai, /appintentstesting, /appintentstesting/testing-your-app-intents-code, /Updates/AppIntents
 
-**Skills**: skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md, skills/app-discoverability.md, axiom-security (skills/agentic-security.md)
+**Skills**: skills/app-shortcuts-ref.md, skills/core-spotlight-ref.md, skills/app-discoverability.md, skills/siri-audio-ref.md, axiom-security (skills/agentic-security.md)
 
 ---
 

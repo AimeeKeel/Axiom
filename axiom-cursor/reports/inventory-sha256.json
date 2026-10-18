@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "5c262c16afca1d9681a489ccaadaa5f9307f4a433ebbd79854ee9f48f1a3b1cf",
+      "sha256": "78a460d8621d052e058f2f95f82d440bb068daa075fadaed5d2402ace1eac766",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "0aae363302c5cdce3381d600a21aa6bac1608b1b0920b5c580d0c049596772e5",
+      "sha256": "e6da50678bedacdaa1eebd24fb120c0ab07230602f7e5cd825945169fc7f812d",
       "bytes": 3314
     },
     {
@@ -38,8 +38,8 @@
     },
     {
       "path": "agents/concurrency-auditor.md",
-      "sha256": "aa7f34611a4ec4802cebd3c2f51db299d5c29033dd5718d739f81800978a3f25",
-      "bytes": 15797
+      "sha256": "c4c08b58d2870d4ccd8ad6a3d86f589187e96515cdc7f1e485af8b1483b3a877",
+      "bytes": 15742
     },
     {
       "path": "agents/core-data-auditor.md",
@@ -48,8 +48,8 @@
     },
     {
       "path": "agents/crash-analyzer.md",
-      "sha256": "d3805842827faf290c36d04bb4ad0e32a5b637db8cc75ce2bf9b2accf6216485",
-      "bytes": 15212
+      "sha256": "ff243459c51fbb1bb3b4a9d49e1b80194b8585c648b0ed3aa5603a2026305250",
+      "bytes": 14349
     },
     {
       "path": "agents/database-schema-auditor.md",
@@ -58,8 +58,8 @@
     },
     {
       "path": "agents/energy-auditor.md",
-      "sha256": "73e311f29914bfb858a85ed7983d68e6e7d8d55da449c24aa52165bde40d3011",
-      "bytes": 15213
+      "sha256": "7d05356543b1d3660cd494bcfac6159eb3e118e2dce30672efaf914a660ba698",
+      "bytes": 15151
     },
     {
       "path": "agents/foundation-models-auditor.md",
@@ -98,8 +98,8 @@
     },
     {
       "path": "agents/memory-auditor.md",
-      "sha256": "ea4b61a64ae9d0ec3444b7973c612da561d394b9a77de6fee55a7603377c369e",
-      "bytes": 13736
+      "sha256": "20c3694d4ed7cad87fcc294cb661b036241b1eda2496194d9be8caaefe226b2f",
+      "bytes": 13674
     },
     {
       "path": "agents/modernization-helper.md",
@@ -113,8 +113,8 @@
     },
     {
       "path": "agents/performance-profiler.md",
-      "sha256": "835ea7d9f5c2158b5c9a358654734622458d433fb7c5e18770d24ea6f0e5f9ad",
-      "bytes": 12302
+      "sha256": "a4a2e011786abd11f7cbf93c56a37968d24b9efe3017f01ba240c221f3af673f",
+      "bytes": 12151
     },
     {
       "path": "agents/resize-auditor.md",
@@ -133,8 +133,8 @@
     },
     {
       "path": "agents/simulator-tester.md",
-      "sha256": "ad8ba5c531f6d93e6551cfeba69fd7e5006dd299d3d8046ea21e5445a56f7a6f",
-      "bytes": 22014
+      "sha256": "73c6c009a19ffca1757cc43fcaba60c1bc6e6e71c17a9810f3633bad3c5a5413",
+      "bytes": 21959
     },
     {
       "path": "agents/spm-conflict-resolver.md",
@@ -188,13 +188,13 @@
     },
     {
       "path": "agents/test-debugger.md",
-      "sha256": "6dc41086b76022a90efa31ebe1dbf0ace37a838b5c26c3c67e24801f8b523734",
-      "bytes": 13731
+      "sha256": "2c28af357a82a04d15a70ac65d145177a91d60d0e72fa52e738288eff4ee9109",
+      "bytes": 13669
     },
     {
       "path": "agents/test-failure-analyzer.md",
-      "sha256": "6b0665c9e037982f058d6ec6aecd7d0408a92d23efff5dec8ba6ae2cc84cd1c4",
-      "bytes": 17026
+      "sha256": "f45268bf3d9a7e0b261ba7d6cefe86f7ffe7fddc63b3270d3b11ed2f205a9465",
+      "bytes": 16964
     },
     {
       "path": "agents/test-runner.md",
@@ -213,8 +213,8 @@
     },
     {
       "path": "agents/triage-analyzer.md",
-      "sha256": "06df959884ce19920dd035aa5bcbb0826fb7df4f9c07edf7eaf1894b74e3b91c",
-      "bytes": 11919
+      "sha256": "954001ae6548ab0d8b1886816fe60dfcc98f04f897a5c07e9b6fa9bc5aaf3eaa",
+      "bytes": 11890
     },
     {
       "path": "agents/ux-flow-auditor.md",
@@ -363,8 +363,8 @@
     },
     {
       "path": "scripts/user-prompt-submit.py",
-      "sha256": "bd93c7b06905a818eed16a2758931a3a32aa65eda7e34125926cdec8ea9490b5",
-      "bytes": 51704
+      "sha256": "d066d395f7ddae88f24e1a88dd60d1645a945755b97b6ac2c3e09d9c42440452",
+      "bytes": 51906
     },
     {
       "path": "scripts/version_context.py",
@@ -888,8 +888,8 @@
     },
     {
       "path": "skills/axiom-integration/SKILL.md",
-      "sha256": "defe25b81cf16aef9582178e04a22c6b367441521320f76d8d7f34c576df6622",
-      "bytes": 17227
+      "sha256": "74f3589e6d4cb42a4474cf9fd71a1557f617cbfc917ac0167803220761473dae",
+      "bytes": 19372
     },
     {
       "path": "skills/axiom-integration/skills/accessorysetupkit-ref.md",
@@ -913,13 +913,18 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-intents-ref.md",
-      "sha256": "0c867f5599667242c5b05001b167b3c25cf8b2f29fcced17c873a0273043c879",
-      "bytes": 60320
+      "sha256": "45a6fae966f0bf08a00f927c29d326cf240c4822ab9a1f1740cf7ddb1b00f3e3",
+      "bytes": 61656
+    },
+    {
+      "path": "skills/axiom-integration/skills/app-schemas-ref.md",
+      "sha256": "5fa6515ea15e965b59533555a48691573caa40964e2fc5aeade7884922e75622",
+      "bytes": 40883
     },
     {
       "path": "skills/axiom-integration/skills/app-shortcuts-ref.md",
-      "sha256": "5fb654f9dc30ede75f26b266b75847cbe0e4a760b3fb1bfbebceae57e7ab9cb2",
-      "bytes": 24279
+      "sha256": "80cb35b0bf90d9ec320d6871c5a1a955a7bfc70eeff6f650cc57972677026b7c",
+      "bytes": 24986
     },
     {
       "path": "skills/axiom-integration/skills/background-assets-ref.md",
@@ -1052,6 +1057,26 @@
       "bytes": 25255
     },
     {
+      "path": "skills/axiom-integration/skills/siri-audio-diag.md",
+      "sha256": "06f0676e3264c384bb7523b47467d7088e115dd85329d59a39de39910743e7c5",
+      "bytes": 7971
+    },
+    {
+      "path": "skills/axiom-integration/skills/siri-audio-ref.md",
+      "sha256": "3bef2e64735e2891531448d28545c9fab5603de280183f7a8970626c172e54e2",
+      "bytes": 31570
+    },
+    {
+      "path": "skills/axiom-integration/skills/siri-audio.md",
+      "sha256": "abda4847f80d2d40736920652025db0652cdf386f441bf91dec4db9488f2121a",
+      "bytes": 11708
+    },
+    {
+      "path": "skills/axiom-integration/skills/siri-notes-reminders.md",
+      "sha256": "aaaa134e0232db11d4907d16109c8955fb7fb84cf08c192d6bd25c7f70089fba",
+      "bytes": 10989
+    },
+    {
       "path": "skills/axiom-integration/skills/storekit-ref.md",
       "sha256": "fc2426f7a9d1b5ae73abe477410afc882a8083b8f1429d078d6f7ddf22cda172",
       "bytes": 52150
@@ -1168,8 +1193,8 @@
     },
     {
       "path": "skills/axiom-media/SKILL.md",
-      "sha256": "830e6c908855c1e0f91ca4ca06ccda9ef44f81b3dedb7f7b13cd2131bbb03424",
-      "bytes": 17414
+      "sha256": "a3043fff2de27505a2af51a221666d7ea023fd80f081c08b8e8c750e549f4400",
+      "bytes": 17806
     },
     {
       "path": "skills/axiom-media/skills/avfoundation-ref.md",
@@ -1248,8 +1273,8 @@
     },
     {
       "path": "skills/axiom-media/skills/now-playing.md",
-      "sha256": "f6a897366d262cd79030cd98e8f576fec5be7d8b5599fd24ee7e40782dfff093",
-      "bytes": 52639
+      "sha256": "86bda7b53029cfd178444b6860a751a236afe0b5460b6580cedfe69272da705f",
+      "bytes": 54494
     },
     {
       "path": "skills/axiom-media/skills/photo-library-ref.md",
@@ -1913,8 +1938,8 @@
     }
   ],
   "totals": {
-    "files": 382,
-    "bytes": 7818613
+    "files": 387,
+    "bytes": 7926970
   },
   "excludedMirrors": 30,
   "classes": {

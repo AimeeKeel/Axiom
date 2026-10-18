@@ -1246,6 +1246,38 @@ For apps that control playback happening on **another device** (a speaker, TV, o
 
 NowPlaying is the recommended path on 27. Apple's WWDC session does **not** deprecate `MPNowPlayingInfoCenter`, `MPRemoteCommandCenter`, or `MPNowPlayingSession` — so Patterns 1–8 remain correct for apps that support iOS &lt;27 or haven't migrated. The same eligibility rule still applies conceptually: publish content + handle at least one command + own an active, non-mixable audio session.
 
+## Siri and Now Playing
+
+Siri drives an audio app through three separate paths; this skill owns two of them.
+
+| Request | Path | Owner |
+|---|---|---|
+| "Pause", "next track", "skip ahead 30 seconds", "play it slower", "shuffle" | The registered `MPRemoteCommandCenter` / NowPlaying commands — the same handlers as Control Center buttons | this skill |
+| "What song / band / album is this?" | Now-playing title / artist / album metadata | this skill |
+| "Play X in MyApp", "like this song", "add this to my running playlist" | App Intents Audio schema (Siri AI) or SiriKit `INPlayMediaIntent` (classic Siri) | axiom-integration (skills/siri-audio.md) |
+
+Neither of the first two needs SiriKit authorization. An unregistered command makes Siri explain it isn't supported; a temporarily disabled one (no skipping during an ad) does the same.
+
+**Entity annotations `OS27`** — give Siri the app entities behind what's playing, most specific first, so "play the live version" or "add this to my playlist" resolve against your catalog. Use your Audio-schema entities (the schema intents act on them), never a `TransientAppEntity`, which has no persistent identifier; see axiom-integration (skills/siri-audio-ref.md).
+
+```swift
+import AppIntents
+import MediaPlayer
+import NowPlaying
+
+// NowPlaying framework: any MediaContentRepresentable
+func annotate(_ content: inout MusicContent, song: SongEntity, artist: ArtistEntity) {
+    content.appEntityIdentifiers = [EntityIdentifier(for: song), EntityIdentifier(for: artist)]
+}
+
+// MediaPlayer: MPNowPlayingInfoCenter dictionary
+func annotate(_ info: inout [String: Any], song: SongEntity, artist: ArtistEntity) {
+    info[MPNowPlayingInfoPropertyAppEntityIdentifiers] = [
+        EntityIdentifier(for: song), EntityIdentifier(for: artist),
+    ].compactMap(MPAppEntityIdentifier.init(entityIdentifier:))
+}
+```
+
 ## Resources
 
 **WWDC**: 2022-110338, 2017-251, 2019-501, 2026-312

@@ -1,6 +1,6 @@
 # Axiom
 
-Apple-platform development expertise for your coding assistant: <!--ax:routers-->27<!--/ax--> skill routers over <!--ax:skills-->280<!--/ax--> skills, <!--ax:agents-->42<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> commands, and its command-line tools. It works in Claude Code and the Claude app, and in Codex, Cursor, Pi and any MCP client.
+Apple-platform development expertise for your coding assistant: <!--ax:routers-->27<!--/ax--> skill routers over <!--ax:skills-->285<!--/ax--> skills, <!--ax:agents-->42<!--/ax--> agents, <!--ax:commands-->17<!--/ax--> commands, and its command-line tools. It works in Claude Code and the Claude app, and in Codex, Cursor, Pi and any MCP client.
 
 ## Install
 

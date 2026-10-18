@@ -178,7 +178,7 @@ Skip: `*/Pods/*`, `*/Carthage/*`, `*/.build/*`, `*/DerivedData/*`, `*/scratch/*`
 ls -lt ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -5
 
 # Full triage in one call (reads pattern_tag, crashed-thread frames, dSYM matches)
-Call the `axiom_xcsym_crash` MCP tool with structured inputs matching reference arguments `--format=summary <path-to-ips>`.
+Call `axiom_xcsym_crash` with `file` and `format: "summary"`.
 ```
 
 Use the returned `pattern_tag` to route the fix:

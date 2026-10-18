@@ -29,7 +29,7 @@ The native Codex plugin includes Axiom's skills, its auditor workflows, and supp
 npx skills add CharlesWiltgen/Axiom -a codex -g
 ```
 
-This installs all <!--ax:skills-->280<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
+This installs all <!--ax:skills-->285<!--/ax--> skills globally using [npx skills](https://skills.sh/). The `-g` flag makes skills available across all projects.
 
 To install for the current project only (omit `-g`):
 
