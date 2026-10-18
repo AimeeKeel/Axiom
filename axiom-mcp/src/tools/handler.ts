@@ -3,6 +3,7 @@ import { Loader } from '../loader/types.js';
 import type { SkillSection } from '../loader/parser.js';
 import { Logger } from '../config.js';
 import { mcpToolFooter } from './mcp-notes.js';
+import { CLI_ONLY_BINARIES } from './binaries.js';
 
 export interface McpTool {
   name: string;
@@ -358,7 +359,7 @@ export class DynamicToolsHandler {
       parts.push('');
     }
 
-    const footer = mcpToolFooter(delivered.join('\n'), this.binaryToolNames());
+    const footer = mcpToolFooter(delivered.join('\n'), this.binaryToolNames(), CLI_ONLY_BINARIES);
     if (footer) parts.push('---', footer);
     return { content: [{ type: 'text', text: parts.join('\n') }] };
   }
@@ -386,7 +387,7 @@ export class DynamicToolsHandler {
     }
     lines.push('');
     lines.push(agent.content);
-    const footer = mcpToolFooter(agent.content, this.binaryToolNames());
+    const footer = mcpToolFooter(agent.content, this.binaryToolNames(), CLI_ONLY_BINARIES);
     if (footer) lines.push('', '---', footer);
 
     return { content: [{ type: 'text', text: lines.join('\n') }] };

@@ -7,6 +7,9 @@ on:
       - 'scripts/cursor/**'
       - 'scripts/build-cursor.ts'
       - 'scripts/inline-auditors.ts'
+      # The Cursor build renders MCP-only notes and derives its tool maps from these.
+      - 'axiom-mcp/src/tools/mcp-notes.ts'
+      - 'axiom-mcp/src/tools/binaries.ts'
       - '.cursor-plugin/**'
       - 'axiom-cursor/**'
       - 'package.json'

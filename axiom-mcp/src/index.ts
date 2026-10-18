@@ -18,9 +18,10 @@ import { Loader } from './loader/types.js';
 import { ResourcesHandler } from './resources/handler.js';
 import { PromptsHandler } from './prompts/handler.js';
 import { DynamicToolsHandler } from './tools/handler.js';
-import { XcprofTools, resolveXcprofPath } from './tools/xcprof.js';
-import { XclogTools, resolveXclogPath } from './tools/xclog.js';
-import { XcsymTools, resolveXcsymPath } from './tools/xcsym.js';
+import { resolveXcprofPath } from './tools/xcprof.js';
+import { resolveXclogPath } from './tools/xclog.js';
+import { resolveXcsymPath } from './tools/xcsym.js';
+import { createBinaryToolProviders } from './tools/providers.js';
 import { serverInstructions } from './instructions.js';
 import { detectToolchain } from './version-context.js';
 import { join, dirname } from 'path';
@@ -64,13 +65,14 @@ async function main() {
   }
 
   // Initialize handlers
-  const xcprof = new XcprofTools({ binaryPath: resolveXcprofPath(config), logger });
-  const xclog = new XclogTools({ binaryPath: resolveXclogPath(config), logger });
-  const xcsym = new XcsymTools({ binaryPath: resolveXcsymPath(config), logger });
-  const binaryToolNames = [xcprof, xclog, xcsym].flatMap((p) => p.listTools().map((t) => t.name));
+  const binaryTools = Object.values(createBinaryToolProviders({
+    paths: { xcprof: resolveXcprofPath(config), xclog: resolveXclogPath(config), xcsym: resolveXcsymPath(config) },
+    logger,
+  }));
+  const binaryToolNames = binaryTools.flatMap((p) => p.listTools().map((t) => t.name));
   const resourcesHandler = new ResourcesHandler(loader, logger, binaryToolNames);
   const promptsHandler = new PromptsHandler(loader, logger, binaryToolNames);
-  const toolsHandler = new DynamicToolsHandler(loader, logger, [xcprof, xclog, xcsym]);
+  const toolsHandler = new DynamicToolsHandler(loader, logger, binaryTools);
 
   // Create MCP server. axiom-mcp serves tools/resources/prompts dynamically
   // from a loader, so it registers low-level request handlers on the underlying

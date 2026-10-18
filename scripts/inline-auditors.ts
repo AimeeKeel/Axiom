@@ -21,6 +21,12 @@
  * (build-inlined-auditors.ts / pre-deploy.ts) handles disk and error reporting.
  * Tests in inline-auditors.test.ts exercise these functions.
  */
+import { MCP_TOOL_NAMES } from "../axiom-mcp/src/tools/binaries.ts";
+
+/** "xclog, xcsym and xcprof steps with the `axiom_xclog_*`, … tools", from the server's tool list. */
+const WRAPPED_BINARY_NAMES = Object.keys(MCP_TOOL_NAMES);
+const andList = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
+const WRAPPED_STEPS = `${andList(WRAPPED_BINARY_NAMES)} steps with the ${andList(WRAPPED_BINARY_NAMES.map((b) => `\`axiom_${b}_*\``))} tools`;
 
 /** Tools that a pure-scan agent may declare. An agent whose tool list is a
  * subset of these needs nothing but file reading and search, so its procedure
@@ -415,7 +421,7 @@ export function renderRouterNote(target: RouterNoteTarget): string {
   }
   lines.push(
     ">",
-    "> For any other agent, over MCP `axiom_get_agent` returns it too; run its xclog, xcsym and xcprof steps with the `axiom_xclog_*`, `axiom_xcsym_*` and `axiom_xcprof_*` tools. Elsewhere, search Axiom's skills for `skills/<agent>.md`; if there is none, do that work yourself with this suite's skills, using any Axiom tool on your `PATH`.",
+    "> For any other agent, over MCP `axiom_get_agent` returns it too; run its " + WRAPPED_STEPS + ". Elsewhere, search Axiom's skills for `skills/<agent>.md`; if there is none, do that work yourself with this suite's skills, using any Axiom tool on your `PATH`.",
     NOTE_END,
   );
   return lines.join("\n");

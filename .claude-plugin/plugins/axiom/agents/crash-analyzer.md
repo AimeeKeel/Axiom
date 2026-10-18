@@ -43,10 +43,10 @@ The exit code narrows the triage path:
 | Exit | Meaning | Next step |
 |---|---|---|
 | 0 | All images matched | Read `pattern_tag`; go straight to fix guidance |
-| 1 | Usage error, a hang report (`"error":"hang_report"`), or a non-fatal EXC_RESOURCE report (`"error":"non_fatal_resource"`) on stdout | Check the `error` key: route hangs to hang-diagnostics and CPU/wakeups warnings to `axiom-performance`; otherwise fix the invocation. MCP-only clients: `xcsym failed (exit 1): timed out…` is the server's time limit, not a usage error; treat it as exit 6, retrying with `dsymPaths` and `noDefaults: true` when you know where the dSYMs live, else `noSpotlight: true` |
+| 1 | Usage error, a hang report (`"error":"hang_report"`), or a non-fatal EXC_RESOURCE report (`"error":"non_fatal_resource"`) on stdout | Check the `error` key: route hangs to hang-diagnostics and CPU/wakeups warnings to `axiom-performance`; otherwise fix the invocation (MCP-only clients: `xcsym failed (exit 1): timed out…` is the server's time limit, not a usage error; treat it as exit 6, retrying with `dsymPaths` and `noDefaults: true` when you know where the dSYMs live, else `noSpotlight: true`) |
 | 2 | Main dSYM missing, input not found/unreadable, or unsupported input (`"error":"unsupported_format"` or `"empty_bundle"` on stdout) | Check the `error` key first; for a missing dSYM, locate the archive or set `XCSYM_DSYM_PATHS` to where it lives (MCP-only clients: `axiom_xcsym_crash` with `file` and `dsymPaths`) |
 | 3 | Main UUID mismatch | Different build than the archive on disk — `xcsym find-dsym <uuid>` (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid`) |
-| 4 | Main arch mismatch | Pass `--arch` to `find-dsym` (arm64 vs arm64e) (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid` and `arch`) |
+| 4 | Main arch mismatch | Pass `--arch` (MCP-only clients: `arch`) to `xcsym find-dsym` (arm64 vs arm64e) |
 | 5 | Tool error (dwarfdump/atos/Spotlight failed, or an I/O error walking a bundle) | Real failure — read stderr |
 | 6 | Command timeout | Retry with `--no-spotlight` (MCP-only clients: `axiom_xcsym_crash` with `file` and `noSpotlight: true`); if still timing out, atos is the bottleneck |
 | 7 | Main matched, others missing/mismatched | Expected for stripped third-party frameworks |
@@ -125,7 +125,7 @@ If xcsym is still absent and no `axiom_xcsym_crash` MCP tool is available (older
 3. [Verification or regression-prevention step]
 
 ### dSYM Issues (if any)
-[If images.missing non-empty: list missing UUIDs and suggest `xcsym find-dsym <uuid>` (MCP-only clients: `axiom_xcsym_find_dsym` with `uuid`) or setting `--dsym-paths`]
+[If images.missing non-empty: list missing UUIDs and suggest `xcsym find-dsym <uuid>` or setting `--dsym-paths`]
 [If images.mismatched non-empty: list mismatches with expected vs found UUID; suggest which archive to pull]
 ```
 

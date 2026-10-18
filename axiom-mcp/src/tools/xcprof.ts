@@ -13,6 +13,7 @@ import {
   resolveToolPath,
   text,
 } from './binary-exec.js';
+import { MCP_TOOL_NAMES } from './binaries.js';
 
 // Default ceiling on a single xcprof invocation. analyze/compare/doctor finish
 // well within this; record bounds itself (--max-duration default 60s + a
@@ -70,12 +71,7 @@ export class XcprofTools implements BinaryToolProvider {
   }
 
   /** Tool names this handler owns, used by the parent handler to dispatch. */
-  static readonly toolNames = [
-    'axiom_xcprof_doctor',
-    'axiom_xcprof_analyze',
-    'axiom_xcprof_compare',
-    'axiom_xcprof_record',
-  ] as const;
+  static readonly toolNames = MCP_TOOL_NAMES.xcprof;
 
   listTools(): McpTool[] {
     return [

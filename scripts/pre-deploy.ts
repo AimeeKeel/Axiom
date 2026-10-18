@@ -2815,6 +2815,14 @@ heading("12o. Codex Pointer Resolution");
       }
     }
 
+    // build-codex strips every MCP-only clients note; one that survives is in a form
+    // stripMcpClientNotes does not know, so nothing stripped or checked it.
+    for (const f of mdFiles) {
+      if (fs.readFileSync(f, "utf8").includes("MCP-only clients:")) {
+        error("codex-mcp-notes", `${path.relative(root, f)} still carries an MCP-only clients note in a form stripMcpClientNotes does not recognize`);
+      }
+    }
+
     if (unresolved.size > 0) {
       for (const [target, count] of [...unresolved].sort((a, b) => b[1] - a[1])) {
         error(

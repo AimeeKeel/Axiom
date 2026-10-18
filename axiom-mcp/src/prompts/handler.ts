@@ -2,6 +2,7 @@ import { Loader } from '../loader/types.js';
 import { Logger } from '../config.js';
 import { Command } from '../loader/parser.js';
 import { mcpToolFooter } from '../tools/mcp-notes.js';
+import { CLI_ONLY_BINARIES } from '../tools/binaries.js';
 
 /**
  * MCP Prompt representation
@@ -24,7 +25,7 @@ export class PromptsHandler {
   constructor(
     private loader: Loader,
     private logger: Logger,
-    private binaryToolNames: string[] = [],
+    private binaryToolNames: readonly string[],
   ) {}
 
   /**
@@ -64,7 +65,7 @@ export class PromptsHandler {
 
     // Substitute arguments in command content
     const substituted = this.substituteArguments(command, args || {});
-    const footer = mcpToolFooter(command.content, this.binaryToolNames);
+    const footer = mcpToolFooter(command.content, this.binaryToolNames, CLI_ONLY_BINARIES);
     const content = footer ? `${substituted}\n\n---\n${footer}` : substituted;
 
     this.logger.info(`Returning prompt: ${name}`);

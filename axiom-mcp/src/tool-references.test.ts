@@ -3,9 +3,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { DynamicToolsHandler } from './tools/handler.js';
-import { XclogTools } from './tools/xclog.js';
-import { XcsymTools } from './tools/xcsym.js';
-import { XcprofTools } from './tools/xcprof.js';
+import { CLI_ONLY_BINARIES, MCP_TOOL_NAMES } from './tools/binaries.js';
 import type { Loader } from './loader/types.js';
 import { Logger, type Config } from './config.js';
 import { detectXcode, loadAppleDocs } from './loader/xcode-docs.js';
@@ -19,16 +17,15 @@ const readme = readFileSync(join(repo, 'axiom-mcp/README.md'), 'utf8');
 const pluginSkills = join(repo, '.claude-plugin/plugins/axiom/skills');
 
 // No word boundary before axiom_, so a qualified name such as mcp__axiom__axiom_xcsym_crash is checked too.
-const TOOL_TOKEN = /(?<![a-z0-9])axiom_(?:get|search|read|xclog|xcsym|xcprof|xcui|xcproject|axbuild)_[a-z_]*[a-z]\b/g;
+const TOOL_FAMILIES = ['get', 'search', 'read', ...Object.keys(MCP_TOOL_NAMES), ...CLI_ONLY_BINARIES];
+const TOOL_TOKEN = new RegExp(`(?<![a-z0-9])axiom_(?:${TOOL_FAMILIES.join('|')})_[a-z_]*[a-z]\\b`, 'g');
 
 async function registeredTools(): Promise<Set<string>> {
   const logger = new Logger({ mode: 'production', enableAppleDocs: false, logLevel: 'error' } satisfies Config);
   const { tools } = await new DynamicToolsHandler({} as Loader, logger).listTools();
   return new Set([
     ...tools.map((t) => t.name),
-    ...XclogTools.toolNames,
-    ...XcsymTools.toolNames,
-    ...XcprofTools.toolNames,
+    ...Object.values(MCP_TOOL_NAMES).flat(),
   ]);
 }
 
@@ -104,5 +101,19 @@ describe('tool names in shipped prose', () => {
 
     expect({ checked: prefixes.size > 0, unknown: [...prefixes].filter((p) => !tools.some((t) => t.startsWith(`${p}_`))) })
       .toEqual({ checked: true, unknown: [] });
+  });
+});
+
+describe('skill-annotations.json', () => {
+  // applyAnnotations skips an entry whose key matches no skill, and a mistyped related id ships
+  // a pointer to nothing; neither fails anywhere else.
+  it('keys and links only skills that exist', () => {
+    const annotations = JSON.parse(readFileSync(join(repo, 'axiom-mcp/skill-annotations.json'), 'utf8')) as Record<string, { related?: string[] }>;
+    const keys = Object.keys(annotations);
+    const missing = [
+      ...keys.filter((id) => !skillIdExists(id)).map((id) => `key ${id}`),
+      ...Object.entries(annotations).flatMap(([id, a]) => (a.related ?? []).filter((r) => !skillIdExists(r)).map((r) => `${id} → ${r}`)),
+    ];
+    expect({ checked: keys.length > 0, missing }).toEqual({ checked: true, missing: [] });
   });
 });

@@ -5,6 +5,7 @@ import {
   CURSOR_MCP_TOOL_BOUNDARY,
   CURSOR_XCUI_TOOL_BOUNDARY,
   rewriteCursorSkillReferences,
+  WRAPPED_BINARY_PATTERN,
 } from "./references.ts";
 import { CURSOR_ALLOWED_SKILL_FIELDS } from "./source.ts";
 import type { SourceSkill, VirtualFile } from "./types.ts";
@@ -40,7 +41,7 @@ function transformFile(file: VirtualFile): VirtualFile {
   );
   const translated = rewriteCursorSkillReferences(withoutGeneratedMirrorRouting);
   const content = prependBody(translated, [
-    ...(/\b(?:xclog|xcsym|xcprof)\b/.test(translated) ? [CURSOR_MCP_TOOL_BOUNDARY] : []),
+    ...(new RegExp(`\\b${WRAPPED_BINARY_PATTERN}\\b`).test(translated) ? [CURSOR_MCP_TOOL_BOUNDARY] : []),
     ...(/\bxcui\b/.test(translated) ? [CURSOR_XCUI_TOOL_BOUNDARY] : []),
   ]);
   assertNoUnsupportedClaudeTokens(content);

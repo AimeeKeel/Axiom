@@ -12,6 +12,7 @@ import {
   resolveToolPath,
   text,
 } from './binary-exec.js';
+import { MCP_TOOL_NAMES } from './binaries.js';
 
 // xclog launch/attach stream until a bound is hit; the others finish quickly.
 // This ceiling is a hard backstop only — the wrapper injects a --timeout bound
@@ -55,12 +56,7 @@ function defaultExec(env: NodeJS.ProcessEnv = process.env): XclogExec {
  * default) is left as-is for LLM consumption. Simulator tooling is macOS-only.
  */
 export class XclogTools implements BinaryToolProvider {
-  static readonly toolNames = [
-    'axiom_xclog_launch',
-    'axiom_xclog_attach',
-    'axiom_xclog_show',
-    'axiom_xclog_list',
-  ] as const;
+  static readonly toolNames = MCP_TOOL_NAMES.xclog;
 
   private readonly binaryPath: string;
   private readonly exec: XclogExec;

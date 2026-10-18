@@ -7,6 +7,14 @@ import { buildCapabilityReport } from "./report.ts";
 import { CURSOR_FORCED_FOREGROUND, CURSOR_HOOK_EXPECTATIONS } from "./contract.ts";
 import { loadCursorSource } from "./source.ts";
 import type { SourceAgent } from "./types.ts";
+import { MCP_SUBCOMMANDS, WRAPPED_BINARY_PATTERN } from "./references.ts";
+
+// A Cursor agent that still says `command -v xcsym` or starts a line with a wrapped command
+// would send Cursor users to a binary the plugin does not install.
+const wrappedCommandResidue = new RegExp(
+  `command -v ${WRAPPED_BINARY_PATTERN}\\b|^\\s*(?:${[...MCP_SUBCOMMANDS.keys()].map((c) => c.replace(" ", "\\s+")).join("|")})\\b`,
+  "m",
+);
 
 const readonlyAgent: SourceAgent = {
   name: "readonly-auditor",
@@ -212,7 +220,7 @@ test("routes agent binary workflows through Axiom MCP tools and gives xcui a deg
     assert.doesNotMatch(content, /XCSYM_DSYM_PATHS=[^\n]*`axiom_(?:xclog|xcsym|xcprof)_/, agent);
   }
   for (const [agent, content] of transformed) {
-    assert.doesNotMatch(content, /command -v (?:xclog|xcsym|xcprof)\b|^\s*(?:xclog|xcsym|xcprof)\s+(?:list|show|launch|attach|doctor|record|analyze|compare|crash|triage|resolve|find-dsym|list-dsyms|verify|anonymize)\b/gm, agent);
+    assert.doesNotMatch(content, wrappedCommandResidue, agent);
   }
 
   const simulator = transformed.get("simulator-tester");
@@ -231,8 +239,9 @@ test("preserves concrete profiling arguments in emitted MCP guidance", () => {
 
   assert.match(content, /axiom_xcprof_record[^\n]*preset: "cpu"[^\n]*attach: "<app>"[^\n]*timeLimit: "10s"/);
   assert.match(content, /axiom_xcprof_record[^\n]*instruments: \["SwiftUI", "CPU Profiler"\][^\n]*attach: "<app>"[^\n]*timeLimit: "10s"/);
-  assert.match(content, /axiom_xcprof_analyze[^\n]*trace: "<trace>"[^\n]*startMs: <milliseconds>[^\n]*endMs: <milliseconds>/);
-  assert.match(content, /axiom_xcprof_compare[^\n]*baseline: "<baseline>"[^\n]*current: "<current>"/);
+  // These two now come from the canonical MCP-only clients notes, which name the params.
+  assert.match(content, /`axiom_xcprof_analyze` with `trace`, `startMs`, and `endMs`/);
+  assert.match(content, /`axiom_xcprof_compare` with `baseline` and `current`/);
   assert.match(content, /failOnRegression: true/);
   assert.match(content, /dsym: "<path>"/);
   assert.doesNotMatch(content, /axiom_xcprof_record` MCP tool[^\n]*--(?:preset|instrument|attach|time-limit)/);

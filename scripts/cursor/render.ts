@@ -9,8 +9,10 @@ import { renderCursorMcp, validateMcpVariables } from "./mcp.ts";
 import { buildCapabilityReport } from "./report.ts";
 import {
   assertHostClaimRewritesFired,
+  assertNoCliResidue,
   resetHostClaimRewriteTracking,
   validateCursorReferences,
+  wrappedFlagsIn,
 } from "./references.ts";
 import { transformSkill } from "./skills.ts";
 import { loadCursorSource } from "./source.ts";
@@ -174,6 +176,10 @@ export function renderCursorDistribution(sourceRoot: string, options: { profile:
   for (const skill of source.skills) for (const file of transformSkill(skill)) addFile(files, file);
   for (const agent of agents) addFile(files, agent.file);
   for (const command of source.commands) addFile(files, transformCommand(command));
+  const wrappedFlags = wrappedFlagsIn([...source.agents.map((a) => a.body), ...source.commands.map((c) => c.body)]);
+  for (const [filePath, file] of files) {
+    if (/^(?:agents|commands)\//.test(filePath)) assertNoCliResidue(file.content, filePath, wrappedFlags);
+  }
   // Every host-claim rewrite must have matched real canonical prose; a dead pattern means
   // the canonical wording moved and Cursor output silently kept a Claude-only claim.
   assertHostClaimRewritesFired();

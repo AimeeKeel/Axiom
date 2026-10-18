@@ -72,15 +72,15 @@ MCP-only clients: `axiom_xcprof_record` with the row's values as `preset`, `atta
 
 Targets and their gates:
 
-- **Attach** (`--attach <pid|name>`) — the default; no gate. Prefer it whenever the app is already running.
+- **Attach** — `--attach <pid|name>` (MCP-only clients: `attach`), the default; no gate. Prefer it whenever the app is already running.
 - **Launch from startup** — append `--allow-launch ... -- <app-path>` (add `--device "$BOOTED"` for a sim). `--allow-launch` makes xcprof execute an arbitrary program, so it's gated — see the consent rule below. (MCP-only clients: `axiom_xcprof_record` with `launch: ["<app-path>"]` and `allowLaunch: true`.)
 - **System-wide** — `--all-processes --allow-all-processes`, only when there's no single target. `--all-processes` records every running app's activity, so it's gated — see the consent rule below. (MCP-only clients: `axiom_xcprof_record` with `allProcesses: true` and `allowAllProcesses: true`.)
 - Pass `--no-prompt` (non-interactive), and add `--device "$BOOTED"` when profiling a sim (MCP-only clients: prompts are always off; pass `device: "<sim name or UDID>"`, asking the user for it if you have no shell).
 - When unsure, add `--dry-run` (MCP-only clients: `dryRun: true`) first to print the exact `xctrace` command without spawning anything.
 
-**Consent gate (hard rule).** `--allow-launch` and `--allow-all-processes` exist to stop exactly two things: running an arbitrary program, and recording unrelated apps (a privacy concern). Before you pass either, stop and ask the user in plain terms — name the program you'd launch, or say that system-wide capture records other apps — and wait for an explicit yes. Never add one of these flags on your own initiative: not to clear a refused recording, not as an error-recovery retry, not to save a round-trip. If the user hasn't agreed, use `--attach` instead. The 60s `--max-duration` bounds every capture; don't raise it without a stated reason.
+**Consent gate (hard rule).** `--allow-launch` (MCP-only clients: `allowLaunch`) and `--allow-all-processes` (MCP-only clients: `allowAllProcesses`) exist to stop exactly two things: running an arbitrary program, and recording unrelated apps (a privacy concern). Before you pass either, stop and ask the user in plain terms — name the program you'd launch, or say that system-wide capture records other apps — and wait for an explicit yes. Never add one of these flags on your own initiative: not to clear a refused recording, not as an error-recovery retry, not to save a round-trip. If the user hasn't agreed, use `--attach` (MCP-only clients: `attach`) instead. The 60s `--max-duration` (MCP-only clients: `maxDuration`) bounds every capture; don't raise it without a stated reason.
 
-`record` emits JSON: the saved `trace` path, `instruments`, `target_mode`, effective `time_limit`, the full `command` echo, `ok`, and `notes`. **`ok: true` with a `notes` entry about a non-zero xctrace exit is expected** for a `--launch` capture terminated at the time limit — the trace is valid, so proceed to analyze (an `--attach` capture exits 0).
+`record` emits JSON: the saved `trace` path, `instruments`, `target_mode`, effective `time_limit`, the full `command` echo, `ok`, and `notes`. **`ok: true` with a `notes` entry about a non-zero xctrace exit is expected** for a `--launch` (MCP-only clients: `launch`) capture terminated at the time limit — the trace is valid, so proceed to analyze (an `--attach` (MCP-only clients: `attach`) capture exits 0).
 
 ### 3. Analyze
 
@@ -137,7 +137,7 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ### Recommendations
 1. Highest-impact fix, tied to a specific frame/family
-2. Next investigation step (e.g. re-scope a hang window, add `--dsym`)
+2. Next investigation step (e.g. re-scope a hang window, or symbolicate a stripped build with its dSYM)
 
 ### Next steps
 - Open in Instruments for deeper / unparsed views: `open "<trace>"`
@@ -149,18 +149,18 @@ For instruments `analyze` doesn't parse yet (SwiftUI, Swift Tasks/Actors), repor
 
 ## Comparison (before / after)
 
-Use `xcprof compare <baseline> <current> --json` (MCP-only clients: `axiom_xcprof_compare` with `baseline` and `current`) to diff two traces. It reports per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame as `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (default 5) as a regression. Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces (MCP-only clients: `failOnRegression`, `thresholdPct`, `dsym`). Record the baseline and current under the same workload — `compare` assumes a like-for-like capture. See `/axiom:compare-traces` and `axiom-performance (skills/trace-comparison.md)`.
+Use `xcprof compare <baseline> <current> --json` (MCP-only clients: `axiom_xcprof_compare` with `baseline` and `current`) to diff two traces. It reports per-function CPU-share deltas (`incl_pct_delta`, `self_pct_delta`, `incl_ms_delta`), classifies each frame as `changed` / `new` / `gone`, and flags any frame at or above `--threshold-pct` (MCP-only clients: `thresholdPct`) (default 5) as a regression. Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces (MCP-only clients: `failOnRegression`, `thresholdPct`, `dsym`). Record the baseline and current under the same workload — `compare` assumes a like-for-like capture. See `/axiom:compare-traces` and `axiom-performance (skills/trace-comparison.md)`.
 
 ## Error handling
 
 | Symptom | Cause | Fix |
 |---|---|---|
 | `doctor` exits 2 | xctrace missing | Install Xcode command-line tools |
-| record refused (exit 2) | a security gate wasn't passed | for launch / all-processes, **get the user's explicit consent first**, then add `--allow-launch` / `--allow-all-processes` (see the consent gate) — never bypass on your own; for an output-sandbox refusal, keep the capture under `XCPROF_TRACE_ROOT` (MCP-only clients: leave `output` unset; to write elsewhere, ask the user before retrying with `allowExternalOutput: true`) |
-| `--time-limit` refused | exceeds `--max-duration` | raise `--max-duration` only if a longer capture is genuinely needed — it's the bound that keeps captures finite |
+| record refused (exit 2) | a security gate wasn't passed | for launch / all-processes, **get the user's explicit consent first**, then add `--allow-launch` (MCP-only clients: `allowLaunch`) / `--allow-all-processes` (MCP-only clients: `allowAllProcesses`) (see the consent gate) — never bypass on your own; for an output-sandbox refusal, keep the capture under `XCPROF_TRACE_ROOT` (MCP-only clients: leave `output` unset; to write elsewhere, ask the user before retrying with `allowExternalOutput: true`) |
+| `--time-limit` (MCP-only clients: `timeLimit`) refused | exceeds `--max-duration` (MCP-only clients: `maxDuration`) | raise `--max-duration` (MCP-only clients: `maxDuration`) only if a longer capture is genuinely needed — it's the bound that keeps captures finite |
 | record `ok:false`, no trace | attach target not found / device wrong | re-run target discovery; confirm the app is running |
 | every family `not_present` | wrong preset for the question | re-record with the matching preset |
-| frames are `0x…` | stripped build | pass `--dsym <path>` |
+| frames are `0x…` | stripped build | pass `--dsym <path>` (MCP-only clients: `dsym`) |
 
 ## Tips for better profiles
 

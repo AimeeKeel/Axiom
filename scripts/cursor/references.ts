@@ -1,6 +1,7 @@
 import path from "node:path";
 import type { VirtualFile } from "./types.ts";
-import { stripMcpClientNotes } from "../../axiom-mcp/src/tools/mcp-notes.ts";
+import { mcpClientNoteBodies, renderMcpClientNotes, stripMcpClientNotes, wrappedCommandFlags } from "../../axiom-mcp/src/tools/mcp-notes.ts";
+import { MCP_TOOL_NAMES } from "../../axiom-mcp/src/tools/binaries.ts";
 
 export const CURSOR_INVOCATION_REWRITES: ReadonlyArray<[RegExp, string]> = [
   [/`\/axiom:([a-z0-9-]+)`/g, "`/axiom-$1`"],
@@ -55,25 +56,18 @@ const UNSUPPORTED_TOKENS: ReadonlyArray<[RegExp, string]> = [
   [/^\s*prompt\s*:\s*\|/m, "prompt: |"],
 ];
 
-const MCP_SUBCOMMANDS = new Map<string, string>([
-  ["xclog attach", "axiom_xclog_attach"],
-  ["xclog launch", "axiom_xclog_launch"],
-  ["xclog list", "axiom_xclog_list"],
-  ["xclog show", "axiom_xclog_show"],
-  ["xcprof analyze", "axiom_xcprof_analyze"],
-  ["xcprof compare", "axiom_xcprof_compare"],
-  ["xcprof doctor", "axiom_xcprof_doctor"],
-  ["xcprof record", "axiom_xcprof_record"],
-  ["xcsym anonymize", "axiom_xcsym_anonymize"],
-  ["xcsym crash", "axiom_xcsym_crash"],
-  ["xcsym find-dsym", "axiom_xcsym_find_dsym"],
-  ["xcsym list-dsyms", "axiom_xcsym_list_dsyms"],
-  ["xcsym resolve", "axiom_xcsym_resolve"],
-  ["xcsym triage", "axiom_xcsym_triage"],
-  ["xcsym verify", "axiom_xcsym_verify"],
-]);
+/** The binaries the MCP server wraps, from the server's own tool list. */
+export const WRAPPED_BINARIES = Object.keys(MCP_TOOL_NAMES) as ReadonlyArray<keyof typeof MCP_TOOL_NAMES>;
+export const WRAPPED_BINARY_PATTERN = `(?:${WRAPPED_BINARIES.join("|")})`;
 
-const MCP_COMMAND_PATTERN = "(?:xclog\\s+(?:attach|launch|list|show)|xcprof\\s+(?:analyze|compare|doctor|record)|xcsym\\s+(?:anonymize|crash|find-dsym|list-dsyms|resolve|triage|verify))";
+/** `xcsym find-dsym` → `axiom_xcsym_find_dsym`, for every tool the server registers. */
+export const MCP_SUBCOMMANDS: ReadonlyMap<string, string> = new Map(WRAPPED_BINARIES.flatMap((binary) =>
+  MCP_TOOL_NAMES[binary].map((tool): [string, string] => [`${binary} ${tool.slice(`axiom_${binary}_`.length).replace(/_/g, "-")}`, tool])));
+
+const MCP_COMMAND_PATTERN = `(?:${WRAPPED_BINARIES.map((binary) => {
+  const subcommands = [...MCP_SUBCOMMANDS.keys()].filter((c) => c.startsWith(`${binary} `)).map((c) => c.slice(binary.length + 1));
+  return `${binary}\\s+(?:${subcommands.sort((a, b) => b.length - a.length || a.localeCompare(b)).join("|")})`;
+}).join("|")})`;
 
 export const CURSOR_MCP_MISSING_TOOL_BOUNDARY = "If a required MCP tool is unavailable, stop and report that the Axiom MCP integration is missing; do not fall back to a same-named executable.";
 
@@ -102,7 +96,7 @@ interface HostClaimRewrite {
  */
 const HOST_CLAIM_REWRITES: ReadonlyArray<HostClaimRewrite> = [
   { id: "codex-bundled-helpers", pattern: /On \*\*Codex plugin installs\*\*[^\n]*\n\n/g, replacement: "" },
-  ...(["xclog", "xcsym", "xcprof"] as const).map((tool) => ({
+  ...WRAPPED_BINARIES.map((tool) => ({
     id: `${tool}-front-ends`,
     pattern: new RegExp(`${tool} has two front-ends over the same engine — the CLI and MCP tools; use whichever your harness provides:\\n\\n(?:- \\*\\*(?:Claude Code|Codex|Pi)\\*\\*[^\\n]*\\n)*- \\*\\*MCP clients\\*\\*[^\\n]*`, "g"),
     replacement: `In Cursor, use the \`axiom_${tool}_*\` MCP tools. The plugin does not provide a bare \`${tool}\` executable on \`PATH\`.`,
@@ -136,24 +130,23 @@ const HOST_CLAIM_REWRITES: ReadonlyArray<HostClaimRewrite> = [
 const MCP_SCHEMA_REWRITES: ReadonlyArray<HostClaimRewrite> = [
   { id: "dsym-paths-env", pattern: /set `XCSYM_DSYM_PATHS` to where it lives/g, replacement: "pass its folder as `dsymPaths`" },
   { id: "dsym-paths-archive", pattern: /point `XCSYM_DSYM_PATHS` at its `dSYMs\/` directory/g, replacement: "pass its `dSYMs/` directory as `dsymPaths`" },
-  { id: "find-dsym-arch", pattern: /Pass `--arch` to `find-dsym` \(arm64 vs arm64e\)/g, replacement: "Pass `arch` to `axiom_xcsym_find_dsym` (arm64 vs arm64e)" },
   { id: "timeout-no-spotlight", pattern: /Retry with `--no-spotlight`;/g, replacement: "Retry with `noSpotlight: true`;" },
   { id: "output-path", pattern: /Real failure — check the `--output` path/g, replacement: "Real failure — read the error text" },
   { id: "stdin", pattern: /^\*\*Stdin\.\*\* Both `crash` and `anonymize` accept `-` as the file argument[^\n]*$/gm, replacement: "**Pasted crashes.** The MCP tools take file paths only, with no stdin: save pasted crash text to a file first." },
   { id: "dsym-paths-flag", pattern: /setting `--dsym-paths`/g, replacement: "passing `dsymPaths`" },
   { id: "scan-timeout-env", pattern: /consider setting `XCSYM_FRAMEWORK_SCAN_TIMEOUT` to a lower value or using `--dsym-paths` to skip discovery entirely/g, replacement: "consider passing `dsymPaths` with `noDefaults: true` to skip default discovery" },
-  { id: "triage-stdin", pattern: /^xcsym triage --latest-version <latest_version> --os-floor <floor> --min-users <n> < \/tmp\/corpus\.jsonl$/gm, replacement: "Call the `axiom_xcsym_triage` MCP tool with `file: \"/tmp/corpus.jsonl\"`, `latestVersion: \"<latest_version>\"`, `osFloor: \"<floor>\"`, and `minUsers: <n>`." },
   { id: "all-processes", pattern: /^- \*\*System-wide\*\* — `--all-processes --allow-all-processes`, only when there's no single target\. `--all-processes` records/gm, replacement: "- **System-wide** — `allProcesses: true` with `allowAllProcesses: true`, only when there's no single target. System-wide capture records" },
   { id: "no-prompt", pattern: /^- Pass `--no-prompt` \(non-interactive\), and add `--device "\$BOOTED"` when profiling a sim\.$/gm, replacement: "- Recording is always non-interactive over MCP; pass `device: \"<booted-udid>\"` when profiling a sim." },
   { id: "dry-run", pattern: /^- When unsure, add `--dry-run` first to print/gm, replacement: "- When unsure, set `dryRun: true` first to print" },
+  // The note after this cell is a sentence, not a param, so renderMcpClientNotes leaves it; the env var cannot reach Cursor.
+  { id: "trace-root-sandbox", pattern: /keep the capture under `XCPROF_TRACE_ROOT`/g, replacement: "leave `output` unset, or ask the user before setting `allowExternalOutput: true`" },
 ];
 
 // Workflow passages rewritten to their MCP form, tracked like the lists above so a pattern
 // that no longer matches the canonical wording fails the build.
 const MCP_WORKFLOW_REWRITES: ReadonlyArray<HostClaimRewrite> = [
-  { id: "dsym-paths-downloads", pattern: /`XCSYM_DSYM_PATHS=\/path\/to\/downloads xcsym crash <file>`/g, replacement: "the `axiom_xcsym_crash` MCP tool with `file: \"<file>\"` and `dsymPaths: \"/path/to/downloads\"`" },
   { id: "doctor-check", pattern: /command -v xcprof\s*&&\s*xcprof doctor/g, replacement: "call the `axiom_xcprof_doctor` MCP tool" },
-  { id: "command-v-check", pattern: /command -v (?:xclog|xcsym|xcprof)\b/g, replacement: "confirm the required Axiom MCP tool is available" },
+  { id: "command-v-check", pattern: new RegExp(`command -v ${WRAPPED_BINARY_PATTERN}\\b`, "g"), replacement: "confirm the required Axiom MCP tool is available" },
   { id: "hand-parse-boundary", pattern: /Do not hand-parse `\.ips` JSON unless neither xcsym nor the `axiom_xcsym_crash` MCP tool is available\./g, replacement: CURSOR_MCP_MISSING_TOOL_BOUNDARY },
   { id: "check-for-xcsym", pattern: /^1\. Check for xcsym:$/gm, replacement: "1. Use the `axiom_xcsym_crash` MCP tool:" },
   { id: "export-trace-root", pattern: /^export XCPROF_TRACE_ROOT="\$\(mktemp -d\)"$/gm, replacement: "Use the MCP server's default trace sandbox, or pass a reviewed path in `output`." },
@@ -165,9 +158,6 @@ const MCP_WORKFLOW_REWRITES: ReadonlyArray<HostClaimRewrite> = [
   { id: "record-preset-full", pattern: /`xcprof record --preset full --attach '<app>'`/g, replacement: "`axiom_xcprof_record` with `preset: \"full\"` and `attach: \"<app>\"`" },
   { id: "preset-full-ios", pattern: /`--preset full-ios`/g, replacement: "`preset: \"full-ios\"`" },
   { id: "launch-from-startup", pattern: /^- \*\*Launch from startup\*\*[^\n]*/gm, replacement: "- **Launch from startup** — call `axiom_xcprof_record` with `launch: [\"<app-path>\"]` and `allowLaunch: true`; add `device: \"<booted-udid>\"` for a simulator. Launch is gated, so follow the consent rule below." },
-  { id: "analyze-line", pattern: /^xcprof analyze "<trace>" --json$/gm, replacement: "Call the `axiom_xcprof_analyze` MCP tool with `trace: \"<trace>\"`." },
-  { id: "analyze-window", pattern: /`xcprof analyze "<trace>" --start-ms <start> --end-ms <end> --json`/g, replacement: "`axiom_xcprof_analyze` with `trace: \"<trace>\"`, `startMs: <milliseconds>`, and `endMs: <milliseconds>`" },
-  { id: "compare-intro", pattern: /Use `xcprof compare <baseline> <current> --json`/g, replacement: "Use `axiom_xcprof_compare` with `baseline: \"<baseline>\"` and `current: \"<current>\"`" },
   { id: "compare-flags", pattern: /Add `--fail-on-regression` to exit 3 for CI gating, and `--dsym` to symbolicate both traces\./g, replacement: "Set `failOnRegression: true` for CI gating, and pass `dsym: \"<path>\"` to symbolicate both traces." },
 ];
 
@@ -215,7 +205,9 @@ function referenceCall(command: string, argumentsText: string, inline: boolean):
 
 /** Translate executable helper workflows used by agent and command prompts. */
 export function rewriteCursorMcpWorkflows(content: string): string {
-  let rewritten = applyTrackedRewrites(rewriteCursorHostClaims(stripMcpClientNotes(content)), MCP_WORKFLOW_REWRITES);
+  // Cursor is an MCP-only client: a command its checked note covers becomes that note's call.
+  const noted = stripMcpClientNotes(renderMcpClientNotes(content, MCP_SUBCOMMANDS));
+  let rewritten = applyTrackedRewrites(rewriteCursorHostClaims(noted), MCP_WORKFLOW_REWRITES);
 
   rewritten = applyTrackedRewrites(rewritten, MCP_SCHEMA_REWRITES);
   rewritten = rewritten.replace(
@@ -246,6 +238,41 @@ export function rewriteCursorInvocations(content: string): string {
     (rewritten, [pattern, replacement]) => rewritten.replace(pattern, replacement),
     commandArgumentsSeparated,
   );
+}
+
+/**
+ * The flags Cursor text must name as MCP params instead: those canonical text passes to wrapped
+ * commands, and every backticked `--flag` whose param a note names (prose-only and gated flags
+ * such as `--allow-launch` appear in no command). Notes are schema-checked in axiom-mcp's tests.
+ */
+export function wrappedFlagsIn(texts: Iterable<string>): ReadonlySet<string> {
+  const subcommands = [...MCP_SUBCOMMANDS.keys()];
+  return new Set([...texts].flatMap((text) => {
+    const noted = new Set(mcpClientNoteBodies(text).flatMap((body) =>
+      [...body.matchAll(/`([a-z][A-Za-z0-9]*)(?::[^`]*)?`/g)].map((m) => m[1].replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`))));
+    const prose = [...text.matchAll(/`--([a-z][a-z0-9-]*)/g)].map((m) => m[1]).filter((flag) => noted.has(flag));
+    return [...wrappedCommandFlags(text, subcommands), ...prose];
+  }));
+}
+
+/**
+ * Fail the build when a Cursor agent or command still carries a CLI-only mechanic: a binary's
+ * env var, a `command -v` check for a wrapped binary, reference arguments that leave flags for
+ * the model to translate, or a backticked flag canonical text passes to a wrapped command. Run
+ * per file, so a rewrite that still fires elsewhere cannot hide a file it no longer matches.
+ */
+export function assertNoCliResidue(content: string, file: string, wrappedFlags: ReadonlySet<string>): void {
+  const flags = [...wrappedFlags].sort((a, b) => b.length - a.length).map((f) => f.replace(/[-]/g, "\\-"));
+  const residue: ReadonlyArray<[RegExp, string]> = [
+    [new RegExp(`\\b(?:${WRAPPED_BINARIES.map((b) => b.toUpperCase()).join("|")})_[A-Z_]+\\b`), "a wrapped binary's environment variable"],
+    [new RegExp(`command -v ${WRAPPED_BINARY_PATTERN}\\b`), "a command -v check for a wrapped binary"],
+    [/structured inputs matching reference arguments `[^`]*--/, "reference arguments with flags"],
+    ...(flags.length > 0 ? [[new RegExp(`\`--(?:${flags.join("|")})(?![a-z0-9-])`), "a wrapped command's flag"] as [RegExp, string]] : []),
+  ];
+  for (const [pattern, what] of residue) {
+    const hit = content.match(pattern);
+    if (hit) throw new Error(`${file} still carries ${what} for Cursor: ${hit[0]} — add an MCP-only clients note at its source, or a tracked rewrite`);
+  }
 }
 
 export function assertNoUnsupportedClaudeTokens(content: string): void {

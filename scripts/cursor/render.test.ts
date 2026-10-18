@@ -89,6 +89,8 @@ test("renders deterministic, safe, non-Claude Cursor bytes", () => {
     assert.doesNotMatch(file.content, /CLAUDE_PLUGIN_ROOT|\$ARGUMENTS|\{\{args\.|\/axiom:|TaskOutput|AskUserQuestion/);
     // Cursor ships no binaries, so the bundled-tools fallback must never reach it.
     assert.doesNotMatch(file.content, /finds nothing, use `<plugin-root>\/tools\/|\*\*Bundled tools on Claude Code:\*\*|Base directory for this skill/, file.path);
+    // The build strips every note; one left behind is in a form stripMcpClientNotes does not know.
+    assert.doesNotMatch(file.content, /MCP-only clients:/, file.path);
     if (/^(?:agents|commands)\//.test(file.path)) {
       assert.doesNotMatch(
         file.content,

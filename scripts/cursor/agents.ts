@@ -9,6 +9,7 @@ import {
   CURSOR_XCUI_TOOL_BOUNDARY,
   rewriteCursorMcpWorkflows,
   rewriteCursorInvocations,
+  WRAPPED_BINARY_PATTERN,
 } from "./references.ts";
 import type {
   AgentProfile,
@@ -180,7 +181,7 @@ export function transformAgent(agent: SourceAgent, profile: AgentProfile): Trans
       `description: ${yamlScalar(description)}`,
     ];
   const translatedBody = rewriteCursorMcpWorkflows(rewriteCursorInvocations(agent.body));
-  const hasMcpWorkflow = /\baxiom_(?:xclog|xcsym|xcprof)_/.test(translatedBody);
+  const hasMcpWorkflow = new RegExp(`\\baxiom_${WRAPPED_BINARY_PATTERN}_`).test(translatedBody);
   const body = `${hasMcpWorkflow ? `${CURSOR_MCP_TOOL_BOUNDARY}\n\n` : ""}${agent.name === "simulator-tester" ? `${CURSOR_XCUI_TOOL_BOUNDARY}\n\n` : ""}${translatedBody}`;
   assertNoUnsupportedClaudeTokens(body);
 

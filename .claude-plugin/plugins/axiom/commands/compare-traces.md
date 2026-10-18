@@ -28,7 +28,7 @@ Diffs two Instruments `.trace` recordings with **xcprof compare** — function-l
    xcprof record --preset cpu --attach MyApp --time-limit 15s --no-prompt \
      --output "$XCPROF_TRACE_ROOT/current.trace"
    ```
-   MCP-only clients: `axiom_xcprof_record` with `preset: "cpu"`, `attach: "MyApp"`, `timeLimit: "15s"`, and no `output`, once for the baseline and once for the current run; skip the `export` (you can't set the server's environment) and keep the trace path each call returns.
+   MCP-only clients: `axiom_xcprof_record` with `preset: "cpu"`, `attach: "MyApp"`, `timeLimit: "15s"`, and no `output`, once for the baseline and once for the current run; skip the export line (you can't set the server's environment) and keep the trace path each call returns.
 
 3. **Compare.** Default output is compact JSON; add `--human` to read it:
    ```bash
@@ -41,7 +41,7 @@ Diffs two Instruments `.trace` recordings with **xcprof compare** — function-l
    ```
    MCP-only clients: `axiom_xcprof_compare` with `baseline`, `current`, `failOnRegression: true`, and `thresholdPct: 5`; a regression shows as a trailing `(xcprof exit 3: …)` line.
 
-4. **Interpret honestly.** Report the regressions (sorted by severity = % delta × absolute time) and improvements. Note when frames were excluded for being unsymbolicated (pass `--dsym` for release builds; MCP-only clients: `dsym`). Deltas are percentage-points of CPU-cycle share — the only quantity comparable across two runs of different total work.
+4. **Interpret honestly.** Report the regressions (sorted by severity = % delta × absolute time) and improvements. Note when frames were excluded for being unsymbolicated; for release builds, pass `--dsym` (MCP-only clients: pass `dsym`). Deltas are percentage-points of CPU-cycle share — the only quantity comparable across two runs of different total work.
 
 ## Flags
 

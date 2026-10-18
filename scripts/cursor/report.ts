@@ -5,6 +5,7 @@ import {
   classifyAgentTools,
 } from "./contract.ts";
 import { CURSOR_AGENT_ADVISORIES } from "./agents.ts";
+import { WRAPPED_BINARIES } from "./references.ts";
 import { compareCursorPaths } from "./compare.ts";
 import type {
   CapabilityReport,
@@ -167,9 +168,7 @@ export function buildCapabilityReport(source: CursorSource, agents: TransformedA
       bundled: false,
     }],
     binaryDispositions: [
-      { name: "xclog", disposition: "external-via-axiom-mcp" },
-      { name: "xcprof", disposition: "external-via-axiom-mcp" },
-      { name: "xcsym", disposition: "external-via-axiom-mcp" },
+      ...[...WRAPPED_BINARIES].sort().map((name) => ({ name, disposition: "external-via-axiom-mcp" })),
       { name: "xcui", disposition: "external-unbundled-no-mcp-wrapper" },
     ],
     cloudDispositions: [{

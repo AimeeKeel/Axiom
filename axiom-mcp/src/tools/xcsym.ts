@@ -13,6 +13,7 @@ import {
   resolveToolPath,
   text,
 } from './binary-exec.js';
+import { MCP_TOOL_NAMES } from './binaries.js';
 
 // Ceiling on a single xcsym invocation. Parsing/symbolication is seconds;
 // list-dsyms/find-dsym can fan out to Spotlight (mdfind) and atos across large
@@ -56,15 +57,7 @@ function defaultExec(env: NodeJS.ProcessEnv = process.env): XcsymExec {
  * symbolication lean on atos/dwarfdump/Spotlight, so the tools are macOS-only.
  */
 export class XcsymTools implements BinaryToolProvider {
-  static readonly toolNames = [
-    'axiom_xcsym_crash',
-    'axiom_xcsym_triage',
-    'axiom_xcsym_resolve',
-    'axiom_xcsym_find_dsym',
-    'axiom_xcsym_list_dsyms',
-    'axiom_xcsym_verify',
-    'axiom_xcsym_anonymize',
-  ] as const;
+  static readonly toolNames = MCP_TOOL_NAMES.xcsym;
 
   private readonly binaryPath: string;
   private readonly exec: XcsymExec;

@@ -17,7 +17,29 @@ export const MCP_TOOL_BINARIES = ['xcprof', 'xclog', 'xcsym'] as const;
 
 export type McpToolBinary = (typeof MCP_TOOL_BINARIES)[number];
 
+/**
+ * The MCP tools each wrapped binary registers, in `listTools()` order. The providers read their
+ * names from here, and root scripts (the Cursor build) derive their CLI-to-tool maps from it, so
+ * adding a tool or a family is one edit; `providers.test.ts` holds it to the live registrations.
+ */
+export const MCP_TOOL_NAMES = {
+  xclog: ['axiom_xclog_launch', 'axiom_xclog_attach', 'axiom_xclog_show', 'axiom_xclog_list'],
+  xcsym: [
+    'axiom_xcsym_crash',
+    'axiom_xcsym_triage',
+    'axiom_xcsym_resolve',
+    'axiom_xcsym_find_dsym',
+    'axiom_xcsym_list_dsyms',
+    'axiom_xcsym_verify',
+    'axiom_xcsym_anonymize',
+  ],
+  xcprof: ['axiom_xcprof_doctor', 'axiom_xcprof_analyze', 'axiom_xcprof_compare', 'axiom_xcprof_record'],
+} as const satisfies Record<McpToolBinary, readonly string[]>;
+
 
 /** Read-only CLI used by distributed project-inspection workflows; no MCP wrapper. */
 export const MCP_WORKFLOW_BINARIES = ['xcproject'] as const;
 export const MCP_PACKAGED_BINARIES = [...MCP_TOOL_BINARIES, ...MCP_WORKFLOW_BINARIES] as const;
+
+/** Binaries the plugin runs that have no MCP tool; the served footer tells MCP clients so. */
+export const CLI_ONLY_BINARIES = ['axbuild', 'xcui', ...MCP_WORKFLOW_BINARIES] as const;

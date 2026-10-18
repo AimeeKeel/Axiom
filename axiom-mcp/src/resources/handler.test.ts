@@ -4,6 +4,7 @@ import { mcpToolFooter } from '../tools/mcp-notes.js';
 import type { Loader } from '../loader/types.js';
 import type { Skill } from '../loader/parser.js';
 import { Logger, type Config } from '../config.js';
+import { CLI_ONLY_BINARIES } from '../tools/binaries.js';
 
 const mockLogger = new Logger({ mode: 'production', enableAppleDocs: false, logLevel: 'error' } satisfies Config);
 
@@ -16,7 +17,7 @@ function makeHandler(skill: Skill): ResourcesHandler {
     loadSkills: vi.fn().mockResolvedValue(new Map([[skill.name, skill]])),
     getSkill: vi.fn().mockResolvedValue(skill),
   } as unknown as Loader;
-  return new ResourcesHandler(loader, mockLogger);
+  return new ResourcesHandler(loader, mockLogger, []);
 }
 
 describe('ResourcesHandler', () => {
@@ -45,7 +46,7 @@ describe('ResourcesHandler.readResource', () => {
   const toolNames = ['axiom_xcsym_crash'];
 
   it.each([
-    ['ends a skill that names a wrapped subcommand with the MCP tool footer', 'Run `xcsym crash <file>`.', `Run \`xcsym crash <file>\`.\n\n---\n${mcpToolFooter('xcsym crash', toolNames)}`],
+    ['ends a skill that names a wrapped subcommand with the MCP tool footer', 'Run `xcsym crash <file>`.', `Run \`xcsym crash <file>\`.\n\n---\n${mcpToolFooter('xcsym crash', toolNames, CLI_ONLY_BINARIES)}`],
     ['leaves a skill that names none unchanged', 'Body', 'Body'],
   ])('%s', async (_case, content, expectedBody) => {
     const skill = { name: 'axiom-tools--xcsym-ref', description: 'A skill', content } as Skill;

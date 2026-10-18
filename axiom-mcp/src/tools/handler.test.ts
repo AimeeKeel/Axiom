@@ -4,6 +4,7 @@ import { mcpToolFooter } from './mcp-notes.js';
 import { XcsymTools } from './xcsym.js';
 import type { Loader } from '../loader/types.js';
 import { Logger, type Config } from '../config.js';
+import { CLI_ONLY_BINARIES } from './binaries.js';
 
 function makeMockLoader(overrides: Partial<Loader> = {}): Loader {
   return {
@@ -490,7 +491,7 @@ describe('MCP tool footer on served text', () => {
 
     const text = (await handler.callTool('axiom_get_agent', { agent: 'crash-analyzer' })).content[0].text;
 
-    expect(text.endsWith(`Run \`xcsym crash <file>\`.\n\n---\n${mcpToolFooter('xcsym crash', xcsym.listTools().map((t) => t.name))}`)).toBe(true);
+    expect(text).toBe(`# Agent: crash-analyzer\nCrashes\n\nRun \`xcsym crash <file>\`.\n\n---\n${mcpToolFooter('xcsym crash', xcsym.listTools().map((t) => t.name), CLI_ONLY_BINARIES)}`);
   });
 
   it('leaves an agent that names no wrapped subcommand unchanged', async () => {

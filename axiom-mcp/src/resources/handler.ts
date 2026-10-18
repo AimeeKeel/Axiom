@@ -2,6 +2,7 @@ import { Loader } from '../loader/types.js';
 import { Logger } from '../config.js';
 import { Skill } from '../loader/parser.js';
 import { mcpToolFooter } from '../tools/mcp-notes.js';
+import { CLI_ONLY_BINARIES } from '../tools/binaries.js';
 
 /**
  * MCP Resource representation
@@ -21,7 +22,7 @@ export class ResourcesHandler {
   constructor(
     private loader: Loader,
     private logger: Logger,
-    private binaryToolNames: string[] = [],
+    private binaryToolNames: readonly string[],
   ) {}
 
   /**
@@ -128,7 +129,7 @@ export class ResourcesHandler {
     header.push('---');
     header.push('');
 
-    const footer = mcpToolFooter(skill.content, this.binaryToolNames);
+    const footer = mcpToolFooter(skill.content, this.binaryToolNames, CLI_ONLY_BINARIES);
     return header.join('\n') + skill.content + (footer ? `\n\n---\n${footer}` : '');
   }
 }
