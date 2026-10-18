@@ -100,7 +100,7 @@ import {
 import { parsePorcelain, resolveGoBinaryStaleness, resolveStaleness } from "./staleness.ts";
 import { classifyNpmFailure, npmErrorCode, npmInstallEnvironment, runNpmDryRun } from "./npm-resolution.ts";
 import { findDashViolations } from "./docs-dashes.ts";
-import { findMissingSidebarTargets, findMissingTools, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, nestedFenceViolations, sidebarLinkTargets, TOOL_ROSTER_SURFACES } from "./docs-lint.ts";
+import { findMissingSidebarTargets, findMissingTools, findUnreachablePages, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, nestedFenceViolations, sidebarLinkTargets, TOOL_ROSTER_SURFACES } from "./docs-lint.ts";
 import { findIgnoredAuthoredFiles, resolvePluginBin } from "./plugin-layout.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
@@ -2259,6 +2259,30 @@ heading("12v. Docs Sidebar Targets");
   const nonLiteral = findNonLiteralSidebarLinks(configText);
   for (const link of nonLiteral) error("docs-sidebar", `docs/.vitepress/config.ts has \`${link}\`; write sidebar links as quoted absolute paths ('/start/install') so this check can resolve them`);
   if (missing.length + nonLiteral.length === 0) console.log("  ✓ every sidebar and nav link in docs/.vitepress/config.ts has a page git ships");
+}
+
+heading("12v-bis. Unreachable Docs Pages");
+// VitePress fails a dead link, never a page nothing links to: siri-notes-reminders shipped
+// through every gate with no sidebar entry and no inbound link (Axiom-lgty). Every page git
+// ships must be reachable from the home page, the sidebar and nav, or a site URL that a
+// shipped manifest or the repo README names (the Codex manifest's privacy and terms pages).
+{
+  const shipped = execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+    .split("\0")
+    .filter(Boolean);
+  const pages = new Map(
+    shipped
+      // A tracked file deleted from the working tree is still in the index, and will not ship.
+      .filter((f) => /^docs\/.*\.md$/.test(f) && !/^docs\/(?:\.vitepress|public)\//.test(f) && fs.existsSync(path.join(root, f)))
+      .map((f) => [f, fs.readFileSync(path.join(root, f), "utf8")]),
+  );
+  const siteUrls = shipped
+    .filter((f) => f === "README.md" || (/(?:^|\/)(?:plugin\.json|marketplace\.json|package\.json)$/.test(f) && !f.includes("node_modules")))
+    .flatMap((f) => [...fs.readFileSync(path.join(root, f), "utf8").matchAll(/https:\/\/charleswiltgen\.github\.io\/Axiom(\/[^\s"')\]>]*)?/g)].map((m) => m[1] || "/"));
+  const roots = [...sidebarLinkTargets(fs.readFileSync(path.join(root, "docs/.vitepress/config.ts"), "utf8")), ...siteUrls];
+  const unreachable = findUnreachablePages(pages, roots);
+  for (const page of unreachable) error("docs-unreachable", `${page}: no sidebar entry, manifest URL, or link from a reachable page leads here; link it, or delete it`);
+  if (unreachable.length === 0) console.log(`  ✓ all ${pages.size} docs pages are reachable from the home page, sidebar, or a shipped manifest`);
 }
 
 heading("12y. Nested Code Fences");

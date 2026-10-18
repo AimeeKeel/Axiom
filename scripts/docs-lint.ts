@@ -221,6 +221,38 @@ export function findMissingSidebarTargets(configText: string, exists: (docsPath:
   return [...missing];
 }
 
+const frontmatter = (text: string) => text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1] ?? "";
+
+/** The site path a docs file is served at: docs/a/index.md is /a, docs/index.md is /. */
+const sitePath = (file: string) => "/" + file.replace(/^docs\//, "").replace(/\.md$/, "").replace(/(?:^|\/)index$/, "");
+
+/**
+ * Pre-deploy check 12v-bis. VitePress fails a dead link but not a page nothing links to, so a
+ * new page with no sidebar entry shipped through every gate (Axiom-lgty). Walks internal links
+ * from the home page and `roots` (sidebar, nav, and site URLs the shipped manifests name);
+ * links inside code fences and code spans do not count. `pages` maps repo-relative `docs/…` files to their text.
+ * Redirect stubs (`http-equiv: refresh`) keep old URLs alive and are meant to be unlinked.
+ */
+export function findUnreachablePages(pages: ReadonlyMap<string, string>, roots: readonly string[]): string[] {
+  const byPath = new Map([...pages.keys()].map((file) => [sitePath(file), file]));
+  const seen = new Set<string>();
+  const rootPath = (link: string) => sitePath(`docs${link.replace(/[#?].*$/, "").replace(/\.(?:md|html)$/, "").replace(/\/$/, "/index")}`);
+  const queue = ["/", ...roots.map(rootPath)];
+  while (queue.length > 0) {
+    const file = byPath.get(queue.pop()!);
+    if (!file || seen.has(file)) continue;
+    seen.add(file);
+    const text = pages.get(file)!;
+    const body = maskFences(text).replace(new RegExp(CODE_SPAN.source, "g"), fill);
+    // Hero and feature `link:` values in the frontmatter, and <a href> targets, written as
+    // markdown links so internalLinks resolves them like any other.
+    const extra = [...frontmatter(text).matchAll(/^[ \t-]*link:[ \t]*['"]?([^'"\s]+)/gm), ...body.matchAll(/<a\s(?:[^>]*?\s)?href=["']([^"']+)["']/gi)]
+      .map((m) => `](${m[1]})`);
+    queue.push(...internalLinks([body, ...extra].join("\n"), file, linkDefinitions(text)));
+  }
+  return [...pages.keys()].filter((file) => !seen.has(file) && !/http-equiv["']?\s*:\s*["']?refresh/i.test(frontmatter(pages.get(file)!))).sort();
+}
+
 /** Sidebar and nav links 12v cannot resolve: values that are not a quoted string, and quoted
  * paths that are neither absolute site paths, anchors nor URLs. */
 export function findNonLiteralSidebarLinks(configText: string): string[] {

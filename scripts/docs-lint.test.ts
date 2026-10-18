@@ -10,7 +10,7 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { findMissingSidebarTargets, findMissingTools, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, nestedFenceViolations, sidebarLinkTargets } from "./docs-lint.ts";
+import { findMissingSidebarTargets, findMissingTools, findUnreachablePages, findNonLiteralSidebarLinks, findPluginReadmeDrift, lintDocPage, nestedFenceViolations, sidebarLinkTargets } from "./docs-lint.ts";
 
 const ROUTERS = new Set(["axiom-networking", "axiom-swiftui", "axiom-performance"]);
 const rules = (content: string) => lintDocPage(content, ROUTERS).map((f) => f.rule);
@@ -316,5 +316,36 @@ describe("nestedFenceViolations", () => {
 
   it("ignores the other fence character and a bare closing fence", () => {
     assert.deepEqual(nestedFenceViolations("~~~\n```swift\n~~~\n\n```\ncode\n```\n"), []);
+  });
+});
+
+describe("findUnreachablePages", () => {
+  const redirect = "---\nsearch: false\nhead:\n  - - meta\n    - http-equiv: refresh\n      content: 0; url=/Axiom/a\n---\n";
+  const pages = new Map([
+    ["docs/index.md", "---\nlayout: home\nhero:\n  actions:\n    - text: Start\n      link: /hero/\n---\n# Home\n\n[Guide](/guide/) and [Reindex](/reindex)\n\n<a href=\"/anchor\" class=\"card\">Anchor</a>\n\nlink: /bodylink\n"],
+    ["docs/hero.md", "# Linked only from a frontmatter hero action\n"],
+    ["docs/anchor.md", "# Linked only from an HTML anchor\n"],
+    ["docs/bodylink.md", "# Named by a link: line in the body, not the frontmatter\n"],
+    ["docs/late-redirect.md", "# Not a stub\n\n---\nhttp-equiv: refresh\n---\n"],
+    ["docs/crlf-redirect.md", "---\r\nhead:\r\n  - - meta\r\n    - \"http-equiv\": \"refresh\"\r\n---\r\n"],
+    ["docs/spans.md", "# Code spans\n\nUse `<a href=\"/span-anchor\">` or `[x](/span-link)`; <a data-href=\"/data\" href=\"#top\">top</a>\n"],
+    ["docs/span-anchor.md", "# Named only inside a code span\n"],
+    ["docs/span-link.md", "# Named only inside a code span\n"],
+    ["docs/data.md", "# Named only by a data-href attribute\n"],
+    ["docs/guide/index.md", "# Guide\n\n- [Install](./install)\n- [Deep](../deep/page.md#top)\n"],
+    ["docs/guide/install.md", "# Install\n"],
+    ["docs/deep/page.md", "# Deep\n\n```md\n[Fenced](/fenced)\n```\n"],
+    ["docs/fenced.md", "# Linked only from inside a code fence\n"],
+    ["docs/sidebar-only.md", "# Sidebar\n\n[Chain](/chain)\n"],
+    ["docs/chain.md", "# Reached through a sidebar page\n"],
+    ["docs/legal.md", "# Linked from a manifest\n"],
+    ["docs/old.md", redirect],
+    ["docs/island.md", "# Linked only by another unreachable page\n\n[Orphan](/orphan)\n"],
+    ["docs/orphan.md", "# Orphan\n\n[Island](/island)\n"],
+    ["docs/reindex.md", "# Ends in index without being an index page\n"],
+  ]);
+
+  it("returns the pages no walk from the home page, sidebar and manifest URLs reaches, skipping redirect stubs", () => {
+    assert.deepEqual(findUnreachablePages(pages, ["/sidebar-only", "/legal", "/spans"]), ["docs/bodylink.md", "docs/data.md", "docs/fenced.md", "docs/island.md", "docs/late-redirect.md", "docs/orphan.md", "docs/span-anchor.md", "docs/span-link.md"]);
   });
 });
