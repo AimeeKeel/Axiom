@@ -292,38 +292,6 @@ test("no script derives its root from a percent-encoded URL pathname", () => {
   assert.deepEqual(offenders, [], "use import.meta.dirname or fileURLToPath instead");
 });
 
-test("the CI paths filter covers every surface the scan reads", () => {
-  // The filter decides whether CI runs at all. A surface the scanner reads but the
-  // filter omits means a PR that leaks into that surface starts no job — which is
-  // the fresh-clone / --no-verify case this workflow exists to backstop. The two
-  // lists live in different files and drifted once already.
-  const workflow = fs.readFileSync(
-    path.join(path.resolve(import.meta.dirname, ".."), ".github/workflows/test-suite.yml"),
-    "utf8",
-  );
-  // Quoted block-list items only: this workflow uses that form for path entries
-  // and nothing else, so no YAML parser is needed (js-yaml is a transitive dep
-  // here, not a declared one).
-  const entries = [...workflow.matchAll(/^\s+- '([^']+)'$/gm)].map((m) => m[1]!);
-  assert.ok(
-    entries.length >= SURFACES.length,
-    `parsed only ${entries.length} path entries — the extraction or the workflow changed shape`,
-  );
-
-  const covered = (target: string): boolean =>
-    entries.some((entry) => {
-      const base = entry.replace(/\/\*\*$/, "");
-      return target === base || target.startsWith(base + "/");
-    });
-
-  for (const surface of SURFACES) {
-    assert.ok(covered(surface.path), `surface "${surface.path}" is not in the CI paths filter`);
-  }
-  for (const file of ROOT_FILES) {
-    assert.ok(entries.includes(file), `root file "${file}" is not in the CI paths filter`);
-  }
-});
-
 test("every tracked file is scanned, or exempt with a reason", () => {
   // The surface model enumerates what to read, so anything outside the enumeration is
   // invisible — and an unread file reads as a clean one. That has shipped twice: 38
@@ -344,7 +312,6 @@ test("every tracked file is scanned, or exempt with a reason", () => {
     unread,
     [],
     `tracked file(s) in no scanned surface: ${unread.join(", ")}. Add the directory to ` +
-      `SURFACES or the file to ROOT_FILES in scripts/leak-scan.ts, and add it to the ` +
-      `workflow's paths filter — an unscanned file reads as a clean one.`,
+      `SURFACES or the file to ROOT_FILES in scripts/leak-scan.ts — an unscanned file reads as a clean one.`,
   );
 });

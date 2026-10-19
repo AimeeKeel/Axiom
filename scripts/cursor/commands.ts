@@ -2,6 +2,7 @@ import path from "node:path";
 import {
   assertNoUnsupportedClaudeTokens,
   CURSOR_MCP_MISSING_TOOL_BOUNDARY,
+  CURSOR_XCUI_SETUP,
   rewriteCursorMcpWorkflows,
   rewriteCursorInvocations,
 } from "./references.ts";
@@ -16,7 +17,7 @@ const CURSOR_COMMAND_DESCRIPTIONS: Readonly<Record<string, string>> = {
   console: "Capture iOS simulator console output through Axiom MCP logging tools",
   profile: "Record and analyze performance traces through Axiom MCP profiling tools",
   "test-simulator": "Run simulator test scenarios and visual verification with the simulator-tester subagent",
-  ui: "Drive simulator UI with an external xcui or AXe installation when available",
+  ui: "Drive simulator UI with Axiom xcui or compatible AXe input verbs",
 };
 
 const CURSOR_COMMAND_BODIES: Readonly<Record<string, string>> = {
@@ -78,12 +79,12 @@ Delegate to the \`triage-analyzer\` subagent and use Axiom's structured MCP tool
 ${CURSOR_MCP_MISSING_TOOL_BOUNDARY}`,
   ui: `# Drive and Validate Simulator UI
 
-\`xcui\` is not bundled with the Cursor plugin and has no Axiom MCP wrapper.
+${CURSOR_XCUI_SETUP}
 
-1. Before UI automation, check \`command -v xcui\`. If present, run \`xcui doctor\` and follow its external installation's documented workflow.
-2. If \`xcui\` is absent, AXe may be used only for compatible pass-through verbs: \`tap\`, \`slider\`, \`type\`, \`swipe\`, \`drag\`, \`touch\`, \`gesture\`, \`button\`, \`key\`, \`key-sequence\`, \`key-combo\`, and \`screenshot\`. Check \`command -v axe\` before using one of those verbs, use that verb's documented AXe arguments, and handle \`DEVELOPER_DIR\` explicitly if AXe reports a SimulatorKit loading error; wrapper-only device auto-resolution is unavailable.
-3. The \`wait\`, \`assert\`, \`a11y\`, \`dialog\`, \`voiceover\`, and \`resize\` capabilities require external \`xcui\`. If \`xcui\` is unavailable for one of these capabilities, stop that UI step and report that external \`xcui\` is required; do not substitute AXe or timing guesses.
-4. If neither tool is available, stop UI automation and give the user setup guidance for an external xcui or AXe installation. Do not claim the Cursor plugin installed either tool.
+1. Resolve and verify \`xcui\` as above before any UI automation.
+2. If \`xcui\` is absent, AXe may be used only for compatible pass-through verbs: \`tap\`, \`slider\`, \`type\`, \`swipe\`, \`drag\`, \`touch\`, \`gesture\`, \`button\`, \`key\`, \`key-sequence\`, \`key-combo\`, and \`screenshot\`. Check \`command -v axe\` before using one of those verbs, use that verb's documented AXe arguments, add \`--tap-style physical\` to every \`axe tap\`, and handle \`DEVELOPER_DIR\` explicitly if AXe reports a SimulatorKit loading error; wrapper-only device auto-resolution is unavailable.
+3. The \`wait\`, \`assert\`, \`a11y\`, \`dialog\`, \`voiceover\`, and \`resize\` capabilities require \`xcui\`. If \`xcui\` is unavailable for one of these capabilities, stop that UI step and report that Axiom’s \`xcui\` is required; do not substitute AXe or timing guesses.
+4. If neither tool is available, stop UI automation and give the user setup guidance for an Axiom checkout or AXe installation. Do not claim the Cursor plugin installed either tool.
 5. When UI automation is unavailable, continue with non-UI simulator and log checks that still answer the request, and label that result as degraded coverage.
 6. Treat simulator erase, delete, shutdown, and boot operations as state-changing actions and preserve the user's authorization boundary.
 `,

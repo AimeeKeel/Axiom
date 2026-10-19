@@ -15,6 +15,8 @@ Coverage strategy:
 
 from __future__ import annotations
 
+from contextlib import redirect_stdout
+from io import StringIO
 import json
 import os
 import re
@@ -23,8 +25,11 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
-HOOK = os.path.join(os.path.dirname(__file__), "user-prompt-submit.py")
+HOOK = os.path.abspath(os.path.join(os.path.dirname(__file__), "user-prompt-submit.py"))
+with open(HOOK) as hook_file:
+    HOOK_CODE = compile(hook_file.read(), HOOK, "exec")
 
 
 def run_hook_in(prompt: str, cwd: str | None = None,
@@ -62,14 +67,27 @@ def run_hook_in(prompt: str, cwd: str | None = None,
 
 
 def run_hook(prompt: str) -> dict:
-    """Invoke the hook for a router-matching test, project gate forced open.
+    """Execute the shipped hook for a router test, project gate forced open.
 
     Router tests assert on keyword matching, which is orthogonal to the
     project-type gate (GH #48). Forcing AXIOM_SESSION_CONTEXT=always makes them
     hermetic — they exercise matching regardless of where the suite runs, rather
     than silently depending on the cwd looking like an Apple project.
     """
-    return run_hook_in(prompt, env_override={"AXIOM_SESSION_CONTEXT": "always"})
+    env = os.environ.copy()
+    env["AXIOM_SESSION_CONTEXT"] = "always"
+    env.pop("AXIOM_HOOK_DIAGNOSTICS_DIR", None)
+    output = StringIO()
+    with patch.dict(os.environ, env, clear=True), \
+            patch.object(sys, "stdin", StringIO(json.dumps({"prompt": prompt}))), \
+            patch.object(sys, "path", [os.path.dirname(HOOK)] + sys.path), \
+            redirect_stdout(output):
+        try:
+            exec(HOOK_CODE, {"__name__": "__main__", "__file__": HOOK})
+        except SystemExit as error:
+            if error.code not in (None, 0):
+                raise AssertionError(f"hook exited {error.code}") from error
+    return json.loads(output.getvalue().strip() or "{}")
 
 
 def routed_skills(prompt: str) -> set[str]:
@@ -1619,7 +1637,7 @@ class TestHarnessReminderStripping(unittest.TestCase):
             "<system-reminder>" * 20000 + "</task-notification>" * 20000,
         ):
             started = time.monotonic()
-            run_hook(payload)
+            run_hook_in(payload, env_override={"AXIOM_SESSION_CONTEXT": "always"})
             self.assertLess(time.monotonic() - started, 2.0)
 
     def test_user_typed_background_task_still_routes(self):
@@ -1829,6 +1847,49 @@ class TestManifestCoverage(unittest.TestCase):
         missing = manifest_routers - covered
         self.assertEqual(missing, set(),
                          f"Routers in manifest but not tested: {sorted(missing)}")
+
+
+class TestRoutingCLI(unittest.TestCase):
+    def test_cli_matches_source_execution_for_every_manifest_router(self):
+        prompts = {
+            "axiom-build": "My Xcode build is failing with linker errors",
+            "axiom-testing": "My XCUITest is flaky and slow",
+            "axiom-swiftui": "My SwiftUI @State view won't update",
+            "axiom-data": "How do I migrate my SwiftData @Model schema?",
+            "axiom-concurrency": "Getting actor-isolated errors with @MainActor in Swift 6",
+            "axiom-performance": "I have a memory leak and retain cycle in my app",
+            "axiom-networking": "How do I use URLSession with async/await?",
+            "axiom-integration": "How do I add a WidgetKit timeline to my app?",
+            "axiom-media": "How do I use AVCaptureSession for camera preview?",
+            "axiom-accessibility": "My VoiceOver labels are missing and Dynamic Type breaks",
+            "axiom-ai": "How do I use Foundation Models with @Generable?",
+            "axiom-vision": "How do I use Vision framework for text recognition?",
+            "axiom-graphics": "How do I migrate from OpenGL to Metal shaders?",
+            "axiom-games": "My SpriteKit SKScene physics aren't working",
+            "axiom-apple-docs": "Does iOS 26 exist? What WWDC 2025 sessions cover this?",
+            "axiom-xcode-mcp": "How do I set up Xcode MCP with xcrun mcpbridge?",
+            "axiom-shipping": "My app store submission was rejected for privacy manifest",
+            "axiom-security": "How do I store credentials in Keychain with passkey auth?",
+            "axiom-location": "How do I use CLMonitor for geofencing with MapKit?",
+            "axiom-design": "How do I apply Liquid Glass and SF Symbol effects?",
+            "axiom-uikit": "How do I bridge UIViewController to SwiftUI with UIViewRepresentable?",
+            "axiom-swift": "How do I use noncopyable types and consuming func?",
+            "axiom-macos": "How do I build a Mac app with NSToolbar and sandboxing?",
+            "axiom-watchos": "How do I add a complication to my Smart Stack widget?",
+            "axiom-health": "How do I read HKWorkout samples from HealthKit?",
+            "axiom-payments": "How do I integrate Apple Pay with PKPaymentAuthorizationController?",
+        }
+        with open(os.path.join(os.path.dirname(HOOK), "..", "claude-code.json")) as file:
+            self.assertEqual(set(prompts), {skill["name"] for skill in json.load(file)["skills"]})
+        for router, prompt in prompts.items():
+            with self.subTest(router=router):
+                expected = run_hook(prompt)
+                context = expected["hookSpecificOutput"]["additionalContext"]
+                self.assertIn(f"`{router}`", context)
+                self.assertEqual(
+                    run_hook_in(prompt, env_override={"AXIOM_SESSION_CONTEXT": "always"}),
+                    expected,
+                )
 
 
 class TestHookIsStandalonePython(unittest.TestCase):

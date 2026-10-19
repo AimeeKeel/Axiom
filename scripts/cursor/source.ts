@@ -201,24 +201,8 @@ function loadHooks(pluginRoot: string, agents: SourceAgent[]): SourceHookEntry[]
     }
   }
   for (const agent of agents) {
-    const hooks = agent.frontmatter.hooks;
-    if (hooks === undefined) continue;
-    if (!hooks || typeof hooks !== "object" || Array.isArray(hooks)) throw new Error(`invalid agent hooks: ${agent.name}`);
-    for (const event of Object.keys(hooks as Record<string, unknown>).sort()) {
-      const hookEntries = (hooks as Record<string, unknown>)[event];
-      if (!Array.isArray(hookEntries)) throw new Error(`invalid agent hook entries: ${agent.name}`);
-      for (const entry of hookEntries) {
-        if (!entry || typeof entry !== "object") throw new Error(`invalid agent hook: ${agent.name}`);
-        const matcher = (entry as { matcher?: unknown }).matcher;
-        if (matcher !== undefined && typeof matcher !== "string") throw new Error(`invalid agent hook matcher: ${agent.name}`);
-        const hooksList = (entry as { hooks?: unknown }).hooks;
-        if (!Array.isArray(hooksList)) throw new Error(`invalid agent hook commands: ${agent.name}`);
-        for (const hook of hooksList) {
-          const command = (hook as { command?: unknown }).command;
-          if (typeof command !== "string") throw new Error(`invalid agent hook command: ${agent.name}`);
-          entries.push({ event, matcher: matcher ?? null, command, source: "agent", owner: agent.name });
-        }
-      }
+    if (agent.frontmatter.hooks !== undefined) {
+      throw new Error(`unsupported plugin agent frontmatter hooks: ${agent.name}`);
     }
   }
   return entries;

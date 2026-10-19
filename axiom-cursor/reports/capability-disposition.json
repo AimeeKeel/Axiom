@@ -4,7 +4,7 @@
   "commands": 17,
   "excludedMirrors": 30,
   "globalHookEntries": 6,
-  "perAgentHooks": 6,
+  "perAgentHooks": 0,
   "releasedReadonlyBackground": 30,
   "releasedWritableForeground": 12,
   "authorityExpansions": [
@@ -408,8 +408,7 @@
     "PreToolUse(Read)": "preToolUse.additional_context",
     "SessionStart": "sessionStart.additional_context",
     "SubagentStart": "subagentStart.additional_context",
-    "UserPromptSubmit": "beforeSubmitPrompt.additional_context",
-    "per-agent PreToolUse": "advisory"
+    "UserPromptSubmit": "beforeSubmitPrompt.additional_context"
   },
   "routerDispositions": [
     {
@@ -1200,66 +1199,6 @@
   ],
   "hookDispositions": [
     {
-      "id": "agent:build-fixer:PreToolUse:Bash",
-      "source": "agent",
-      "owner": "build-fixer",
-      "event": "PreToolUse",
-      "matcher": "Bash",
-      "disposition": "agent-prompt.advisory",
-      "warning": "Warning: Destructive command detected.",
-      "advisory": "Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: \"Destructive command detected.\""
-    },
-    {
-      "id": "agent:build-optimizer:PreToolUse:Edit|Write",
-      "source": "agent",
-      "owner": "build-optimizer",
-      "event": "PreToolUse",
-      "matcher": "Edit|Write",
-      "disposition": "agent-prompt.advisory",
-      "warning": "Warning: Modifying Xcode project file. Ensure backup exists.",
-      "advisory": "Before editing or writing a `.pbxproj` or `.xcproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\""
-    },
-    {
-      "id": "agent:iap-implementation:PreToolUse:Edit|Write",
-      "source": "agent",
-      "owner": "iap-implementation",
-      "event": "PreToolUse",
-      "matcher": "Edit|Write",
-      "disposition": "agent-prompt.advisory",
-      "warning": "Warning: Modifying StoreKit configuration.",
-      "advisory": "Before editing or writing a StoreKit-related path or `.storekit` file, warn: \"Modifying StoreKit configuration.\""
-    },
-    {
-      "id": "agent:simulator-tester:PreToolUse:Bash",
-      "source": "agent",
-      "owner": "simulator-tester",
-      "event": "PreToolUse",
-      "matcher": "Bash",
-      "disposition": "agent-prompt.advisory",
-      "warning": "Warning: Simulator state change command.",
-      "advisory": "Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: \"Simulator state change command.\""
-    },
-    {
-      "id": "agent:test-debugger:PreToolUse:Bash",
-      "source": "agent",
-      "owner": "test-debugger",
-      "event": "PreToolUse",
-      "matcher": "Bash",
-      "disposition": "agent-prompt.advisory",
-      "warning": "Warning: About to delete test results.",
-      "advisory": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\""
-    },
-    {
-      "id": "agent:test-runner:PreToolUse:Bash",
-      "source": "agent",
-      "owner": "test-runner",
-      "event": "PreToolUse",
-      "matcher": "Bash",
-      "disposition": "agent-prompt.advisory",
-      "warning": "Warning: About to delete test results.",
-      "advisory": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\""
-    },
-    {
       "id": "global:global:PostToolUse:Bash",
       "source": "global",
       "owner": null,
@@ -1343,7 +1282,7 @@
     },
     {
       "name": "xcui",
-      "disposition": "external-unbundled-no-mcp-wrapper"
+      "disposition": "separate-checkout-no-mcp-wrapper"
     }
   ],
   "cloudDispositions": [

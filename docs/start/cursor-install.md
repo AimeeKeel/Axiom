@@ -46,6 +46,36 @@ Try a command such as `/axiom-status` or `/axiom-ask`. Axiom's Cursor command na
 
 The plugin root is `axiom-cursor/`. Cursor discovers `axiom-cursor/mcp.json` automatically, so the plugin and marketplace manifests deliberately don't repeat the MCP definition.
 
+## Axiom Tools in Cursor
+
+| Tool | Availability |
+| --- | --- |
+| `xclog` | Console capture through `axiom_xclog_*` MCP tools. |
+| `xcsym` | Crash symbolication through `axiom_xcsym_*` MCP tools. |
+| `xcprof` | Profiling through `axiom_xcprof_*` MCP tools. |
+| `axbuild` | Not bundled and no MCP wrapper; use the saved-log fallback for builds and tests. |
+| `xcproject` | Not bundled and no MCP wrapper; the assistant reads project files directly and uses native Xcode queries for effective settings. |
+| `xcui` | Axiom's own simulator UI tool, installed separately from an Axiom checkout; no MCP wrapper. |
+
+The MCP tools run through the separately published `axiom-mcp` package. They use Node.js and Cursor's MCP approvals; npm package resolution may need network access. See [MCP Behavior](#mcp-behavior) for details. If a required MCP tool is unavailable, report the missing integration; the generated workflows don't fall back to a same-named shell binary.
+
+For the saved-log fallback, the assistant redirects a necessary native build or test command's output to a unique file, records its exit status, and inspects the saved output. It checks for existing Xcode builds first and preserves result bundles for later analysis.
+
+### Set up xcui
+
+Use the stable repository checkout from [Local Checkout](#local-checkout). Its executable is `.claude-plugin/plugins/axiom/tools/xcui`, outside the generated `axiom-cursor/` directory. Replace `/absolute/path/to/Axiom` below with your checkout's absolute path:
+
+```bash
+XCUI="/absolute/path/to/Axiom/.claude-plugin/plugins/axiom/tools/xcui"
+test -x "$XCUI"
+"$XCUI" --help
+"$XCUI" doctor
+```
+
+Give the assistant that verified absolute executable path and have it substitute the path for `xcui` in UI workflows. Generated Cursor guidance also checks `command -v xcui` if you already installed it on `PATH`; the plugin doesn't add it there. `doctor` reports missing prerequisites, including AXe, Xcode, or a booted simulator. Installing AXe with `doctor --install` requires your consent.
+
+Without xcui, an installed AXe can handle compatible input verbs such as taps, typing, swipes, and screenshots. Direct AXe taps need `--tap-style physical`. AXe cannot replace xcui's `wait`, `assert`, `a11y`, `dialog`, `voiceover`, or `resize` workflows. The assistant stops those UI steps when xcui is unavailable and reports the resulting coverage limit; it can continue with non-UI simulator and log checks.
+
 ## Agent Authority
 
 The released plugin has two agent classes:

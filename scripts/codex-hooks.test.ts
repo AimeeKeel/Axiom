@@ -6,7 +6,7 @@
  *
  * Scope = layer 1 (the manifest transform): plugin-root var rename, dropping the
  * "Read"-matched crash-route group (no Codex Read tool), and structure fidelity.
- * The env->stdin rewrite of the $TOOL_INPUT_FILE_PATH shell hooks is layer 2.
+ * Plugin-agent warnings live in explicit agent steps, not frontmatter hooks.
  */
 
 import { describe, it } from "node:test";

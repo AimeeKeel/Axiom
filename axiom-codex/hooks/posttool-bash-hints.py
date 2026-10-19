@@ -87,7 +87,7 @@ _PATTERN_RULES: list[tuple[re.Pattern, str]] = [
         "💡 Auto Layout conflict. Try: skill axiom-uikit",
     ),
     (
-        re.compile(r"Actor-isolated|Sendable|data race|@MainActor"),
+        re.compile(r"Actor-isolated|Sendable|data race|@MainActor", re.IGNORECASE),
         "💡 Concurrency issue. Try: skill axiom-concurrency",
     ),
     (
@@ -121,92 +121,329 @@ _PATTERN_RULES: list[tuple[re.Pattern, str]] = [
 ]
 
 
-def match_patterns(output: str) -> list[str]:
-    """Return every pattern hint that matches ``output``, in rule order.
+_DIAGNOSTIC_LINE = re.compile(
+    r"\b(?:error|warning|failed|failure|detected|unavailable|fatal|exception)\b|"
+    r"\b(?:note|reason):|never called|not available|data race|"
+    r"Unable to simultaneously satisfy constraints|Leaks:|CKError\s*\d|"
+    r"^\s*(?:[\w.]+(?:Error|Exception):|no such column\b|file not found\b|"
+    r"CKError(?:Domain)?\b|(?:Application terminated:\s*)?file (?:is )?locked\b)",
+    re.IGNORECASE,
+)
+_LOG_PREFIX = re.compile(
+    r"^\s*(?:(?:\[[^\]\n]+\]|[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9:.,+\-]+Z?|"
+    r"[0-9]{2}:[0-9]{2}:[0-9]{2}(?:[.,][0-9]+)?|[A-Za-z_][\w.-]*\[[0-9:]+\]:?)\s*)+"
+)
+_ISSUE_TERMS = r"(?:migration\s+(?:errors?|failures?|issues?|problems?)|memory leaks?|retain cycles?)\b"
+_NEGATED_ISSUE = re.compile(
+    r"\b(?:no|without)\s+" + _ISSUE_TERMS + r"(?:\s+(?:or|and)\s+" + _ISSUE_TERMS + r")*",
+    re.IGNORECASE,
+)
 
-    Multiple rules can fire on a single Bash output (e.g. a build that
-    surfaces both a concurrency error and a linker failure).
-    """
+
+def match_patterns(output: str) -> list[str]:
+    """Return hints from diagnostic fragments, excluding negated issue reports."""
     if not output:
         return []
-    return [hint for pattern, hint in _PATTERN_RULES if pattern.search(output)]
+    diagnostics = []
+    for fragment in re.split(r"[;\n]|(?<=[.!?])\s+", output):
+        fragment = _NEGATED_ISSUE.sub("", fragment)
+        payload = _LOG_PREFIX.sub("", fragment)
+        if _DIAGNOSTIC_LINE.search(fragment) or _DIAGNOSTIC_LINE.search(payload):
+            diagnostics.append(payload)
+    return [hint for pattern, hint in _PATTERN_RULES
+            if any(pattern.search(line) for line in diagnostics)]
 
 
-# Tokenize a Bash command so we can answer "is this an xcodebuild call"
-# without being fooled by the literal token appearing inside a string,
-# a comment, or a path component (e.g. `# xcodebuild test`,
-# `echo "xcodebuild test"`, `/usr/local/share/xcodebuild-templates`).
-_TOKEN_RE = re.compile(r"[A-Za-z0-9_./=-]+")
+def _expansion_end(command: str, start: int) -> int | None:
+    backtick = command[start] == "`"
+    depth = 1
+    quote = ""
+    i = start + (1 if backtick else 2)
+    while i < len(command):
+        char = command[i]
+        if char == "\\" and quote != "'":
+            i += 2
+            continue
+        if backtick:
+            if char == "`":
+                return i + 1
+        elif quote:
+            if char == quote:
+                quote = ""
+        elif char in "'\"":
+            quote = char
+        elif char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return None
 
 
-def _command_tokens(command: str) -> list[str]:
-    """Split a command into bare word tokens, ignoring comments and quoted strings.
+def _shell_tokens(command: str, allow_incomplete: bool = False) -> list[tuple[str, bool]] | None:
+    """Lex words/operators without expansion; mirrored in Pi and tested by one corpus."""
+    tokens: list[tuple[str, bool]] = []
+    word = ""
+    active = False
+    quoted = False
+    quote = ""
+    i = 0
+    while i < len(command):
+        char = command[i]
+        if char == "\\" and quote != "'":
+            if i + 1 == len(command):
+                if not allow_incomplete:
+                    return None
+                word += char
+                active = True
+                break
+            following = command[i + 1]
+            if not quote or following in '\\"$`\n':
+                if following != "\n":
+                    word += following
+                    active = True
+                i += 2
+                continue
+        if quote != "'" and (command.startswith("$(", i) or char == "`"
+                             or (not quote and command[i:i + 2] in {"<(", ">("})):
+            end = _expansion_end(command, i)
+            if end is None:
+                return None
+            word += "\0"  # Opaque argument: can execute commands, never a literal action/path.
+            active = True
+            i = end
+            continue
+        if quote:
+            if char == quote:
+                quote = ""
+            else:
+                word += char
+            i += 1
+            continue
+        if char in "'\"":
+            quote = char
+            active = quoted = True
+            i += 1
+            continue
+        if char == "#" and not active:
+            while i < len(command) and command[i] != "\n":
+                i += 1
+            continue
+        if char in " \t\r\n;&|()<>":
+            operator = re.match(r"&>>|&>|&&|\|\||\|&|>>|<<<?|<>|>&|<&|[;\n&|()<>]", command[i:])
+            descriptor = ""
+            if active:
+                if operator and char in "<>" and word.isascii() and word.isdigit() and not quoted:
+                    descriptor = word
+                else:
+                    tokens.append((word, False))
+                word, active, quoted = "", False, False
+            if operator:
+                tokens.append((descriptor + operator[0], True))
+                i += len(operator[0])
+            else:
+                i += 1
+            continue
+        word += char
+        active = True
+        i += 1
+    if quote and not allow_incomplete:
+        return None
+    if active:
+        tokens.append((word, False))
+    return tokens
 
-    This is heuristic — not a full shell parser — but sufficient to
-    distinguish a real ``xcodebuild`` invocation from a mention.
-    """
-    if not command:
-        return []
-    # Drop everything after a top-level `#` (best-effort comment strip).
-    # We only do this if the `#` is at start-of-line or preceded by
-    # whitespace, to avoid mangling URL fragments etc.
-    cleaned: list[str] = []
-    for line in command.splitlines():
-        # Strip line comments. Conservative: only strip if `#` follows
-        # whitespace or is at start.
-        stripped = re.sub(r"(^|\s)#.*$", "", line)
-        cleaned.append(stripped)
-    text = "\n".join(cleaned)
-    # Strip quoted strings — single AND double, including their contents.
-    # Order matters: handle escapes minimally (good enough for hint heuristics).
-    text = re.sub(r"'[^']*'", "", text)
-    text = re.sub(r'"[^"]*"', "", text)
-    return _TOKEN_RE.findall(text)
+
+class CommandGroup(NamedTuple):
+    words: list[str]
+    pipeline: bool
+    executes_expansion: bool
+
+
+def _command_groups(command: str, depth: int = 0, allow_incomplete: bool = False) -> list[CommandGroup] | None:
+    tokens = _shell_tokens(command, allow_incomplete)
+    if tokens is None or depth > 8:
+        return None
+    groups: list[CommandGroup] = []
+    words: list[str] = []
+    pipeline = False
+    executes_expansion = False
+    i = 0
+    while i < len(tokens):
+        token, operator = tokens[i]
+        executes_expansion |= "\0" in token
+        if operator and re.fullmatch(r"[0-9]*(?:[<>]+|[<>]&)|&>>?", token):
+            if i + 1 >= len(tokens) or tokens[i + 1][1]:
+                return None
+            executes_expansion |= "\0" in tokens[i + 1][0]
+            if re.fullmatch(r"[0-9]*<>?", token):
+                words.append(tokens[i + 1][0])
+            i += 2
+            continue
+        if operator:
+            groups.append(CommandGroup(words, pipeline, executes_expansion))
+            words = []
+            executes_expansion = False
+            pipeline = token in {"|", "|&"}
+        else:
+            words.append(token)
+        i += 1
+    groups.append(CommandGroup(words, pipeline, executes_expansion))
+    expanded: list[CommandGroup] = []
+    option_arguments = {
+        "env": {"-u", "--unset", "-C", "--chdir", "-S", "--split-string"},
+        "sudo": {"-u", "--user", "-g", "--group", "-h", "--host", "-p", "--prompt",
+                 "-C", "--close-from", "-T", "--command-timeout", "-R", "--chroot",
+                 "-D", "--chdir", "-r", "--role", "-t", "--type", "-a", "--auth-type"},
+        "nice": {"-n", "--adjustment"},
+        "time": {"-f", "--format", "-o", "--output"},
+        "command": set(),
+        "exec": {"-a"},
+        "xcrun": {"--sdk", "--toolchain"},
+    }
+    for words, pipeline, executes_expansion in groups:
+        while words:
+            if re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[0]):
+                words = words[1:]
+            elif os.path.basename(words[0]) in option_arguments:
+                prefix = os.path.basename(words[0])
+                wrapped_words = words
+                words = words[1:]
+                lookup = False
+                while words and words[0].startswith("-"):
+                    option, words = words[0], words[1:]
+                    lookup |= ((prefix == "xcrun" and option in {"--find", "-f"})
+                               or (prefix == "command" and option in {"-v", "-V"}))
+                    if words and option in option_arguments[prefix]:
+                        words = words[1:]
+                if lookup:
+                    words = wrapped_words
+                    break
+            else:
+                break
+        if words and os.path.basename(words[0]) in {"sh", "bash", "zsh"}:
+            index = next((j for j in range(1, len(words))
+                          if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", words[j])), None)
+            if index is not None and index + 1 < len(words):
+                nested = _command_groups(words[index + 1], depth + 1, allow_incomplete)
+                if nested is None:
+                    return None
+                expanded.extend(CommandGroup(group.words, group.pipeline,
+                                             group.executes_expansion or executes_expansion)
+                                for group in nested)
+                continue
+        expanded.append(CommandGroup(words, pipeline, executes_expansion))
+    return expanded
+
+
+def _documentation_operand(word: str) -> bool:
+    if any(character in word for character in ("$", "`", "\0")):
+        return False
+    parts = word.lower().split("/")
+    name = parts[-1]
+    suffix = name.rsplit(".", 1)[-1] if "." in name else ""
+    if suffix in {"", "txt", "json", "jsonl", "ndjson", "out", "err"} and re.search(
+        r"(?:^|[-_.])(?:stdout|stderr|output|logs?|results?|traces?|diagnostics|console|captured?)(?:[-_.]|$)", name
+    ):
+        return False
+    suffixes = {"md", "mdx", "rst", "adoc", "swift", "m", "mm", "h", "c", "cc", "cpp",
+                "hpp", "js", "ts", "tsx", "jsx", "py", "rs", "go", "java", "kt", "kts",
+                "rb", "sh", "bash", "zsh", "json", "yaml", "yml", "toml", "xml", "plist",
+                "xcconfig", "pbxproj", "xcproj", "html", "css", "scss", "sql"}
+    names = {"readme", "license", "licence", "copying", "notice", "authors", "changelog",
+             "contributing", "code_of_conduct", "security", "agents", "claude", "makefile",
+             "dockerfile", "gemfile", "podfile", "package.resolved"}
+    directories = {"docs", "documentation", "sources", "source", "src", "scripts", "tests",
+                   "test", ".claude", ".claude-plugin"}
+    return (suffix in suffixes or name in names or name.split(".", 1)[0] in names
+            or any(part in directories for part in parts))
+
+
+def is_documentation_command(command: str) -> bool:
+    """Suppress inspection only when no command group produces runtime output."""
+    groups = _command_groups(command, allow_incomplete=True)
+    if groups is None:
+        return False
+    searches = {"rg", "grep", "sed", "awk"}
+    readers = {"cat", "head", "tail", "less", "more", "bat", "nl"}
+    inspection = False
+    runtime = any(group.executes_expansion for group in groups)
+    for words, pipeline, _ in groups:
+        if not words:
+            continue
+        program = os.path.basename(words[0])
+        if program in readers | searches:
+            operands: list[str] = []
+            pattern_provided = False
+            pattern_options = {"-e", "--regexp", "-f", "--file", "--expression"} if program in searches else set()
+            paired_options = pattern_options | {"-A", "-B", "-C", "--context", "-g", "--glob"}
+            if program in {"head", "tail"}:
+                paired_options |= {"-n", "-c", "--lines", "--bytes"}
+            if program == "awk":
+                paired_options |= {"-F", "-v"}
+            arguments = iter(words[1:])
+            for word in arguments:
+                if word == "--":
+                    operands.extend(arguments)
+                elif word in paired_options:
+                    next(arguments, None)
+                    pattern_provided |= word in pattern_options
+                elif word.startswith("-") and word != "-":
+                    pattern_provided |= any(word.startswith(option + "=") for option in pattern_options)
+                    pattern_provided |= program in searches and bool(re.match(r"^-[ef][^-]", word))
+                else:
+                    operands.append(word)
+            if program in searches and not pattern_provided:
+                operands = operands[1:]
+            if any(word == "-" or word.endswith((".log", ".crash", ".ips")) for word in operands):
+                runtime = True
+            elif operands:
+                if all(_documentation_operand(word) or (program in searches and word in {".", "./"})
+                       for word in operands):
+                    inspection = True
+                else:
+                    runtime = True
+            elif not pipeline:
+                if program == "rg":
+                    inspection = True  # With no file operands, ripgrep searches source in cwd.
+                else:
+                    runtime = True
+        elif program in {"echo", "printf", "git"}:
+            inspection = True
+        elif program in {"curl", "wget"} and any(
+            word.endswith((".md", ".swift", ".txt", ".rst")) for word in words[1:]
+        ):
+            inspection = True
+        elif program not in {"cd", "pwd", "true", "false", ":", "export"}:
+            runtime = True
+    return inspection and not runtime
 
 
 def _is_xcodebuild_command(command: str) -> bool:
-    """True if the command's first executable token is `xcodebuild`.
-
-    Matches:
-        xcodebuild ...
-        env FOO=bar xcodebuild ...
-        sudo xcodebuild ...
-        /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild ...
-
-    Doesn't match:
-        echo "xcodebuild test"
-        # xcodebuild test
-        ls xcodebuild-templates/
-    """
-    tokens = _command_tokens(command)
-    # Walk past common prefixes (env, sudo, nice, time) to find the
-    # actual program token. Stop at the first non-prefix token.
-    prefixes = {"env", "sudo", "nice", "time", "command", "exec"}
-    i = 0
-    while i < len(tokens) and tokens[i] in prefixes:
-        i += 1
-        # `env FOO=bar program` style: skip VAR=value tokens too
-        while i < len(tokens) and "=" in tokens[i] and not tokens[i].startswith("/"):
-            i += 1
-    if i >= len(tokens):
-        return False
-    program = tokens[i]
-    # Allow absolute path forms (`/.../xcodebuild`). Compare only the
-    # basename for those.
-    basename = program.rsplit("/", 1)[-1]
-    return basename == "xcodebuild"
+    groups = _command_groups(command)
+    return groups is not None and any(
+        group.words and os.path.basename(group.words[0]) == "xcodebuild" for group in groups
+    )
 
 
 def _is_xcodebuild_test_command(command: str) -> bool:
-    """True if this is an xcodebuild test invocation.
-
-    Looks for the literal `test` (or `test-without-building`) token
-    appearing as a bare word in an `xcodebuild` command.
-    """
-    if not _is_xcodebuild_command(command):
+    groups = _command_groups(command)
+    if groups is None:
         return False
-    tokens = _command_tokens(command)
-    return any(t in {"test", "test-without-building"} for t in tokens)
+    values = {"-scheme", "-project", "-workspace", "-target", "-configuration",
+              "-sdk", "-destination", "-derivedDataPath", "-resultBundlePath", "-testPlan"}
+    for words, _, _ in groups:
+        if not words or os.path.basename(words[0]) != "xcodebuild":
+            continue
+        arguments = iter(words[1:])
+        for word in arguments:
+            if word in values:
+                next(arguments, None)
+            elif word in {"test", "test-without-building"}:
+                return True
+    return False
 
 
 # Output signatures that suggest an xcodebuild call ended in failure
@@ -432,7 +669,7 @@ def main() -> int:
         duration_ms = None
 
     hints = (
-        match_patterns(output)
+        ([] if is_documentation_command(command) else match_patterns(output))
         + duration_hints(command, output, duration_ms)
         + truncated_build_hints(command, output, outcome)
     )

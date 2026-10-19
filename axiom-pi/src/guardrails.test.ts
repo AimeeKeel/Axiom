@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
 import {
   unscopedStateVars,
@@ -191,5 +192,17 @@ describe("toolResultHint", () => {
     expect(
       toolResultHint({ toolName: "bash", input: {}, content: [{ type: "text", text: "all good" }] }, readSwift),
     ).toBeNull();
+  });
+});
+
+
+describe("shared Bash hint precision corpus", () => {
+  const cases = JSON.parse(readFileSync(new URL("../../scripts/fixtures/bash-hint-cases.json", import.meta.url), "utf8")) as {
+    name: string; command: string; output: string; expectedHints: string[];
+  }[];
+  it.each(cases)("$name", ({ command, output, expectedHints }) => {
+    const result = toolResultHint({ toolName: "bash", input: { command }, content: [{ type: "text", text: output }] }, () => "");
+    const hints = [...(result ?? "").matchAll(/axiom-[\w-]+/g)].map((match) => match[0]);
+    expect(hints).toEqual(expectedHints);
   });
 });

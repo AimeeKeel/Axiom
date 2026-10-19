@@ -84,17 +84,19 @@ test("preserves file-path and pasted-text crash input without exposing pasted co
   assert.match(content, /remove only the temporary file and directory created for this request/);
 });
 
-test("documents xcui as external and limits AXe degradation to compatible verbs", () => {
+test("documents xcui ownership and setup and limits AXe degradation to compatible verbs", () => {
   const source = loadCursorSource(process.cwd()).commands.find((entry) => entry.name === "ui");
   assert.ok(source);
   const content = transformCommand(source).content;
 
-  assert.match(content, /`xcui` is not bundled with the Cursor plugin and has no Axiom MCP wrapper/);
+  assert.match(content, /`xcui` is Axiom's own tool, distributed separately from the Cursor plugin/);
+  assert.match(content, /`<axiom-checkout>\/\.claude-plugin\/plugins\/axiom\/tools\/xcui`/);
+  assert.match(content, /verify it is executable and run `--help`/);
   assert.match(content, /check `command -v xcui`/);
   assert.match(content, /If `xcui` is absent, AXe may be used only for compatible pass-through verbs/);
   assert.match(content, /`tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, and `screenshot`/);
-  assert.match(content, /`wait`, `assert`, `a11y`, `dialog`, `voiceover`, and `resize` capabilities require external `xcui`/);
-  assert.match(content, /stop that UI step and report that external `xcui` is required/);
+  assert.match(content, /`wait`, `assert`, `a11y`, `dialog`, `voiceover`, and `resize` capabilities require `xcui`/);
+  assert.match(content, /stop that UI step and report that Axiom’s `xcui` is required/);
   assert.match(content, /If neither tool is available, stop UI automation and give the user setup guidance/);
   assert.match(content, /continue with non-UI simulator and log checks/);
   assert.doesNotMatch(content, /equivalent arguments|Claude Code-only|always on PATH/);

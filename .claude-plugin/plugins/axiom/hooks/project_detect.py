@@ -111,12 +111,14 @@ def _is_marker(name: str) -> bool:
 
 
 def _dir_has_marker(path: str) -> bool:
-    """True if `path` directly contains an Apple marker. Unreadable → False."""
+    """True for an Apple marker or a permission-denied, inconclusive scan."""
     try:
         with os.scandir(path) as it:
             for entry in it:
                 if _is_marker(entry.name):
                     return True
+    except PermissionError:
+        return True
     except OSError:
         return False
     return False
@@ -152,10 +154,14 @@ def _downward_has_marker(root: str) -> bool:
                             and name not in PRUNE_DIRS):
                         try:
                             is_dir = entry.is_dir(follow_symlinks=False)
+                        except PermissionError:
+                            return True
                         except OSError:
                             is_dir = False
                         if is_dir:
                             stack.append((entry.path, depth + 1))
+        except PermissionError:
+            return True
         except OSError:
             continue
     return False

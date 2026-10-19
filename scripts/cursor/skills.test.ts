@@ -161,7 +161,9 @@ test("translates every emitted skill resource away from Cursor-unavailable helpe
   assert.match(xcsym, /xcsym crash --format=summary/);
   assert.match(xcprof, /axiom_xcprof_record/);
   assert.match(xcprof, /xcprof record --preset cpu/);
-  assert.match(xcui, /`xcui` is an external tool and is not bundled with the Cursor plugin/);
+  assert.match(xcui, /`xcui` is Axiom's own tool, distributed separately from the Cursor plugin/);
+  assert.match(xcui, /`<axiom-checkout>\/\.claude-plugin\/plugins\/axiom\/tools\/xcui`/);
+  assert.match(xcui, /substitute that verified absolute path for every `xcui` command/);
   assert.match(xcui, /AXe fallback is limited to compatible input verbs/);
   assert.match(xcui, /AXe cannot replace `wait`, `assert`, `a11y`, `dialog`, `voiceover`, `resize`, or `doctor`/);
   assert.doesNotMatch(xcui, /On \*\*Claude Code\*\*/);

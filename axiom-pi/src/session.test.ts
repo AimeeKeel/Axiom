@@ -72,6 +72,37 @@ describe("buildAxiomContext", () => {
 });
 
 describe("isAppleProject / resolveContextDecision", () => {
+  it.each([false, true])("keeps guidance enabled when a project scan is denied (nested=%s)", (nested) => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-denied-"));
+    const denied = nested ? path.join(root, "ios") : root;
+    fs.mkdirSync(denied, { recursive: true });
+    fs.writeFileSync(path.join(root, ".git"), "");
+    fs.writeFileSync(path.join(denied, "App.swift"), "");
+    fs.chmodSync(denied, 0);
+    try {
+      expect(() => fs.readdirSync(denied)).toThrow();
+      expect(isAppleProject(root)).toBe(true);
+    } finally {
+      fs.chmodSync(denied, 0o700);
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("ignores denied directories that the project scan prunes", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-pruned-"));
+    const denied = path.join(root, "node_modules");
+    fs.mkdirSync(denied);
+    fs.writeFileSync(path.join(root, ".git"), "");
+    fs.writeFileSync(path.join(denied, "App.swift"), "");
+    fs.chmodSync(denied, 0);
+    try {
+      expect(isAppleProject(root)).toBe(false);
+    } finally {
+      fs.chmodSync(denied, 0o700);
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("detects a directory containing an Xcode project", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-apple-"));
     try {

@@ -10,6 +10,10 @@ license: MIT
 
 You are an expert at running XCUITests and analyzing test results using xcodebuild and xcresulttool.
 
+## Before State-Changing Actions
+
+Before deleting `.xcresult` test results with `rm -rf`, warn: "About to delete test results". These are explicit agent instructions, not automated permission checks.
+
 ## Capture Build and Test Diagnostics
 
 Before the next necessary build or test, resolve `tools/axbuild` under the **actual loaded package** in Claude Code (`command -v axbuild`; if that finds nothing, `tools/axbuild` two levels above the `Base directory for this skill:` path of a loaded Axiom skill) or Codex (`<plugin-root>/tools/`), or discover an executable on PATH in Pi. Check executable permission and run its absolute path with `--help`; assign that observed path to `AXBUILD`. Never infer an installation path from an example.

@@ -5,24 +5,6 @@ import { compareCursorPaths } from "./compare.ts";
 import { buildCapabilityReport } from "./report.ts";
 import { loadCursorSource } from "./source.ts";
 
-const expectedWarnings = {
-  "build-fixer": "Warning: Destructive command detected.",
-  "build-optimizer": "Warning: Modifying Xcode project file. Ensure backup exists.",
-  "iap-implementation": "Warning: Modifying StoreKit configuration.",
-  "simulator-tester": "Warning: Simulator state change command.",
-  "test-debugger": "Warning: About to delete test results.",
-  "test-runner": "Warning: About to delete test results.",
-};
-
-const expectedAdvisories = {
-  "build-fixer": "Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: \"Destructive command detected.\"",
-  "build-optimizer": "Before editing or writing a `.pbxproj` or `.xcproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
-  "iap-implementation": "Before editing or writing a StoreKit-related path or `.storekit` file, warn: \"Modifying StoreKit configuration.\"",
-  "simulator-tester": "Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: \"Simulator state change command.\"",
-  "test-debugger": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",
-  "test-runner": "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",
-};
-
 function fixture() {
   const source = loadCursorSource(process.cwd());
   const agents = source.agents.map((agent) => transformAgent(agent, "full"));
@@ -63,7 +45,7 @@ test("capability report enumerates exactly the canonical router, agent, and comm
   assert.ok(report.commandDispositions.every((row) => row.disposition === "generated-native-command"));
 });
 
-test("capability report has exact owner-specific hook coverage and warnings", () => {
+test("capability report has only supported global hook coverage", () => {
   const { source, report } = fixture();
   const expectedIds = source.hooks.map((hook) => [
     hook.source,
@@ -77,25 +59,8 @@ test("capability report has exact owner-specific hook coverage and warnings", ()
     expectedIds.sort(compareCursorPaths),
   );
   assert.equal(new Set(report.hookDispositions.map((row) => row.id)).size, source.hooks.length);
-  assert.deepEqual(
-    Object.fromEntries(
-      report.hookDispositions
-        .filter((row) => row.source === "agent")
-        .map((row) => [row.owner, row.warning]),
-    ),
-    expectedWarnings,
-  );
-  assert.deepEqual(
-    Object.fromEntries(
-      report.hookDispositions
-        .filter((row) => row.source === "agent")
-        .map((row) => [row.owner, row.advisory]),
-    ),
-    expectedAdvisories,
-  );
-  assert.ok(report.hookDispositions
-    .filter((row) => row.source === "agent")
-    .every((row) => row.disposition === "agent-prompt.advisory"));
+  assert.equal(report.perAgentHooks, 0);
+  assert.deepEqual(report.hookDispositions.filter((row) => row.source === "agent"), []);
 });
 
 test("capability report explicitly accounts for MCP, every binary, and Cloud", () => {
@@ -110,7 +75,7 @@ test("capability report explicitly accounts for MCP, every binary, and Cloud", (
     { name: "xclog", disposition: "external-via-axiom-mcp" },
     { name: "xcprof", disposition: "external-via-axiom-mcp" },
     { name: "xcsym", disposition: "external-via-axiom-mcp" },
-    { name: "xcui", disposition: "external-unbundled-no-mcp-wrapper" },
+    { name: "xcui", disposition: "separate-checkout-no-mcp-wrapper" },
   ]);
   assert.deepEqual(report.cloudDispositions, [{
     name: "Cursor Cloud Agents",

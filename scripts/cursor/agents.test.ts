@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { test } from "node:test";
 import matter from "gray-matter";
-import { CURSOR_AGENT_ADVISORIES, transformAgent } from "./agents.ts";
+import { transformAgent } from "./agents.ts";
 import { buildCapabilityReport } from "./report.ts";
 import { CURSOR_FORCED_FOREGROUND, CURSOR_HOOK_EXPECTATIONS } from "./contract.ts";
 import { loadCursorSource } from "./source.ts";
@@ -66,101 +65,40 @@ test("minimal profile omits enforcement fields and never ships", () => {
   assert.doesNotMatch(result.file.content, /model:|readonly:|is_background:/);
 });
 
-test("preserves required skills and turns source hooks into an advisory warning", () => {
+test("preserves required skills without inventing hook compatibility metadata", () => {
   const source = loadCursorSource(process.cwd());
   const buildFixer = source.agents.find((agent) => agent.name === "build-fixer");
   assert.ok(buildFixer);
   const result = transformAgent(buildFixer, "full");
   assert.match(result.file.content, /## Required Skills/);
   assert.match(result.file.content, /`axiom-build`/);
-  assert.match(result.file.content, /## Advisory Hook Compatibility/);
+  assert.doesNotMatch(result.file.content, /## Advisory Hook Compatibility/);
 });
 
-test("maps all six canonical agent hooks to exact owner-specific Cursor advisories", () => {
-  const expected = {
-    "build-fixer": {
-      event: "PreToolUse",
-      matcher: "Bash",
-      advisory: "Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: \"Destructive command detected.\"",
-    },
-    "build-optimizer": {
-      event: "PreToolUse",
-      matcher: "Edit|Write",
-      advisory: "Before editing or writing a `.pbxproj` or `.xcproj` file, warn: \"Modifying Xcode project file. Ensure backup exists.\"",
-    },
-    "iap-implementation": {
-      event: "PreToolUse",
-      matcher: "Edit|Write",
-      advisory: "Before editing or writing a StoreKit-related path or `.storekit` file, warn: \"Modifying StoreKit configuration.\"",
-    },
-    "simulator-tester": {
-      event: "PreToolUse",
-      matcher: "Bash",
-      advisory: "Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: \"Simulator state change command.\"",
-    },
-    "test-debugger": {
-      event: "PreToolUse",
-      matcher: "Bash",
-      advisory: "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",
-    },
-    "test-runner": {
-      event: "PreToolUse",
-      matcher: "Bash",
-      advisory: "Before deleting `.xcresult` test results with `rm -rf`, warn: \"About to delete test results.\"",
-    },
-  } as const;
-
-  assert.deepEqual(Object.keys(CURSOR_AGENT_ADVISORIES), Object.keys(expected));
+test("should preserve all six agent warnings in canonical body steps without frontmatter hooks", () => {
+  const warnings = {
+    "build-fixer": /Before running[^\n]*`killall`[^\n]*DerivedData[^\n]*`xcrun simctl erase`[^\n]*Destructive command detected/,
+    "build-optimizer": /Before[^\n]*`\.pbxproj`[^\n]*`\.xcproj`[^\n]*Modifying Xcode project file\. Ensure backup exists/,
+    "iap-implementation": /Before[^\n]*StoreKit[^\n]*`\.storekit`[^\n]*Modifying StoreKit configuration/,
+    "simulator-tester": /Before[^\n]*`simctl`[^\n]*erases, deletes, shuts down, or boots[^\n]*Simulator state change command/,
+    "test-debugger": /Before deleting[^\n]*`\.xcresult`[^\n]*`rm -rf`[^\n]*About to delete test results/,
+    "test-runner": /Before deleting[^\n]*`\.xcresult`[^\n]*`rm -rf`[^\n]*About to delete test results/,
+  };
   const source = loadCursorSource(process.cwd());
-  for (const [owner, contract] of Object.entries(expected)) {
+  for (const [owner, warning] of Object.entries(warnings)) {
     const agent = source.agents.find((candidate) => candidate.name === owner);
     assert.ok(agent, owner);
-    const mapping = CURSOR_AGENT_ADVISORIES[owner as keyof typeof CURSOR_AGENT_ADVISORIES];
-    assert.deepEqual(
-      { event: mapping.event, matcher: mapping.matcher, advisory: mapping.advisory },
-      contract,
-      owner,
-    );
-    assert.match(transformAgent(agent, "full").file.content, new RegExp(escapeRegExp(contract.advisory)), owner);
+    assert.equal(agent.frontmatter.hooks, undefined, owner);
+    assert.match(agent.body, warning, owner);
+    assert.match(transformAgent(agent, "full").file.content, warning, owner);
   }
 });
 
-test("build-optimizer hook command matches exactly the two Xcode project file names when TOOL_INPUT_FILE_PATH is set", () => {
-  const { command } = CURSOR_AGENT_ADVISORIES["build-optimizer"];
-  const warns = (path: string) =>
-    execFileSync("/bin/sh", ["-c", command], {
-      env: { ...process.env, TOOL_INPUT_FILE_PATH: path },
-      encoding: "utf8",
-    }).includes("Modifying Xcode project file");
-  const expected = {
-    "App.xcodeproj/project.pbxproj": true,
-    "App.xcodeproj/project.xcproj": true,
-    "App.xcodeproj/project.pbxproj.orig": false,
-    "App.xcodeproj/Sources/myxcproj": false,
-    "App/ContentView.swift": false,
-  };
-  assert.deepEqual(Object.fromEntries(Object.keys(expected).map((path) => [path, warns(path)])), expected);
-});
-
-test("fails closed when a mapped per-agent hook drifts or an unmapped owner gains hooks", () => {
-  const source = loadCursorSource(process.cwd());
-  const buildFixer = source.agents.find((agent) => agent.name === "build-fixer");
-  assert.ok(buildFixer);
-  const drifted = structuredClone(buildFixer);
-  const hooks = drifted.frontmatter.hooks as Record<string, Array<{ matcher: string; hooks: Array<{ command: string }> }>>;
-  hooks.PreToolUse![0]!.hooks[0]!.command = "printf 'different warning'";
-  assert.throws(() => transformAgent(drifted, "full"), /agent advisory hook drift: build-fixer/);
-
-  assert.throws(
-    () => transformAgent({
-      ...readonlyAgent,
-      frontmatter: {
-        ...readonlyAgent.frontmatter,
-        hooks: { PreToolUse: [{ matcher: "Read", hooks: [{ command: "printf warning" }] }] },
-      },
-    }, "full"),
-    /unmapped agent advisory hooks: readonly-auditor/,
-  );
+test("rejects unsupported frontmatter hooks on any agent", () => {
+  assert.throws(() => transformAgent({
+    ...readonlyAgent,
+    frontmatter: { ...readonlyAgent.frontmatter, hooks: { PreToolUse: [] } },
+  }, "full"), /unknown agent frontmatter field: hooks/);
 });
 
 test("reduces agent descriptions to the first concise routing paragraph", () => {
@@ -225,7 +163,7 @@ test("routes agent binary workflows through Axiom MCP tools and gives xcui a deg
 
   const simulator = transformed.get("simulator-tester");
   assert.ok(simulator);
-  assert.match(simulator, /`xcui` is an external tool and is not bundled with the Cursor plugin/);
+  assert.match(simulator, /`xcui` is Axiom's own tool, distributed separately from the Cursor plugin/);
   assert.match(simulator, /check `command -v xcui`/);
   assert.match(simulator, /check `command -v axe`/);
   assert.match(simulator, /If neither tool is available, stop UI automation/);
@@ -247,13 +185,13 @@ test("preserves concrete profiling arguments in emitted MCP guidance", () => {
   assert.doesNotMatch(content, /axiom_xcprof_record` MCP tool[^\n]*--(?:preset|instrument|attach|time-limit)/);
 });
 
-test("describes xcui as external and limits AXe fallback to compatible input verbs", () => {
+test("describes xcui ownership and setup and limits AXe fallback to compatible input verbs", () => {
   const source = loadCursorSource(process.cwd());
   const simulator = source.agents.find((agent) => agent.name === "simulator-tester");
   assert.ok(simulator);
   const content = transformAgent(simulator, "full").file.content;
 
-  assert.match(content, /`xcui` is an external tool and is not bundled with the Cursor plugin/);
+  assert.match(content, /`xcui` is Axiom's own tool, distributed separately from the Cursor plugin/);
   assert.match(content, /AXe fallback is limited to compatible input verbs/);
   assert.match(content, /AXe cannot replace `wait`, `assert`, `a11y`, `dialog`, `voiceover`, `resize`, or `doctor`/);
   assert.doesNotMatch(content, /on PATH automatically only on Claude Code|`xcui` \(bundled\)|\*\*xcui\*\*: bundled/i);
@@ -316,10 +254,6 @@ test("rejects duplicate transformed names that omit a canonical agent", () => {
     /transformed agent names differ from source/,
   );
 });
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 test("forced-foreground exclusion reaches the emitted frontmatter, not just the report", () => {
   const forced = [...CURSOR_FORCED_FOREGROUND][0];

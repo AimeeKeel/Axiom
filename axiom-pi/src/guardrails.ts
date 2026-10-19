@@ -133,7 +133,7 @@ export function crashFileHint(p: string): string | null {
 // tool_result event carries no command duration to gate them on.
 const BASH_PATTERN_RULES: { pattern: RegExp; hint: string }[] = [
   { pattern: /Unable to simultaneously satisfy constraints/, hint: "💡 Auto Layout conflict — load the axiom-uikit skill." },
-  { pattern: /Actor-isolated|Sendable|data race|@MainActor/, hint: "💡 Concurrency issue — load the axiom-concurrency skill." },
+  { pattern: /Actor-isolated|Sendable|data race|@MainActor/i, hint: "💡 Concurrency issue — load the axiom-concurrency skill." },
   { pattern: /no such column|FOREIGN KEY constraint|migration/, hint: "💡 Database migration issue — load the axiom-data skill." },
   { pattern: /retain cycle|memory leak|deinit.*never called/, hint: "💡 Memory issue — load the axiom-performance skill." },
   { pattern: /CKError|CKRecord.*error/, hint: "💡 CloudKit issue — load the axiom-data skill." },
@@ -143,10 +143,256 @@ const BASH_PATTERN_RULES: { pattern: RegExp; hint: string }[] = [
   { pattern: /error:.*module.*not found|linker command failed/, hint: "💡 Build configuration issue — try /axiom-fix-build." },
 ];
 
-/** Every skill hint whose pattern matches the Bash output, in rule order. */
+const DIAGNOSTIC_LINE = /\b(?:error|warning|failed|failure|detected|unavailable|fatal|exception)\b|\b(?:note|reason):|never called|not available|data race|Unable to simultaneously satisfy constraints|Leaks:|CKError\s*\d|^\s*(?:[\w.]+(?:Error|Exception):|no such column\b|file not found\b|CKError(?:Domain)?\b|(?:Application terminated:\s*)?file (?:is )?locked\b)/i;
+const LOG_PREFIX = /^\s*(?:(?:\[[^\]\n]+\]|[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9:.,+\-]+Z?|[0-9]{2}:[0-9]{2}:[0-9]{2}(?:[.,][0-9]+)?|[A-Za-z_][\w.-]*\[[0-9:]+\]:?)\s*)+/;
+const ISSUE_TERMS = String.raw`(?:migration\s+(?:errors?|failures?|issues?|problems?)|memory leaks?|retain cycles?)\b`;
+const NEGATED_ISSUE = new RegExp(String.raw`\b(?:no|without)\s+${ISSUE_TERMS}(?:\s+(?:or|and)\s+${ISSUE_TERMS})*`, "gi");
+
+/** Every skill hint whose pattern matches diagnostic output, in rule order. */
 export function bashOutputHints(output: string): string[] {
-  if (!output) return [];
-  return BASH_PATTERN_RULES.filter((r) => r.pattern.test(output)).map((r) => r.hint);
+  const diagnostics = output.split(/[;\n]|(?<=[.!?])\s+/)
+    .flatMap((fragment) => {
+      const original = fragment.replace(NEGATED_ISSUE, "");
+      const payload = original.replace(LOG_PREFIX, "");
+      return DIAGNOSTIC_LINE.test(original) || DIAGNOSTIC_LINE.test(payload) ? [payload] : [];
+    });
+  return BASH_PATTERN_RULES.filter((r) => diagnostics.some((line) => r.pattern.test(line))).map((r) => r.hint);
+}
+
+type ShellToken = { text: string; operator: boolean };
+type CommandGroup = { words: string[]; pipeline: boolean; executesExpansion: boolean };
+
+function expansionEnd(command: string, start: number): number | null {
+  const backtick = command[start] === "`";
+  let depth = 1;
+  let quote = "";
+  let i = start + (backtick ? 1 : 2);
+  while (i < command.length) {
+    const char = command[i];
+    if (char === "\\" && quote !== "'") { i += 2; continue; }
+    if (backtick) {
+      if (char === "`") return i + 1;
+    } else if (quote) {
+      if (char === quote) quote = "";
+    } else if ("'\"".includes(char)) quote = char;
+    else if (char === "(") depth++;
+    else if (char === ")") {
+      depth--;
+      if (depth === 0) return i + 1;
+    }
+    i++;
+  }
+  return null;
+}
+
+/** Lex words/operators without expansion; mirrored in Python and tested by one corpus. */
+function shellTokens(command: string, allowIncomplete = false): ShellToken[] | null {
+  const tokens: ShellToken[] = [];
+  let word = "";
+  let active = false;
+  let quoted = false;
+  let quote = "";
+  let i = 0;
+  while (i < command.length) {
+    const char = command[i];
+    if (char === "\\" && quote !== "'") {
+      if (i + 1 === command.length) {
+        if (!allowIncomplete) return null;
+        word += char;
+        active = true;
+        break;
+      }
+      const following = command[i + 1];
+      if (!quote || '\\"$`\n'.includes(following)) {
+        if (following !== "\n") { word += following; active = true; }
+        i += 2;
+        continue;
+      }
+    }
+    if (quote !== "'" && (command.startsWith("$(", i) || char === "`" ||
+        (!quote && ["<(", ">("].includes(command.slice(i, i + 2))))) {
+      const end = expansionEnd(command, i);
+      if (end === null) return null;
+      word += "\0"; // Opaque argument: can execute commands, never a literal action/path.
+      active = true;
+      i = end;
+      continue;
+    }
+    if (quote) {
+      if (char === quote) quote = "";
+      else word += char;
+      i++;
+      continue;
+    }
+    if ("'\"".includes(char)) {
+      quote = char;
+      active = quoted = true;
+      i++;
+      continue;
+    }
+    if (char === "#" && !active) {
+      while (i < command.length && command[i] !== "\n") i++;
+      continue;
+    }
+    if (" \t\r\n;&|()<>".includes(char)) {
+      const operator = command.slice(i).match(/^(&>>|&>|&&|\|\||\|&|>>|<<<?|<>|>&|<&|[;\n&|()<>])/);
+      let descriptor = "";
+      if (active) {
+        if (operator && "<>".includes(char) && /^[0-9]+$/.test(word) && !quoted) descriptor = word;
+        else tokens.push({ text: word, operator: false });
+        word = ""; active = false; quoted = false;
+      }
+      if (operator) {
+        tokens.push({ text: descriptor + operator[0], operator: true });
+        i += operator[0].length;
+      } else i++;
+      continue;
+    }
+    word += char;
+    active = true;
+    i++;
+  }
+  if (quote && !allowIncomplete) return null;
+  if (active) tokens.push({ text: word, operator: false });
+  return tokens;
+}
+
+function commandGroups(command: string, depth = 0, allowIncomplete = false): CommandGroup[] | null {
+  const tokens = shellTokens(command, allowIncomplete);
+  if (!tokens || depth > 8) return null;
+  const groups: CommandGroup[] = [];
+  let words: string[] = [];
+  let pipeline = false;
+  let executesExpansion = false;
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    executesExpansion ||= token.text.includes("\0");
+    if (token.operator && /^(?:[0-9]*(?:[<>]+|[<>]&)|&>>?)$/.test(token.text)) {
+      const target = tokens[++i];
+      if (!target || target.operator) return null;
+      executesExpansion ||= target.text.includes("\0");
+      if (/^[0-9]*<>?$/.test(token.text)) words.push(target.text);
+      continue;
+    }
+    if (token.operator) {
+      groups.push({ words, pipeline, executesExpansion });
+      words = [];
+      executesExpansion = false;
+      pipeline = ["|", "|&"].includes(token.text);
+    } else words.push(token.text);
+  }
+  groups.push({ words, pipeline, executesExpansion });
+  const expanded: CommandGroup[] = [];
+  const optionArguments: Record<string, Set<string>> = {
+    env: new Set(["-u", "--unset", "-C", "--chdir", "-S", "--split-string"]),
+    sudo: new Set(["-u", "--user", "-g", "--group", "-h", "--host", "-p", "--prompt",
+      "-C", "--close-from", "-T", "--command-timeout", "-R", "--chroot", "-D", "--chdir",
+      "-r", "--role", "-t", "--type", "-a", "--auth-type"]),
+    nice: new Set(["-n", "--adjustment"]),
+    time: new Set(["-f", "--format", "-o", "--output"]),
+    command: new Set(),
+    exec: new Set(["-a"]),
+    xcrun: new Set(["--sdk", "--toolchain"]),
+  };
+  for (const group of groups) {
+    const commandWords = [...group.words];
+    while (commandWords.length) {
+      if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(commandWords[0])) commandWords.shift();
+      else if (Object.hasOwn(optionArguments, commandWords[0].split("/").at(-1) ?? "")) {
+        const prefix = commandWords[0].split("/").at(-1) ?? "";
+        const wrappedWords = [...commandWords];
+        commandWords.shift();
+        let lookup = false;
+        while (commandWords[0]?.startsWith("-")) {
+          const option = commandWords.shift() ?? "";
+          lookup ||= (prefix === "xcrun" && ["--find", "-f"].includes(option)) ||
+            (prefix === "command" && ["-v", "-V"].includes(option));
+          if (optionArguments[prefix].has(option)) commandWords.shift();
+        }
+        if (lookup) {
+          commandWords.splice(0, commandWords.length, ...wrappedWords);
+          break;
+        }
+      } else break;
+    }
+    if (["sh", "bash", "zsh"].includes(commandWords[0]?.split("/").at(-1) ?? "")) {
+      const index = commandWords.findIndex((word, j) => j > 0 && /^-[A-Za-z]*c[A-Za-z]*$/.test(word));
+      if (index >= 0 && index + 1 < commandWords.length) {
+        const nested = commandGroups(commandWords[index + 1], depth + 1, allowIncomplete);
+        if (!nested) return null;
+        expanded.push(...nested.map((inner) => ({ ...inner, executesExpansion: inner.executesExpansion || group.executesExpansion })));
+        continue;
+      }
+    }
+    expanded.push({ words: commandWords, pipeline: group.pipeline, executesExpansion: group.executesExpansion });
+  }
+  return expanded;
+}
+
+function documentationOperand(word: string): boolean {
+  if (["$", "`", "\0"].some((character) => word.includes(character))) return false;
+  const parts = word.toLowerCase().split("/");
+  const name = parts.at(-1) ?? "";
+  const suffix = name.includes(".") ? name.split(".").at(-1) ?? "" : "";
+  if (["", "txt", "json", "jsonl", "ndjson", "out", "err"].includes(suffix) &&
+      /(?:^|[-_.])(?:stdout|stderr|output|logs?|results?|traces?|diagnostics|console|captured?)(?:[-_.]|$)/.test(name)) return false;
+  const suffixes = new Set(["md", "mdx", "rst", "adoc", "swift", "m", "mm", "h", "c", "cc", "cpp",
+    "hpp", "js", "ts", "tsx", "jsx", "py", "rs", "go", "java", "kt", "kts", "rb", "sh", "bash",
+    "zsh", "json", "yaml", "yml", "toml", "xml", "plist", "xcconfig", "pbxproj", "xcproj", "html",
+    "css", "scss", "sql"]);
+  const names = new Set(["readme", "license", "licence", "copying", "notice", "authors", "changelog",
+    "contributing", "code_of_conduct", "security", "agents", "claude", "makefile", "dockerfile",
+    "gemfile", "podfile", "package.resolved"]);
+  const directories = new Set(["docs", "documentation", "sources", "source", "src", "scripts", "tests",
+    "test", ".claude", ".claude-plugin"]);
+  return suffixes.has(suffix) || names.has(name) || names.has(name.split(".")[0]) ||
+    parts.some((part) => directories.has(part));
+}
+
+function isDocumentationCommand(command: string): boolean {
+  const groups = commandGroups(command, 0, true);
+  if (!groups) return false;
+  const searches = new Set(["rg", "grep", "sed", "awk"]);
+  const readers = new Set(["cat", "head", "tail", "less", "more", "bat", "nl"]);
+  let inspection = false;
+  let runtime = groups.some((group) => group.executesExpansion);
+  for (const { words, pipeline } of groups) {
+    const program = words[0]?.split("/").at(-1);
+    if (!program) continue;
+    if (readers.has(program) || searches.has(program)) {
+      let operands: string[] = [];
+      let patternProvided = false;
+      const patternOptions = new Set(searches.has(program) ? ["-e", "--regexp", "-f", "--file", "--expression"] : []);
+      const pairedOptions = new Set([...patternOptions, "-A", "-B", "-C", "--context", "-g", "--glob"]);
+      if (["head", "tail"].includes(program)) for (const option of ["-n", "-c", "--lines", "--bytes"]) pairedOptions.add(option);
+      if (program === "awk") for (const option of ["-F", "-v"]) pairedOptions.add(option);
+      for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        if (word === "--") {
+          operands.push(...words.slice(i + 1));
+          break;
+        } else if (pairedOptions.has(word)) {
+          i++;
+          patternProvided ||= patternOptions.has(word);
+        } else if (word.startsWith("-") && word !== "-") {
+          patternProvided ||= [...patternOptions].some((option) => word.startsWith(`${option}=`));
+          patternProvided ||= searches.has(program) && /^-[ef][^-]/.test(word);
+        } else operands.push(word);
+      }
+      if (searches.has(program) && !patternProvided) operands = operands.slice(1);
+      if (operands.some((word) => word === "-" || /\.(log|crash|ips)$/.test(word))) runtime = true;
+      else if (operands.length) {
+        if (operands.every((word) => documentationOperand(word) || (searches.has(program) && [".", "./"].includes(word)))) inspection = true;
+        else runtime = true;
+      } else if (!pipeline) {
+        if (program === "rg") inspection = true; // Without file operands, ripgrep searches source in cwd.
+        else runtime = true;
+      }
+    } else if (["echo", "printf", "git"].includes(program)) inspection = true;
+    else if (["curl", "wget"].includes(program) && words.slice(1).some((word) => /\.(md|swift|txt|rst)$/.test(word))) inspection = true;
+    else if (!["cd", "pwd", "true", "false", ":", "export"].includes(program)) runtime = true;
+  }
+  return inspection && !runtime;
 }
 
 /** A file path off a tool event's input, tolerating either `path` or `filePath`. */
@@ -203,6 +449,10 @@ export function toolResultHint(event: ToolResultLike, readFile: (p: string) => s
     }
   }
   if (event.toolName === "bash") {
+    if (typeof event.input === "object" && event.input !== null) {
+      const command = (event.input as Record<string, unknown>).command;
+      if (typeof command === "string" && isDocumentationCommand(command)) return null;
+    }
     const text = event.content.filter((c) => c.type === "text").map((c) => c.text ?? "").join("\n");
     const hints = bashOutputHints(text);
     return hints.length ? hints.join("\n") : null;

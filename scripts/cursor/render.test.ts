@@ -77,6 +77,20 @@ test("generated README installs a local checkout through Cursor's marketplace fl
   assert.doesNotMatch(readme, /\.cursor\/plugins\/local|ln -s|readlink/);
 });
 
+test("should explain tool availability in both the install guide and generated README", () => {
+  const readme = renderCursorDistribution(root, { profile: "full" }).plugin.get("README.md")!.content;
+  const guide = fs.readFileSync(path.join(root, "docs/start/cursor-install.md"), "utf8");
+  for (const content of [readme, guide]) {
+    assert.match(content, /axiom_xclog_\*/);
+    assert.match(content, /axiom_xcsym_\*/);
+    assert.match(content, /axiom_xcprof_\*/);
+    assert.match(content, /axbuild[^\n]*saved-log fallback/);
+    assert.match(content, /xcproject[^\n]*reads project files directly/);
+    assert.match(content, /\.claude-plugin\/plugins\/axiom\/tools\/xcui/);
+    assert.doesNotMatch(content, /symlink|ln -s/);
+  }
+});
+
 test("renders deterministic, safe, non-Claude Cursor bytes", () => {
   const first = renderCursorDistribution(root, { profile: "full" });
   const second = renderCursorDistribution(root, { profile: "full" });

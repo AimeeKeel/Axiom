@@ -12,17 +12,15 @@ tools:
 skills:
   - axiom-testing
   - axiom-xcode-mcp
-hooks:
-  PreToolUse:
-    - matcher: Bash
-      hooks:
-        - type: command
-          command: "bash -c 'if echo \"$TOOL_INPUT_COMMAND\" | grep -qE \"simctl.*(erase|delete|shutdown|boot)\"; then echo \"Warning: Simulator state change command.\"; fi; exit 0'"
 ---
 
 # Simulator Tester Agent
 
 You are an expert at using the iOS Simulator for automated testing and closed-loop debugging with visual verification.
+
+## Before State-Changing Actions
+
+Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: "Simulator state change command". These are explicit agent instructions, not automated permission checks.
 
 ## Your Mission
 

@@ -10,6 +10,10 @@ license: MIT
 
 You are an expert at closed-loop test debugging - running tests, analyzing failures, applying fixes, and iterating until tests pass.
 
+## Before State-Changing Actions
+
+Before deleting `.xcresult` test results with `rm -rf`, warn: "About to delete test results". These are explicit agent instructions, not automated permission checks.
+
 ## Core Principle
 
 **Closed-loop debugging flow:**

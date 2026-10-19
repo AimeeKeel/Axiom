@@ -1,6 +1,6 @@
 ## Cursor UI Tool Availability
 
-`xcui` is an external tool and is not bundled with the Cursor plugin; it has no Axiom MCP wrapper. Before UI automation, check `command -v xcui`. If it is absent, AXe fallback is limited to compatible input verbs: `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, and `screenshot`. Then check `command -v axe` before that fallback and handle `DEVELOPER_DIR` explicitly if AXe reports a SimulatorKit loading error. AXe cannot replace `wait`, `assert`, `a11y`, `dialog`, `voiceover`, `resize`, or `doctor`. If neither tool is available, stop UI automation, explain the external setup requirement, and continue only with non-UI simulator and log checks. If AXe exists but the requested workflow requires an xcui-only capability, stop that UI workflow and report the limitation.
+`xcui` is Axiom's own tool, distributed separately from the Cursor plugin; it has no Axiom MCP wrapper. Before UI automation, check `command -v xcui`. If absent, use a stable Axiom repository checkout and locate `<axiom-checkout>/.claude-plugin/plugins/axiom/tools/xcui`, where `<axiom-checkout>` is that checkout's absolute root. Before using either discovered executable, verify it is executable and run `--help`; substitute that verified absolute path for every `xcui` command, then run `doctor`. Do not use the cached `axiom-cursor/` plugin directory as the checkout root. If xcui remains unavailable, AXe fallback is limited to compatible input verbs: `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, and `screenshot`. Then check `command -v axe` before that fallback; add `--tap-style physical` to every `axe tap` and handle `DEVELOPER_DIR` explicitly if AXe reports a SimulatorKit loading error. AXe cannot replace `wait`, `assert`, `a11y`, `dialog`, `voiceover`, `resize`, or `doctor`. If neither tool is available, stop UI automation, explain the checkout setup requirement, and continue only with non-UI simulator and log checks. If AXe exists but the requested workflow requires an xcui-only capability, stop that UI workflow and report the limitation.
 
 # xcui Reference (Scriptable Simulator UI & Accessibility Testing)
 
@@ -8,10 +8,10 @@ xcui makes iOS-simulator UI and accessibility testing scriptable for coding harn
 
 ## Invocation
 
-In Cursor, `xcui` is external and is not placed on `PATH` by the plugin. Check `command -v xcui` before following an `xcui` workflow.
+In Cursor, `xcui` is Axiom's own tool, installed separately from a repository checkout. Follow Cursor UI Tool Availability above; the plugin does not place it on `PATH`.
 
 If it is absent, you have two working options and should say which you took:
-- Put it on PATH — clone the repo and symlink `.claude-plugin/plugins/axiom/tools/xcui` (see the Pi install guide). This is the only way to get `resize sweep`, `wait`, `assert`, `a11y`, `dialog`, and `voiceover`, which have no AXe equivalent.
+- Use the verified absolute path to Axiom's `tools/xcui` from Cursor UI Tool Availability above. Its `resize sweep`, `wait`, `assert`, `a11y`, `dialog`, and `voiceover` capabilities have no AXe equivalent.
 - For **input only**, call AXe directly: `axe tap`/`type`/`swipe` take the same flags the `xcui` passthrough forwards — add `--tap-style physical` to every `axe tap` (see Tap styles) — and AXe installs with `brew install cameroncooke/axe/axe`. You then own the `DEVELOPER_DIR` handling yourself — rare, since AXe 1.8.0 loads SimulatorKit under Xcode 27 unaided.
 
 ## Prerequisite: run `xcui doctor`

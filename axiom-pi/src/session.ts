@@ -185,11 +185,16 @@ function isMarker(name: string): boolean {
   return APPLE_MARKER_NAMES.has(name) || APPLE_MARKER_SUFFIXES.some((s) => name.endsWith(s));
 }
 
+function isPermissionError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error &&
+    (error.code === "EACCES" || error.code === "EPERM");
+}
+
 function dirHasMarker(dir: string): boolean {
   try {
     return fs.readdirSync(dir).some(isMarker);
-  } catch {
-    return false;
+  } catch (error) {
+    return isPermissionError(error);
   }
 }
 
@@ -202,7 +207,8 @@ function downwardHasMarker(root: string): boolean {
     let entries: fs.Dirent[];
     try {
       entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
+    } catch (error) {
+      if (isPermissionError(error)) return true;
       continue;
     }
     for (const e of entries) {
@@ -216,7 +222,8 @@ function downwardHasMarker(root: string): boolean {
         let isDir = false;
         try {
           isDir = e.isDirectory();
-        } catch {
+        } catch (error) {
+          if (isPermissionError(error)) return true;
           isDir = false;
         }
         if (isDir) stack.push([path.join(dir, e.name), depth + 1]);

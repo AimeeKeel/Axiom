@@ -1,7 +1,7 @@
 {
   "name": "axiom",
   "version": "27.6.0",
-  "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, tvOS, watchOS) development — Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more",
+  "description": "Battle-tested Claude Code skills, agents, and tools for modern xOS (iOS, iPadOS, tvOS, watchOS) development \u2014 Swift 6, SwiftUI, Liquid Glass, Apple Intelligence, and more",
   "type": "module",
   "pi": {
     "skills": [
@@ -22,7 +22,7 @@
     "build:docs": "vitepress build docs",
     "build:manifest": "node scripts/build-manifest.js",
     "build:mcp": "cd axiom-mcp && pnpm run build:bundle",
-    "check:ci": "npm run test:unit && npm run test:hooks && node scripts/leak-scan.ts",
+    "check:ci": "npm run test:unit && npm run test:hooks && npm run test:mcp && node scripts/leak-scan.ts",
     "check:codex": "node scripts/build-codex.ts --check",
     "check:cursor": "node scripts/build-cursor.ts --check",
     "check:refs": "node scripts/check-cross-refs.js",
@@ -35,7 +35,8 @@
     "test:full": "node scripts/pre-deploy.ts",
     "test:hooks": "node scripts/test-hooks.ts",
     "test:routing": "node scripts/test-routing.ts",
-    "test:unit": "node --test 'scripts/**/*.test.ts' 'tools/*/*.test.ts'"
+    "test:unit": "node --test 'scripts/**/*.test.ts' 'tools/*/*.test.ts'",
+    "test:mcp": "npm --prefix axiom-mcp test"
   },
   "devDependencies": {
     "gray-matter": "^4.0.3",

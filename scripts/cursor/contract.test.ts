@@ -153,7 +153,7 @@ test("the closed Cursor source contract preserves its release policy", () => {
   assert.deepEqual(CURSOR_HOOK_EXPECTATIONS, {
     globalHookEventTypes: 5,
     globalHookEntries: 6,
-    perAgentHooks: 6,
+    perAgentHooks: 0,
   });
   assert.equal(CURSOR_INJECTED_ROUTER, "axiom-tools");
   assert.equal(CURSOR_RELEASE_PROFILE, "full");
@@ -175,7 +175,6 @@ test("the closed Cursor source contract preserves its release policy", () => {
     "color",
     "tools",
     "skills",
-    "hooks",
     "mcp",
     "exempt-from-routing",
   ]);
@@ -184,7 +183,7 @@ test("the closed Cursor source contract preserves its release policy", () => {
 test("hook counts and dispositions remain tied to canonical sources", () => {
   assert.equal(globalHookEvents.length, 5);
   assert.equal(globalHookEntries.length, 6);
-  assert.equal(perAgentHookOwners.length, 6);
+  assert.deepEqual(perAgentHookOwners, []);
   assert.equal(globalHookEvents.length, CURSOR_HOOK_EXPECTATIONS.globalHookEventTypes);
   assert.equal(globalHookEntries.length, CURSOR_HOOK_EXPECTATIONS.globalHookEntries);
   assert.equal(perAgentHookOwners.length, CURSOR_HOOK_EXPECTATIONS.perAgentHooks);
@@ -218,16 +217,6 @@ test("hook counts and dispositions remain tied to canonical sources", () => {
     );
   }
 
-  for (const filename of perAgentHookOwners) {
-    const hooks = agentFrontmatter.get(filename)?.hooks;
-    assert.ok(hooks && typeof hooks === "object", `${filename} hooks must be a mapping`);
-    for (const event of Object.keys(hooks as Record<string, unknown>)) {
-      assert.equal(
-        CURSOR_HOOK_DISPOSITIONS[`per-agent ${event}` as keyof typeof CURSOR_HOOK_DISPOSITIONS],
-        "advisory",
-      );
-    }
-  }
 });
 
 test("released foreground policy follows source agent frontmatter", () => {

@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
+import re
 import subprocess
 import unittest
 
@@ -48,6 +50,39 @@ def bash_payload(command: str = "swift build", duration_ms: int | None = None) -
     if duration_ms is not None:
         payload["duration_ms"] = duration_ms
     return payload
+
+
+class TestSharedPrecisionCorpus(unittest.TestCase):
+    def test_shared_command_output_cases(self):
+        corpus = Path(__file__).resolve().parents[4] / "scripts/fixtures/bash-hint-cases.json"
+        for case in json.loads(corpus.read_text()):
+            with self.subTest(case=case["name"]):
+                out, code = run_hook(bash_payload(case["command"]), case["output"])
+                hints = re.findall(r"(?:skill |/axiom:)(axiom-[\w-]+|fix-build)", out)
+                hints = ["axiom-fix-build" if hint == "fix-build" else hint for hint in hints]
+                self.assertEqual((code, hints), (0, case["expectedHints"]))
+
+    def test_mixed_chains_preserve_duration_hints(self):
+        for command in ("git stash && xcodebuild build", "cat Package.swift && xcodebuild build",
+                        "bash -lc 'cat Package.swift && xcodebuild build'",
+                        "xcodebuild build <>/dev/null"):
+            with self.subTest(command=command):
+                out, code = run_hook(bash_payload(command, duration_ms=70_000), "error: build failed")
+                self.assertEqual(code, 0)
+                self.assertIn("Long xcodebuild (70s)", out)
+
+    def test_literal_tests_preserve_duration_with_expansion_arguments_or_later_groups(self):
+        for command in ('xcodebuild -scheme App -derivedDataPath "$(mktemp -d)" test',
+                        'xcodebuild test; echo "$(date)"'):
+            with self.subTest(command=command):
+                out, code = run_hook(bash_payload(command, duration_ms=310_000), "error: build failed")
+                self.assertEqual(code, 0)
+                self.assertIn("Slow test run (310s)", out)
+
+    def test_mixed_chain_preserves_slow_tests(self):
+        out, code = run_hook(bash_payload("cat Package.swift && xcodebuild test <>/dev/null", duration_ms=310_000))
+        self.assertEqual(code, 0)
+        self.assertIn("Slow test run (310s)", out)
 
 
 class TestPatternMatching(unittest.TestCase):
@@ -368,6 +403,13 @@ class TestCommandHelpers(unittest.TestCase):
         self.assertTrue(self.is_xcb("sudo xcodebuild build"))
         self.assertTrue(self.is_xcb("time xcodebuild build"))
 
+    def test_noninteractive_sudo_preserves_build_detection(self):
+        self.assertTrue(self.is_xcb("sudo -n xcodebuild build"))
+
+    def test_executable_lookup_is_not_a_build(self):
+        self.assertFalse(self.is_xcb("xcrun --find xcodebuild"))
+        self.assertFalse(self.is_xcb("command -v xcodebuild"))
+
     def test_absolute_path_xcodebuild(self):
         self.assertTrue(self.is_xcb("/usr/bin/xcodebuild build"))
 
@@ -393,6 +435,10 @@ class TestCommandHelpers(unittest.TestCase):
     def test_build_subcommand_not_test(self):
         self.assertFalse(self.is_xcb_test("xcodebuild build"))
         self.assertFalse(self.is_xcb_test("xcodebuild clean build"))
+
+    def test_test_named_scheme_is_not_a_test_action(self):
+        self.assertFalse(self.is_xcb_test('git pull && xcodebuild -scheme "test" build'))
+        self.assertFalse(self.is_xcb_test('xcodebuild -destination test-without-building build'))
 
     def test_non_xcodebuild_test(self):
         # `swift test` is not xcodebuild test — different command, our

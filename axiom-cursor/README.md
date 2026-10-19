@@ -29,6 +29,14 @@ Cursor imports the local marketplace into its plugin cache; it does not follow l
 
 Open Cursor's Customize panel and verify Axiom's version plus all 27 skills, 42 agents, 17 commands, hooks, and MCP server before relying on the installation.
 
+## Axiom Tools
+
+Console capture, crash symbolication, and profiling use `axiom_xclog_*`, `axiom_xcsym_*`, and `axiom_xcprof_*` MCP tools from the separately published `axiom-mcp` runtime. If an MCP tool is missing, report the integration problem; do not fall back to a same-named binary.
+
+`axbuild` is not bundled and has no MCP wrapper; use the saved-log fallback for builds and tests. `xcproject` is not bundled and has no MCP wrapper; the assistant reads project files directly and uses native Xcode queries for effective settings.
+
+`xcui` is Axiom's own tool, installed separately from the stable repository checkout at `.claude-plugin/plugins/axiom/tools/xcui`. Verify the executable and run its absolute path with `--help`, then `doctor`; substitute that verified path in UI commands. The generated Cursor workflows also check `command -v xcui`. The plugin does not add it to PATH. AXe can substitute only compatible input verbs, not wait/assert, accessibility, dialog, VoiceOver, or resize workflows. See the install guide for setup and prerequisites.
+
 ## Authority and Hooks
 
 The released profile has 30 read-only/background agents and 12 writable/foreground agents. Cursor agents inherit host tool and MCP access that may be broader than their canonical Axiom tool lists. Review the agent, tool approvals, and MCP allowlist before running it; prompt instructions and hooks are not security boundaries. Writable agents run in the foreground and may change the shared checkout.

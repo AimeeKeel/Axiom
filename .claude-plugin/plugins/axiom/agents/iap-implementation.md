@@ -13,17 +13,15 @@ tools:
   - Bash
 skills:
   - axiom-integration
-hooks:
-  PreToolUse:
-    - matcher: Edit|Write
-      hooks:
-        - type: command
-          command: "bash -c 'if echo \"$TOOL_INPUT_FILE_PATH\" | grep -qE \"StoreKit|\\.storekit$\"; then echo \"Warning: Modifying StoreKit configuration.\"; fi; exit 0'"
 ---
 
 # In-App Purchase Implementation Agent
 
 You are an expert at implementing production-ready in-app purchases using StoreKit 2.
+
+## Before State-Changing Actions
+
+Before editing or writing a StoreKit-related path or `.storekit` file, warn: "Modifying StoreKit configuration". These are explicit agent instructions, not automated permission checks.
 
 ## Your Mission
 

@@ -4,7 +4,6 @@ import {
   CURSOR_HOOK_EXPECTATIONS,
   classifyAgentTools,
 } from "./contract.ts";
-import { CURSOR_AGENT_ADVISORIES } from "./agents.ts";
 import { WRAPPED_BINARIES } from "./references.ts";
 import { compareCursorPaths } from "./compare.ts";
 import type {
@@ -20,24 +19,6 @@ function assertEqual(actual: number, expected: number, label: string): void {
 function hookDispositionKey(event: string, matcher: string | null, source: "global" | "agent"): string {
   if (source === "agent") return `per-agent ${event}`;
   return matcher ? `${event}(${matcher})` : event;
-}
-
-function agentHookWarning(command: string, owner: string | null): string {
-  if (!owner) throw new Error("per-agent hook lacks an owner");
-  const warnings = [...command.matchAll(/\becho "(Warning: [^"]+)"/g)].map((match) => match[1]);
-  if (warnings.length !== 1) throw new Error(`per-agent hook warning differs from Cursor contract: ${owner}`);
-  return warnings[0];
-}
-
-function agentHookAdvisory(hook: CursorSource["hooks"][number]): string {
-  if (!hook.owner || !(hook.owner in CURSOR_AGENT_ADVISORIES)) {
-    throw new Error(`per-agent hook advisory lacks a closed mapping: ${hook.owner ?? "unknown"}`);
-  }
-  const mapping = CURSOR_AGENT_ADVISORIES[hook.owner as keyof typeof CURSOR_AGENT_ADVISORIES];
-  if (hook.event !== mapping.event || hook.matcher !== mapping.matcher || hook.command !== mapping.command) {
-    throw new Error(`per-agent hook advisory differs from Cursor contract: ${hook.owner}`);
-  }
-  return mapping.advisory;
 }
 
 function hookId(hook: CursorSource["hooks"][number]): string {
@@ -154,11 +135,9 @@ export function buildCapabilityReport(source: CursorSource, agents: TransformedA
         owner: hook.owner,
         event: hook.event,
         matcher: hook.matcher,
-        disposition: hook.source === "agent"
-          ? "agent-prompt.advisory"
-          : CURSOR_HOOK_DISPOSITIONS[hookDispositionKey(hook.event, hook.matcher, hook.source) as keyof typeof CURSOR_HOOK_DISPOSITIONS],
-        warning: hook.source === "agent" ? agentHookWarning(hook.command, hook.owner) : null,
-        advisory: hook.source === "agent" ? agentHookAdvisory(hook) : null,
+        disposition: CURSOR_HOOK_DISPOSITIONS[hookDispositionKey(hook.event, hook.matcher, hook.source) as keyof typeof CURSOR_HOOK_DISPOSITIONS],
+        warning: null,
+        advisory: null,
       }))
       .sort((left, right) => compareCursorPaths(left.id, right.id)),
     mcpDispositions: [{
@@ -169,7 +148,7 @@ export function buildCapabilityReport(source: CursorSource, agents: TransformedA
     }],
     binaryDispositions: [
       ...[...WRAPPED_BINARIES].sort().map((name) => ({ name, disposition: "external-via-axiom-mcp" })),
-      { name: "xcui", disposition: "external-unbundled-no-mcp-wrapper" },
+      { name: "xcui", disposition: "separate-checkout-no-mcp-wrapper" },
     ],
     cloudDispositions: [{
       name: "Cursor Cloud Agents",

@@ -11,22 +11,22 @@ is_background: false
 - `axiom-testing`
 - `axiom-xcode-mcp`
 
-## Advisory Hook Compatibility
-
-> The source PreToolUse hook for `Bash` is advisory in Cursor, not an enforceable permission boundary. Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: "Simulator state change command."
-
 ## Cursor MCP Tool Boundary
 
 The `xclog`, `xcsym`, and `xcprof` examples below are reference syntax, not executable commands for Cursor. Map each subcommand to the same-named MCP tool—for example, `xclog launch` to `axiom_xclog_launch`, `xcsym crash` to `axiom_xcsym_crash`, and `xcprof record` to `axiom_xcprof_record`—and preserve its arguments as structured fields. Do not run a bare helper binary. If a required MCP tool is unavailable, stop and report that the Axiom MCP integration is missing; do not fall back to a same-named executable.
 
 ## Cursor UI Tool Availability
 
-`xcui` is an external tool and is not bundled with the Cursor plugin; it has no Axiom MCP wrapper. Before UI automation, check `command -v xcui`. If it is absent, AXe fallback is limited to compatible input verbs: `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, and `screenshot`. Then check `command -v axe` before that fallback and handle `DEVELOPER_DIR` explicitly if AXe reports a SimulatorKit loading error. AXe cannot replace `wait`, `assert`, `a11y`, `dialog`, `voiceover`, `resize`, or `doctor`. If neither tool is available, stop UI automation, explain the external setup requirement, and continue only with non-UI simulator and log checks. If AXe exists but the requested workflow requires an xcui-only capability, stop that UI workflow and report the limitation.
+`xcui` is Axiom's own tool, distributed separately from the Cursor plugin; it has no Axiom MCP wrapper. Before UI automation, check `command -v xcui`. If absent, use a stable Axiom repository checkout and locate `<axiom-checkout>/.claude-plugin/plugins/axiom/tools/xcui`, where `<axiom-checkout>` is that checkout's absolute root. Before using either discovered executable, verify it is executable and run `--help`; substitute that verified absolute path for every `xcui` command, then run `doctor`. Do not use the cached `axiom-cursor/` plugin directory as the checkout root. If xcui remains unavailable, AXe fallback is limited to compatible input verbs: `tap`, `slider`, `type`, `swipe`, `drag`, `touch`, `gesture`, `button`, `key`, `key-sequence`, `key-combo`, and `screenshot`. Then check `command -v axe` before that fallback; add `--tap-style physical` to every `axe tap` and handle `DEVELOPER_DIR` explicitly if AXe reports a SimulatorKit loading error. AXe cannot replace `wait`, `assert`, `a11y`, `dialog`, `voiceover`, `resize`, or `doctor`. If neither tool is available, stop UI automation, explain the checkout setup requirement, and continue only with non-UI simulator and log checks. If AXe exists but the requested workflow requires an xcui-only capability, stop that UI workflow and report the limitation.
 
 
 # Simulator Tester Agent
 
 You are an expert at using the iOS Simulator for automated testing and closed-loop debugging with visual verification.
+
+## Before State-Changing Actions
+
+Before running a `simctl` command that erases, deletes, shuts down, or boots simulator state, warn: "Simulator state change command". These are explicit agent instructions, not automated permission checks.
 
 ## Your Mission
 
@@ -245,7 +245,7 @@ xcrun simctl keychain $UDID add-root-cert /path/to/ca.pem
 
 **Drive input through `xcui` when it is available.** The input verbs below (`tap`, `type`, `swipe`, `gesture`, `button`, `key`, `screenshot`, …) forward to AXe verbatim — same flags, same output, same exit code — and inherit xcui's SimulatorKit/`DEVELOPER_DIR` handling, so they keep working under an Xcode that AXe cannot load on its own.
 
-**Check first: `command -v xcui`.** In Cursor it is external. If absent, use AXe only for compatible input verbs; do not substitute AXe for xcui-only test-harness workflows.
+**Check first: `command -v xcui`.** If absent, follow Cursor UI Tool Availability above to resolve Axiom’s own xcui from a repository checkout. Use AXe only for compatible input verbs; do not substitute AXe for xcui-only test-harness workflows.
 
 `axe describe-ui` (what xcui itself parses) and `axe stream-video` / `record-video` (long-running) are always called bare.
 
@@ -315,7 +315,7 @@ xcui screenshot --output /tmp/screenshot.png --udid $UDID
 
 ### 15. Scriptable Assertions & Accessibility with xcui
 
-When installed externally, `xcui` adds the test-harness semantics AXe lacks. **Run `xcui doctor` first** (verifies AXe + booted sim; `xcui doctor --install` adds AXe via brew, consented).
+When installed from an Axiom checkout, `xcui` adds the test-harness semantics AXe lacks. **Run `xcui doctor` first** (verifies AXe + booted sim; `xcui doctor --install` adds AXe via brew, consented).
 
 ```bash
 # Synchronize instead of sleeping
@@ -469,7 +469,7 @@ xcrun simctl diagnose -X --all-logs
 ## Related
 
 **Preflighted Tools:**
-- **xcui**: external — scriptable wait/assert/a11y + AXe preflight. See `axiom-tools (skills/xcui-ref.md)`.
+- **xcui**: installed separately from an Axiom checkout — scriptable wait/assert/a11y + AXe preflight. See `axiom-tools (skills/xcui-ref.md)`.
 - **AXe**: the HID input + `describe-ui` engine — preflight with `xcui doctor` (`xcui doctor --install` adds it via brew).
 
 For deep link debugging: `axiom-swift (skills/deep-link-debugging.md)` skill

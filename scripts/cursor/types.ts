@@ -114,7 +114,7 @@ export interface CapabilityReport {
   }>;
   binaryDispositions: Array<{
     name: "xclog" | "xcprof" | "xcsym" | "xcui";
-    disposition: "external-via-axiom-mcp" | "external-unbundled-no-mcp-wrapper";
+    disposition: "external-via-axiom-mcp" | "separate-checkout-no-mcp-wrapper";
   }>;
   cloudDispositions: Array<{
     name: "Cursor Cloud Agents";

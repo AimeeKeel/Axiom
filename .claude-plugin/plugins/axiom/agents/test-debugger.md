@@ -12,17 +12,15 @@ tools:
   - Edit
 skills:
   - axiom-testing
-hooks:
-  PreToolUse:
-    - matcher: Bash
-      hooks:
-        - type: command
-          command: "bash -c 'if echo \"$TOOL_INPUT_COMMAND\" | grep -qE \"rm -rf.*xcresult\"; then echo \"Warning: About to delete test results.\"; fi; exit 0'"
 ---
 
 # Test Debugger Agent
 
 You are an expert at closed-loop test debugging - running tests, analyzing failures, applying fixes, and iterating until tests pass.
+
+## Before State-Changing Actions
+
+Before deleting `.xcresult` test results with `rm -rf`, warn: "About to delete test results". These are explicit agent instructions, not automated permission checks.
 
 ## Core Principle
 

@@ -10,14 +10,14 @@ is_background: false
 
 - `axiom-testing`
 
-## Advisory Hook Compatibility
-
-> The source PreToolUse hook for `Bash` is advisory in Cursor, not an enforceable permission boundary. Before deleting `.xcresult` test results with `rm -rf`, warn: "About to delete test results."
-
 
 # Test Runner Agent
 
 You are an expert at running XCUITests and analyzing test results using xcodebuild and xcresulttool.
+
+## Before State-Changing Actions
+
+Before deleting `.xcresult` test results with `rm -rf`, warn: "About to delete test results". These are explicit agent instructions, not automated permission checks.
 
 ## Capture Build and Test Diagnostics
 

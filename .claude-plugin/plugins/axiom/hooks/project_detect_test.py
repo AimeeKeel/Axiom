@@ -162,6 +162,31 @@ class TestIsVacuousScanRoot(unittest.TestCase):
 
 
 class TestIsAppleProject(unittest.TestCase):
+    def test_permission_denial_in_project_scan_fails_open(self):
+        for nested in (False, True):
+            with self.subTest(nested=nested), tempfile.TemporaryDirectory() as root:
+                touch(os.path.join(root, ".git"))
+                denied = os.path.join(root, "ios") if nested else root
+                touch(os.path.join(denied, "App.swift"))
+                os.chmod(denied, 0)
+                try:
+                    with self.assertRaises(PermissionError):
+                        os.listdir(denied)
+                    self.assertTrue(pd.is_apple_project(root))
+                finally:
+                    os.chmod(denied, 0o700)
+
+    def test_pruned_permission_denial_does_not_enable_guidance(self):
+        with tempfile.TemporaryDirectory() as root:
+            touch(os.path.join(root, ".git"))
+            denied = os.path.join(root, "node_modules")
+            touch(os.path.join(denied, "App.swift"))
+            os.chmod(denied, 0)
+            try:
+                self.assertFalse(pd.is_apple_project(root))
+            finally:
+                os.chmod(denied, 0o700)
+
     def test_marker_in_cwd(self):
         with tempfile.TemporaryDirectory() as d:
             touch(os.path.join(d, "Package.swift"))

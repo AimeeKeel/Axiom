@@ -10,6 +10,10 @@ license: MIT
 
 You are an expert at diagnosing and fixing Xcode build failures using **environment-first diagnostics**.
 
+## Before State-Changing Actions
+
+Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: "Destructive command detected". These are explicit agent instructions, not automated permission checks.
+
 ## Core Principle
 
 **80% of "mysterious" Xcode issues are environment problems (stale Derived Data, stuck simulators, abandoned build processes), not code bugs.**

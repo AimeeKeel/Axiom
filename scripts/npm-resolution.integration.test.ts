@@ -1,11 +1,74 @@
 import { describe, it } from "node:test";
-import { spawnSync } from "node:child_process";
+import type { TestContext } from "node:test";
+import childProcess, { spawnSync } from "node:child_process";
 import assert from "node:assert/strict";
+import { once } from "node:events";
 import { chmod, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { setTimeout as delay } from "node:timers/promises";
+import { syncBuiltinESMExports } from "node:module";
+import timers, { setTimeout as namedSetTimeout } from "node:timers";
+import timerPromises, { setImmediate as nextTurn, setTimeout as delay } from "node:timers/promises";
 import { npmInstallEnvironment, runNpmDryRun } from "./npm-resolution.ts";
+
+const nativeSetTimeout = globalThis.setTimeout;
+
+function startNpmDryRun(t: TestContext, cwd: string, timeoutMs: number) {
+  const realDelay = timerPromises.setTimeout;
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  // Cleanup retries use real time; only the operation deadline is controlled.
+  timerPromises.setTimeout = realDelay;
+  const realSpawn = childProcess.spawn;
+  let child: ReturnType<typeof realSpawn> | undefined;
+  const observedSpawn = t.mock.method(childProcess, "spawn", (...args: Parameters<typeof realSpawn>) => {
+    child = realSpawn(...args);
+    return child;
+  });
+  syncBuiltinESMExports();
+  try {
+    let settled = false;
+    const result = runNpmDryRun(cwd, {
+      timeoutMs,
+      env: { ...process.env, PATH: cwd },
+    }).finally(() => { settled = true; });
+    assert.ok(child);
+    return { child, result, get settled() { return settled; } };
+  } finally {
+    observedSpawn.mock.restore();
+    syncBuiltinESMExports();
+  }
+}
+
+async function stopNpmFixture(
+  t: TestContext,
+  cwd: string,
+  child: ReturnType<typeof childProcess.spawn> | undefined,
+) {
+  t.mock.timers.reset();
+  syncBuiltinESMExports();
+  if (child?.pid) {
+    try {
+      process.kill(-child.pid, "SIGKILL");
+    } catch (error) {
+      assert.equal((error as NodeJS.ErrnoException).code, "ESRCH");
+    }
+  }
+  let pids: number[];
+  try {
+    pids = JSON.parse(await readFile(join(cwd, "fixture-pids"), "utf8"));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    pids = [];
+  }
+  for (const pid of pids) {
+    try {
+      process.kill(pid, "SIGKILL");
+    } catch (error) {
+      assert.equal((error as NodeJS.ErrnoException).code, "ESRCH");
+    }
+  }
+  await rm(cwd, { recursive: true });
+}
 
 describe("npmInstallEnvironment", () => {
   it("allows a real fresh npm ci under an inherited npm run environment", async () => {
@@ -55,104 +118,135 @@ describe("npmInstallEnvironment", () => {
 });
 
 describe("runNpmDryRun", () => {
-  it("stops a TERM-resistant npm process and its descendant at the deadline", async () => {
+  it("stops a TERM-resistant npm process and its descendant at the deadline", { timeout: 10_000 }, async (t) => {
     const directory = await mkdtemp(join(tmpdir(), "axiom npm deadline "));
     const timeoutMs = 500;
     const maximumElapsedMs = 2000;
     let pids: number[] = [];
-    try {
-      const executable = join(directory, "npm");
-      await writeFile(
-        executable,
-        `#!${process.execPath}\nconst {spawn}=require('node:child_process');\nprocess.on('SIGTERM',()=>{});\nconst child=spawn(process.execPath,['-e',"process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(),4000);setInterval(()=>{},100)"],{stdio:'inherit'});\nconsole.log(JSON.stringify([process.pid,child.pid]));\nsetTimeout(()=>process.exit(),4000);setInterval(()=>{},100);\n`,
-      );
-      await chmod(executable, 0o755);
-      const start = performance.now();
-      const result = await runNpmDryRun(directory, {
-        timeoutMs,
-        env: { ...process.env, PATH: directory },
-      });
-      assert.deepEqual(
-        {
-          timedOut: result.timedOut,
-          errorCode: result.errorCode,
-          status: result.status,
-        },
-        { timedOut: true, errorCode: "ETIMEDOUT", status: null },
-      );
-      pids = JSON.parse(result.stdout.trim());
-      assert.ok(performance.now() - start < maximumElapsedMs);
-      for (const pid of pids) {
-        let alive = true;
-        for (let attempt = 0; attempt < 20 && alive; attempt++) {
-          try {
-            process.kill(pid, 0);
-            await delay(25);
-          } catch (error) {
-            assert.equal((error as NodeJS.ErrnoException).code, "ESRCH");
-            alive = false;
-          }
-        }
-        assert.equal(
-          alive,
-          false,
-          `owned process ${pid} survived the deadline`,
-        );
-      }
-    } finally {
-      for (const pid of pids) {
+    let running: ReturnType<typeof startNpmDryRun> | undefined;
+    t.after(() => stopNpmFixture(t, directory, running?.child));
+    const executable = join(directory, "npm");
+    // Ignored TERM is inherited by sleep, so both processes resist it from startup.
+    await writeFile(
+      executable,
+      `#!/bin/sh\ntrap '' TERM\n/bin/sleep 30 &\nprintf '[%s,%s]\\n' "$$" "$!" > fixture-pids\nprintf '[%s,%s]\\n' "$$" "$!"\nwait\n`,
+    );
+    await chmod(executable, 0o755);
+    running = startNpmDryRun(t, directory, timeoutMs);
+    await once(running.child.stdout!, "data", { signal: t.signal });
+    const start = performance.now();
+    t.mock.timers.tick(timeoutMs - 1);
+    await nextTurn();
+    assert.equal(running.settled, false);
+    t.mock.timers.tick(1);
+    const result = await running.result;
+    t.mock.timers.reset();
+    syncBuiltinESMExports();
+    assert.deepEqual(
+      {
+        timedOut: result.timedOut,
+        errorCode: result.errorCode,
+        status: result.status,
+      },
+      { timedOut: true, errorCode: "ETIMEDOUT", status: null },
+    );
+    pids = JSON.parse(result.stdout.trim());
+    assert.ok(performance.now() - start < maximumElapsedMs);
+    for (const pid of pids) {
+      let alive = true;
+      for (let attempt = 0; attempt < 20 && alive; attempt++) {
         try {
-          process.kill(pid, "SIGKILL");
+          process.kill(pid, 0);
+          await delay(25);
         } catch (error) {
           assert.equal((error as NodeJS.ErrnoException).code, "ESRCH");
+          alive = false;
         }
       }
-      await rm(directory, { recursive: true });
+      assert.equal(
+        alive,
+        false,
+        `owned process ${pid} survived the deadline`,
+      );
     }
   });
 
-  for (const detached of [false, true]) {
-    it(`preserves leader success and bounds pipe draining with a ${detached ? "detached" : "same-group"} descendant`, async () => {
+  for (const { detached, startupDelayMs } of [
+    { detached: false, startupDelayMs: 0 },
+    { detached: true, startupDelayMs: 0 },
+    { detached: true, startupDelayMs: 600 },
+  ]) {
+    it(`preserves leader success and bounds pipe draining with a ${detached ? "detached" : "same-group"} descendant${startupDelayMs ? " after slow launcher startup" : ""}`, { timeout: 10_000 }, async (t) => {
       const directory = await mkdtemp(join(tmpdir(), "axiom npm leader "));
       let pids: number[] = [];
-      try {
-        const executable = join(directory, "npm");
-        await writeFile(
-          executable,
-          `#!${process.execPath}\nconst {spawn}=require('node:child_process');\nconst child=spawn(process.execPath,['-e',"setTimeout(()=>process.exit(),1500);setInterval(()=>{},100)"],{stdio:'inherit',detached:${detached}});\nconsole.log(JSON.stringify([process.pid,child.pid]));process.exit(0);\n`,
-        );
-        await chmod(executable, 0o755);
-        const start = performance.now();
-        const result = await runNpmDryRun(directory, {
-          timeoutMs: 300,
-          env: { ...process.env, PATH: directory },
-        });
-        pids = JSON.parse(result.stdout.trim());
-        assert.deepEqual(
-          {
-            status: result.status,
-            timedOut: result.timedOut,
-            errorCode: result.errorCode,
-          },
-          { status: 0, timedOut: false, errorCode: undefined },
-        );
-        assert.ok(performance.now() - start < 1000);
-        if (!detached) {
-          await delay(100);
-          assert.throws(() => process.kill(pids[1], 0), { code: "ESRCH" });
-        }
-      } finally {
-        for (const pid of pids) {
-          try {
-            process.kill(pid, "SIGKILL");
-          } catch (error) {
-            assert.equal((error as NodeJS.ErrnoException).code, "ESRCH");
-          }
-        }
-        await rm(directory, { recursive: true });
+      let running: ReturnType<typeof startNpmDryRun> | undefined;
+      t.after(() => stopNpmFixture(t, directory, running?.child));
+      const executable = join(directory, "npm");
+      // Job control puts the detached descendant in its own process group.
+      await writeFile(
+        executable,
+        `#!/bin/sh\n${startupDelayMs ? `/bin/sleep ${startupDelayMs / 1000}\n` : ""}${detached ? "set -m\n" : ""}/bin/sleep 30 &\nprintf '[%s,%s]\\n' "$$" "$!" > fixture-pids\nprintf '[%s,%s]\\n' "$$" "$!"\nexit 0\n`,
+      );
+      await chmod(executable, 0o755);
+      const timeoutMs = 300;
+      running = startNpmDryRun(t, directory, timeoutMs);
+      const [[status]] = await Promise.all([
+        once(running.child, "exit", { signal: t.signal }),
+        once(running.child.stdout!, "data", { signal: t.signal }),
+      ]);
+      assert.equal(status, 0);
+      const start = performance.now();
+      t.mock.timers.tick(timeoutMs - 1);
+      await nextTurn();
+      if (detached) assert.equal(running.settled, false);
+      t.mock.timers.tick(1);
+      const result = await running.result;
+      t.mock.timers.reset();
+      syncBuiltinESMExports();
+      assert.deepEqual(
+        {
+          status: result.status,
+          timedOut: result.timedOut,
+          errorCode: result.errorCode,
+        },
+        { status: 0, timedOut: false, errorCode: undefined },
+        JSON.stringify(result),
+      );
+      pids = JSON.parse(result.stdout.trim());
+      assert.ok(performance.now() - start < 1000);
+      if (detached) {
+        assert.doesNotThrow(() => process.kill(pids[1], 0));
+      } else {
+        await delay(100);
+        assert.throws(() => process.kill(pids[1], 0), { code: "ESRCH" });
       }
     });
   }
+
+  it("restores global, module and named timer exports after a controlled fixture", { timeout: 10_000 }, async (t) => {
+    const directory = await mkdtemp(join(tmpdir(), "axiom npm timer restore "));
+    let running: ReturnType<typeof startNpmDryRun> | undefined;
+    t.after(async () => {
+      await stopNpmFixture(t, directory, running?.child);
+      assert.deepEqual(
+        {
+          global: globalThis.setTimeout,
+          module: timers.setTimeout,
+          named: namedSetTimeout,
+        },
+        {
+          global: nativeSetTimeout,
+          module: nativeSetTimeout,
+          named: nativeSetTimeout,
+        },
+      );
+    });
+    const executable = join(directory, "npm");
+    await writeFile(executable, "#!/bin/sh\nexit 0\n");
+    await chmod(executable, 0o755);
+    running = startNpmDryRun(t, directory, 300);
+    await running.result;
+  });
 
   // Darwin's kill(-pgid) answers EPERM while every remaining member is an unreaped
   // zombie. The fake npm leaves exactly that: a helper forks a child that exits at

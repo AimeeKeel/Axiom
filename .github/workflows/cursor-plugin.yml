@@ -1,35 +1,21 @@
 name: Cursor Plugin
 
+# Hosted tests are manual-only to keep GitHub usage under owner control.
+# Full validation remains available locally before release.
 on:
-  pull_request:
-    paths:
-      - '.claude-plugin/plugins/axiom/**'
-      - 'scripts/cursor/**'
-      - 'scripts/build-cursor.ts'
-      - 'scripts/inline-auditors.ts'
-      # The Cursor build renders MCP-only notes and derives its tool maps from these.
-      - 'axiom-mcp/src/tools/mcp-notes.ts'
-      - 'axiom-mcp/src/tools/binaries.ts'
-      - '.cursor-plugin/**'
-      - 'axiom-cursor/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'README.md'
-      - 'CURSOR-MARKETPLACE-SUBMISSION.md'
-      - 'docs/**'
-      - '.github/workflows/cursor-plugin.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

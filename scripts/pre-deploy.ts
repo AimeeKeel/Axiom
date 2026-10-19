@@ -105,7 +105,6 @@ import { findIgnoredAuthoredFiles, resolvePluginBin } from "./plugin-layout.ts";
 import { renderCursorDistribution } from "./cursor/render.ts";
 import { compareCursorPaths } from "./cursor/compare.ts";
 import { validateCursorInventory } from "./cursor/inventory.ts";
-import { CURSOR_AGENT_ADVISORIES } from "./cursor/agents.ts";
 
 const root = path.resolve(import.meta.dirname!, "..");
 const pluginDir = path.join(root, ".claude-plugin/plugins/axiom");
@@ -3077,17 +3076,6 @@ heading("12r. Cursor Generated Distribution");
     const agentRows = Array.isArray(disposition.agentDispositions) ? disposition.agentDispositions : [];
     const commandRows = Array.isArray(disposition.commandDispositions) ? disposition.commandDispositions : [];
     const hookRows = Array.isArray(disposition.hookDispositions) ? disposition.hookDispositions : [];
-    const advisoryEntries = Object.entries(CURSOR_AGENT_ADVISORIES);
-    const expectedHookWarnings: Record<string, string> = Object.fromEntries(
-      advisoryEntries.map(([owner, mapping]) => {
-        const warnings = [...mapping.command.matchAll(/\becho "(Warning: [^"]+)"/g)].map((match) => match[1]);
-        if (warnings.length !== 1) throw new Error(`per-agent advisory lacks exactly one warning: ${owner}`);
-        return [`agent:${owner}:${mapping.event}:${mapping.matcher}`, warnings[0]];
-      }),
-    );
-    const expectedHookAdvisories: Record<string, string> = Object.fromEntries(
-      advisoryEntries.map(([owner, mapping]) => [`agent:${owner}:${mapping.event}:${mapping.matcher}`, mapping.advisory]),
-    );
     const expectedGlobalHookIds = [
       "global:global:PostToolUse:Bash",
       "global:global:PostToolUse:Write|Edit",
@@ -3106,7 +3094,7 @@ heading("12r. Cursor Generated Distribution");
       && exactStrings(agentNames, canonicalAgents)
       && exactStrings(commandNames, canonicalCommands.map((name) => `axiom-${name}`))
       && exactStrings(disposition.authorityExpansions.map((row: { agent?: unknown }) => row.agent), canonicalAgents)
-      && Object.keys(disposition.dispositions ?? {}).length === 7
+      && Object.keys(disposition.dispositions ?? {}).length === 6
       && exactStrings(routerRows.map((row: { name?: unknown }) => row.name), canonicalRouters)
       && routerRows.every((row: { disposition?: unknown; listedInCanonicalManifest?: unknown }) =>
         row.disposition === "generated-native-skill" && typeof row.listedInCanonicalManifest === "boolean")
@@ -3124,17 +3112,16 @@ heading("12r. Cursor Generated Distribution");
       && exactStrings(commandRows.map((row: { generatedName?: unknown }) => row.generatedName), canonicalCommands.map((name) => `axiom-${name}`))
       && exactStrings(commandRows.map((row: { canonicalName?: unknown }) => row.canonicalName), canonicalCommands)
       && commandRows.every((row: { disposition?: unknown }) => row.disposition === "generated-native-command")
-      && exactStrings(hookRows.map((row: { id?: unknown }) => row.id), [...expectedGlobalHookIds, ...Object.keys(expectedHookWarnings)])
-      && hookRows.filter((row: { source?: unknown }) => row.source === "agent").every((row: { id: string; disposition?: unknown; warning?: unknown; advisory?: unknown }) =>
-        row.disposition === "agent-prompt.advisory"
-        && row.warning === expectedHookWarnings[row.id]
-        && row.advisory === expectedHookAdvisories[row.id])
+      && disposition.perAgentHooks === 0
+      && exactStrings(hookRows.map((row: { id?: unknown }) => row.id), expectedGlobalHookIds)
+      && hookRows.every((row: { source?: unknown; owner?: unknown; warning?: unknown; advisory?: unknown }) =>
+        row.source === "global" && row.owner === null && row.warning === null && row.advisory === null)
       && JSON.stringify(disposition.mcpDispositions) === JSON.stringify([{ name: "axiom", disposition: "external-runtime-mcp", command: "npx -y axiom-mcp", bundled: false }])
       && JSON.stringify(disposition.binaryDispositions) === JSON.stringify([
         { name: "xclog", disposition: "external-via-axiom-mcp" },
         { name: "xcprof", disposition: "external-via-axiom-mcp" },
         { name: "xcsym", disposition: "external-via-axiom-mcp" },
-        { name: "xcui", disposition: "external-unbundled-no-mcp-wrapper" },
+        { name: "xcui", disposition: "separate-checkout-no-mcp-wrapper" },
       ])
       && JSON.stringify(disposition.cloudDispositions) === JSON.stringify([{ name: "Cursor Cloud Agents", disposition: "unsupported" }]);
     if (!capabilityOkay) {

@@ -11,17 +11,15 @@ tools:
   - Glob
 skills:
   - axiom-build
-hooks:
-  PreToolUse:
-    - matcher: Bash
-      hooks:
-        - type: command
-          command: "bash -c 'if echo \"$TOOL_INPUT_COMMAND\" | grep -qE \"killall|rm -rf.*DerivedData|xcrun simctl erase\"; then echo \"Warning: Destructive command detected.\"; fi; exit 0'"
 ---
 
 # Build Fixer Agent
 
 You are an expert at diagnosing and fixing Xcode build failures using **environment-first diagnostics**.
+
+## Before State-Changing Actions
+
+Before running a shell command containing `killall`, deleting DerivedData with `rm -rf`, or erasing a simulator with `xcrun simctl erase`, warn: "Destructive command detected". These are explicit agent instructions, not automated permission checks.
 
 ## Core Principle
 

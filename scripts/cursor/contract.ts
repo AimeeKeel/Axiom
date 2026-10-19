@@ -15,7 +15,7 @@
 export const CURSOR_HOOK_EXPECTATIONS = Object.freeze({
   globalHookEventTypes: 5,
   globalHookEntries: 6,
-  perAgentHooks: 6,
+  perAgentHooks: 0,
 });
 
 export const CURSOR_INJECTED_ROUTER = "axiom-tools";
@@ -76,7 +76,6 @@ export const CURSOR_ALLOWED_AGENT_FIELDS = new Set([
   "color",
   "tools",
   "skills",
-  "hooks",
   "mcp",
   "exempt-from-routing",
 ]);
@@ -88,7 +87,6 @@ export const CURSOR_HOOK_DISPOSITIONS = Object.freeze({
   "PostToolUse(Bash)": "postToolUse.additional_context",
   "PostToolUse(Write|Edit)": "postToolUse.additional_context",
   SubagentStart: "subagentStart.additional_context",
-  "per-agent PreToolUse": "advisory",
 });
 
 export type AgentToolClass = "readonly" | "writable";

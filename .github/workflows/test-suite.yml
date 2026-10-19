@@ -1,82 +1,21 @@
 name: Test Suite
 
-# The paths filters below mirror what the three steps actually READ. That is wider
-# than it looks: `node scripts/leak-scan.ts` walks the scanner's SURFACES plus
-# ROOT_FILES in scripts/leak-scan.ts, the unit suite covers scripts/ and tools/,
-# the scanner's surfaces include axiom-pi/ and axiom-mcp/ (their own suites run
-# separately), and the Python hook suites read the plugin's hooks/. A filter
-# listing only the plugin would start no CI for a PR that adds a home path to
-# README.md or a UUID to axiom-codex/ — which is exactly the case this job
-# exists to catch. A test in scripts/leak-scan.test.ts
-# fails if the filter and the scanner's surfaces drift apart.
-#
-# Written out per event rather than shared with a YAML anchor: a workflow that
-# fails to parse runs nothing, silently, which is the failure mode this job is for.
-
+# Hosted tests are manual-only to keep GitHub usage under owner control.
+# Full validation remains available locally before release.
 on:
-  pull_request:
-    paths:
-      - '.claude-plugin/**'
-      - '.cursor-plugin/**'
-      - '.agents/**'
-      - 'axiom-codex/**'
-      - 'axiom-cursor/**'
-      - 'axiom-pi/**'
-      - 'axiom-mcp/**'
-      - 'docs/**'
-      - 'tools/**'
-      - 'scripts/**'
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - 'LICENSE'
-      - 'marketplace.json'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'MARKETPLACE-SUBMISSION.md'
-      - 'CURSOR-MARKETPLACE-SUBMISSION.md'
-      - 'SUBMISSION-STATUS.md'
-      - '.github/**'
-      - '.gitattributes'
-      - '.gitignore'
-      - '.mise.toml'
-  push:
-    branches: [main]
-    paths:
-      - '.claude-plugin/**'
-      - '.cursor-plugin/**'
-      - '.agents/**'
-      - 'axiom-codex/**'
-      - 'axiom-cursor/**'
-      - 'axiom-pi/**'
-      - 'axiom-mcp/**'
-      - 'docs/**'
-      - 'tools/**'
-      - 'scripts/**'
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - 'LICENSE'
-      - 'marketplace.json'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'MARKETPLACE-SUBMISSION.md'
-      - 'CURSOR-MARKETPLACE-SUBMISSION.md'
-      - 'SUBMISSION-STATUS.md'
-      - '.github/**'
-      - '.gitattributes'
-      - '.gitignore'
-      - '.mise.toml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -89,23 +28,12 @@ jobs:
 
       - run: npm ci
 
-      # One definition, shared with a maintainer's machine: `npm run check:ci` is
-      # the unit suite, the Python hook suites, and the content gate. Before it
-      # existed the two gates were written twice and checked different things, so
-      # "green locally" was not evidence about CI — a manifest drift that this
-      # job caught took four red runs to surface, because the obvious local
-      # command was a strict subset.
-      #
-      # The unit suite carries the version-parity gate, the generated-marker
-      # rules, the docs conventions and the leak scanner's own rules. The hook
-      # suites run the plugin's Python unittest files through the same runner
-      # pre-deploy uses (`scripts/hook-suites.ts`), including session-start's
-      # worst-case hook-context size test. The content gate lives in a pre-commit
-      # hook and inside pre-deploy, so it does not run on a fresh clone or for
-      # anyone committing with --no-verify; this is the backstop for that.
-      # (leak-scan is TypeScript, stripped natively by Node 24.)
-      #
-      # Deliberately NOT `npm run test` (pre-deploy --static). Its first check
-      # shells out to `claude plugin validate` and treats ANY failure — including
-      # the CLI being absent — as a gate failure, so it cannot run here yet.
+      - name: Install locked MCP test dependencies
+        run: |
+          npm install --global pnpm@12.10.1
+          pnpm --dir axiom-mcp install --frozen-lockfile --allow-build=esbuild
+
+      # The same command runs locally and in a manually requested hosted run.
+      # MCP reference/tool tests are part of this gate, alongside root and hook
+      # tests and the content scan. No artifacts or dependency caches are uploaded.
       - run: npm run check:ci
