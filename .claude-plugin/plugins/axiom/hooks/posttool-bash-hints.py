@@ -315,7 +315,10 @@ def _command_groups(command: str, depth: int = 0, allow_incomplete: bool = False
                 while words and words[0].startswith("-"):
                     option, words = words[0], words[1:]
                     lookup |= ((prefix == "xcrun" and option in {"--find", "-f"})
-                               or (prefix == "command" and option in {"-v", "-V"}))
+                               or (prefix == "command" and option in {"-v", "-V"})
+                               or (prefix == "env" and ((option.startswith("-")
+                                   and not option.startswith("--") and "S" in option)
+                                   or option.split("=", 1)[0] == "--split-string")))
                     if words and option in option_arguments[prefix]:
                         words = words[1:]
                 if lookup:
@@ -330,7 +333,7 @@ def _command_groups(command: str, depth: int = 0, allow_incomplete: bool = False
                 nested = _command_groups(words[index + 1], depth + 1, allow_incomplete)
                 if nested is None:
                     return None
-                expanded.extend(CommandGroup(group.words, group.pipeline,
+                expanded.extend(CommandGroup(group.words, group.pipeline or pipeline,
                                              group.executes_expansion or executes_expansion)
                                 for group in nested)
                 continue
@@ -361,13 +364,126 @@ def _documentation_operand(word: str) -> bool:
             or any(part in directories for part in parts))
 
 
+def _is_awk_inspection(words: list[str]) -> bool:
+    arguments = iter(words[1:])
+    for word in arguments:
+        if word in {"-F", "-v"}:
+            if next(arguments, None) is None:
+                return False
+        elif word == "--":
+            word = next(arguments, "")
+            break
+        elif word.startswith(("-F", "-v")):
+            continue
+        elif word.startswith("-"):
+            return False
+        else:
+            break
+    else:
+        return False
+    selector = r"(?:NR|FNR)\s*(?:==|!=|<=|>=|<|>)\s*[0-9]+"
+    return (re.fullmatch(
+        rf"\s*(?:{selector}(?:\s*(?:&&|\|\|)\s*{selector})*\s*)?"
+        r"\{\s*print(?:\s+\$[0-9]+(?:\s*,\s*\$[0-9]+)*)?\s*;?\s*\}\s*",
+        word,
+    ) is not None and all(not arg.startswith("-") or arg == "-" for arg in arguments))
+
+
+def _is_sed_inspection(words: list[str]) -> bool:
+    arguments = iter(words[1:])
+    programs = []
+    for word in arguments:
+        if word in {"-n", "--quiet", "--silent"}:
+            continue
+        if word in {"-e", "--expression"}:
+            programs.append(next(arguments, ""))
+        elif word.startswith("--expression="):
+            programs.append(word.split("=", 1)[1])
+        elif word.startswith("-e"):
+            programs.append(word[2:])
+        elif word.startswith("-"):
+            return False
+        elif not programs:
+            programs.append(word)
+        elif not _documentation_operand(word):
+            return False
+    return bool(programs) and all(re.fullmatch(
+        r"\s*(?:(?:[0-9]+|\$)(?:\s*,\s*(?:[0-9]+|\$))?\s*)?p\s*"
+        r"(?:;\s*(?:(?:[0-9]+|\$)(?:\s*,\s*(?:[0-9]+|\$))?\s*)?p\s*)*;?\s*",
+        program,
+    ) is not None for program in programs)
+
+
+def _is_git_inspection(words: list[str]) -> bool:
+    arguments = iter(words[1:])
+    monitor_disabled = False
+    for word in arguments:
+        if word in {"-C", "--git-dir", "--work-tree"}:
+            if next(arguments, None) is None:
+                return False
+        elif word == "-c":
+            if next(arguments, None) != "core.fsmonitor=false":
+                return False
+            monitor_disabled = True
+        elif word in {"--no-pager", "--no-optional-locks", "--literal-pathspecs"}:
+            continue
+        elif word.startswith(("--git-dir=", "--work-tree=")):
+            continue
+        elif word.startswith("-"):
+            return False
+        else:
+            break
+    else:
+        return False
+    subcommand = word
+    if subcommand not in {"diff", "show", "status", "log", "blame", "grep", "ls-files", "ls-tree"}:
+        return False
+    inspection_options = {
+        "--no-ext-diff", "--no-textconv", "--stat", "--numstat", "--shortstat",
+        "--name-only", "--name-status", "--check", "--raw", "--patch", "-p",
+        "--no-patch", "-s", "--cached", "--staged", "--short", "--porcelain",
+        "--porcelain=v1", "--porcelain=v2", "--branch", "-b", "--oneline",
+        "--no-decorate", "--decorate", "--all", "--no-color", "--color=never",
+        "--no-renames", "--no-show-signature",
+    }
+    options = set()
+    operands = []
+    for argument in arguments:
+        if argument == "--":
+            break
+        if argument.startswith("-") and argument not in inspection_options:
+            return False
+        if argument.startswith("-"):
+            options.add(argument)
+        else:
+            operands.append(argument)
+    if any(operand.startswith(":") for operand in operands):
+        return False
+    if subcommand == "ls-tree":
+        return True
+    if subcommand == "show" and len(operands) == 1 and ":" in operands[0] and not options:
+        return True
+    if subcommand == "log" and {"--oneline", "--no-show-signature"} <= options and options <= {
+        "--oneline", "--no-decorate", "--decorate", "--all", "--no-color",
+        "--color=never", "--no-patch", "-s", "--no-show-signature",
+    }:
+        return True
+    # Working-tree queries can run a configured filesystem monitor, even without a diff.
+    if not monitor_disabled:
+        return False
+    if subcommand in {"diff", "show", "log"}:
+        return ({"--no-ext-diff", "--no-textconv"} <= options
+                and (subcommand == "diff" or {"--oneline", "--no-show-signature"} <= options))
+    return subcommand != "blame" or "--no-textconv" in options
+
+
 def is_documentation_command(command: str) -> bool:
     """Suppress inspection only when no command group produces runtime output."""
     groups = _command_groups(command, allow_incomplete=True)
     if groups is None:
         return False
     searches = {"rg", "grep", "sed", "awk"}
-    readers = {"cat", "head", "tail", "less", "more", "bat", "nl"}
+    readers = {"cat", "head", "tail", "nl"}
     inspection = False
     runtime = any(group.executes_expansion for group in groups)
     for words, pipeline, _ in groups:
@@ -375,6 +491,20 @@ def is_documentation_command(command: str) -> bool:
             continue
         program = os.path.basename(words[0])
         if program in readers | searches:
+            if program == "awk" and not _is_awk_inspection(words):
+                runtime = True
+                continue
+            if program == "sed" and not _is_sed_inspection(words):
+                runtime = True
+                continue
+            # First argument proves this is an option, never a pattern or option value.
+            if program == "rg" and (words[1:2] != ["--no-config"] or any(
+                word.split("=", 1)[0] in {"--pre", "--hostname-bin", "--search-zip"}
+                or (word.startswith("-") and not word.startswith("--") and "z" in word)
+                for word in words[1:]
+            )):
+                runtime = True
+                continue
             operands: list[str] = []
             pattern_provided = False
             pattern_options = {"-e", "--regexp", "-f", "--file", "--expression"} if program in searches else set()
@@ -410,7 +540,12 @@ def is_documentation_command(command: str) -> bool:
                     inspection = True  # With no file operands, ripgrep searches source in cwd.
                 else:
                     runtime = True
-        elif program in {"echo", "printf", "git"}:
+        elif program == "git":
+            if _is_git_inspection(words):
+                inspection = True
+            else:
+                runtime = True
+        elif program in {"echo", "printf"}:
             inspection = True
         elif program in {"curl", "wget"} and any(
             word.endswith((".md", ".swift", ".txt", ".rst")) for word in words[1:]

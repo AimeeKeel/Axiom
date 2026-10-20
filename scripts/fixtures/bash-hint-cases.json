@@ -12,10 +12,12 @@
     "expectedHints": []
   },
   {
-    "name": "suppress inspection: rg Sendable Sources",
+    "name": "preserve config-uncertain source search: rg Sendable Sources",
     "command": "rg Sendable Sources",
     "output": "# Error handling\nMigration errors and memory leaks.\nwarning: non-Sendable type\nerror: actor-isolated property 'value'",
-    "expectedHints": []
+    "expectedHints": [
+      "axiom-concurrency"
+    ]
   },
   {
     "name": "suppress inspection: grep -n migration README.md",
@@ -36,10 +38,12 @@
     "expectedHints": []
   },
   {
-    "name": "suppress inspection: git diff",
+    "name": "preserve uncertain Git inspection: git diff",
     "command": "git diff",
     "output": "# Error handling\nMigration errors and memory leaks.\nwarning: non-Sendable type\nerror: actor-isolated property 'value'",
-    "expectedHints": []
+    "expectedHints": [
+      "axiom-concurrency"
+    ]
   },
   {
     "name": "suppress inspection: git show HEAD:Sources/App.swift",
@@ -48,10 +52,12 @@
     "expectedHints": []
   },
   {
-    "name": "suppress inspection: git status",
+    "name": "preserve uncertain Git inspection: git status",
     "command": "git status",
     "output": "# Error handling\nMigration errors and memory leaks.\nwarning: non-Sendable type\nerror: actor-isolated property 'value'",
-    "expectedHints": []
+    "expectedHints": [
+      "axiom-concurrency"
+    ]
   },
   {
     "name": "suppress inspection: echo \"error: migration failed\"",
@@ -78,10 +84,12 @@
     "expectedHints": []
   },
   {
-    "name": "suppress inspection: cat README.md && git diff",
+    "name": "preserve uncertain Git inspection: cat README.md && git diff",
     "command": "cat README.md && git diff",
     "output": "# Error handling\nMigration errors and memory leaks.\nwarning: non-Sendable type\nerror: actor-isolated property 'value'",
-    "expectedHints": []
+    "expectedHints": [
+      "axiom-concurrency"
+    ]
   },
   {
     "name": "suppress inspection: env MODE=docs cat README.md",
@@ -757,10 +765,12 @@
     "expectedHints": []
   },
   {
-    "name": "suppress proven docs/source: rg Sendable Sources",
+    "name": "preserve config-uncertain source search: rg Sendable Sources",
     "command": "rg Sendable Sources",
     "output": "error: actor-isolated property cannot be referenced",
-    "expectedHints": []
+    "expectedHints": [
+      "axiom-concurrency"
+    ]
   },
   {
     "name": "suppress proven docs/source: cat AGENTS.md",
@@ -905,16 +915,20 @@
     "expectedHints": []
   },
   {
-    "name": "suppress literal/source search control: rg Sendable .",
+    "name": "preserve config-uncertain source search: rg Sendable .",
     "command": "rg Sendable .",
     "output": "error: actor-isolated property cannot be referenced",
-    "expectedHints": []
+    "expectedHints": [
+      "axiom-concurrency"
+    ]
   },
   {
-    "name": "suppress literal/source search control: rg Sendable ./",
+    "name": "preserve config-uncertain source search: rg Sendable ./",
     "command": "rg Sendable ./",
     "output": "error: actor-isolated property cannot be referenced",
-    "expectedHints": []
+    "expectedHints": [
+      "axiom-concurrency"
+    ]
   },
   {
     "name": "suppress literal/source search control: grep -R Sendable .",
@@ -923,15 +937,763 @@
     "expectedHints": []
   },
   {
-    "name": "suppress literal/source search control: rg Sendable src",
+    "name": "preserve config-uncertain source search: rg Sendable src",
     "command": "rg Sendable src",
     "output": "error: actor-isolated property cannot be referenced",
-    "expectedHints": []
+    "expectedHints": [
+      "axiom-concurrency"
+    ]
   },
   {
     "name": "suppress literal/source search control: grep -R Sendable Sources",
     "command": "grep -R Sendable Sources",
     "output": "error: actor-isolated property cannot be referenced",
     "expectedHints": []
+  },
+  {
+    "name": "suppress wrapped inspection: cat README.md | cat",
+    "command": "cat README.md | cat",
+    "output": "error: migration failed",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress wrapped inspection: cat README.md | bash -lc 'cat'",
+    "command": "cat README.md | bash -lc 'cat'",
+    "output": "error: migration failed",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress wrapped inspection: cat README.md | sh -c \"bash -lc 'cat'\"",
+    "command": "cat README.md | sh -c \"bash -lc 'cat'\"",
+    "output": "error: migration failed",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress wrapped inspection: cat README.md | bash -lc 'cat | tail -n 10'",
+    "command": "cat README.md | bash -lc 'cat | tail -n 10'",
+    "output": "error: migration failed",
+    "expectedHints": []
+  },
+  {
+    "name": "preserve wrapped runtime: python3 migrate.py | bash -lc 'cat'",
+    "command": "python3 migrate.py | bash -lc 'cat'",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve wrapped runtime: python3 migrate.py | sh -c \"bash -lc 'cat'\"",
+    "command": "python3 migrate.py | sh -c \"bash -lc 'cat'\"",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "suppress known inspection: awk '{ print $0 }' README.md",
+    "command": "awk '{ print $0 }' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: awk 'NR >= 2 && NR <= 30 { print $1, $2; }' Sources/App.swift",
+    "command": "awk 'NR >= 2 && NR <= 30 { print $1, $2; }' Sources/App.swift",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: awk -F ':' -v mode=docs '{print $1}' README.md",
+    "command": "awk -F ':' -v mode=docs '{print $1}' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git --no-pager -C checkout -c core.fsmonitor=false diff --no-ext-diff --no-textconv --stat",
+    "command": "git --no-pager -C checkout -c core.fsmonitor=false diff --no-ext-diff --no-textconv --stat",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git --git-dir=.git show HEAD:Sources/App.swift",
+    "command": "git --git-dir=.git show HEAD:Sources/App.swift",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git log --oneline --no-show-signature",
+    "command": "git log --oneline --no-show-signature",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git -c core.fsmonitor=false status --short",
+    "command": "git -c core.fsmonitor=false status --short",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git -c core.fsmonitor=false diff --no-ext-diff --no-textconv -- Sources/App.swift",
+    "command": "git -c core.fsmonitor=false diff --no-ext-diff --no-textconv -- Sources/App.swift",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git -c core.fsmonitor=false diff --no-ext-diff --no-textconv -- Sources/--ext-diff.swift",
+    "command": "git -c core.fsmonitor=false diff --no-ext-diff --no-textconv -- Sources/--ext-diff.swift",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk 'BEGIN {system(\"python3 migrate.py\")}' README.md",
+    "command": "awk 'BEGIN {system(\"python3 migrate.py\")}' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk '{ cmd=\"python3 migrate.py\"; cmd | getline result; print result }' README.md",
+    "command": "awk '{ cmd=\"python3 migrate.py\"; cmd | getline result; print result }' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk '{getline line < \"build.log\"; print line}' README.md",
+    "command": "awk '{getline line < \"build.log\"; print line}' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk '{print run()} function run() {system(\"python3 migrate.py\")}' README.md",
+    "command": "awk '{print run()} function run() {system(\"python3 migrate.py\")}' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk -f inspect.awk README.md",
+    "command": "awk -f inspect.awk README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk -finspect.awk README.md",
+    "command": "awk -finspect.awk README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk --file=inspect.awk README.md",
+    "command": "awk --file=inspect.awk README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk -e '{print}' -e 'BEGIN {system(cmd)}' README.md",
+    "command": "awk -e '{print}' -e 'BEGIN {system(cmd)}' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk --source='BEGIN {system(cmd)}' README.md",
+    "command": "awk --source='BEGIN {system(cmd)}' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk '{print}' -f inspect.awk README.md",
+    "command": "awk '{print}' -f inspect.awk README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk -W exec inspect.awk README.md",
+    "command": "awk -W exec inspect.awk README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk -X plugin '{print}' README.md",
+    "command": "awk -X plugin '{print}' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: awk '{ print $0 > target }' README.md",
+    "command": "awk '{ print $0 > target }' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git -c 'alias.sql=!python3 migrate.py' sql",
+    "command": "git -c 'alias.sql=!python3 migrate.py' sql",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git sql",
+    "command": "git sql",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git pull",
+    "command": "git pull",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git commit -m update",
+    "command": "git commit -m update",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git stash",
+    "command": "git stash",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git checkout main",
+    "command": "git checkout main",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git diff --ext-diff",
+    "command": "git diff --ext-diff",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git show --textconv HEAD:README.md",
+    "command": "git show --textconv HEAD:README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git grep --open-files-in-pager=python3 migration",
+    "command": "git grep --open-files-in-pager=python3 migration",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git grep -Opython3 migration",
+    "command": "git grep -Opython3 migration",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git -c diff.external=python3 diff",
+    "command": "git -c diff.external=python3 diff",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git --config-env=diff.external=EXTERNAL_DIFF diff",
+    "command": "git --config-env=diff.external=EXTERNAL_DIFF diff",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git --paginate diff",
+    "command": "git --paginate diff",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git --unknown-option diff",
+    "command": "git --unknown-option diff",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable or uncertain inspection: git diff --unknown-option",
+    "command": "git diff --unknown-option",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "suppress known inspection: git -c core.fsmonitor=false grep migration",
+    "command": "git -c core.fsmonitor=false grep migration",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git -c core.fsmonitor=false ls-files",
+    "command": "git -c core.fsmonitor=false ls-files",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git -c core.fsmonitor=false blame --no-textconv README.md",
+    "command": "git -c core.fsmonitor=false blame --no-textconv README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: git ls-tree HEAD",
+    "command": "git ls-tree HEAD",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: sed -n -e '1,30p' README.md",
+    "command": "sed -n -e '1,30p' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: sed -n '2p;5,10p' README.md",
+    "command": "sed -n '2p;5,10p' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress known inspection: rg --no-config migration README.md",
+    "command": "rg --no-config migration README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "preserve configured or opaque execution: git diff --no-ext-diff --no-textconv",
+    "command": "git diff --no-ext-diff --no-textconv",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git status --short",
+    "command": "git status --short",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git grep migration",
+    "command": "git grep migration",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git ls-files",
+    "command": "git ls-files",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git blame README.md",
+    "command": "git blame README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git show HEAD",
+    "command": "git show HEAD",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git log -p",
+    "command": "git log -p",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git -c core.fsmonitor=false diff",
+    "command": "git -c core.fsmonitor=false diff",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git -c core.fsmonitor=false diff --no-ext-diff",
+    "command": "git -c core.fsmonitor=false diff --no-ext-diff",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git -c core.fsmonitor=false diff --no-textconv",
+    "command": "git -c core.fsmonitor=false diff --no-textconv",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: git -c core.fsmonitor=false -c diff.external=python3 diff --no-ext-diff --no-textconv",
+    "command": "git -c core.fsmonitor=false -c diff.external=python3 diff --no-ext-diff --no-textconv",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: sed -n 'r build.log' README.md",
+    "command": "sed -n 'r build.log' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: sed -n 'e python3 migrate.py' README.md",
+    "command": "sed -n 'e python3 migrate.py' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: sed -f inspect.sed README.md",
+    "command": "sed -f inspect.sed README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: sed --file=inspect.sed README.md",
+    "command": "sed --file=inspect.sed README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: sed -n -e '1,30p' -e 'r build.log' README.md",
+    "command": "sed -n -e '1,30p' -e 'r build.log' README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: rg --pre=python3 migration README.md",
+    "command": "rg --pre=python3 migration README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: rg --pre python3 . README.md",
+    "command": "rg --pre python3 . README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: rg --hostname-bin=python3 migration README.md",
+    "command": "rg --hostname-bin=python3 migration README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: rg --search-zip migration README.md",
+    "command": "rg --search-zip migration README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: rg -z migration README.md",
+    "command": "rg -z migration README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: env -S 'python3 migrate.py' printf literal",
+    "command": "env -S 'python3 migrate.py' printf literal",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: env --split-string 'python3 migrate.py' printf literal",
+    "command": "env --split-string 'python3 migrate.py' printf literal",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: env --split-string='python3 migrate.py' printf literal",
+    "command": "env --split-string='python3 migrate.py' printf literal",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured or opaque execution: env -S'python3 migrate.py' printf literal",
+    "command": "env -S'python3 migrate.py' printf literal",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "suppress config-disabled source search: rg Sendable Sources",
+    "command": "rg --no-config Sendable Sources",
+    "output": "# Error handling\nMigration errors and memory leaks.\nwarning: non-Sendable type\nerror: actor-isolated property 'value'",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress config-disabled source search: rg Sendable Sources",
+    "command": "rg --no-config Sendable Sources",
+    "output": "error: actor-isolated property cannot be referenced",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress config-disabled source search: rg Sendable .",
+    "command": "rg --no-config Sendable .",
+    "output": "error: actor-isolated property cannot be referenced",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress config-disabled source search: rg Sendable ./",
+    "command": "rg --no-config Sendable ./",
+    "output": "error: actor-isolated property cannot be referenced",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress config-disabled source search: rg Sendable src",
+    "command": "rg --no-config Sendable src",
+    "output": "error: actor-isolated property cannot be referenced",
+    "expectedHints": []
+  },
+  {
+    "name": "preserve implicit helper execution: git show :README.md",
+    "command": "git show :README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: git show :0:README.md",
+    "command": "git show :0:README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: git ls-tree :README.md",
+    "command": "git ls-tree :README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: git log --oneline --no-show-signature :README.md",
+    "command": "git log --oneline --no-show-signature :README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: git log --oneline",
+    "command": "git log --oneline",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: git log --no-patch",
+    "command": "git log --no-patch",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: git -c core.fsmonitor=false show --no-ext-diff --no-textconv HEAD",
+    "command": "git -c core.fsmonitor=false show --no-ext-diff --no-textconv HEAD",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: rg migration README.md",
+    "command": "rg migration README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: bat --pager=python3 README.md",
+    "command": "bat --pager=python3 README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: less README.md",
+    "command": "less README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve implicit helper execution: more README.md",
+    "command": "more README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "suppress explicit non-signature format: git -c core.fsmonitor=false show --no-ext-diff --no-textconv --no-show-signature HEAD --oneline",
+    "command": "git -c core.fsmonitor=false show --no-ext-diff --no-textconv --no-show-signature HEAD --oneline",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "suppress explicit non-signature format: git log --no-show-signature --no-patch --oneline",
+    "command": "git log --no-show-signature --no-patch --oneline",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": []
+  },
+  {
+    "name": "preserve executable option-value boundary: env -iS'python3 migrate.py' printf literal",
+    "command": "env -iS'python3 migrate.py' printf literal",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable option-value boundary: rg -e --no-config README.md",
+    "command": "rg -e --no-config README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable option-value boundary: rg --no-config -e -- --pre=python3 README.md",
+    "command": "rg --no-config -e -- --pre=python3 README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve executable option-value boundary: rg -e -- --pre=python3 README.md",
+    "command": "rg -e -- --pre=python3 README.md",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured signature format: git log --no-show-signature",
+    "command": "git log --no-show-signature",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured signature format: git log --no-show-signature --no-patch",
+    "command": "git log --no-show-signature --no-patch",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
+  },
+  {
+    "name": "preserve configured signature format: git -c core.fsmonitor=false show --no-show-signature --no-ext-diff --no-textconv HEAD",
+    "command": "git -c core.fsmonitor=false show --no-show-signature --no-ext-diff --no-textconv HEAD",
+    "output": "sqlite3.OperationalError: no such column: missing_column",
+    "expectedHints": [
+      "axiom-data"
+    ]
   }
 ]

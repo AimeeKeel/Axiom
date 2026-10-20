@@ -306,7 +306,9 @@ function commandGroups(command: string, depth = 0, allowIncomplete = false): Com
         while (commandWords[0]?.startsWith("-")) {
           const option = commandWords.shift() ?? "";
           lookup ||= (prefix === "xcrun" && ["--find", "-f"].includes(option)) ||
-            (prefix === "command" && ["-v", "-V"].includes(option));
+            (prefix === "command" && ["-v", "-V"].includes(option)) ||
+            (prefix === "env" && ((option.startsWith("-") && !option.startsWith("--") && option.includes("S")) ||
+              option.split("=", 1)[0] === "--split-string"));
           if (optionArguments[prefix].has(option)) commandWords.shift();
         }
         if (lookup) {
@@ -320,7 +322,11 @@ function commandGroups(command: string, depth = 0, allowIncomplete = false): Com
       if (index >= 0 && index + 1 < commandWords.length) {
         const nested = commandGroups(commandWords[index + 1], depth + 1, allowIncomplete);
         if (!nested) return null;
-        expanded.push(...nested.map((inner) => ({ ...inner, executesExpansion: inner.executesExpansion || group.executesExpansion })));
+        expanded.push(...nested.map((inner) => ({
+          ...inner,
+          pipeline: inner.pipeline || group.pipeline,
+          executesExpansion: inner.executesExpansion || group.executesExpansion,
+        })));
         continue;
       }
     }
@@ -349,17 +355,112 @@ function documentationOperand(word: string): boolean {
     parts.some((part) => directories.has(part));
 }
 
+function isAwkInspection(words: string[]): boolean {
+  let index = 1;
+  for (; index < words.length; index++) {
+    const word = words[index];
+    if (["-F", "-v"].includes(word)) {
+      if (++index >= words.length) return false;
+    } else if (word === "--") {
+      index++;
+      break;
+    } else if (word.startsWith("-F") || word.startsWith("-v")) continue;
+    else if (word.startsWith("-")) return false;
+    else break;
+  }
+  const selector = String.raw`(?:NR|FNR)\s*(?:==|!=|<=|>=|<|>)\s*[0-9]+`;
+  const print = new RegExp(String.raw`^\s*(?:${selector}(?:\s*(?:&&|\|\|)\s*${selector})*\s*)?\{\s*print(?:\s+\$[0-9]+(?:\s*,\s*\$[0-9]+)*)?\s*;?\s*\}\s*$`);
+  return index < words.length && print.test(words[index]) &&
+    words.slice(index + 1).every((word) => !word.startsWith("-") || word === "-");
+}
+
+function isSedInspection(words: string[]): boolean {
+  const programs: string[] = [];
+  for (let index = 1; index < words.length; index++) {
+    const word = words[index];
+    if (["-n", "--quiet", "--silent"].includes(word)) continue;
+    if (["-e", "--expression"].includes(word)) programs.push(words[++index] ?? "");
+    else if (word.startsWith("--expression=")) programs.push(word.slice("--expression=".length));
+    else if (word.startsWith("-e")) programs.push(word.slice(2));
+    else if (word.startsWith("-")) return false;
+    else if (!programs.length) programs.push(word);
+    else if (!documentationOperand(word)) return false;
+  }
+  const print = /^\s*(?:(?:[0-9]+|\$)(?:\s*,\s*(?:[0-9]+|\$))?\s*)?p\s*(?:;\s*(?:(?:[0-9]+|\$)(?:\s*,\s*(?:[0-9]+|\$))?\s*)?p\s*)*;?\s*$/;
+  return programs.length > 0 && programs.every((program) => print.test(program));
+}
+
+function isGitInspection(words: string[]): boolean {
+  let index = 1;
+  let monitorDisabled = false;
+  for (; index < words.length; index++) {
+    const word = words[index];
+    if (["-C", "--git-dir", "--work-tree"].includes(word)) {
+      if (++index >= words.length) return false;
+    } else if (word === "-c") {
+      if (words[++index] !== "core.fsmonitor=false") return false;
+      monitorDisabled = true;
+    } else if (["--no-pager", "--no-optional-locks", "--literal-pathspecs"].includes(word)) continue;
+    else if (word.startsWith("--git-dir=") || word.startsWith("--work-tree=")) continue;
+    else if (word.startsWith("-")) return false;
+    else break;
+  }
+  const subcommand = words[index];
+  if (!["diff", "show", "status", "log", "blame", "grep", "ls-files", "ls-tree"].includes(subcommand)) return false;
+  const inspectionOptions = new Set([
+    "--no-ext-diff", "--no-textconv", "--stat", "--numstat", "--shortstat",
+    "--name-only", "--name-status", "--check", "--raw", "--patch", "-p",
+    "--no-patch", "-s", "--cached", "--staged", "--short", "--porcelain",
+    "--porcelain=v1", "--porcelain=v2", "--branch", "-b", "--oneline",
+    "--no-decorate", "--decorate", "--all", "--no-color", "--color=never",
+    "--no-renames", "--no-show-signature",
+  ]);
+  const options = new Set<string>();
+  const operands: string[] = [];
+  for (const argument of words.slice(index + 1)) {
+    if (argument === "--") break;
+    if (argument.startsWith("-") && !inspectionOptions.has(argument)) return false;
+    if (argument.startsWith("-")) options.add(argument);
+    else operands.push(argument);
+  }
+  if (operands.some((operand) => operand.startsWith(":"))) return false;
+  if (subcommand === "ls-tree") return true;
+  if (subcommand === "show" && operands.length === 1 && operands[0].includes(":") && !options.size) return true;
+  const logOptions = new Set(["--oneline", "--no-decorate", "--decorate", "--all", "--no-color", "--color=never", "--no-patch", "-s", "--no-show-signature"]);
+  if (subcommand === "log" && options.has("--oneline") && options.has("--no-show-signature") && [...options].every((option) => logOptions.has(option))) return true;
+  // Working-tree queries can run a configured filesystem monitor, even without a diff.
+  if (!monitorDisabled) return false;
+  if (["diff", "show", "log"].includes(subcommand)) return options.has("--no-ext-diff") && options.has("--no-textconv") &&
+    (subcommand === "diff" || (options.has("--oneline") && options.has("--no-show-signature")));
+  return subcommand !== "blame" || options.has("--no-textconv");
+}
+
 function isDocumentationCommand(command: string): boolean {
   const groups = commandGroups(command, 0, true);
   if (!groups) return false;
   const searches = new Set(["rg", "grep", "sed", "awk"]);
-  const readers = new Set(["cat", "head", "tail", "less", "more", "bat", "nl"]);
+  const readers = new Set(["cat", "head", "tail", "nl"]);
   let inspection = false;
   let runtime = groups.some((group) => group.executesExpansion);
   for (const { words, pipeline } of groups) {
     const program = words[0]?.split("/").at(-1);
     if (!program) continue;
     if (readers.has(program) || searches.has(program)) {
+      if (program === "awk" && !isAwkInspection(words)) {
+        runtime = true;
+        continue;
+      }
+      if (program === "sed" && !isSedInspection(words)) {
+        runtime = true;
+        continue;
+      }
+      // First argument proves this is an option, never a pattern or option value.
+      if (program === "rg" && (words[1] !== "--no-config" || words.slice(1).some((word) =>
+        ["--pre", "--hostname-bin", "--search-zip"].includes(word.split("=", 1)[0]) ||
+        (word.startsWith("-") && !word.startsWith("--") && word.includes("z"))))) {
+        runtime = true;
+        continue;
+      }
       let operands: string[] = [];
       let patternProvided = false;
       const patternOptions = new Set(searches.has(program) ? ["-e", "--regexp", "-f", "--file", "--expression"] : []);
@@ -388,7 +489,10 @@ function isDocumentationCommand(command: string): boolean {
         if (program === "rg") inspection = true; // Without file operands, ripgrep searches source in cwd.
         else runtime = true;
       }
-    } else if (["echo", "printf", "git"].includes(program)) inspection = true;
+    } else if (program === "git") {
+      if (isGitInspection(words)) inspection = true;
+      else runtime = true;
+    } else if (["echo", "printf"].includes(program)) inspection = true;
     else if (["curl", "wget"].includes(program) && words.slice(1).some((word) => /\.(md|swift|txt|rst)$/.test(word))) inspection = true;
     else if (!["cd", "pwd", "true", "false", ":", "export"].includes(program)) runtime = true;
   }
