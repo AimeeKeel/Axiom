@@ -8,6 +8,9 @@
 /IDEAS.md
 /CONTINUE.md
 
+# New tool sources pending a distribution decision
+/private-tools/
+
 # Local agent context — private dev state, never distributed
 # CLAUDE.md is canonical; AGENTS.md is a symlink to it (import-blind harnesses read it verbatim)
 .claude/
