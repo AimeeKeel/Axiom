@@ -52,6 +52,10 @@ Questions you can ask your assistant that will draw from this reference:
 ### Subscriptions
 - `CKDatabaseSubscription`, `CKQuerySubscription`, `CKRecordZoneSubscription`
 - Silent push with `shouldSendContentAvailable`, and handling the notification
+- Public-database query subscriptions as a silent-push sender without an APNs server
+
+### CloudKit Web Services
+- Server-to-server keys and request signing, including DER encoding for Web Crypto signatures
 
 ### Assets
 - `CKAsset` from a file URL
