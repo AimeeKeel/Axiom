@@ -565,6 +565,32 @@ func application(_ application: UIApplication,
 }
 ```
 
+A public-database query subscription with `shouldSendContentAvailable` lets a server job send silent pushes without an APNs provider server — see `axiom-integration (skills/background-processing.md)`, Pattern 7, "Sending Silent Pushes Without an APNs Server".
+
+---
+
+## CloudKit Web Services (Server-to-Server)
+
+A backend writes to the public database with a server-to-server key: generate a P-256 key (`openssl ecparam -name prime256v1 -genkey -noout -out eckey.pem`) and register its public key in CloudKit Console. For every request:
+
+1. Sign `[ISO8601 date, no milliseconds]:[base64 SHA-256 of the body]:[subpath]` with ECDSA/SHA-256. The subpath is the URL without `https://api.apple-cloudkit.com` — `/database/1/iCloud.com.example.App/production/public/records/modify`
+2. Send `X-Apple-CloudKit-Request-KeyID`, `X-Apple-CloudKit-Request-ISO8601Date` (the same date string), and `X-Apple-CloudKit-Request-SignatureV1` (base64 of the DER signature). A signed request is valid for 10 minutes
+
+**The signature must be DER.** OpenSSL, Node's `crypto.sign`, and Swift Crypto's `derRepresentation` produce DER. Web Crypto's `crypto.subtle.sign` (Cloudflare Workers, Deno, browsers) returns the raw 64-byte `r‖s` form, and CloudKit rejects it with 401. Convert before base64-encoding:
+
+```js
+function p1363ToDer(sig) {  // sig: Uint8Array(64) from crypto.subtle.sign
+  const int = (b) => {
+    let i = 0;
+    while (i < b.length - 1 && b[i] === 0) i++;
+    b = b.slice(i);
+    return b[0] & 0x80 ? [0x02, b.length + 1, 0, ...b] : [0x02, b.length, ...b];
+  };
+  const r = int(sig.slice(0, 32)), s = int(sig.slice(32));
+  return new Uint8Array([0x30, r.length + s.length, ...r, ...s]);
+}
+```
+
 ---
 
 ## Sharing Records
