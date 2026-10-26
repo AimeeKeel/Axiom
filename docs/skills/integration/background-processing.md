@@ -12,7 +12,7 @@ Background execution is a privilege, not a right. iOS actively limits background
 
 - **7 Common Patterns** – BGAppRefreshTask, BGProcessingTask, BGContinuedProcessingTask (iOS 26), Background URLSession, beginBackgroundTask, Silent Push, SwiftUI backgroundTask modifier
 - **Debugging Decision Trees** – "Task never runs", "Task terminates early", "Works in dev not prod"
-- **The 7 Scheduling Factors** – Why iOS may not run your task
+- **The 7 Scheduling Factors** – Why iOS may not run your task, and which factors gate which background mode
 - **Swift 6 Cancellation Integration** – withTaskCancellationHandler for expiration
 - **LLDB Testing Commands** – Force task execution during development
 
@@ -23,6 +23,7 @@ Background execution is a privilege, not a right. iOS actively limits background
 - Understanding BGAppRefreshTask vs BGProcessingTask
 - Testing background execution in simulator
 - Integrating Swift Concurrency with task expiration
+- Understanding why background work stops when users haven't opened the app for a while
 
 ## Task Types
 
@@ -58,6 +59,7 @@ subsystem:com.apple.backgroundtasks
 2. **Registration fails** – Must register in didFinishLaunchingWithOptions before return
 3. **Works in dev, not prod** – Check Low Power Mode, Background App Refresh setting, app not swiped away
 4. **Missing setTaskCompleted** – Must call in ALL code paths including errors
+5. **Task keeps getting postponed** – Each submit replaces the pending request, so resubmitting from silent-push or other task handlers delays the start
 
 ## Related Skills
 
@@ -75,4 +77,4 @@ subsystem:com.apple.backgroundtasks
 
 **WWDC**: 2019-707, 2020-10063, 2022-10142, 2023-10170, 2025-227
 
-**Docs**: [BGTaskScheduler](https://developer.apple.com/documentation/backgroundtasks/bgtaskscheduler)
+**Docs**: /backgroundtasks/bgtaskscheduler

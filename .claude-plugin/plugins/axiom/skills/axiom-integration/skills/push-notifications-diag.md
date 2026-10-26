@@ -29,7 +29,7 @@ Symptoms that indicate push-specific issues:
 | Image not showing in notification | Service extension failed silently — check serviceExtensionTimeWillExpire |
 | Plain text though mutable-content is set | NSE never called contentHandler before the budget expired and serviceExtensionTimeWillExpire has no fallback. The system delivers the original, unmodified notification |
 | NSE never fires at all | Extension bundle ID prefix wrong. Must be {host-app-bundle-id}.SomeName — a mismatched prefix means the NSE silently never runs, no crash, no log |
-| Silent push not waking app | System throttling (~2-3/hour), or app was force-quit by user |
+| Silent push not waking app | System throttling (~2-3/hour), app force-quit by user, Background App Refresh off, or app not launched for a while |
 | Notifications stopped after iOS update | Focus mode enabled by default in iOS 15+; check interruption level |
 | Badge shows wrong number | Multiple notifications sent without explicit badge count reset |
 | Actions not appearing | Category identifier mismatch between payload and registered categories |
@@ -240,6 +240,10 @@ Silent push not waking app?
 ├─ App state?
 │  ├─ Force-quit by user (swiped up)?
 │  │  └─ System will NOT wake force-quit apps for silent push
+│  ├─ Background App Refresh off (globally or for this app)?
+│  │  └─ Gates background pushes too — check backgroundRefreshStatus
+│  ├─ User hasn't launched the app for a while?
+│  │  └─ Background pushes stop being delivered (Apple DTS) — no silent-push workaround; refresh on launch
 │  └─ Suspended or background?
 │     └─ Should wake — continue debugging
 │

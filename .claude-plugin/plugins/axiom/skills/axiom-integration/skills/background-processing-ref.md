@@ -99,11 +99,12 @@ func scheduleAppRefresh() {
     do {
         try BGTaskScheduler.shared.submit(request)
     } catch BGTaskScheduler.Error.notPermitted {
-        // Background App Refresh disabled in Settings
+        // Missing UIBackgroundModes entry, identifier not in
+        // BGTaskSchedulerPermittedIdentifiers, or user denied background launches
     } catch BGTaskScheduler.Error.tooManyPendingTaskRequests {
-        // Too many pending requests for this identifier
+        // Over the limit: 1 refresh and 10 processing requests pending in total
     } catch BGTaskScheduler.Error.unavailable {
-        // Background tasks not available (Simulator, etc.)
+        // Background App Refresh off in Settings, or running in Simulator
     } catch {
         print("Schedule failed: \(error)")
     }
@@ -564,9 +565,9 @@ BGTaskScheduler.shared.getPendingTaskRequests { requests in
 |--------|--------------|--------|
 | Critically Low Battery | Battery very low (no threshold published) | Discretionary work paused |
 | Low Power Mode | `ProcessInfo.isLowPowerModeEnabled` | Limited activity |
-| App Usage | User opens app frequently? | Higher priority |
+| App Usage | User opens app frequently? | Higher priority; gates background pushes too |
 | App Switcher | Not swiped away? | Swiped = no background |
-| Background App Refresh | `backgroundRefreshStatus` | Off = no BGAppRefresh |
+| Background App Refresh | `backgroundRefreshStatus` | Off = no refresh, processing, or background-push launches; `submit` throws |
 | System Budgets | Many recent launches? | Budget depletes, refills daily |
 | Rate Limiting | Requests too frequent? | System spaces launches |
 
@@ -670,6 +671,10 @@ func application(
 > "The number of background notifications allowed by the system depends on current conditions, but don't try to send more than two or three per hour."
 
 Silent pushes are rate-limited — the system may delay delivery and may throttle it when the total becomes excessive, and Apple advises against sending more than two or three per hour. Don't expect launch on every push.
+
+### App Usage Gates Background Pushes
+
+Background pushes "will not be delivered to the app at all if the user has not launched the app for a while" (Apple DTS, 2024). This supersedes WWDC 2020-10063's "does not gate background pushes based on app usage". The Background App Refresh switch and force-quit gate them too.
 
 ---
 

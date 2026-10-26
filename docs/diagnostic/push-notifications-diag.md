@@ -31,6 +31,7 @@ Questions you can ask your assistant that will invoke this diagnostic:
 - "Push works in the simulator but not on device"
 - "My notifications work in dev but not production"
 - "Silent push notifications aren't waking my app"
+- "Silent pushes stopped waking my app for users who haven't opened it in weeks"
 - "Rich notification images aren't showing"
 - "Live Activity push updates aren't working"
 - "FCM push works on Android but not iOS"

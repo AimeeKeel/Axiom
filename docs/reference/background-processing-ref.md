@@ -43,7 +43,7 @@ Questions you can ask your assistant that will draw from this reference:
 - **Background `URLSession`** – Discretionary downloads, `sessionSendsLaunchEvents`, the AppDelegate handler, delegate lifecycle
 - **Testing** – LLDB commands that simulate launch and expiration, Console filters, `getPendingTaskRequests`
 - **System constraints** – The 7 scheduling factors, Low Power Mode, Background App Refresh status, thermal state
-- **Silent push notifications** – Payload format, APNs priority, rate limiting
+- **Silent push notifications** – Payload format, APNs priority, rate limiting, app-usage gating
 - **SwiftUI integration** – `.backgroundTask(.appRefresh)` and `.backgroundTask(.urlSession)` modifiers, cancellation with Swift concurrency
 
 ## Documentation Scope

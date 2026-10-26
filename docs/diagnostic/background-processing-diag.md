@@ -51,6 +51,7 @@ Use when you're experiencing:
 11. Testing on real device (not just simulator)?
 12. Release build matches debug behavior?
 13. Background App Refresh enabled in Settings?
+14. Silent-push and other task handlers don't resubmit and delay an already-pending request?
 
 ### LLDB Quick Test
 
@@ -76,11 +77,11 @@ All affect whether iOS runs your task in production:
 
 | Factor | Impact |
 |--------|--------|
-| Critically Low Battery | Discretionary work paused below ~20% |
+| Critically Low Battery | Discretionary work paused (Apple publishes no threshold) |
 | Low Power Mode | Limited background activity |
-| App Usage Frequency | Rarely used apps get lower priority |
+| App Usage Frequency | Rarely used apps get lower priority; apps not launched for a while stop getting refresh, processing, and background-push launches |
 | App Switcher | Swiped away = no background until foreground |
-| Background App Refresh | User can disable per-app in Settings |
+| Background App Refresh | User can disable per-app in Settings; off blocks refresh tasks, processing tasks, and background pushes |
 | System Budgets | Depletes with frequent launches, refills daily |
 | Rate Limiting | System spaces out launches |
 
