@@ -30,11 +30,16 @@ Task never runs?
 │  └─ Registration before first submit()?
 │     └─ NO → Ensure register() precedes submit()
 │
-└─ Step 3: Check app state (1 min)
-   ├─ App swiped away from App Switcher?
-   │  └─ YES → No background until user opens app
-   └─ Background App Refresh disabled in Settings?
-      └─ YES → Enable or inform user
+├─ Step 3: Check app state (1 min)
+│  ├─ App swiped away from App Switcher?
+│  │  └─ YES → No background until user opens app
+│  └─ Background App Refresh disabled in Settings?
+│     └─ YES → Blocks processing tasks and background pushes too; enable or inform user
+│
+└─ Step 4: Check resubmission (2 min)
+   └─ submit() from silent-push or other task handlers?
+      └─ YES → Each replaces the pending request, so a relative earliestBeginDate
+         restarts; guard with Prevent Duplicate Scheduling (Symptom 7)
 ```
 
 ### Time-Cost Analysis
@@ -242,7 +247,7 @@ All affect task execution in production:
 | Low Power Mode | ProcessInfo.isLowPowerModeEnabled |
 | App Usage | User opens app frequently? |
 | App Switcher | App NOT swiped away? |
-| Background App Refresh | Settings enabled? |
+| Background App Refresh | Settings enabled? (gates refresh, processing, and background pushes) |
 | System Budgets | Many recent background launches? |
 | Rate Limiting | Requests too frequent? |
 
@@ -299,8 +304,12 @@ Inconsistent scheduling?
 └─ Step 3: Understand system behavior (1 min)
    ├─ BGAppRefreshTask runs based on USER patterns
    │  └─ User rarely opens app = rare runs
-   └─ BGProcessingTask runs when charging
-      └─ User doesn't charge overnight = no runs
+   ├─ BGProcessingTask runs when charging
+   │  ├─ User doesn't charge overnight = no runs
+   │  └─ Attempted within two days when the app was used within the past week
+   └─ App not launched for a while?
+      └─ Refresh, processing, and background pushes all stop;
+         refresh on launch
 ```
 
 **Reschedule is the FIRST line of the handler.** BGTask requests are one-shot — the system consumes the request when it launches you. If you reschedule at the end, any early `return`, thrown error, or expiration skips it and the task never runs again. Submit the next request before doing any work.
@@ -322,7 +331,7 @@ BGTaskScheduler.shared.getPendingTaskRequests { requests in
 |-----------|---------------------|
 | BGAppRefreshTask | Runs before predicted app usage times |
 | BGProcessingTask | Runs when charging + idle (typically overnight) |
-| Silent Push | Coalesced and rate-limited (see below) |
+| Silent Push | Coalesced and rate-limited (see below); not delivered once the app goes unlaunched for a while |
 
 ### Silent Push Is Not a Polling Hammer
 
@@ -344,8 +353,9 @@ Crash on background launch?
 ├─ Step 1: Check launch initialization (2 min)
 │  ├─ UI setup before task handler?
 │  │  └─ Background launch may not have UI context
-│  ├─ Accessing files before first unlock?
-│  │  └─ Use completeUntilFirstUserAuthentication protection
+│  ├─ Launched before the first unlock after a restart?
+│  │  └─ .completeUntilFirstUserAuthentication (the default) and stricter files
+│  │     are unreadable until then — defer file work
 │  └─ Force unwrapping optionals that may be nil?
 │     └─ Guard against nil in background context
 │
@@ -357,7 +367,10 @@ Crash on background launch?
 │
 └─ Step 3: Check data protection (1 min)
    └─ Files accessible when device locked?
-      └─ Use .completeUnlessOpen or .completeUntilFirstUserAuthentication
+      └─ Processing tasks never start before the first unlock after a restart and
+         typically run while locked. Reading a `.complete` file, or a closed
+         `.completeUnlessOpen` one, fails until unlock → use at most
+         .completeUntilFirstUserAuthentication (the default)
 ```
 
 ### File Protection for Background Tasks
@@ -402,15 +415,15 @@ Task runs multiple times?
 │  ├─ Scheduling on every app launch?
 │  │  └─ Check getPendingTaskRequests first
 │  ├─ Scheduling in handler AND elsewhere?
-│  │  └─ Consolidate to single location
+│  │  └─ Expected: on entering background + first line of handler.
+│  │     From other background wakes, guard with Prevent Duplicate Scheduling
 │  └─ Using same identifier for different purposes?
 │     └─ Use unique identifiers per task type
 │
 ├─ Step 2: Check for duplicate submissions (2 min)
 │  └─ Multiple submit() calls for the same identifier?
-│     └─ Each replaces the pending request; beyond 1 refresh /
-│        10 processing requests the system throws
-│        TooManyPendingTaskRequests
+│     └─ Each replaces the pending request (no error). TooManyPendingTaskRequests
+│        comes only from distinct identifiers beyond 1 refresh / 10 processing
 │
 └─ Step 3: Check handler execution (1 min)
    └─ setTaskCompleted called promptly?
@@ -420,16 +433,10 @@ Task runs multiple times?
 ### Prevent Duplicate Scheduling
 
 ```swift
-func scheduleRefreshIfNeeded() {
-    BGTaskScheduler.shared.getPendingTaskRequests { requests in
-        let alreadyScheduled = requests.contains {
-            $0.identifier == "com.app.refresh"
-        }
-
-        if !alreadyScheduled {
-            self.scheduleRefresh()
-        }
-    }
+func scheduleRefreshIfNeeded() async {
+    let pending = await BGTaskScheduler.shared.pendingTaskRequests()
+    guard !pending.contains(where: { $0.identifier == "com.app.refresh" }) else { return }
+    scheduleRefresh()
 }
 ```
 

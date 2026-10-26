@@ -33,6 +33,9 @@ Real questions developers ask that this skill answers:
 #### 6. "My background task works in development but not in production."
 → The skill covers the 7 scheduling factors, throttling behavior, and production debugging
 
+#### 7. "Background sync stops after users haven't opened the app for a week or two."
+→ The skill covers which factors gate each background mode, including the app-usage gate that refresh, processing, and background pushes share
+
 ---
 
 ## Red Flags — Task Won't Run or Terminates
@@ -225,7 +228,16 @@ func applicationDidEnterBackground(_ application: UIApplication) {
         scheduleAppRefresh()
     }
 }
+
+// From background wakes (silent-push or other task handlers): keep a pending request
+func scheduleAppRefreshIfNeeded() async {
+    let pending = await BGTaskScheduler.shared.pendingTaskRequests()
+    guard !pending.contains(where: { $0.identifier == "com.yourapp.refresh" }) else { return }
+    scheduleAppRefresh()
+}
 ```
+
+**Submitting again replaces the pending request** ("Submitting a task request for an unexecuted task that's already in the queue replaces the previous task request" — BGTaskScheduler header). Restarting the 15-minute clock on entering background is Apple's design — the user just stopped using the app (WWDC 2019-707). A submit from a background wake restarts it while nobody is using the app, so repeated wakes keep postponing the refresh. In those paths call `Task { await scheduleAppRefreshIfNeeded() }`.
 
 #### Handler
 
@@ -344,6 +356,7 @@ func handleMaintenance(task: BGProcessingTask) {
 - Save progress incrementally — task may be interrupted
 - Work may never run if user doesn't charge device
 - Don't set `earliestBeginDate` more than a week ahead
+- A processing task never starts before the user's first unlock after a restart, and typically runs while the device is locked (WWDC 2019-707). Files the handler reads must be at most `.completeUntilFirstUserAuthentication` (the default); a `.complete` file, or a closed `.completeUnlessOpen` one, can't be opened until the device unlocks
 
 ---
 
@@ -602,6 +615,30 @@ func application(_ application: UIApplication,
 - Budget depletes with each launch and refills over the day
 - ~30 seconds runtime per launch
 
+#### Sending Silent Pushes Without an APNs Server
+
+A CloudKit query subscription in the public database sends a silent push to each subscribed user's devices when a matching record is created. A scheduled server job that creates a record then wakes subscribed installs on a cadence you control, with no APNs provider server or device-token database.
+
+```swift
+// Save once, then record that in UserDefaults (Apple's guidance for subscriptions)
+let subscription = CKQuerySubscription(
+    recordType: "WakePing",
+    predicate: NSPredicate(value: true),
+    subscriptionID: "wake-ping-v1",
+    options: [.firesOnRecordCreation]
+)
+let info = CKSubscription.NotificationInfo()
+info.shouldSendContentAvailable = true  // silent: no alert, sound, or badge
+subscription.notificationInfo = info
+_ = try await CKContainer.default().publicCloudDatabase.save(subscription)
+```
+
+- Background Modes: Background fetch and Remote notifications (CKSubscription header); call `registerForRemoteNotifications()` at launch. The work runs in the handler above
+- Server: create the record with `records/modify` and a server-to-server key — `axiom-data (skills/cloudkit-ref.md)`, CloudKit Web Services. Delete old records so they don't accumulate
+- Hourly fits the two-or-three-per-hour guidance, but the budget is shared across all apps on the device and can deliver none
+- A subscription belongs to the iCloud user who saved it: no iCloud account, no push
+- Not a keep-alive for an app the user stopped opening — background pushes are usage-gated too (Which Factors Gate Which Mode)
+
 > For silent push notification patterns (content-available payload, throttling limits, APNs setup), see skills/push-notifications.md.
 
 ---
@@ -726,9 +763,21 @@ From WWDC 2020-10063 "Background execution demystified":
 | **Low Power Mode** | User-enabled | Background activity limited |
 | **App Usage** | How often user launches app | More usage = higher priority |
 | **App Switcher** | App still visible? | Swiped away = no background |
-| **Background App Refresh** | System setting | Off = no BGAppRefresh tasks |
+| **Background App Refresh** | System setting | Off = no refresh, processing, or background-push launches; `submit` throws |
 | **System Budgets** | Energy/data budgets | Deplete with launches, refill over day |
 | **Rate Limiting** | System spacing | Prevents too-frequent launches |
+
+### Which Factors Gate Which Mode
+
+| Mode | Gated by | App-usage rule |
+|------|----------|----------------|
+| BGAppRefreshTask | All 7 | Honored for apps the user uses regularly; launches land just before predicted opens |
+| Background push (`content-available`) | All 7 | "Will not be delivered to the app at all if the user has not launched the app for a while" (Apple DTS, 2024) — supersedes WWDC 2020-10063's "does not gate background pushes based on app usage" |
+| BGProcessingTask | App Switcher, Background App Refresh switch, app usage, system budgets, rate limiting (critically low battery, Low Power Mode, and the energy budget don't apply on external power) | Attempted within two days when the user used the app within the past week (SDK header); daily if plugged in daily |
+| Background URLSession, discretionary | Most factors; transfers aren't rate-limited, launches are (waived if the app was foreground recently) | None |
+| Background URLSession, nondiscretionary (enqueued in foreground) | App Switcher and greatly relaxed budgets | None |
+
+None of refresh, processing, or background pushes keeps running an app the user stopped opening — all three depend on recent launches. Refresh on launch and treat background freshness as a bonus.
 
 ### Responding to System Constraints
 
@@ -775,7 +824,7 @@ case .restricted:
 - [ ] Scheduling on main queue or background queue (if performance sensitive)?
 - [ ] `earliestBeginDate` treated as a floor, not a schedule (the system decides when to run)?
 - [ ] Handling `submit()` errors?
-- [ ] Not scheduling duplicate tasks (check `pendingTaskRequests()`)?
+- [ ] Submits from background wakes (silent-push or other task handlers) go through `scheduleAppRefreshIfNeeded()`?
 
 ### Handler Checklist
 
@@ -791,6 +840,7 @@ case .restricted:
 - [ ] Tested in release build, not just debug?
 - [ ] Tested with Low Power Mode enabled?
 - [ ] Tested after force-quit from App Switcher (should NOT run)?
+- [ ] Tested with Background App Refresh off?
 - [ ] Console logs show expected "Task completed" messages?
 
 ---
@@ -1035,7 +1085,7 @@ subsystem:com.apple.backgroundtasks
 
 **Docs**: /backgroundtasks/bgtaskscheduler, /backgroundtasks/starting-and-terminating-tasks-during-development
 
-**Skills**: skills/background-processing-ref.md, skills/background-processing-diag.md, axiom-performance (skills/energy.md), skills/push-notifications.md, axiom-build (skills/lldb.md)
+**Skills**: skills/background-processing-ref.md, skills/background-processing-diag.md, axiom-performance (skills/energy.md), skills/push-notifications.md, axiom-build (skills/lldb.md), axiom-data (skills/cloudkit-ref.md)
 
 ---
 

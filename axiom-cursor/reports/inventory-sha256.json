@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "95e45f99304205f4b37612e59fa69079c76f035fa3d9eeca73fc721e2235622f",
+      "sha256": "86b63d8bf24208c5ec04b7135eb5ed1da8d4a74ffaebf05186fd20c5992239fb",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "0979ccc3e5742837059e37210b7e0a36b115f8e06694c81a1cebdf952f676a82",
+      "sha256": "8f8ef328f14bb88664a45ad221267a3c755f36d88658d0fff1e63eb09e488a8c",
       "bytes": 4374
     },
     {
@@ -598,8 +598,8 @@
     },
     {
       "path": "skills/axiom-data/skills/cloudkit-ref.md",
-      "sha256": "fd91c9b4921d7865053f575d9102b045164b49855b49a2b8d5d51dc1b9d89873",
-      "bytes": 22423
+      "sha256": "703b9f2acebf32afb3328a05ed4e1444034432a005185053744dca935315f068",
+      "bytes": 24117
     },
     {
       "path": "skills/axiom-data/skills/codable.md",
@@ -938,18 +938,18 @@
     },
     {
       "path": "skills/axiom-integration/skills/background-processing-diag.md",
-      "sha256": "33d41849132bcd351557eb73fa62c20628cdb1cfe4277a4aabe7066d941c12ca",
-      "bytes": 18041
+      "sha256": "616d3926cb714a3d7771356eb9baca249f4b4b07b272905757cf5dc854651e62",
+      "bytes": 19051
     },
     {
       "path": "skills/axiom-integration/skills/background-processing-ref.md",
-      "sha256": "8a0553e44a5be30031ba811c4430eb742c0580a11499039add31c9265fa38a04",
-      "bytes": 21509
+      "sha256": "e6585dba4d1dd9cd95be0dc55a0e93fc8cb0233a19c6c4f9b4e44602f1ecd872",
+      "bytes": 22040
     },
     {
       "path": "skills/axiom-integration/skills/background-processing.md",
-      "sha256": "0460ab474931d4bc09e89db34dfc1b1b8d79ec49ff8b833be0fdcab9cd1a4d47",
-      "bytes": 35800
+      "sha256": "3b55e6cd7f7a61ad393b79eb99b1dd3d551f848020a782c095ce531e00436629",
+      "bytes": 40210
     },
     {
       "path": "skills/axiom-integration/skills/callkit-livecommunicationkit-ref.md",
@@ -1033,8 +1033,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/push-notifications-diag.md",
-      "sha256": "91a73d0cd99d7777522eeb54bfbf96b611c8a1b5bd1483f51011102d185b7a34",
-      "bytes": 31308
+      "sha256": "8cee396848f050defdd9af2de4abba5b16d3c0dc1aa57a97ee144dc7b41db886",
+      "bytes": 31679
     },
     {
       "path": "skills/axiom-integration/skills/push-notifications-ref.md",
@@ -1939,7 +1939,7 @@
   ],
   "totals": {
     "files": 387,
-    "bytes": 7946896
+    "bytes": 7954912
   },
   "excludedMirrors": 30,
   "classes": {
