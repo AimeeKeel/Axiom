@@ -68,6 +68,40 @@ import Testing
     #expect(result.diagnostics.map(\.kind) == [.test])
   }
 
+  // Real Swift Testing 6.4 output: " at " can appear in argument values and in file names.
+  @Test(arguments: [
+    (
+      "􀢄  Test admits(pin:) recorded an issue with 1 argument pin → main-display at 3.0 at T.swift:3:104: Expectation failed: pin.d == \"z\"",
+      "T.swift", 3
+    ),
+    (
+      "􀢄  Test two(s:n:) recorded an issue with 2 arguments s → \"a at b\", n → 1 at T.swift:4:80: Expectation failed: n == 0",
+      "T.swift", 4
+    ),
+    (
+      "􀢄  Test two(s:n:) recorded an issue with 2 arguments s → \"12:30:45\", n → 1 at T.swift:4:80: Expectation failed: n == 0",
+      "T.swift", 4
+    ),
+    (
+      "􀢂  Test knownArg(s:) recorded a known issue with 1 argument s → \"x\" at T.swift:9:69: Expectation failed: s == \"y\"",
+      "T.swift", 9
+    ),
+    (
+      "􀢄  Test inAtFile() recorded an issue at Arrive at Gate.swift:2:25: Expectation failed: 1 == 2",
+      "Arrive at Gate.swift", 2
+    ),
+    (
+      "􀢄  Test \"Display at noon\" recorded an issue at T.swift:8:40: Expectation failed: Bool(false)",
+      "T.swift", 8
+    ),
+    ("􀇿  Test warn() recorded a warning at T.swift:6:33: Issue recorded", "T.swift", 6),
+  ])
+  func locatesSwiftTestingIssueWhenAtAppearsInArgumentsOrPath(line: String, file: String, row: Int)
+  {
+    let result = readLog(data: Data(line.utf8), context: context)
+    #expect(result.diagnostics.map { "\($0.file ?? "nil"):\($0.line ?? 0)" } == ["\(file):\(row)"])
+  }
+
   @Test func acceptsUnlocatedVirtualSourceWithoutParseIssue() {
     let result = readLog(
       data: Data("<unknown>:0: error: unable to load standard library\n".utf8), context: context)

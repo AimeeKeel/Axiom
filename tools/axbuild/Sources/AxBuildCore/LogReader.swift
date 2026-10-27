@@ -62,6 +62,12 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
       pattern:
         "^\\S+\\s+Test (.+?) recorded (an issue|a known issue|a warning)(?:.*?) at (.+?):([0-9]+):([0-9]+): (.*)$"
     )
+    // An argument description can itself contain " at ", so after one the path cannot; a file name
+    // may, so this narrower form applies only to parameterized cases.
+    let swiftTestWithArguments = try NSRegularExpression(
+      pattern:
+        "^\\S+\\s+Test (.+?) recorded (an issue|a known issue|a warning) with [0-9]+ arguments? .*? at ((?:(?! at ).)+?):([0-9]+):([0-9]+): (.*)$"
+    )
     let tool = try NSRegularExpression(
       pattern: "^(?:([^|]+?): )?(fatal error|error|warning|note|remark): (.+)$")
     let detail = try NSRegularExpression(pattern: "^(?:↳|􀄵)\\s+(.*)$")
@@ -97,7 +103,7 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
       {
         batch.crashed = true
       }
-      if let found = captures(swiftTest, in: line) {
+      if let found = captures(swiftTestWithArguments, in: line) ?? captures(swiftTest, in: line) {
         block = nil
         let known = found[1] == "a known issue"
         let warning = found[1] == "a warning"
