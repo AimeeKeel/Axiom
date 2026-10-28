@@ -323,8 +323,8 @@
     },
     {
       "path": "reports/capability-disposition.json",
-      "sha256": "fcc3f00804d1e85232bfa6b8b174b931b6c9041d10e4766ceb9f5d729c42f1cd",
-      "bytes": 32846
+      "sha256": "958fdaab76975ad112fed889075967703298a4b2f47251cfc2838e30913a7b36",
+      "bytes": 33152
     },
     {
       "path": "scripts/cursor-hook-adapter.py",
@@ -338,8 +338,8 @@
     },
     {
       "path": "scripts/posttool-bash-hints.py",
-      "sha256": "564591030c72bdb03c5b027554db3ae6df2ad3bd9e4c34cded21fc6f259fec36",
-      "bytes": 31198
+      "sha256": "bf1fdd843bb7e8a2ac27e1e484bd5301fe917edcc06a46f46be2b2566047334b",
+      "bytes": 33166
     },
     {
       "path": "scripts/pretool-crash-route.py",
@@ -1939,7 +1939,7 @@
   ],
   "totals": {
     "files": 387,
-    "bytes": 7961696
+    "bytes": 7963970
   },
   "excludedMirrors": 30,
   "classes": {

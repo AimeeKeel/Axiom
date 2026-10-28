@@ -23,25 +23,29 @@ Input:
           "session_id": "...",
           "tool_name": "Bash",
           "tool_input": {"command": "...", ...},
-          "tool_response": {...},          # Bash response shape undocumented
+          "tool_response": {"stdout": "...", "stderr": "...", ...},
           "duration_ms": 12345,            # optional, ms
           ...
         }
 
-    Bash output text on the ``CURSOR_TOOL_OUTPUT`` env var. We read this
-    rather than ``tool_response`` because the latter's Bash schema is
-    not documented; the env var is proven (used by the previous inline
-    hook). If the var is unset, we treat output as empty.
+    Claude Code (captured on 2.1.312) sends output only on stdin: PostToolUse
+    carries ``tool_response.stdout``/``stderr``, and a failing command fires
+    PostToolUseFailure with the output in ``error``. Claude Code never set the
+    tool-output environment variable this hook once relied on; Cursor's adapter
+    does, so a payload without those stdin fields falls back to it.
 
 Output:
 
-    Canonical Claude invocations emit zero or more plain-text hint lines.
-    Generated invocations set ``AXIOM_HARNESS=codex`` to read terminal text
+    Claude Code payloads (PostToolUse / PostToolUseFailure) get one
+    ``hookSpecificOutput.additionalContext`` object, the channel that reaches the
+    model; payloads without an event name (Cursor's adapter, tests) get plain-text
+    hint lines. Generated invocations set ``AXIOM_HARNESS=codex`` to read terminal text
     from stdin ``tool_response`` (string or explicit ``output`` field) and
     emit one PostToolUse ``hookSpecificOutput.additionalContext`` object.
     Unknown response fields are not scanned; no hints produce no output.
-    Claude/Codex completion status is unverified, so truncated-build recovery
-    stays silent for those adapters. Error text cannot establish failure.
+    Only Claude Code's PostToolUseFailure event establishes failure; Codex and
+    Cursor status is unverified, so truncated-build recovery stays silent there.
+    Error text never establishes failure.
 
 Exit code: always 0.
 """
@@ -652,9 +656,22 @@ def normalize_build_completion(
         output = response.get("output") if isinstance(response, dict) else response
         if not isinstance(output, str):
             return None
-    else:
-        output = environment_output
-    # Neither adapter has a verified native completion-status contract.
+        # Codex has no verified native completion-status contract.
+        return BuildCompletion(command, output, "unknown")
+    # Claude Code (verified on 2.1.312) sets no output env var: success output is in
+    # tool_response, and a failing command fires PostToolUseFailure with its output in
+    # `error`. The event, not the text, establishes failure (it may also cover a
+    # spawn error, but recovery needs truncation evidence too). Cursor's adapter sends
+    # neither and passes output through the environment.
+    event = data.get("hook_event_name")
+    response = data.get("tool_response")
+    if event == "PostToolUseFailure" and isinstance(data.get("error"), str):
+        outcome = "unknown" if data.get("is_interrupt") is True else "failed"
+        return BuildCompletion(command, data["error"], outcome)
+    streams = [response.get(key) for key in ("stdout", "stderr")] if isinstance(response, dict) else []
+    if not any(isinstance(stream, str) for stream in streams):
+        return BuildCompletion(command, environment_output, "unknown")
+    output = "\n".join(stream for stream in streams if isinstance(stream, str) and stream)
     return BuildCompletion(command, output, "unknown")
 
 
@@ -819,6 +836,21 @@ def main() -> int:
                         "hookSpecificOutput": {
                             "hookEventName": "PostToolUse",
                             "additionalContext": context,
+                        }
+                    },
+                    ensure_ascii=False,
+                )
+            )
+    elif data.get("hook_event_name") in ("PostToolUse", "PostToolUseFailure"):
+        # Claude Code shows a PostToolUse hook's plain stdout only in the transcript;
+        # additionalContext is what reaches the model.
+        if hints:
+            print(
+                json.dumps(
+                    {
+                        "hookSpecificOutput": {
+                            "hookEventName": data["hook_event_name"],
+                            "additionalContext": "\n".join(hints),
                         }
                     },
                     ensure_ascii=False,

@@ -31,6 +31,10 @@ const CC_HOOKS = {
       // Write/Edit to apply_patch) that must survive the transform unchanged.
       { matcher: "Write|Edit", hooks: [{ type: "command", command: 'python3 "${CLAUDE_PLUGIN_ROOT}/hooks/swift-guardrails.py"' }] },
     ],
+    // Codex firing PostToolUseFailure is unverified, so the event must drop.
+    PostToolUseFailure: [
+      { matcher: "Bash", hooks: [{ type: "command", command: 'python3 "${CLAUDE_PLUGIN_ROOT}/hooks/posttool-bash-hints.py"' }] },
+    ],
     SessionStart: [
       { hooks: [{ type: "command", command: '"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"' }] },
     ],

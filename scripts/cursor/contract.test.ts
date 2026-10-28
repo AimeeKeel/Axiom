@@ -151,8 +151,8 @@ test("every canonical agent falls into a class Cursor can release", () => {
 
 test("the closed Cursor source contract preserves its release policy", () => {
   assert.deepEqual(CURSOR_HOOK_EXPECTATIONS, {
-    globalHookEventTypes: 5,
-    globalHookEntries: 6,
+    globalHookEventTypes: 6,
+    globalHookEntries: 7,
     perAgentHooks: 0,
   });
   assert.equal(CURSOR_INJECTED_ROUTER, "axiom-tools");
@@ -181,8 +181,8 @@ test("the closed Cursor source contract preserves its release policy", () => {
 });
 
 test("hook counts and dispositions remain tied to canonical sources", () => {
-  assert.equal(globalHookEvents.length, 5);
-  assert.equal(globalHookEntries.length, 6);
+  assert.equal(globalHookEvents.length, 6);
+  assert.equal(globalHookEntries.length, 7);
   assert.deepEqual(perAgentHookOwners, []);
   assert.equal(globalHookEvents.length, CURSOR_HOOK_EXPECTATIONS.globalHookEventTypes);
   assert.equal(globalHookEntries.length, CURSOR_HOOK_EXPECTATIONS.globalHookEntries);
@@ -206,6 +206,8 @@ test("hook counts and dispositions remain tied to canonical sources", () => {
       (entry.matcher === "Bash" || entry.matcher === "Write|Edit")
     ) {
       expected = "postToolUse.additional_context";
+    } else if (event === "PostToolUseFailure" && entry.matcher === "Bash") {
+      expected = "not-rendered";
     } else if (event === "SubagentStart" && entry.matcher === undefined) {
       expected = "subagentStart.additional_context";
     } else {

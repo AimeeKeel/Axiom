@@ -687,5 +687,76 @@ class TestTruncatedBuildRecovery(unittest.TestCase):
                     self.assertNotIn("axbuild", out)
 
 
+class TestClaudeCodeNativePayloads(unittest.TestCase):
+    """Payload shapes captured from Claude Code 2.1.312: no output env var; success
+    output in tool_response, failure output in a separate PostToolUseFailure event."""
+
+    CONCURRENCY_OUTPUT = "error: actor-isolated property 'value' can not be referenced"
+    TRUNCATED_FAILURE = "Exit code 65\nerror: fixture\n... [20013 characters truncated] ..."
+
+    def run_native(self, payload: dict) -> str:
+        """Return the context Claude Code would add. Plain stdout from these events
+        never reaches the model, so anything but additionalContext JSON fails."""
+        env = {k: v for k, v in os.environ.items() if k != "CLAUDE_TOOL_OUTPUT"}
+        env.update(AXIOM_SESSION_CONTEXT="always", AXIOM_HARNESS="claude")
+        result = subprocess.run(
+            ["python3", HOOK], input=json.dumps(payload), capture_output=True, text=True,
+            timeout=5, env=env,
+        )
+        self.assertEqual(result.returncode, 0)
+        if not result.stdout.strip():
+            return ""
+        output = json.loads(result.stdout)["hookSpecificOutput"]
+        self.assertEqual(output["hookEventName"], payload["hook_event_name"])
+        return output["additionalContext"]
+
+    def success(self, command: str, **response) -> dict:
+        tool_response = {"stdout": "", "stderr": "", "interrupted": False, "isImage": False,
+                         "noOutputExpected": False, **response}
+        return {"hook_event_name": "PostToolUse", "tool_name": "Bash",
+                "tool_input": {"command": command}, "tool_response": tool_response}
+
+    def failure(self, command: str, error: str, is_interrupt: bool = False) -> dict:
+        return {"hook_event_name": "PostToolUseFailure", "tool_name": "Bash",
+                "tool_input": {"command": command}, "error": error,
+                "is_interrupt": is_interrupt}
+
+    def test_success_output_in_tool_response_is_scanned(self):
+        for field in ["stdout", "stderr"]:
+            with self.subTest(field=field):
+                out = self.run_native(self.success("swift build", **{field: self.CONCURRENCY_OUTPUT}))
+                self.assertIn("axiom-concurrency", out)
+
+    def test_failure_event_output_is_scanned(self):
+        out = self.run_native(
+            self.failure("swift build", "Exit code 1\n" + self.CONCURRENCY_OUTPUT))
+        self.assertIn("axiom-concurrency", out)
+
+    def test_truncated_failing_build_gets_the_recovery_hint(self):
+        out = self.run_native(self.failure("xcodebuild build", self.TRUNCATED_FAILURE))
+        self.assertIn("was truncated", out)
+        self.assertIn("axbuild", out)
+
+    def test_only_an_uninterrupted_failure_event_claims_failure(self):
+        cases = {
+            "interrupted failure": self.failure(
+                "xcodebuild build", self.TRUNCATED_FAILURE, is_interrupt=True),
+            "success with failure text": self.success(
+                "xcodebuild build", stdout=self.TRUNCATED_FAILURE),
+            "backgrounded success": self.success(
+                "xcodebuild build", stdout=self.TRUNCATED_FAILURE,
+                backgroundTaskId="b1", timedOutAfterMs=2000),
+        }
+        for name, payload in cases.items():
+            with self.subTest(case=name):
+                self.assertNotIn("axbuild", self.run_native(payload))
+
+    def test_slow_failing_build_on_the_failure_event_gets_the_duration_hint(self):
+        payload = self.failure(
+            "xcodebuild build -scheme App", "Exit code 65\nerror: x\n** BUILD FAILED **")
+        payload["duration_ms"] = 90_000
+        self.assertIn("Long xcodebuild (90s)", self.run_native(payload))
+
+
 if __name__ == "__main__":
     unittest.main()

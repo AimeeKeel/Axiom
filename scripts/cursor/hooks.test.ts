@@ -195,6 +195,7 @@ test("adapter fails open for an unknown mode", () => {
 test("adapter relays Axiom Shell hints as advisory context", () => {
   withStagedAdapter((adapter) => {
     const { response } = invoke(adapter, "post-shell", JSON.stringify({
+      hook_event_name: "postToolUse",
       tool_name: "Shell",
       tool_input: { command: "xcodebuild test" },
       tool_output: JSON.stringify({
@@ -207,6 +208,8 @@ test("adapter relays Axiom Shell hints as advisory context", () => {
 
     assert.deepEqual(Object.keys(response), ["additional_context"]);
     assert.match(response.additional_context, /axiom-uikit/);
+    // The hook's Claude Code JSON form must never leak into Cursor's plain context.
+    assert.doesNotMatch(response.additional_context, /hookSpecificOutput/);
   });
 });
 

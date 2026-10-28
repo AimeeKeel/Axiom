@@ -31,6 +31,11 @@ export const UNSUPPORTED_TOOL_MATCHERS = new Set(['Read']);
 // Events where Codex does not support a `matcher` field (any matcher is stripped).
 export const MATCHERLESS_EVENTS = new Set(['UserPromptSubmit', 'Stop']);
 
+// Source events left out of the Codex manifest because Codex firing them is unverified.
+// PostToolUseFailure carries Claude Code's failing-command output (captured 2026-10-28,
+// Claude Code 2.1.312); Codex keeps its PostToolUse path until its own event is captured.
+export const UNSUPPORTED_EVENTS = new Set(['PostToolUseFailure']);
+
 // Hook SCRIPTS that back only dropped hooks, so the Codex build must not copy them.
 // pretool-crash-route.py backs the "Read" PreToolUse group (UNSUPPORTED_TOOL_MATCHERS) —
 // with no Codex Read tool it can never fire. Kept beside the matcher exclusion as the
@@ -58,6 +63,7 @@ export function translateHooksToCodex(ccHooks) {
   /** @type {Record<string, HookGroup[]>} */
   const outHooks = {};
   for (const [event, groups] of Object.entries(ccHooks.hooks ?? {})) {
+    if (UNSUPPORTED_EVENTS.has(event)) continue;
     const translatedGroups = [];
     for (const group of groups) {
       // Drop groups Codex can't fire (matcher names a tool with no Codex equivalent).

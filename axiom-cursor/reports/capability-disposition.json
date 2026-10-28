@@ -3,7 +3,7 @@
   "agents": 42,
   "commands": 17,
   "excludedMirrors": 30,
-  "globalHookEntries": 6,
+  "globalHookEntries": 7,
   "perAgentHooks": 0,
   "releasedReadonlyBackground": 30,
   "releasedWritableForeground": 12,
@@ -405,6 +405,7 @@
   "dispositions": {
     "PostToolUse(Bash)": "postToolUse.additional_context",
     "PostToolUse(Write|Edit)": "postToolUse.additional_context",
+    "PostToolUseFailure(Bash)": "not-rendered",
     "PreToolUse(Read)": "preToolUse.additional_context",
     "SessionStart": "sessionStart.additional_context",
     "SubagentStart": "subagentStart.additional_context",
@@ -1215,6 +1216,16 @@
       "event": "PostToolUse",
       "matcher": "Write|Edit",
       "disposition": "postToolUse.additional_context",
+      "warning": null,
+      "advisory": null
+    },
+    {
+      "id": "global:global:PostToolUseFailure:Bash",
+      "source": "global",
+      "owner": null,
+      "event": "PostToolUseFailure",
+      "matcher": "Bash",
+      "disposition": "not-rendered",
       "warning": null,
       "advisory": null
     },

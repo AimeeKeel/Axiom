@@ -44,6 +44,7 @@ import {
 import {
   UNSUPPORTED_TOOL_MATCHERS,
   MATCHERLESS_EVENTS,
+  UNSUPPORTED_EVENTS,
   CODEX_EXCLUDED_HOOK_SCRIPTS,
   shouldCopyHookScript,
 } from "./codex-hooks.js";
@@ -2493,6 +2494,7 @@ heading("12l. Codex Hooks Fidelity");
     // translator *logic* regression is caught. (The shared exclusion constants are the
     // one common dependency — the group/guardrail checks below backstop that vector.)
     const expectedEvents = Object.entries(src.hooks ?? {})
+      .filter(([event]) => !UNSUPPORTED_EVENTS.has(event))
       .filter(([, groups]) =>
         groups.some((g) => g.matcher === undefined || !UNSUPPORTED_TOOL_MATCHERS.has(g.matcher)),
       )
@@ -2515,6 +2517,7 @@ heading("12l. Codex Hooks Fidelity");
     // (PLUGIN_ROOT-rewritten). matcher is stripped on matcherless events.
     let groupsOk = true;
     for (const [event, groups] of Object.entries(src.hooks ?? {})) {
+      if (UNSUPPORTED_EVENTS.has(event)) continue;
       for (const g of groups) {
         if (g.matcher !== undefined && UNSUPPORTED_TOOL_MATCHERS.has(g.matcher)) continue;
         const wantMatcher =
@@ -2553,6 +2556,10 @@ heading("12l. Codex Hooks Fidelity");
     let schemaOk = true;
     const referencedScripts = new Set<string>();
     for (const [event, groups] of Object.entries(emitted.hooks ?? {})) {
+      if (UNSUPPORTED_EVENTS.has(event)) {
+        error("codex-hooks", `${event} is emitted but Codex firing it is unverified`);
+        schemaOk = false;
+      }
       for (const g of groups) {
         if (g.matcher !== undefined && MATCHERLESS_EVENTS.has(event)) {
           error("codex-hooks", `${event} carries a matcher Codex rejects on this event: ${g.matcher}`);
@@ -3079,6 +3086,7 @@ heading("12r. Cursor Generated Distribution");
     const expectedGlobalHookIds = [
       "global:global:PostToolUse:Bash",
       "global:global:PostToolUse:Write|Edit",
+      "global:global:PostToolUseFailure:Bash",
       "global:global:PreToolUse:Read",
       "global:global:SessionStart:*",
       "global:global:SubagentStart:*",
@@ -3094,7 +3102,7 @@ heading("12r. Cursor Generated Distribution");
       && exactStrings(agentNames, canonicalAgents)
       && exactStrings(commandNames, canonicalCommands.map((name) => `axiom-${name}`))
       && exactStrings(disposition.authorityExpansions.map((row: { agent?: unknown }) => row.agent), canonicalAgents)
-      && Object.keys(disposition.dispositions ?? {}).length === 6
+      && Object.keys(disposition.dispositions ?? {}).length === 7
       && exactStrings(routerRows.map((row: { name?: unknown }) => row.name), canonicalRouters)
       && routerRows.every((row: { disposition?: unknown; listedInCanonicalManifest?: unknown }) =>
         row.disposition === "generated-native-skill" && typeof row.listedInCanonicalManifest === "boolean")

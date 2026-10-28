@@ -13,8 +13,8 @@
 
 /** Hook porting is a closed, reviewed decision — drift here must fail the build. */
 export const CURSOR_HOOK_EXPECTATIONS = Object.freeze({
-  globalHookEventTypes: 5,
-  globalHookEntries: 6,
+  globalHookEventTypes: 6,
+  globalHookEntries: 7,
   perAgentHooks: 0,
 });
 
@@ -86,6 +86,9 @@ export const CURSOR_HOOK_DISPOSITIONS = Object.freeze({
   "PreToolUse(Read)": "preToolUse.additional_context",
   "PostToolUse(Bash)": "postToolUse.additional_context",
   "PostToolUse(Write|Edit)": "postToolUse.additional_context",
+  // Claude Code's failure-only event. Cursor documents postToolUseFailure, but no
+  // payload has been captured, so it is not rendered; Cursor keeps postToolUse(Shell).
+  "PostToolUseFailure(Bash)": "not-rendered",
   SubagentStart: "subagentStart.additional_context",
 });
 
