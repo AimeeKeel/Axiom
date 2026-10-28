@@ -1,14 +1,14 @@
 ---
 name: now-playing
-description: Now Playing metadata, remote commands, artwork, and state sync for audio/video apps on iOS 18+
+description: Now Playing metadata, remote commands, artwork, and playback state for audio and video apps, from the MediaPlayer APIs to the NowPlaying framework in OS 27
 skill_type: discipline
 version: 1.1.0
-apple_platforms: iOS 18+, iPadOS 18+, CarPlay
+apple_platforms: iOS 18+, iPadOS 18+, CarPlay; NowPlaying framework on iOS, iPadOS, macOS, watchOS, tvOS, and visionOS 27+
 ---
 
 # Now Playing Integration
 
-Lock Screen and Control Center integration for audio and video apps, from the MediaPlayer APIs (`MPNowPlayingInfoCenter`, and `MPNowPlayingSession` from iOS 16) to the Swift-native NowPlaying framework in iOS 27. Also covers CarPlay, MusicKit, and animated Lock Screen artwork.
+Puts your audio or video app's playback on the Lock Screen and in Control Center, using either the MediaPlayer APIs (`MPNowPlayingInfoCenter`, and `MPNowPlayingSession` from iOS 16) or the Swift-native NowPlaying framework introduced in iOS 27. Also covers CarPlay, MusicKit, Siri, and animated Lock Screen artwork.
 
 ## When to Use
 
@@ -21,20 +21,24 @@ Use this skill when:
 - Another app "steals" Now Playing status from your app
 - You're implementing Now Playing for the first time
 - You're adding Now Playing to a CarPlay audio app
+- You're showing playback from a speaker, TV, or other device your app controls (iOS 27)
+- You want Siri's "pause", "next", or "what song is this?" to work with your app
 
-**Core insight** Now Playing eligibility requires three things: an active `AVAudioSession`, remote command handlers, and published metadata. Missing any one of them silently breaks the whole system.
+**Core insight** With the MediaPlayer APIs, Now Playing needs three things: an active `AVAudioSession`, remote command handlers, and published metadata. Leave out any one and your app silently never appears.
 
 ## Example Prompts
 
 Questions you can ask your assistant that will draw from this skill:
 
-- "Now Playing info shows briefly when playback starts, then disappears when I lock the screen."
-- "Play/pause buttons in Control Center are grayed out or don't respond to taps."
-- "Album artwork never appears, or shows wrong artwork, or flickers between images."
-- "Control Center shows 'Playing' when my app is actually paused. How do I sync them?"
-- "Apple Music takes over and my app loses Now Playing control."
+- "Why does Now Playing info appear when playback starts, then disappear when I lock the screen?"
+- "Why are the play and pause buttons in Control Center grayed out?"
+- "Why does my album artwork flicker between images when the track changes?"
+- "Control Center shows 'Playing' when my app is paused. How do I keep them in sync?"
+- "Why does Apple Music take over Now Playing from my app?"
 - "How do I add Now Playing support to my CarPlay audio app?"
-- "How do I adopt the new NowPlaying framework / MediaSession on iOS 27?"
+- "How do I adopt the new NowPlaying framework on iOS 27?"
+- "Why doesn't `requestToBecomeSystemPrimary()` put my session on the Lock Screen?"
+- "How do I show playback from our smart speaker on the Lock Screen when our app isn't running?"
 
 ## What This Skill Provides
 
@@ -52,6 +56,7 @@ Questions you can ask your assistant that will draw from this skill:
 
 ### Artwork (Pattern 3)
 - `MPMediaItemArtwork` with a size handler that returns the image closest to the requested size
+- Marking that handler `@Sendable` and capturing the image, because the system calls it off the main thread and Swift 6 otherwise crashes there
 - A single source of truth to prevent flickering
 - Cancelling the previous artwork load on track change
 
@@ -91,12 +96,18 @@ Questions you can ask your assistant that will draw from this skill:
 - Your `@Observable` model conforms to `MediaSessionRepresentable`, and the system observes it, so there are no manual refreshes
 - Strongly typed content (`MusicContent`, `PodcastContent`, `MovieContent`, …) instead of a string-keyed dictionary
 - A declarative `[MediaCommand]` array with `async` closures instead of per-command `MPRemoteCommandCenter` targets
-- Remote and server-driven playback via a push-based `RemoteMediaSession` extension (iOS only)
-- Doesn't deprecate the MediaPlayer APIs, so Patterns 1–8 remain valid for apps that support versions before iOS 27
+- Playback snapshots that pair the elapsed time with a timestamp, so the system can advance the progress bar on its own between updates
+- The session life cycle: configuring the audio session first, running more than one session, removing a session, and the rule that `requestToBecomeSystemPrimary()` only works while your app is in the foreground
+- Playback on other devices (iOS only): remote sessions, backed by a `RemoteMediaSessionExtension` app extension, that your server can start, update, and end with push notifications while your app isn't running
+- The MediaPlayer APIs aren't deprecated, so Patterns 1–8 still apply to apps that support versions before iOS 27
+
+### Siri
+- Siri's "pause", "next", and "what song is this?" use the same commands and metadata as the Lock Screen
+- Entity annotations (iOS 27) that tell Siri which song or artist is playing, so requests like "add this to my playlist" resolve against your catalog
 
 ## Key Pattern
 
-### The Eligibility Requirements
+### The MediaPlayer Eligibility Requirements
 
 ```swift
 // ✅ All three required for Now Playing to appear:
@@ -148,7 +159,8 @@ This page documents the `now-playing` skill (in the `axiom-media` suite), which 
 
 - [now-playing-carplay](/reference/now-playing-carplay) – CarPlay Now Playing details: `CPNowPlayingTemplate` buttons, entitlement setup, and CarPlay-specific debugging
 - [now-playing-musickit](/reference/now-playing-musickit) – `ApplicationMusicPlayer` publishing and hybrid apps that mix Apple Music with your own content
-- [avfoundation-ref](/reference/avfoundation-ref) – AVAudioSession configuration, spatial audio, ASAF/APAC
+- [siri-audio](/skills/integration/siri-audio) – "Play X in MyApp" and other Siri requests that start playback, which go through App Intents rather than Now Playing commands
+- [avfoundation-ref](/reference/avfoundation-ref) – `AVAudioSession` configuration in depth, plus spatial audio formats
 - [memory-debugging](/skills/debugging/memory-debugging) – Retain cycle diagnosis in closure-based command handlers
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – `@MainActor` patterns for async artwork loading
 
@@ -156,4 +168,4 @@ This page documents the `now-playing` skill (in the `axiom-media` suite), which 
 
 **WWDC**: 2017-251, 2019-501, 2022-110338, 2026-312
 
-**Docs**: /nowplaying, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpmediaitemanimatedartwork
+**Docs**: /nowplaying, /nowplaying/publishing-media-sessions, /nowplaying/publishing-remote-media-sessions, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
