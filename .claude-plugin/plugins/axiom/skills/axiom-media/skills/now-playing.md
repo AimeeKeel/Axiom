@@ -929,7 +929,7 @@ Testing: Verified with 10 track changes, zero flicker.
 
 ## Expert Checklist
 
-MediaPlayer path. On the NowPlaying path only the first two items apply; never add the MediaPlayer items alongside a `MediaSession`.
+MediaPlayer path. On the NowPlaying path, Before Implementing, AVAudioSession Setup and Testing apply; skip Remote Commands, Now Playing Info and Artwork, and never add those MediaPlayer calls alongside a `MediaSession`.
 
 ### Before Implementing Now Playing
 - [ ] Added `audio` to UIBackgroundModes in Info.plist
@@ -1181,7 +1181,7 @@ Prefer the async forms unless you're bridging callback-based code.
 
 `import NowPlaying` is a Swift-native alternative to the manual MediaPlayer work — building an `MPNowPlayingInfoCenter.nowPlayingInfo` dictionary by hand and registering per-command handlers on `MPRemoteCommandCenter` (Patterns 2–4). Pattern 1 still applies: `.playback` audio session and the `audio` background mode. Instead, your `@Observable` player model conforms to `MediaSessionRepresentable`, you hand it to a `MediaSession`, and the system **observes the model** — every Now Playing surface stays in sync automatically, with no manual refresh calls: Lock Screen, Control Center, Dynamic Island, StandBy, CarPlay, AirPlay-capable accessories, Apple Watch, and Now Playing on Apple TV and Vision Pro.
 
-**One API per process for local playback.** Apple's framework overview: "Don't mix the Now Playing framework with the `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` APIs from the Media Player framework for local playback. Doing so results in undefined behavior." Migrate the whole local path at once — a leftover `nowPlayingInfo` write, or an `MPRemoteCommandCenter` target added "just for CarPlay" or "just for Siri", is mixing; NowPlaying sessions already reach CarPlay and Apple Watch. Apple scopes the rule to local playback, not remote sessions. `ApplicationMusicPlayer` publishes from its own process, and Apple states no rule for running it beside a `MediaSession`; keep one publisher active at a time — the handoff in now-playing-musickit.md, with `session = nil` in place of clearing `nowPlayingInfo` while Apple Music plays.
+**One API per process for local playback.** Apple's framework overview: "Don't mix the Now Playing framework with the `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` APIs from the Media Player framework for local playback. Doing so results in undefined behavior." Migrate the whole local path at once — a leftover `nowPlayingInfo` write, or an `MPRemoteCommandCenter` target added "just for CarPlay" or "just for Siri", is mixing; NowPlaying sessions already reach CarPlay and Apple Watch. Apple scopes the rule to local playback, not remote sessions. `ApplicationMusicPlayer` publishes Now Playing from a system process, outside your code, and Apple states no rule for running it beside a `MediaSession`; keep one publisher active at a time — the handoff in now-playing-musickit.md, with `session = nil` in place of clearing `nowPlayingInfo` while Apple Music plays.
 
 Local path: all platforms. Remote path: iOS and iPadOS apps plus their extension — not Mac Catalyst.
 
@@ -1297,7 +1297,7 @@ Key shapes:
 
 ### Session lifecycle and primacy
 
-- **`MediaSession`** is `@MainActor`, conforms to `Observable`, and is **unavailable in iOS app extensions**. Publish = create it + `requestToBecomeApplicationPrimary()`; unpublish = drop your last reference (set it to `nil`). There is no `end()` for local sessions.
+- **`MediaSession`** is `@MainActor`, conforms to `Observable`, and is **unavailable in iOS app extensions**. Publish = create it + `requestToBecomeApplicationPrimary()`; unpublish = drop your last reference (set it to `nil`). There is no `end()` for local sessions. `MediaSession` retains its representable strongly, so a model that stores its own session forms a cycle — call `stopPublishing()` (or set `session = nil`) before discarding the model; dropping the model alone keeps both alive.
 - **Multiple sessions** — one app can run several (say a music player and a podcast player); each observes its own representable. `requestToBecomeApplicationPrimary()` picks which one represents the app; `canBecomeApplicationPrimary` reports whether it can. Observe `isApplicationPrimary` (and, on iOS/iPadOS/Mac Catalyst, `isSystemPrimary`) to reflect primacy in your UI.
 - **`requestToBecomeSystemPrimary()`** (iOS, iPadOS and Mac Catalyst apps; not extensions) requests Lock Screen / Control Center display and also makes the session app-primary; display is not guaranteed. **Your app must be in the foreground — from the background the request has no effect.** Not needed for ordinary local playback. The system-primary session should be the one your UI is prominently showing — call it when the user focuses one of several sessions, or to take over from another app.
 - **Errors** — `MediaSessionError`: `.invalidState` (session can't become primary), `.sessionInvalidated`, `.internalFailure`.

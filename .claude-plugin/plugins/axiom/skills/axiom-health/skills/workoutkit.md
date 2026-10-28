@@ -218,7 +218,7 @@ try await plan.openInWorkoutApp()
 
 This is the current shipping way to preview or hand off a plan for immediate execution.
 
-In SwiftUI, `.workoutPreview(plan, isPresented: $showing)` presents the system preview sheet (iOS 17, watchOS 11; not tvOS). To export a plan, read `try plan.dataRepresentation` (a throwing property, not a method); restore it with `try WorkoutPlan(from: data)`.
+In SwiftUI, `.workoutPreview(plan, isPresented: $showing)` presents the system preview sheet (iOS 17, watchOS 11, macOS 15, Mac Catalyst 18; not tvOS). To export a plan, read `try plan.dataRepresentation` (a throwing property, not a method); restore it with `try WorkoutPlan(from: data)`.
 
 ## Swimming Workouts
 

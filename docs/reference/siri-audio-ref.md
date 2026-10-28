@@ -66,7 +66,7 @@ Questions you can ask your assistant that will draw from this reference:
 - App Selection (Siri choosing your app when the user doesn't name it): donations, `INMediaUserContext`, Spotlight, and vocabulary
 
 ### Now Playing Commands
-- How Siri's "pause", "next", and "what song is this?" reach `MPRemoteCommandCenter` and Now Playing metadata
+- How Siri's "pause", "next", and "what song is this?" reach `MPRemoteCommandCenter` or the NowPlaying framework's `MediaCommand` closures (one or the other, never both), and Now Playing metadata
 
 ### Build Error Reference
 - Each metadata-phase and Swift error message, and its fix

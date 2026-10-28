@@ -48,7 +48,7 @@ Signs you're making this harder than it needs to be:
 - ❌ Using FCM without disabling method swizzling when you have custom delegate handling
 - ❌ Not handling foreground notification presentation (notifications silently dropped)
 - ❌ Overusing Time Sensitive interruption level (erodes user trust, they'll disable all notifications)
-- ❌ Treating any notification, local or remote, as guaranteed delivery — it's best-effort; VoIP calls and complication updates belong on PushKit
+- ❌ Treating any notification, local or remote, as guaranteed delivery — it's best-effort; VoIP calls belong on PushKit, widget/complication refreshes on WidgetKit push (`WidgetPushHandler`)
 
 ## Mandatory First Steps
 

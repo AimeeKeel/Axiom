@@ -32,6 +32,7 @@ Questions you can ask your assistant that will draw from this reference:
 ## What's Covered
 
 - CarPlay's relationship to `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` (no CarPlay-specific metadata for the basic case)
+- On iOS 27, apps using the NowPlaying framework reach CarPlay through their `MediaSession`; never add `MPNowPlayingInfoCenter` or `MPRemoteCommandCenter` calls for CarPlay alongside it
 - `CPNowPlayingTemplate` customization with custom buttons (iOS 14+), configured at connection time
 - Sports mode (iOS 18.4+): the content schema, clock behavior, and when to use it
 - The `audio` background mode and the `com.apple.developer.carplay-audio` entitlement, which you request from Apple; the deprecated `playable-content` entitlement

@@ -37,7 +37,7 @@ Two caveats on the evidence, so you know how far to trust the model. The out-of-
 
 ### Check Music Authorization
 
-Add `NSAppleMusicUsageDescription` to Info.plist first — without it the system terminates the app when it touches the user's music data. The App ID also needs the MusicKit App Service (`music-library`, Authorization).
+Add `NSAppleMusicUsageDescription` to Info.plist first — without it the system terminates the app when it touches the user's music data. The App ID also needs the MusicKit App Service (see skills/music-library.md, "Authorization — Two Separate Gates").
 
 ```swift
 import MusicKit

@@ -80,7 +80,7 @@ digraph macos {
 }
 ```
 
-> **iOS screen capture?** ScreenCaptureKit is macOS-only. For iOS screen recording, use ReplayKit — see axiom-media.
+> **iOS screen capture?** On iOS 27+ use ScreenCaptureKit's `SCContentSharingPicker` — see axiom-media (skills/screen-capture.md); ReplayKit (deprecated in the 27 SDKs) only below 27.
 
 ## Resources
 

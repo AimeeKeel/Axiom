@@ -878,8 +878,8 @@
     },
     {
       "path": "skills/axiom-health/skills/workoutkit.md",
-      "sha256": "849bf90256ad4513ec03ac03c7f4cc9647c08cbe8ceb38a6c9cb991fac974c67",
-      "bytes": 11195
+      "sha256": "8901cf4433f7d6207f1ba70727e12a7a42d3c12e3272f04c47de42a02e3e0db5",
+      "bytes": 11222
     },
     {
       "path": "skills/axiom-health/skills/workouts.md",
@@ -1043,8 +1043,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/push-notifications.md",
-      "sha256": "0abd51cda841261ed8ffa0563d4cf7fc5249b8d08815bad073305b1da9840406",
-      "bytes": 31355
+      "sha256": "25324d3431b7b55751f7e969969f1bf1e864c4ced7e3299e1a5b4a0078facc3f",
+      "bytes": 31401
     },
     {
       "path": "skills/axiom-integration/skills/shareplay-ref.md",
@@ -1133,8 +1133,8 @@
     },
     {
       "path": "skills/axiom-macos/SKILL.md",
-      "sha256": "1ee8f5ba4ff0ed60162f2e4413c5c0f74b04e37451e568ea4d7b2337fc30f81a",
-      "bytes": 4895
+      "sha256": "f0393d61cca8440430c9b51281aa382730f682326200b700aee753ed5a89de44",
+      "bytes": 4962
     },
     {
       "path": "skills/axiom-macos/skills/appkit-interop.md",
@@ -1268,13 +1268,13 @@
     },
     {
       "path": "skills/axiom-media/skills/now-playing-musickit.md",
-      "sha256": "6c7977885059a42bf9391a901b4292dbbe96d4c4d1fcd9259b6303b81d19e57a",
-      "bytes": 16162
+      "sha256": "ea53e96ace7c8c822cd011cfc26fab043c7447c3f0e0ca4bdd2f608fa08e7a08",
+      "bytes": 16199
     },
     {
       "path": "skills/axiom-media/skills/now-playing.md",
-      "sha256": "64143cb6b7f520c3db12fe3c276b01a8b2b97e7cb6cd2fc97e8a0d9a28c4c48b",
-      "bytes": 67263
+      "sha256": "4300a3af732bc9bfcf0a332280528c7605af7b3d28dd7139cb25b7ff22184a11",
+      "bytes": 67612
     },
     {
       "path": "skills/axiom-media/skills/photo-library-ref.md",
@@ -1413,8 +1413,8 @@
     },
     {
       "path": "skills/axiom-performance/skills/app-launch.md",
-      "sha256": "e1ba8d2127fdb8e8ee9560b22002932e7d55fcbc1ac62ee80ab56415f1360b59",
-      "bytes": 24277
+      "sha256": "f75b6a0758609e42f6122e0061c54dbc4715d0fc56c5de14494ab393639e053f",
+      "bytes": 24263
     },
     {
       "path": "skills/axiom-performance/skills/energy-diag.md",
@@ -1478,8 +1478,8 @@
     },
     {
       "path": "skills/axiom-security/skills/agentic-security.md",
-      "sha256": "41dbb305df9ace7833ac85f0fbce9acb0e136f883821a20dc904e79e55a58b5c",
-      "bytes": 17357
+      "sha256": "55ab9d0c648c05e7e7a731cf10cb292aa118f643cc8de0cf070aa37f2cd0f38f",
+      "bytes": 17468
     },
     {
       "path": "skills/axiom-security/skills/app-attest.md",
@@ -1939,7 +1939,7 @@
   ],
   "totals": {
     "files": 387,
-    "bytes": 7974097
+    "bytes": 7974720
   },
   "excludedMirrors": 30,
   "classes": {
