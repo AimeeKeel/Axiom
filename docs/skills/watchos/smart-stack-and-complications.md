@@ -37,6 +37,7 @@ Questions you can ask your assistant that will draw from this skill:
 
 ### RelevanceKit and Relevant Widgets on watchOS 26
 - `RelevantContext` types, including the watchOS 26 date and MapKit point-of-interest contexts
+- Why RelevanceKit takes effect only on watchOS: it compiles on iOS and iPadOS but doesn't affect their Smart Stacks
 - Which parts are RelevanceKit (`RelevantContext`) and which are WidgetKit (`WidgetRelevance`, `WidgetRelevanceAttribute`)
 - The roles of `RelevanceEntry`, `RelevanceEntriesProvider`, and `RelevanceConfiguration`, compared with their timeline-widget equivalents
 - Worked example building a beach-events relevant widget end to end

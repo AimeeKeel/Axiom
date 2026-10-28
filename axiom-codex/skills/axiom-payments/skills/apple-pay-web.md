@@ -71,6 +71,8 @@ Two JavaScript APIs accept Apple Pay on the web. Both are supported; pick by bro
 
 You can support both — many large merchants do, choosing dynamically based on the browser. Apple's recommended migration path is toward Payment Request API for portability, but Apple Pay JS remains supported.
 
+**Platform limits.** Inside an iOS app, show Apple Pay web pages in `SFSafariViewController` (it supports Apple Pay). In China, neither API is available in macOS Safari. A Mac authorizes with Touch ID or a nearby Apple Pay-capable iPhone or Apple Watch. Some regions' regulations require specific configuration (/passkit/complying-with-regional-regulations).
+
 ## Display the Button (WWDC24, MIG p.13)
 
 There are two ways to render the Apple Pay button on the web. **One of them works on third-party browsers; one doesn't.**

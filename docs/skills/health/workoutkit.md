@@ -50,6 +50,7 @@ Questions you can ask your assistant that will draw from this skill:
 - Scheduler limits: at most 15 scheduled plans, within ±7 days of now
 - Listing, removing, and marking scheduled workouts complete
 - Opening a plan immediately in the Workout app with `plan.openInWorkoutApp()`
+- Previewing a plan with the SwiftUI `.workoutPreview` modifier, and exporting and restoring plans with `dataRepresentation` and `WorkoutPlan(from:)`
 
 ### Swimming Workouts (iOS 18+)
 - The `.poolSwimDistanceWithTime` goal for send-off-interval semantics

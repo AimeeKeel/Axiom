@@ -35,13 +35,14 @@ Questions developers ask that this reference answers:
 
 - **Top-level keys** – `formatVersion`, `passTypeIdentifier`, `serialNumber`, `teamIdentifier`, `organizationName`, `description`, plus optional `logoText`, color keys, `expirationDate`, `voided`, `relevantDate`, `locations`, `beacons`, `barcodes`, `nfc`, `webServiceURL`, `authenticationToken`, `associatedStoreIdentifiers`, `appLaunchURL`, `userInfo`, `sharingProhibited`, `suppressStripShine`, `preferredStyleSchemes`, `groupingIdentifier`, `semantics`
 - **Pass style keys** – `boardingPass` (with `transitType`), `eventTicket`, `coupon`, `storeCard`, `generic`; iOS 18+ `posterEventTicket` declared via `preferredStyleSchemes` (underlying style is still `eventTicket`); iOS 27 `posterGeneric` with the `generic`-alongside fallback
+- **Semantic boarding passes and multi-event tickets** – iOS 26+ `semanticBoardingPass` for air boarding passes with live flight updates; `upcomingPassInformation` for several upcoming events on one ticket
 - **`PKTransitType`** values for boarding passes
 - **PassFields** – `headerFields` (stacked Wallet view), `primaryFields`, `secondaryFields`, `auxiliaryFields` (Apple Watch surfaces these), `backFields` (tap pass info), `footerFields` (iOS 27, `posterGeneric` only — only the first entry renders)
 - **Field dictionary keys** – `key`, `label`, `value`, `attributedValue`, `changeMessage`, `dateStyle`, `timeStyle`, `currencyCode`, `numberStyle`, `textAlignment`, `isRelative`, `ignoresTimeZone`, `dataDetectorTypes`
 - **`PKDateStyle*`**, **`PKNumberStyle*`**, **`PKTextAlignment*`**, and **`PKDataDetectorType*`** value lists
 - **Semantic tags** – `eventName`, `eventStartDate`/`eventEndDate`, venue tags, `performerNames`, `seats`, sports `leftTeamName`/`rightTeamName`, airline `airlineCode`/`flightNumber`, boarding `departureGate`/`arrivalDate`, store-card `balance`/`totalPrice`
 - **Barcodes array** – `PKBarcodeFormatQR`, `PKBarcodeFormatPDF417`, `PKBarcodeFormatAztec`, `PKBarcodeFormatCode128`; the deprecated singular `barcode` key; the four 1D types new in the 27 releases (EAN-13, Code 39, Codabar, ITF) with the legacy-format fallback technique
-- **Featured actions** (27 releases) — the top-level `featuredActions` key, up to two actions per pass
+- **Featured actions** (27 releases) – the top-level `featuredActions` key, up to two actions per pass
 - **Pass authoring tools** – Pass Designer (Mac app, `.pkpasstemplate`) and the Pass Builder Swift-on-Server package with the `buildpass` CLI
 - **NFC payload schema** – `nfc.message`, `nfc.encryptionPublicKey`, `nfc.requiresAuthentication`; requires NFC Pass Encoding entitlement
 - **Locations and beacons** – schema and 10-item caps

@@ -68,7 +68,7 @@ Every section notes the RealityKit equivalent, so the guidance doubles as a migr
 - Converting .scn to USDZ via `xcrun scntool`
 
 ### Migration Decision Tree
-- Whether to migrate, by situation: a new project, AR features, a visionOS target, heavy SceneKit investment, performance needs, or maintenance mode
+- Whether to migrate, by situation: a new project, AR features, a visionOS target (where SceneKit renders only into 2D views, with no volumes or immersive spaces), heavy SceneKit investment, performance needs, or maintenance mode
 
 ### Anti-Patterns
 - Starting new projects in SceneKit

@@ -59,7 +59,7 @@ Questions you can ask your assistant that will draw from this reference:
 - `ControlWidgetButton` and `ControlWidgetToggle`
 - `ControlValueProvider` for async state
 - Configurable controls and refinements
-- watchOS controls (watchOS 26+)
+- watchOS controls (watchOS 26+); no controls on visionOS or tvOS
 
 ### Rendering and Platforms
 - Accented rendering: `widgetAccentable()`, `WidgetAccentedRenderingMode`, container backgrounds

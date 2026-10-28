@@ -1015,6 +1015,8 @@ See OSSignposter section above. Add signpost intervals to performance-critical c
 
 ### Stage 2: Automate with XCTest Performance Tests
 
+Performance tests stay in XCTest — Swift Testing has no performance-measurement API. One target can hold both frameworks, but never mix their APIs inside a single test.
+
 ```swift
 func testDataLoadPerformance() throws {
     let options = XCTMeasureOptions()

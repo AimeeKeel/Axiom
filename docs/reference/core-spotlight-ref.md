@@ -16,6 +16,7 @@ Complete reference for Core Spotlight framework and NSUserActivity — make app 
 - Batch index for performance
 - Delete indexed content
 - Debug Spotlight search not finding app content
+- Expose custom file types to Spotlight on macOS, where File Import extensions do nothing and a Spotlight importer plugin is the path
 - Integrate NSUserActivity with App Intents (appEntityIdentifier)
 - Configure semantic / on-device LLM search over indexed content with `SearchableItemAttribute` (iOS 27)
 

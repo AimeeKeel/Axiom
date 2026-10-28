@@ -53,6 +53,10 @@ Do NOT use this skill for:
 
 ## Core Spotlight (CSSearchableItem)
 
+The index stays on device and private to the device owner: never sent to Apple, never synced to the person's other devices — index on each device. Your app owns indexing and upkeep, either while running or from an index extension (`CSIndexExtensionRequestHandler`) the system calls on demand.
+
+**macOS: Spotlight File Import extensions (`CSImportExtension`) do nothing**, though the SDK declares the class macOS 12+ and it compiles. To expose custom file types to Spotlight on macOS, write a Spotlight importer plugin (`.mdimporter`).
+
 ### Creating Searchable Items
 
 ```swift

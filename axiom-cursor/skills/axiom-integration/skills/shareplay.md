@@ -1,7 +1,7 @@
 
 # SharePlay (GroupActivities) — Discipline
 
-SharePlay gives your app a private, system-provided realtime channel between people who are already together in FaceTime or Messages — no account system, no invitations, no transport of your own. You describe an *activity*; the system creates and hands you *sessions*.
+SharePlay gives your app a private, system-provided realtime channel between people who are already together in FaceTime or Messages — no account system, no invitations, no transport of your own. You describe an *activity*; the system creates and hands you *sessions*. Everything a `GroupSession` syncs is end-to-end encrypted: Apple can't read your content or playback events (start, pause, skip), and its servers don't know which app a session belongs to — useful for privacy disclosures.
 
 ## Core mental model
 

@@ -32,7 +32,8 @@ Questions you can ask your assistant that will draw from this reference:
 
 - What `ApplicationMusicPlayer` publishes automatically (title, artist, album, artwork, duration, elapsed time, rate), and why it doesn't use your app's `MPNowPlayingInfoCenter` dictionary
 - What is not automatic (custom metadata, remote command customization, mixed content)
-- Music authorization, Apple Music subscription checks, the subscription offer sheet, and graceful fallback without a subscription
+- `ApplicationMusicPlayer`, which plays for your app only, vs `SystemMusicPlayer`, which drives the Music app's own playback
+- Music authorization (the app needs `NSAppleMusicUsageDescription`, or the system terminates it), Apple Music subscription checks, the subscription offer sheet, and graceful fallback without a subscription
 - Playback, playback state observation, and queue management
 - Hybrid app handoff between MusicKit and `AVPlayer`: `stop()` rather than `pause()`, clearing your dictionary on every switch, never read-modify-write
 - The common mistake of writing `nowPlayingInfo` during MusicKit playback, and why it blanks the artwork

@@ -29,7 +29,7 @@ Use this skill when you're:
 - **The iOS capture model** – on iOS you can't enumerate `SCShareableContent` (it's macOS-only); you obtain an `SCContentFilter` from the system **`SCContentSharingPicker`** (`.present()` / `.presentForCurrentApplication()`), then create an `SCStream`
 - **Output options** – raw `CMSampleBuffer` frames (`SCStreamOutput`), record-to-file (`SCRecordingOutput`), instant-replay clip buffering, and iOS-only camera video effects (`SCVideoEffectOutput`, in-app capture only)
 - **Configuration** – `SCStreamConfiguration` (width/height/audio); the verified iOS-vs-macOS availability deltas (e.g. `minimumFrameInterval`/`pixelFormat`/`SCScreenshotManager` are macOS-only)
-- **How it differs from neighbors** – vs `ImageRenderer` (snapshots *your own* SwiftUI view, not the screen) and vs ReplayKit (the pre-27 iOS path)
+- **How it differs from neighbors** – vs `ImageRenderer` (snapshots *your own* SwiftUI view, not the screen) and vs ReplayKit, which the 27 SDKs deprecate in favor of ScreenCaptureKit (keep it only as the fallback for earlier OS versions)
 
 ## Related
 

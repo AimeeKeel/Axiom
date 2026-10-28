@@ -5,7 +5,7 @@ description: SpriteKit game development — scene graph, physics, actions, perfo
 
 # SpriteKit
 
-Complete guide to building reliable SpriteKit games. Covers the scene graph model, physics engine, action system, game loop, rendering optimization, and integration with SwiftUI and Metal.
+Complete guide to building reliable SpriteKit games. Covers the scene graph model, physics engine, action system, game loop, rendering optimization, and integration with SwiftUI and Metal. On visionOS, SpriteKit is for compatible iPhone and iPad apps only; build native visionOS apps with RealityKit.
 
 ## When to Use
 

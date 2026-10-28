@@ -19,7 +19,7 @@ Region availability is gated. As of writing: US, UK, Australia, Canada, France, 
 
 ## The PSP-Onboarding Reality
 
-You **cannot** ship Tap to Pay without a PSP relationship. Apple's docs gloss this over; in practice, PSP integration is the actual blocker for most teams.
+You **cannot** ship Tap to Pay without a PSP relationship. Apple's docs gloss this over; in practice, PSP integration is the actual blocker for most teams. The PSP must be a participating, **Level 3–certified** provider; Tap to Pay itself follows the PCI CPoC standard (Level 2–certified payment kernels).
 
 Three Apple-supported PSPs as of writing:
 

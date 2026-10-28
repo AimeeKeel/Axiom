@@ -72,6 +72,8 @@ final class GameView: MTKView {
 
 ### Where the GCController Comes From
 
+Setup: add the **Game Controllers** capability in Signing & Capabilities — it sets `GCSupportsControllerUserInteraction` in Info.plist and records the profiles you support in `GCSupportedGameControllers`.
+
 Touch and physical controllers arrive through the same discovery path. Observe connects, sweep already-connected controllers, and bind handlers once:
 
 ```swift
@@ -350,6 +352,7 @@ if let keys = GCKeyboard.coalesced?.keyboardInput {
 | Controls clipped by Dynamic Island / home indicator | Fold `safeAreaInsets` into anchor offsets (Section 4) |
 | Virtual stick feels cramped | Set `colliderShape = .leftSide`/`.rightSide` — never leave a small `.circle` collider on a movement stick |
 | Camera over-rotates on touch | Use `TCTouchpad` with `reportsRelativeValues = true` instead of mapping the right stick directly |
+| On-screen button prompts name the wrong button | Players remap buttons in Settings. When `physicalInputProfile.hasRemappedElements`, resolve prompts with `mappedElementAlias(forPhysicalInputName:)` / `mappedPhysicalInputNames(forElementAlias:)`, and refresh them on every return to foreground — mappings can change while backgrounded |
 | `GCControllerHomeButtonSettingsManager` calls fail | Only permitted while a game controller is connected; init is failable — guard it |
 
 ## Resources

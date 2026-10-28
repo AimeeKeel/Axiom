@@ -65,6 +65,8 @@ The relevant widget is the better tool when multiple instances of the same widge
 
 RelevanceKit tells the system when a widget matters. Contexts cover date, sleep schedule, fitness state, location — and on watchOS 26, **points of interest** by MapKit category.
 
+**watchOS only in effect.** It covers watch widgets and iPhone widgets that appear in the watch Smart Stack. The API also compiles on iOS/iPadOS, but it has no effect on their Smart Stacks. `import AppIntents` re-exports RelevanceKit, so no separate `import RelevanceKit` is needed.
+
 **Two frameworks, don't conflate them.** Only `RelevantContext` lives in RelevanceKit, and only its `.date(interval:kind:)` / `.location(category:)` overloads are new in watchOS 26.0. The wrapper types `WidgetRelevance<Configuration>` and `WidgetRelevanceAttribute<Configuration>` are **WidgetKit** types that have shipped since iOS 18 / macOS 15 / **watchOS 11** (visionOS 26; tvOS unavailable) — they are not new in watchOS 26 and are not part of RelevanceKit. You build the WidgetKit `WidgetRelevance` wrapper around the watchOS-26 `RelevantContext` cases.
 
 ### `RelevantContext` types
@@ -84,7 +86,7 @@ func relevance() async -> WidgetRelevance<Void> {
 }
 ```
 
-`RelevantContext.location(category:)` returns `nil` if the category isn't supported — guard, don't force-unwrap.
+`RelevantContext.location(category:)` returns `nil` if the category isn't supported — guard, don't force-unwrap. It needs `import MapKit`; the `category:` overload comes from a RelevanceKit–MapKit overlay.
 
 ## Relevant Widgets — the watchOS 26 Pattern
 

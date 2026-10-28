@@ -4,6 +4,7 @@
 **Purpose**: Build reliable SpriteKit games by mastering the scene graph, physics engine, action system, and rendering pipeline
 **iOS Version**: iOS 14+ (SwiftUI integration), iOS 11+ (SKRenderer)
 **Xcode**: Xcode 15+
+**Platforms**: iOS, macOS, tvOS, watchOS. On visionOS, only compatible iPhone/iPad apps should use it — don't build a native visionOS app on SpriteKit (use RealityKit)
 
 ## When to Use This Skill
 

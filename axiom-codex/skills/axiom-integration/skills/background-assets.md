@@ -53,6 +53,7 @@ If you see ANY of these, you're heading toward either an oversized IPA, a brittl
 - **Bundling Foundation Models `.fmadapter` files in the app bundle**: Apple explicitly prohibits this — adapters are ~160 MB and per-OS-version; bundle bloat compounds across OS versions
 - **Assuming asset packs auto-evict**: The system does NOT remove asset packs while your app is installed; call `remove(assetPackWithID:)` when done
 - **Hyphens in adapter names**: The identifier regex `/fmadapter-\w+-\w+/` breaks on hyphens; use underscores
+- **Using Background Assets for anything but your app's assets**: Apple restricts it to downloading additional app assets — never to collect or transmit data that identifies a user or device, or for advertising or ad measurement
 - **Taking exclusive control on only one side**: `BADownloadManager.withExclusiveControl` serializes your app against its downloader extension, and the header is explicit — "Both the extension and app must use this API to ensure exclusive access." A one-sided call buys nothing; the other side still schedules underneath you
 
 ---

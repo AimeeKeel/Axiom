@@ -358,6 +358,8 @@ let fragmentLib = try device.makeLibrary(URL: fragmentURL)
 
 ## Part 4: Complete Setup Examples
 
+On visionOS an `MTKView` or `CAMetalLayer` renders into a flat window. Fully immersive stereoscopic Metal rendering goes through Compositor Services: a `CompositorLayer` inside an `ImmersiveSpace`.
+
 ### MTKView Setup (Recommended)
 
 ```swift
@@ -635,6 +637,8 @@ Metal 4 (26 cycle) runs machine learning inside the render pipeline at three lev
 | Platform-integrated | MetalFX upscaling + denoising | Path-traced viewports, temporal upscaling — black-box, optimized per Apple Silicon generation |
 | Command-buffer | MTL4 machine learning command encoder + `MTLPackage` | Run a trained network (e.g. neural tone mapper) in the same command buffer as compute/render — no context switch |
 | In-shader | TensorOps (MetalPerformancePrimitives, MSL) | Tiny task-specific networks (MLPs) inline in a shader; supports online training; auto-uses the neural accelerator on M5/A19 Pro GPUs |
+
+**MetalFX scaler choice**: `MTLFXTemporalScaler` needs color, depth, and motion textures; `MTLFXSpatialScaler` needs color only. Scalers are costly to create — make one at launch or when the display resolution changes, then reuse it every frame. A temporal scaler compiles its fast upscaler in the background and runs a slower interim one meanwhile; set `requiresSynchronousInitialization = true` on the descriptor to pay that cost at creation instead.
 
 ### MetalFX Denoising Best Practices
 

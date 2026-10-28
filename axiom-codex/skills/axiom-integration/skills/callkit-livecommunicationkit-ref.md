@@ -211,7 +211,7 @@ try await manager.refreshPIRParameters(forExtensionWithIdentifier: "com.example.
 let status = manager.status(forExtensionWithIdentifier: "com.example.lookup")  // sync, returns .enabled / .disabled
 ```
 
-Backed by a Live Caller ID Lookup app extension (`LiveCallerIDLookupExtensionContext`, `LiveCallerIDLookupProtocol`). Uses Private Information Retrieval so your server can't see who is being looked up.
+Backed by a Live Caller ID Lookup app extension (`LiveCallerIDLookupExtensionContext`, `LiveCallerIDLookupProtocol`). Uses Private Information Retrieval so your server can't see who is being looked up. Register the Live Caller ID configuration on the Identity & Trust page of the CloudKit Console.
 
 ## Message filtering — IdentityLookup
 
@@ -235,6 +235,9 @@ class MessageFilter: ILMessageFilterExtension, ILMessageFilterQueryHandling {
 - `com.apple.developer.calling-app` — default calling app (iOS 18.2+)
 - `com.apple.developer.dialing-app` — default dialer app (iOS 26.0+, EU)
 - A Call Directory or Live Caller ID Lookup **app extension** target for caller ID/blocking
+- `SRResearchDataGeneration` = `NO` — stops SensorKit research apps collecting Speech Metrics while your CallKit/LiveCommunicationKit app is in use
+
+Privacy: when someone places a call (CallKit) or starts a conversation (LiveCommunicationKit) in your app, the recipient's contact info goes to the system, which may surface it as a suggestion in Journal and other Journaling Suggestions apps.
 
 ---
 

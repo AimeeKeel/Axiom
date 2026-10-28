@@ -707,6 +707,27 @@ func setUpCloth(simulationRoot: Entity, cloth: Entity) {
 
 The runtime `ComputeGraphComponent` family above *runs* compute node graphs; the new **`ComputeGraph`** framework (`import ComputeGraph`) is the programmatic, code-level way to *build and drive* one — the Swift counterpart to authoring a graph visually in Reality Composer Pro 3. Two core types: `ComputeNodeGraph` (the graph *description*) and `ComputeGraphSimulation` (the runtime — `simulationRate`, `advance(_:)`). Plus the node-description enums: `Topology` (`.point`/`.triangle`/`.quad`/`.octagon`/`.strip`/`.instances`), `BinaryOperation` / `UnaryOperation` / `StandardLibraryFunction` (node math), `AddressSpace`, `CoordinateSpace`, `ElementGrouping`, `Sorting`, `StripOrientation`, `ElementSpawnParameters`, `PortReference`. Available on iOS/macOS/visionOS/tvOS 27 (not watchOS). Most apps author graphs in RCP 3 and run them via `ComputeGraphComponent`; reach for the framework only when you need to generate or mutate graphs at build/runtime.
 
+Pipeline: `ComputeNodeGraph` → `ComputeNodeGraph.Assembly` (resolves buffer/uniform/texture layout) → `ComputeNodeGraph.Pipelines` (generates and compiles the GPU shaders). `Pipelines` is a `Sendable` value — compile it once and back any number of concurrent `ComputeGraphSimulation`s with it. Custom Metal Shading Language node functions join through the descriptor (`addLibrary(_:bundle:)`, or `ComputeNodeGraph.Library(from:bundleIdentifier:)` + `setLibrary`). Inject elements with `spawn(elements:in:using:)` and `ElementSpawnParameters`.
+
+```swift
+import ComputeGraph
+import Metal
+
+@available(iOS 27, macOS 27, visionOS 27, tvOS 27, *)
+func makeSimulations(_ graph: ComputeNodeGraph, custom: any MTLLibrary,
+                     queue: any MTLCommandQueue) async throws -> [ComputeGraphSimulation] {
+    var descriptor = ComputeNodeGraph.PipelinesDescriptor(assembly: try ComputeNodeGraph.Assembly(graph))
+    descriptor.addLibrary(custom, bundle: nil)                       // your MSL node functions
+    let pipelines = try await ComputeNodeGraph.Pipelines(descriptor: descriptor)  // compiles shaders — do it once
+    return (0..<3).map { _ in ComputeGraphSimulation(pipelines: pipelines, commandQueue: queue) }
+}
+
+@available(iOS 27, macOS 27, visionOS 27, tvOS 27, *)
+func step(_ sim: ComputeGraphSimulation, dt: Float, buffer: any MTLCommandBuffer, encoder: any MTLComputeCommandEncoder) {
+    sim.advance(.init(deltaTime: dt, commandBuffer: buffer, computeEncoder: encoder))  // every frame
+}
+```
+
 ### ShaderGraph in Swift (`OS27`, not watchOS)
 
 27 is the first cycle where you can **author** a shader graph in code. `ShaderGraphMaterial` existed in 26 but was opaque — load an asset made in Reality Composer Pro, then `setParameter(name:)` and nothing more. 27 adds `ShaderGraphMaterial.Program` (+ `Program.Descriptor`) and `PortalMaterial.Program`, both built from a `ShaderGraph` you construct yourself.

@@ -40,7 +40,7 @@ For memory debugging including jetsam, see `axiom-performance (skills/memory-deb
 | Basic metrics (battery, CPU, memory) | iOS 13+ |
 | Diagnostic payloads | iOS 14+ |
 | Hang diagnostics | iOS 14+ |
-| Immediate diagnostic delivery | iOS 15+ |
+| Immediate diagnostic delivery | iOS 15+, macOS 12+ |
 | Launch diagnostics | iOS 16+ |
 | Swift-first API (`MetricManager`, typed metrics/diagnostics) | `OS27` (not watchOS/tvOS; visionOS = diagnostics subset) |
 | Per-state metrics (StateReporting framework) | `OS27` (the StateReporting framework itself spans all platforms) |
@@ -50,7 +50,7 @@ For memory debugging including jetsam, see `axiom-performance (skills/memory-deb
 
 ## Part 1: The New Swift API `OS27`
 
-Available on iOS 27, iPadOS 27, macOS 27, and Mac Catalyst 27; visionOS 27 receives the diagnostics subset only; not available on watchOS or tvOS. The companion StateReporting framework is available on **all** platforms at 27, including watchOS and tvOS. Apple's guidance (WWDC 2026-222): migrate from `MXMetricManager` to `MetricManager` — all new capabilities are exclusive to the new API.
+Available on iOS 27, iPadOS 27, macOS 27, and Mac Catalyst 27; not available on watchOS or tvOS. **visionOS never gets performance metrics** — only crash, hang, CPU-exception (high energy) and disk-write diagnostics, with either API, for native visionOS apps and compatible iPhone/iPad apps alike. The companion StateReporting framework is available on **all** platforms at 27, including watchOS and tvOS. Apple's guidance (WWDC 2026-222): migrate from `MXMetricManager` to `MetricManager` — all new capabilities are exclusive to the new API.
 
 ### MetricManager Setup
 
@@ -70,7 +70,7 @@ for await report in manager.metricReports {
 
 ### MetricReport Structure
 
-A daily `MetricReport` contains `intervalEntries` — one full-day aggregate (`entries.fullDayEntry`) plus smaller breakdown windows (typically a few hours each, present only when they have data). Each entry's `values` is `[MetricResult]`, filterable by `metricGroup`:
+A daily `MetricReport` contains `intervalEntries` — one full-day aggregate (`entries.fullDayEntry`) plus smaller breakdown windows (typically a few hours each, present only when they have data). Each entry's `values` is `[MetricResult]`, filterable by `metricGroup` (each entry's `states` lists the StateReporting states active in that window; for per-state values use `stateEntries`):
 
 ```swift
 for await report in manager.metricReports {
@@ -912,7 +912,7 @@ struct MyCrashReporter: CrashReporterExtension {
 | Type | Members |
 |------|---------|
 | `CrashReporterExtension` | `AppExtension` protocol; implement `processCrashReport(process:)`; default `configuration` provided |
-| `CrashedProcess` | `reason: CrashReason`, `corpsePort: mach_port_t`, `binaryImages: [BinaryImageInfo]`, `symbolicateAddress(_:) -> [SymbolicatedFrame]`, `symbolicateAddresses(_:)`, `symbolAddress(imageName:symbolName:)` |
+| `CrashedProcess` | `reason: CrashReason`, `corpsePort: mach_port_t` (read-only task port — e.g. `task_threads`, `mach_vm_read`), `binaryImages: [BinaryImageInfo]`, `symbolicateAddress(_:) -> [SymbolicatedFrame]`, `symbolicateAddresses(_:)`, `symbolAddress(imageName:symbolName:)` |
 | `CrashReason` | `exception: Int32`, `codes: [UInt64]` |
 | `SymbolicatedFrame` | `symbol`, `symbolOffset`, `sourceFile?`, `sourceLine?`, `isInline` — `Codable`, `Sendable` |
 | `BinaryImageInfo` | `path`, `uuid?`, `baseAddress`, `size`, `cpuType`, `cpuSubType` — `Codable`, `Sendable` |

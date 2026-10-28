@@ -13,7 +13,7 @@
 
 Not the same as:
 - **`ImageRenderer`** (SwiftUI, iOS 16+) — rasterizes a view *you* define to a static image/`CGImage`. It only renders your own view tree; it cannot capture the live screen or other apps. Use it for a snapshot of your own UI, not screen recording.
-- **ReplayKit** (`RPScreenRecorder` / broadcast upload extensions) — the pre-27 iOS screen-capture path; still valid for older OS versions and system-wide broadcast.
+- **ReplayKit** (`RPScreenRecorder`, `RPSystemBroadcastPickerView`, broadcast upload extensions) — the pre-27 path, deprecated in the 27 SDKs in favor of ScreenCaptureKit (`SCContentSharingPicker` replaces the broadcast picker). Streaming and mirroring no longer need a broadcast extension; keep ReplayKit only behind an availability check for earlier OS versions.
 
 ## The iOS flow
 
@@ -66,6 +66,8 @@ final class ScreenCapture: NSObject, SCContentSharingPickerObserver, SCStreamDel
 ```
 
 `SCContentSharingPicker` essentials: `.shared` (singleton), `.isAvailable`, `.isActive` (must be `true`), `.add(_:)` / `.remove(_:)`, `.present()` (not tvOS), `.presentForCurrentApplication()` (iOS/visionOS/tvOS — captures only your app), `.present(using:)` for a `SCShareableContentStyle`. Config knobs: `SCContentSharingPickerConfiguration.showsMicrophoneControl` (iOS/visionOS) and `.showsCameraControl` (iOS, in-app only) — the macOS mode/exclusion options (`allowedPickerModes`, `excludedWindowIDs`, …) are macOS-only.
+
+**Background capture** needs the matching background execution mode in Signing & Capabilities. Without it, the stream stops with `SCStreamErrorMissingBackgroundMode`.
 
 ## Output options (add to the `SCStream`)
 

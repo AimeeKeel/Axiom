@@ -68,6 +68,8 @@ func copyCurve(from source: ColorSyncProfile,
 }
 ```
 
+To hand a profile (curve included) to CoreGraphics, make a color space from it: `CGColorSpaceCreateWithColorSyncProfile(profile, nil)` — optional result; put `kCGColorSpaceExtendedRange: true` in the options dictionary for an extended-range space.
+
 For a cheap presence check, call `ColorSyncProfileContainsHeadroomAdaptiveGainCurve(profileRef) -> Bool` — the one function in the header *not* marked `CF_REFINED_FOR_SWIFT`, so it is the C entry point you call directly from Swift.
 
 **Every initializer in the curve tree `throws`** — they are validating constructors, so `HeadroomAdaptiveGainCurve(...)` without `try` does not compile. (`HeadroomAdaptiveGainCurveOptions.init()` is the lone non-throwing init, and it configures nothing about the curve.) The `Error` enum carries the runtime limits (`tooManyControlPoints(count:limit:)`, `mismatchedTangentCount`, `zeroFreeStyleWeights`, …). Both `adding(...)` overloads return an **Optional** profile.

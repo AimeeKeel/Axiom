@@ -23,6 +23,7 @@ Use this skill when:
 - A threat-modeling exercise: mapping untrusted prompt sources and classifying action side effects (financial, exfiltration, context poisoning, data loss)
 - The indirect prompt injection model — data poisoning vs action poisoning, and the "Lethal Trifecta" risk framing
 - Deterministic mitigations first: PII redaction, user confirmation via Foundation Models' `.onToolCall` lifecycle modifier (the 27 releases), and lock-screen gating with App Intents `authenticationPolicy`
+- Where model context goes: with a third-party server model, the whole context goes to that provider; only the on-device model keeps it on device
 - Probabilistic layers: spotlighting untrusted tool output with `.historyTransform` delimiters
 - How App Intents schema risk metadata and the 27-cycle risk-based confirmation system protect schema-adopting intents
 - A pre-ship checklist covering prompt-level and action-level defenses

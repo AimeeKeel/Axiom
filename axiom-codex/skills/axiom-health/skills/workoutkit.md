@@ -218,6 +218,8 @@ try await plan.openInWorkoutApp()
 
 This is the current shipping way to preview or hand off a plan for immediate execution.
 
+In SwiftUI, `.workoutPreview(plan, isPresented: $showing)` presents the system preview sheet (iOS 17, watchOS 11; not tvOS). To export a plan, read `try plan.dataRepresentation` (a throwing property, not a method); restore it with `try WorkoutPlan(from: data)`.
+
 ## Swimming Workouts
 
 iOS 18 / watchOS 11 added first-class pool swimming:

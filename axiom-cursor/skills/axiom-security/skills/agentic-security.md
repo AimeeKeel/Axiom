@@ -27,7 +27,7 @@ Signs your agentic feature is exploitable:
 
 - **Untrusted content flows into the prompt unmarked** — calendar invites, social feeds, emails, and tool results can carry embedded instructions (indirect prompt injection)
 - **Side-effectful tools run without confirmation** — financial, destructive, or posting actions execute on the model's say-so alone
-- **PII reaches the model when it doesn't need to** — anything in context can be exfiltrated by a successful injection
+- **PII reaches the model when it doesn't need to** — anything in context can be exfiltrated by a successful injection. With a third-party server model (any `LanguageModel` you back with your own provider), the whole context — prompts, tool output, history — also goes to that provider; only `SystemLanguageModel` keeps it on device
 - **Risky intents callable from the lock screen** — Siri is reachable while locked; an attacker with the device can invoke your intents
 - **"The model will refuse bad instructions"** — that's a probabilistic defense; injections are crafted to defeat it. Deterministic checks first
 - **Relying on tool-call validation inside the tool prompt/description** — descriptions steer the model; they don't constrain it

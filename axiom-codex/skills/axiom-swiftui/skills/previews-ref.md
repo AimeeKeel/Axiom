@@ -490,6 +490,26 @@ This is also why the Five Performance Rules (see `skills/previews.md`) put so mu
 
 ---
 
+## Xcode Library Items — `LibraryContentProvider`
+
+To list custom views and modifiers in Xcode's Library (`+`), declare any type conforming to `LibraryContentProvider` (DeveloperToolsSupport); Xcode harvests every provider in the project as you edit. No registration step.
+
+```swift
+import SwiftUI
+import DeveloperToolsSupport
+
+struct BadgeLibrary: LibraryContentProvider {
+    var views: [LibraryItem] {
+        LibraryItem(Text("New").font(.caption), title: "Badge", category: .control)
+    }
+    func modifiers(base: Text) -> [LibraryItem] {
+        LibraryItem(base.bold().foregroundStyle(.red), title: "Alert Text")
+    }
+}
+```
+
+---
+
 ## Known Issues
 
 ### Xcode 26.x: "Cannot preview in this file. Failed to launch"
@@ -585,6 +605,6 @@ Migration is safe in either direction during the same Xcode session — `Preview
 
 **WWDC**: 2023-10252, 2024-10144, 2020-10149
 
-**Docs**: /xcode/previewing-your-apps-interface-in-xcode, /swiftui/preview(_:body:), /swiftui/preview(_:traits:_:body:), /swiftui/previewable(), /swiftui/previewmodifier, /swiftui/previewmodifier/makesharedcontext(), /developertoolssupport/previewtrait
+**Docs**: /xcode/previewing-your-apps-interface-in-xcode, /swiftui/preview(_:body:), /swiftui/preview(_:traits:_:body:), /swiftui/previewable(), /swiftui/previewmodifier, /swiftui/previewmodifier/makesharedcontext(), /developertoolssupport/previewtrait, /developertoolssupport/librarycontentprovider
 
 **Skills**: skills/previews.md, skills/debugging.md, skills/swiftui-performance.md, axiom-accessibility, axiom-data

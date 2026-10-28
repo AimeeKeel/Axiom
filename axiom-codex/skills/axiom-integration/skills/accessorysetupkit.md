@@ -30,7 +30,7 @@ For the full type/property surface (every descriptor field, event case, and the 
 | Bluetooth HID accessories | iOS 18.4+ |
 | Wi-Fi Aware descriptor fields (`wifiAwareServiceName`, etc.) | iOS 26.0+ |
 
-No macOS, watchOS, or tvOS. (If you saw "iOS 26" as the floor — that's wrong; the framework shipped in iOS 18.0.)
+No macOS, watchOS, or tvOS. (If you saw "iOS 26" as the floor — that's wrong; the framework shipped in iOS 18.0.) **watchOS 26+:** once your iOS app sets up an accessory through AccessorySetupKit, its companion watchOS app can use CoreBluetooth with that accessory and any others.
 
 ## Critical Gotchas
 
@@ -123,6 +123,8 @@ func connect(to accessory: ASAccessory) {
 ```
 
 `central.scanForPeripherals` also works and returns **only** accessories paired with your app. `ASAccessory` exposes `displayName`, `state` (an `ASAccessory.AccessoryState`: `.unauthorized` / `.awaitingAuthorization` / `.authorized`), `descriptor`, `bluetoothIdentifier`, and `ssid`.
+
+CoreBluetooth rules that still apply: never subclass its classes (undefined behavior). iOS 26+: an app with an instantiated `CBManager` that starts a Live Activity before backgrounding keeps its foreground Bluetooth privileges in the background (scanning without service UUIDs, duplicate filtering off). Bluetooth background modes don't work for iPad apps running on a Mac.
 
 Once connected, on iOS 27 you can **measure the distance** to the accessory with Bluetooth Channel Sounding — `CBCentralManager.supports(.channelSounding)`, then `peripheral.startChannelSoundingSession(_:)` for distance, or feed `peripheral.identifier` into a NearbyInteraction `NISession` for distance *and* direction. Needs an N1-chip iPhone and a foreground app. Full surface: Part 7 of `skills/accessorysetupkit-ref.md`.
 

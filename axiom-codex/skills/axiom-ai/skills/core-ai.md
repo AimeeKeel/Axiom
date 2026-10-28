@@ -21,6 +21,7 @@ This page owns the **Core AI** path. Core ML still exists for classic models —
 | Back a `LanguageModelSession` with **my own** LLM | This page (FM bridge) + `foundation-models-ref` Ecosystem |
 | Bring a large/LLM/transformer PyTorch model on-device (27-cycle) | **This page** — Core AI |
 | Convert/compress a classic Core ML model (`.mlpackage`, `MLModel`) | `skills/ios-ml.md` → `coreml-conversion.md` / `coreml-compression.md` |
+| Non-neural-network model (decision trees, tabular feature engineering) | `skills/ios-ml.md` → Core ML |
 | Custom Metal-shader tensor ops / `MTLTensor` quantization | `axiom-graphics` metal-migration-ref Part 6 |
 | Computer vision with Apple's models (no model to ship) | `axiom-vision` |
 

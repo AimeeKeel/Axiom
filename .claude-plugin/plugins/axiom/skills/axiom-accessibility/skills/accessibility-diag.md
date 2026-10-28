@@ -982,7 +982,7 @@ final class SubtitleStyleController {
 }
 ```
 
-Rendering captions entirely yourself? `AVCaptionRenderer.captionPreview(forProfileID:extendedLanguageTag:renderSize:)` returns a styled `NSAttributedString` for a profile ID — but Apple warns it can block, so generate previews off the main thread.
+Rendering captions entirely yourself? `AVCaptionRenderer.captionPreview(forProfileID:extendedLanguageTag:renderSize:)` returns a styled `NSAttributedString` for a profile ID — but Apple warns it can block, so generate previews off the main thread. A custom renderer must also honor the user's systemwide caption settings: read them with `MACaptionAppearanceGetDisplayType(.user)` and `MACaptionAppearanceCopy*(.user, …)` (`.default` is for comparison, never rendering), and re-render on `kMACaptionAppearanceSettingsChangedNotification`.
 
 #### Common mistakes
 

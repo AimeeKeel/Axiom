@@ -1363,6 +1363,15 @@ app.get("promo-offer") { req async throws -> String in
 
 ## App Store Server API
 
+### Basics
+
+- **Auth**: JWT bearer token signed with an App Store Connect API key; mint one per request or reuse until it expires. Server needs TLS 1.2+.
+- **Hosts**: production `https://api.storekit.apple.com/`, sandbox `https://api.storekit-sandbox.apple.com/`. Every endpoint exists in sandbox except Look Up Order ID. `/inApps` is case-sensitive.
+- **Environment**: call with the environment that created the `transactionId` (`environment` in `JWSTransactionDecodedPayload`). Unknown? Try production; on `4040010 TransactionIdNotFoundError`, retry sandbox; a second `4040010` means neither.
+- Results reflect purchase history regardless of whether the app is installed.
+- Get Notification History reaches back 180 days (30 in sandbox) — use it to recover missed Server Notifications.
+- Get Customer Groups / Get Group Members: production supports only `groupType` `ORGANIZATION`.
+
 ### Set App Account Token
 
 **Endpoint**:

@@ -210,7 +210,7 @@ labelMask.withUnsafePointer { raw in
 
 ### ImageAnalysisInteraction (iOS)
 
-**Availability**: iOS 16+, iPadOS 16+
+**Availability**: iOS 16+, iPadOS 16+, Mac Catalyst 17+ (macOS 14); `.imageSubject` and the subject APIs need iOS 17+
 
 Adds system-like subject lifting UI to views:
 
@@ -861,7 +861,7 @@ for barcode in request.results as? [VNBarcodeObservation] ?? [] {
 
 ### DataScannerViewController
 
-**Availability**: iOS 16+
+**Availability**: iOS 16+ (unavailable in Mac Catalyst)
 
 Camera-based live scanner with built-in UI for text and barcodes.
 
@@ -1419,7 +1419,7 @@ Both tools accept optional `init(name:description:)` overrides. For image inputs
 
 ## Sensitive Content Analysis (`SensitiveContentAnalysis` framework)
 
-A **separate framework** from Vision (and VisionKit), but the same job family — `SensitiveContentAnalysis` (iOS 17+, macOS 14+, visionOS 2+; **not watchOS/tvOS**) flags nudity, gore, and violence in images and video. It runs only when the user has the system **Sensitive Content Warning** / **Communication Safety** setting on: check `analysisPolicy` first, and treat `.disabled` as "feature off," not an error.
+A **separate framework** from Vision (and VisionKit), but the same job family — `SensitiveContentAnalysis` (iOS 17+, macOS 14+, visionOS 2+; **not watchOS/tvOS**) flags nudity, gore, and violence in images and video. It runs only when the user has the system **Sensitive Content Warning** / **Communication Safety** setting on: check `analysisPolicy` first, and treat `.disabled` as "feature off," not an error. **Requires the `com.apple.developer.sensitivecontentanalysis.client` entitlement** (Sensitive Content Analysis capability; not available to Enterprise or free accounts) — without it, analysis silently never returns a positive result.
 
 ```swift
 import SensitiveContentAnalysis

@@ -57,6 +57,8 @@ Two project requirements that produce no build error when missing:
 
 If someone reports "my query returns almost nothing", check both gates before anything else in this file.
 
+**Use restriction (App Review):** read the user's library only to support playing their content in your app. Don't gather information about it for any other purpose.
+
 ## Measurement Regime
 
 Measured 2026-09-03/05 against one real, cloud-heavy library:

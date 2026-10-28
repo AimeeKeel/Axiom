@@ -505,7 +505,7 @@ Custom types should conform to system types for broader compatibility:
 // This means any receiver that accepts generic data can also accept recipes
 ```
 
-Common conformance parents: `public.data`, `public.content`, `public.text`, `public.image`
+Common conformance parents: `public.data` (byte stream), `public.content` (user-viewable document content), `public.text`, `public.image`. A file or package type must conform to `public.data` or `com.apple.package`, or the system won't bind documents to it.
 
 #### `UTType(identifier:allowUndeclared:)` `OS27`
 

@@ -32,6 +32,7 @@ Use this skill when:
 
 ### One GCController Pipeline
 - Touch controls surface as a `GCController` — existing controller logic needs no changes
+- The Game Controllers capability that declares controller support, and on-screen button prompts that follow players' button remapping in Settings
 
 ### Touch Controller Setup
 - `TCTouchController` creation, connect/disconnect, Metal rendering, UIKit touch routing

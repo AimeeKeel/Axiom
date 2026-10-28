@@ -25,6 +25,7 @@ Vision provides computer vision algorithms for still images and video. This refe
   - `ImageAnalysisInteraction` / `ImageAnalysisOverlayView`
   - System UI for subject lifting
   - Programmatic access via `ImageAnalyzer`
+  - Mac Catalyst 17+ (subject lifting needs iOS 17+); VisionKit's `DataScannerViewController` is unavailable in Mac Catalyst
 
 ### Person Segmentation
 

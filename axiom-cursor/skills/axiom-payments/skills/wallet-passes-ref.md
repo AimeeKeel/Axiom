@@ -62,6 +62,10 @@ Exactly one of these top-level keys appears, carrying a `PassFields` dictionary 
 
 **`posterGeneric` fallback (WWDC 2026-209)**: include the existing `generic` style key *alongside* `posterGeneric`, with relevant fields under each — devices on iOS 26 and earlier render the `generic` face, iOS 27 renders the poster.
 
+**Semantic boarding pass (iOS/watchOS 26+)**: `preferredStyleSchemes: ["semanticBoardingPass"]` on a `boardingPass` whose `transitType` is `PKTransitTypeAir`, plus the required semantic tags, gets live flight status, gate and baggage updates in Wallet. Omit any required tag and the pass falls back to the legacy boarding pass. List your App Store ID in `associatedStoreIdentifiers` to suppress Wallet's own Live Activity. See /walletpasses/creating-an-airline-boarding-pass-using-semantic-tags.
+
+**Multi-event tickets**: `upcomingPassInformation` (ordered array of `UpcomingPassInformationEntry`) shows several upcoming events on one ticket.
+
 `boardingPass` additionally requires:
 ```json
 "boardingPass": {

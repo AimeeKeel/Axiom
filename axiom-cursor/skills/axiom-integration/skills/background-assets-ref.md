@@ -8,7 +8,7 @@ The Background Assets framework (`BackgroundAssets`) delivers asset packs to app
 ### Two layers
 
 - **Managed asset packs** (iOS 26+ / iPadOS 26+ / macOS 26+ / tvOS 26+ / visionOS 26+): high-level `AssetPackManager` actor and download policies. Use `StoreDownloaderExtension` for Apple-hosted, `ManagedDownloaderExtension` for managed server-hosted. The recommended path for new apps.
-- **Unmanaged legacy** (iOS 16.1+): lower-level `BADownloadManager`, `BAURLDownload`, `BADownloaderExtension` with manual delegate logic. Use only when targeting OS versions below 26 or when you need download-level control the managed layer doesn't expose.
+- **Unmanaged legacy** (iOS 16.1+ / macOS 13+ / tvOS 18.4+ / visionOS 2.4+; compatible iPad/iPhone apps on visionOS 1.0+): lower-level `BADownloadManager`, `BAURLDownload`, `BADownloaderExtension` with manual delegate logic. Use only when targeting OS versions below 26 or when you need download-level control the managed layer doesn't expose.
 
 ### Distribution
 

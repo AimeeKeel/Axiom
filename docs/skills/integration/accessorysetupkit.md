@@ -8,7 +8,7 @@ apple_platforms: iOS 18+, iPadOS 18+
 
 # AccessorySetupKit
 
-AccessorySetupKit (iOS/iPadOS 18+) replaces the old "request broad Bluetooth permission, then scan for everything" flow with a one-tap, privacy-preserving picker. Your app declares which accessories it can pair with; the system runs the scan out-of-process and shows a picker with your artwork. One tap grants scoped Bluetooth **and** Wi-Fi access to that single accessory — with no broad Bluetooth permission prompt.
+AccessorySetupKit (iOS/iPadOS 18+) replaces the old "request broad Bluetooth permission, then scan for everything" flow with a one-tap, privacy-preserving picker. Your app declares which accessories it can pair with; the system runs the scan out-of-process and shows a picker with your artwork. One tap grants scoped Bluetooth **and** Wi-Fi access to that single accessory — with no broad Bluetooth permission prompt. On watchOS 26 and later, the app's companion watch app can use Core Bluetooth with accessories the iOS app set up this way.
 
 Part of the **axiom-integration** suite (`skills/accessorysetupkit.md` and `skills/accessorysetupkit-ref.md`).
 

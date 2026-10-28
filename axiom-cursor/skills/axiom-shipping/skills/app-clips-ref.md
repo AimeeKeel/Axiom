@@ -92,6 +92,7 @@ Capabilities an App Clip does **not** have:
 - **No ATT / SKAdNetwork** — no App Tracking Transparency, no attribution kit.
 - **Restricted frameworks** — App Intents, HealthKit, HomeKit, Contacts, EventKit, Core Motion, MediaPlayer, PhotoKit, Speech, Nearby Interaction, and others are unavailable at runtime; verify a framework's App Clip availability before depending on it.
 - **No standalone submission** — always submitted embedded in the full app.
+- **Not on the Home screen, not user-managed** — the system removes an App Clip after a period of inactivity, so its container is not durable storage.
 
 ## App Clip Live Activities
 

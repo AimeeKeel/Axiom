@@ -5,6 +5,8 @@
 
 ShazamKit provides audio recognition against Shazam's music catalog and custom audio catalogs. The framework covers matching, signature generation, catalog management, and library integration.
 
+A signature is a one-way time-frequency fingerprint, much smaller than the audio, and the recording can't be reconstructed from it. Matching tolerates noisy, partial captures; a match reports where in the reference recording the query starts.
+
 For decision trees, setup checklist, and best practices, see the **shazamkit** discipline skill.
 
 **Platform**: iOS 15+, iPadOS 15+, macOS 12+, tvOS 15+, watchOS 8+, visionOS 1+

@@ -105,7 +105,7 @@ final class PushProvider: NEAppPushProvider {
 }
 ```
 
-For Push to Talk apps, call `reportPushToTalkMessage(userInfo:)` (iOS 16.4+) instead — the system delivers it to the containing app's `PTChannelManagerDelegate` if the user has joined a PTT channel.
+For Push to Talk apps, call `reportPushToTalkMessage(userInfo:)` (iOS 16.4+) instead — the system delivers it to the containing app's `PTChannelManagerDelegate` if the user has joined a PTT channel. Push to Talk doesn't exist on visionOS (no PushToTalk framework in its SDK), including for compatible iPad/iPhone apps.
 
 ## Part 3 — Ethernet (iOS 26)
 

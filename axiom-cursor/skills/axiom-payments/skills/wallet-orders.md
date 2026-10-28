@@ -196,6 +196,8 @@ Don't fabricate the pickup location to a generic address — Siri Suggestions mi
 
 This skill uses `FinanceKitUI` only for the **order-add helpers** (`AddOrderToWalletButton`). The broader **FinanceKit** (consumer banking surface — account aggregation, transaction queries) is **out of scope for axiom-payments** and would belong in a future banking-app suite. Don't conflate the two; the order-add buttons are a small, isolated FinanceKitUI affordance.
 
+Reading someone's financial data through FinanceKit is gated: the FinanceKit managed entitlement (Apple reviews each app against its published criteria and grants it through managed capabilities), an organization-level developer account with the request made by the Account Holder, and `NSFinancialDataUsageDescription` in Info.plist.
+
 ## Misuse Cost — Why "It Will Probably Work" Doesn't
 
 When teams propose using Orders for things that aren't orders (subscription renewals, free-trial-to-paid transitions, "engagement" tracking, in-app event reminders), the argument is usually "the cert pipeline is already built; this is free infrastructure." The infrastructure may be cheap to wire up, but the misuse pollutes **shared system surfaces** that other apps' Orders depend on:

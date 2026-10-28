@@ -37,6 +37,7 @@ Real questions developers ask that this skill answers:
 - **Four-criteria test** for when to use Orders versus a Pass or a simple in-app push
 - **Setup** – Order Type ID creation, Order Type ID Certificate (separate from Pass Type ID Cert and Apple Pay Merchant Cert), five-endpoint server pattern, APNs with the Order Type ID Cert as topic
 - **Three add-to-wallet paths** – Apple Pay handoff via `PKPaymentOrderDetails` (preferred), `AddOrderToWalletButton` for non-Apple-Pay purchases, email attachment with `application/vnd.apple.finance.order` MIME type
+- **Reading financial data with FinanceKit** – needs the FinanceKit managed entitlement, an organization account whose Account Holder requests it, and `NSFinancialDataUsageDescription`
 - **Order package structure** – required fields, signing chain (PKCS #7 detached plus WWDR plus S/MIME signing-time, same pattern as `.pkpass`)
 - **Status lifecycle** – `orderPlaced`, `processing`, `readyForPickup`, `pickedUp`, `shipped`, `onTheWay`, `outForDelivery`, `delivered`, `issue`, `cancelled`; `shippingType` (iOS 17+) for shipping/delivery/pickup rendering
 - **HIG discipline** – add orders with partial data; 300×300 solid-background line-item images; universal links for "Manage Order"; suppress in-app push when Wallet has the order

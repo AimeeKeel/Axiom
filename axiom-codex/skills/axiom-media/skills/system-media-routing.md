@@ -1,7 +1,7 @@
 
 # System Media Routing — Casting Beyond AirPlay `iOS27`
 
-`import AVSystemRouting` — a new framework, iOS only (not macCatalyst/visionOS/macOS/tvOS/watchOS), that lets a media app route playback to **non-AirPlay system routes**: third-party casting targets such as **Google Cast / Chromecast, DLNA, and other streaming standards**, surfaced in the same system route picker / Control Center as AirPlay.
+`import AVSystemRouting` — a new framework, iOS only (not macCatalyst/visionOS/macOS/tvOS/watchOS), that lets a media app route playback to **non-AirPlay system routes**: third-party casting targets such as **Google Cast / Chromecast, DLNA, and other streaming standards**, surfaced in the same system route picker / Control Center as AirPlay. Also called **Media Sharing Extensions**.
 
 Historically iOS exposed only **one** native streaming protocol (AirPlay); supporting Chromecast etc. meant bundling each vendor's SDK and your own cast button. AVSystemRouting replaces that with **one Apple API**: the protocol is supplied by a system **route provider**, and your app drives playback through a uniform interface.
 

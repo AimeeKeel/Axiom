@@ -41,6 +41,7 @@ Real questions developers ask that this skill answers:
 - **Merchant validation flow** – server-only `POST /paymentSession` with two-way TLS, opaque session JSON passed through verbatim, single-use 5-minute expiry, sandbox vs production endpoint discipline
 - **Payment request construction** – decimal-precise string amounts (never JS Number), differences between Apple Pay JS and Payment Request API forms
 - **Variants** – `recurringPaymentRequest`, `automaticReloadPaymentRequest`, `deferredPaymentRequest`, web disbursements (WWDC24) with `supportsInstantFundsOut`
+- **Platform limits** – in-app web pages use `SFSafariViewController`; Apple Pay isn't available in macOS Safari in China
 - **Third-party browser scan-to-pay** – iOS 18 QR-handoff flow; requires SDK button at version 1.2.0+
 - **30-second production triage** – the curl-test-first incident-response sequence and named anti-actions (don't re-issue cert before curl, don't bounce servers as first move)
 

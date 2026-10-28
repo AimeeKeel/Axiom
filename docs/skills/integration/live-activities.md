@@ -8,7 +8,7 @@ apple_platforms: iOS 16.1+ (push-to-start & broadcast iOS 18+, Smart Stack watch
 
 # Live Activities
 
-Live Activities show glanceable, persistent, current-state information about an ongoing event on the Lock Screen, in the Dynamic Island, in StandBy, and (with one modifier) on Apple Watch Smart Stack, CarPlay, and the Mac menu bar. They render in a widget extension but the lifecycle is driven by **ActivityKit** from your app and your server.
+Live Activities show glanceable, persistent, current-state information about an ongoing event on the Lock Screen, in the Dynamic Island, in StandBy, and (with one modifier) on Apple Watch Smart Stack, CarPlay, and the Mac menu bar. They render in a widget extension but the lifecycle is driven by **ActivityKit** from your app and your server. visionOS has no Live Activities, even for compatible iPhone and iPad apps.
 
 Two skills in the **axiom-integration** suite: `skills/live-activities.md` (discipline) and `skills/live-activities-ref.md` (API reference).
 

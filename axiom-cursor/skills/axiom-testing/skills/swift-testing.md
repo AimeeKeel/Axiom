@@ -576,7 +576,7 @@ class FeatureModel: ObservableObject {
 
 ## Parallel Testing
 
-Swift Testing runs tests in parallel by default.
+Swift Testing runs tests in parallel by default, as task-group tasks in one process — not XCTest's separate runner clones — so `static`/global state is shared by concurrently running tests. `.serialized` orders tests only within its own suite; that suite still runs in parallel with every other suite.
 
 ### When to Serialize
 

@@ -283,6 +283,8 @@ The two App Intent roles are distinct and unrelated. A **button's** intent is a 
 
 Interactive controls work in all system families and in `accessoryCircular` / `accessoryRectangular` (Lock Screen) on iPhone and iPad — Lock Screen widgets are **not** read-only.
 
+A tap outside a button or toggle launches the app. Set `.widgetURL(_:)` on the widget view and handle it in `onOpenURL` to open the scene matching what the widget shows.
+
 ## Button and Toggle
 
 Interactive widgets use SwiftUI `Button` and `Toggle` with App Intents, placed inside the entry view of any configuration type.
@@ -432,7 +434,9 @@ struct Provider: AppIntentTimelineProvider {
 
 ## ControlWidget Protocol
 
-Controls appear in Control Center, Lock Screen, and Action Button (iPhone 15 Pro+).
+Controls appear in Control Center, Lock Screen, and Action Button (iPhone 15 Pro+). `ControlWidget` is iOS 18+ and macOS 26+ (watchOS: see watchOS Controls below); unavailable on visionOS and tvOS.
+
+Controls have no timeline. They refresh when someone uses them, when the app calls `ControlCenter.shared.reloadControls(ofKind:)` / `reloadAllControls()`, or on an APNs push (`.pushHandler(_:)` with a `ControlPushHandler`).
 
 ### StaticControlConfiguration
 

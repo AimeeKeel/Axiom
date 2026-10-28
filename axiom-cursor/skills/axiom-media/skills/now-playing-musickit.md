@@ -37,6 +37,8 @@ Two caveats on the evidence, so you know how far to trust the model. The out-of-
 
 ### Check Music Authorization
 
+Add `NSAppleMusicUsageDescription` to Info.plist first — without it the system terminates the app when it touches the user's music data. The App ID also needs the MusicKit App Service (`music-library`, Authorization).
+
 ```swift
 import MusicKit
 
@@ -129,6 +131,8 @@ class MusicPlayer: ObservableObject {
 ---
 
 ## Playback
+
+**Two players.** `ApplicationMusicPlayer` plays for your app only and leaves the Music app's state alone. `SystemMusicPlayer` drives the Music app itself: it adopts Music's current repeat mode, shuffle mode and playback status, and Music keeps playing after your app leaves the foreground. Everything below uses `ApplicationMusicPlayer`.
 
 ### Basic Playback
 

@@ -472,7 +472,7 @@ Should you migrate to RealityKit?
 │   └─ YES → Migrate. ARSCNView is legacy, RealityKit is the only forward path.
 │
 ├─ Does the app target visionOS?
-│   └─ YES → Must migrate. SceneKit doesn't support visionOS spatial features.
+│   └─ YES → Must migrate. On visionOS SceneKit renders only into 2D views and textures — no volumes or immersive spaces.
 │
 ├─ Is the codebase heavily invested in SceneKit?
 │   ├─ YES, and app is stable → Maintain in SceneKit for now, plan phased migration.

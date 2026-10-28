@@ -747,6 +747,7 @@ class DashboardViewController: UIViewController {
 | Layout properties modified on representable view | View jumps, disappears, or has inconsistent layout | Never modify `center`, `bounds`, `frame`, or `transform` on the wrapped UIView — SwiftUI owns these. |
 | Keyboard hides content in hybrid layout | Text field or content hidden behind keyboard | Use `UIKeyboardLayoutGuide` (iOS 15+) constraints in UIKit, or ensure SwiftUI's keyboard avoidance isn't disabled. |
 | @Observable not updating UIKit views | UIKit views show stale data after model changes | Use `withObservationTracking()` (iOS 17+) or enable `UIObservationTrackingEnabled` in Info.plist (iOS 18). iOS 26+ auto-tracks in `updateProperties()`. |
+| UIKit touched off the main thread | Main Thread Checker reports, intermittent crashes, Swift 6 isolation errors | Use UIKit classes only on the main thread unless a class's docs say otherwise — `UIResponder` and its subclasses are `@MainActor`. `UIImage`, `UIColor`, `UIFont` are `Sendable`, so usable off-main. |
 
 ---
 

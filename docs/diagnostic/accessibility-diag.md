@@ -57,7 +57,7 @@ The skill rates seven core issues by severity, with missing VoiceOver labels the
 - **Announcements** – when to post `.announcement`, `.layoutChanged`, or `.screenChanged`, how to throttle announcements during a drag, and how to set priority for a message that must not be interrupted
 - **Assistive Access** – the Info.plist opt-in (iOS 17+), runtime detection (iOS 18+), and a dedicated `AssistiveAccess` scene (iOS 26+)
 - **Continuous reading** – linking text elements so VoiceOver keeps going across paragraphs, automatic page turns for read-all, and `UITextInput` for custom-rendered text
-- **Captions and subtitles** – a subtitle-selection UI so generated subtitles (new in the 27 releases) reach users, and live subtitle style preview (iOS 26.4+)
+- **Captions and subtitles** – a subtitle-selection UI so generated subtitles (new in the 27 releases) reach users, and live subtitle style preview (iOS 26.4+); custom caption renderers must follow the user's caption appearance settings and re-render when they change
 - **Resizable windows** – reading order after layout changes, table and grid navigation, labels for items in the toolbar overflow menu, Button Shapes, the Large Content Viewer, and testing with Full Keyboard Access and Switch Control
 - **tvOS Large Text** – tvOS 27 brings system-wide text scaling to Apple TV, including shelf layouts that show fewer items at accessibility sizes
 

@@ -396,6 +396,7 @@ Without per-locale eval, none of these are measurable until App Store reviews su
 - [ ] `onDemand` download policy (never `essential` or `prefetch`)
 - [ ] One asset pack per base-model variant
 - [ ] Apple-hosted vs server-hosted decision per `axiom-integration (skills/background-assets.md)`
+- [ ] Downloader extension and CDN requests only fetch adapter packs — Background Assets forbids using it to collect/transmit user or device identifiers or for advertising/ad measurement
 - [ ] `com.apple.developer.foundation-model-adapter` entitlement requested
 
 ### Disclosure & UX

@@ -22,7 +22,7 @@ Use this skill when you're:
 - Migrating off `CGDisplayStream` / `CGWindowListCreateImage` / `AVCaptureScreenInput`
 - Saving instant-replay clips or showing the system preview and share UI for a finished recording (macOS 27)
 
-This page covers the **macOS** API. ScreenCaptureKit also ships on iOS, iPadOS, tvOS, and visionOS 27, but with a picker-only model — see [Screen Capture](/skills/integration/screen-capture). Below iOS 27, iOS screen capture uses ReplayKit.
+This page covers the **macOS** API. ScreenCaptureKit also ships on iOS, iPadOS, tvOS, and visionOS 27, but with a picker-only model — see [Screen Capture](/skills/integration/screen-capture). ReplayKit, which the 27 SDKs deprecate, remains the fallback below iOS 27.
 
 ## Example Prompts
 

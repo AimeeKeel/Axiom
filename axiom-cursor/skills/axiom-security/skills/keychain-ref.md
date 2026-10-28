@@ -415,6 +415,8 @@ let status = SecItemAdd(query as CFDictionary, nil)
 
 Pre-evaluate biometrics with `LAContext`, then pass the context to the keychain query to avoid a second biometric prompt.
 
+`evaluatePolicy` hands the app only a success/failure Bool — never biometric data. A Bool check is app-side logic; for a secret, store it with a `SecAccessControl` flag so the Secure Enclave enforces the authentication at read time.
+
 ```swift
 import LocalAuthentication
 

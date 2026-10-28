@@ -156,7 +156,7 @@ func testLaunchPerformance() {
 }
 ```
 
-One throwaway launch, then (by default) five measured iterations with statistics. `XCTApplicationLaunchMetric(waitUntilResponsive:)` extends the window to first-responsive. (`XCTApplicationLaunchMetric` supersedes the old `XCTOSSignpostMetric.applicationLaunch`.) For field monitoring, wrap your extended-launch tasks in `MXMetricManager.shared.extendLaunchMeasurement(forTaskID:)` / `finishExtendedLaunchMeasurement(forTaskID:)`.
+One throwaway launch, then (by default) five measured iterations with statistics. `XCTApplicationLaunchMetric(waitUntilResponsive:)` extends the window to first-responsive. (`XCTApplicationLaunchMetric` supersedes the old `XCTOSSignpostMetric.applicationLaunch`.) For field monitoring, wrap your extended-launch tasks in the static `MXMetricManager.extendLaunchMeasurement(forTaskID:)` / `finishExtendedLaunchMeasurement(forTaskID:)` (both `throws`) — soft-deprecated in the 27 SDK in favor of the 27 SDK's instance method `trackLaunchTask(id:onTrackingError:_:)` on `MetricManager` (see `metrickit-ref.md`).
 
 ## Fixes by Phase
 

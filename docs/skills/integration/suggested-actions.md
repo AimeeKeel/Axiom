@@ -28,6 +28,7 @@ If you need to generate your *own* structured output from an on-device model, th
 
 - **`SuggestedActionsView`** – a `@MainActor` SwiftUI `View`; initialize with the focused `message` and optional `previousMessages`
 - **`SuggestedActionsMessage`** – the context you hand the system: `AttributedString` body/subject, `date`, a `sender`, and `recipients`, each a `Participant(name:handle:isUser:)`
+- **Placement** – the view is zero-size when there's nothing to suggest, so place one under every message; keep each message's `id` stable across launches
 - **`previousMessagesLimit`** – the system's supported maximum number of preceding messages to pass for context
 - **`generate(message:previousMessages:)`** – a `nonisolated static async` call to warm suggestions ahead of presenting the view
 - **Entitlement** – the feature is gated by `com.apple.developer.suggested-actions` (Signing & Capabilities); availability-gate with `#available` and fall back to your normal reply UI

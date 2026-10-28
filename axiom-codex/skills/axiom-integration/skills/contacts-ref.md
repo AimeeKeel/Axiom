@@ -64,6 +64,8 @@ CNContact.predicateForContactsInGroup(withIdentifier: groupId)
 CNContact.predicateForContactsInContainer(withIdentifier: containerId)
 ```
 
+For `CNContactStore` contact fetches, only these built-in predicates work — generic `NSPredicate` and compound predicates are unsupported. Results are unified contacts (linked contacts merged in memory, on by default) whose `identifier` differs from every linked contact's; refetch with the unified identifier.
+
 ## Containers and Groups
 
 ```swift
@@ -73,6 +75,8 @@ store.defaultContainerIdentifier()            // String (method, not property)
 ```
 
 **CNContainer types**: `.local`, `.exchange`, `.cardDAV`, `.unassigned`
+
+A contact lives in exactly one container. iCloud: one container, many groups, no subgroups. Exchange: no groups, possibly several containers (folders).
 
 ## Change Tracking
 
@@ -104,7 +108,7 @@ try store.execute(saveRequest)
 
 # Part 2: CNContact Key Descriptors
 
-You MUST specify which properties to fetch. Accessing an unfetched property raises the Objective-C exception `CNContactPropertyNotFetchedExceptionName`.
+You MUST specify which properties to fetch. Accessing an unfetched property raises the Objective-C exception `CNContactPropertyNotFetchedExceptionName`. Unsure what was fetched? Check `contact.isKeyAvailable(_:)` / `areKeysAvailable(_:)` and refetch by identifier if false.
 
 ## Common Key Constants
 
@@ -206,7 +210,7 @@ Set strings/arrays to empty, other properties to `nil`.
 
 # Part 4: CNSaveRequest
 
-Batch operations for contacts and groups.
+Batch operations for contacts and groups. Don't touch the objects in a request while `execute` runs — they may be modified.
 
 **Platform**: iOS 9.0+, iPadOS 9.0+, macOS 10.11+, Mac Catalyst 13.1+ (no watchOS)
 
@@ -448,6 +452,8 @@ manager.isEnabled                     // Bool — activation state
 ```
 
 **Cannot be used in app extensions** — main app only.
+
+Provided contacts are read-only to other apps. People enable/disable each provider in Settings; disabling hides its contacts, and deleting the app deletes the extension and all its contacts. Besides `signalEnumerator`, Contacts syncs every enabled domain at low priority overnight on power. Xcode has a Contact Provider Extension target template.
 
 ## ContactProviderExtension Protocol
 

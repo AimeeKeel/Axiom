@@ -34,7 +34,7 @@ Real questions developers ask that this skill answers:
 ## What This Skill Provides
 
 - **What Tap to Pay actually is** – supported payment types (contactless card, Apple Pay, other digital wallets, NFC loyalty passes), hardware floor (iPhone XS+), region gating
-- **The PSP-onboarding reality** – three Apple-supported PSPs as of writing, the per-region certification and account-flag requirements, the in-writing PSP confirmation rule before spending engineering time
+- **The PSP-onboarding reality** – three Apple-supported PSPs as of writing, the per-region certification and account-flag requirements, the in-writing PSP confirmation rule before spending engineering time; the PSP must be Level 3 certified, and Tap to Pay follows the PCI CPoC standard
 - **Managed-entitlement workflow** – the nine-step flow from request form to App Review, the Quinn-the-Eskimo mental model for managed capabilities, dev vs distribution entitlement (each requested separately), per-extension-bundle requests
 - **"Submitted" stuck pattern** – the 7-business-day escalation rule and the Apple Developer Support case path (not Feedback Assistant)
 - **Merchant onboarding flow** – `isSupported`, `isAccountLinked`, `linkAccount(using:)`, `relinkAccount(using:)`; the PSP-issued token at runtime; never roll your own T&C sheet

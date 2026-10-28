@@ -145,7 +145,7 @@ Context for platform decisions (WWDC 2026-285):
 - Preview on macOS 27 adds essential 3D editing, a choice of renderers (RealityKit, Storm, and a new production-quality Raytracer), and OpenPBR material support.
 - The Spatial Preview framework (macOS 27) streams a scene live from a Mac app to Quick Look on Vision Pro, with SharePlay collaboration.
 - Safari's Model tag embeds interactive USD models in web pages (spatial presentation on visionOS).
-- Picking an integration: USDKit for apps on Apple platforms; SwiftUSD (SPM) for advanced cross-platform Swift needs; embed OpenUSD as a framework for C++ codebases. All read/write the same files.
+- Picking an integration: USDKit for apps on Apple platforms — it exposes a curated subset of OpenUSD, so OpenUSD API it lacks means one of the other two; SwiftUSD (SPM) for advanced cross-platform Swift needs; embed OpenUSD as a framework for C++ codebases. All read/write the same files.
 
 ## Resources
 

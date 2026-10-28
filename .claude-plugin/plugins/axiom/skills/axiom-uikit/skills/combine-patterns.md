@@ -71,6 +71,8 @@ Is it existing Combine code that works?
 
 ## Part 2: Publisher/Subscriber Lifecycle
 
+**Demand drives delivery.** A publisher sends only as many values as its subscriber requests (`Subscribers.Demand`). `sink` requests `.unlimited`, so backpressure exists only in a custom `Subscriber` or a bounded operator such as `flatMap(maxPublishers:)`.
+
 ### AnyCancellable Storage Rules
 
 AnyCancellable cancels its subscription when deallocated. If you don't store it, the pipeline is cancelled immediately after setup.

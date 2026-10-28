@@ -35,7 +35,7 @@ For static/timeline widgets and Control Center controls, use `skills/extensions-
 | Apple Watch Smart Stack surfacing | watchOS 11 (paired with iOS 18) |
 | AlarmKit-backed alarms/timers | iOS 26+ |
 
-Dynamic Island is hardware-specific (iPhone 14 Pro and later); Live Activities still render on the Lock Screen on every supported device. `NSSupportsLiveActivities` must be `YES` in the app target's Info.plist — without it, nothing starts.
+Dynamic Island is hardware-specific (iPhone 14 Pro and later); Live Activities still render on the Lock Screen on every supported device. `NSSupportsLiveActivities` must be `YES` in the app target's Info.plist — without it, nothing starts. visionOS has no Live Activities (no ActivityKit in its SDK); a compatible iPad/iPhone app running there gets a failed request.
 
 ## Critical Gotchas
 

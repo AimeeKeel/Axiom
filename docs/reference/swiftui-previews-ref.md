@@ -64,6 +64,7 @@ Questions you can ask your assistant that will draw from this reference:
 ### Xcode Tooling
 - Coding intelligence's "Generate a Preview"
 - `XCPreviewAgent` for framework and package targets
+- `LibraryContentProvider` for listing custom views and modifiers in Xcode's Library
 
 ### Known Issues
 - Xcode 26.x "Failed to launch" on framework and package targets
@@ -104,4 +105,4 @@ This page documents the `previews-ref` skill (in the `axiom-swiftui` suite), whi
 
 **WWDC**: 2020-10185 (Structure your app for SwiftUI previews), 2023-10252 (Build programmatic UI with Xcode Previews), 2024-10144 (What's new in SwiftUI — `@Previewable`)
 
-**Docs**: /swiftui/preview(_:body:), /swiftui/preview(_:traits:_:body:), /swiftui/previewable(), /swiftui/previewmodifier, /swiftui/previewmodifier/makesharedcontext(), /developertoolssupport/previewtrait
+**Docs**: /swiftui/preview(_:body:), /swiftui/preview(_:traits:_:body:), /swiftui/previewable(), /swiftui/previewmodifier, /swiftui/previewmodifier/makesharedcontext(), /developertoolssupport/previewtrait, /developertoolssupport/librarycontentprovider

@@ -7,7 +7,7 @@
 
 ## Key Insight
 
-**CarPlay reuses the same `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` as the Lock Screen and Control Center.** If your Now Playing integration works on iOS, it automatically renders in CarPlay — no CarPlay-specific metadata needed for the basic case.
+**CarPlay reuses the same `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` as the Lock Screen and Control Center.** If your Now Playing integration works on iOS, it automatically renders in CarPlay — no CarPlay-specific metadata needed for the basic case. On 27, an app using the NowPlaying framework feeds CarPlay from its `MediaSession` the same way; never add `MPNowPlayingInfoCenter` or `MPRemoteCommandCenter` calls for CarPlay alongside it — undefined behavior.
 
 | iOS Component | CarPlay Display |
 |---|---|
@@ -122,7 +122,7 @@ See `carplay-hig.md` for the full entitlement request flow and what Apple review
 | Issue | Cause | Fix | Time |
 |---|---|---|---|
 | CarPlay doesn't show app | Missing entitlement or entitlement not yet granted by Apple | Verify `com.apple.developer.carplay-audio` is in your profile; request via developer.apple.com/carplay if missing | 5 min (once approved) |
-| Now Playing blank in CarPlay | `MPNowPlayingInfoCenter` not set | Same fix as Lock Screen — populate `nowPlayingInfo` with `MPMediaItemPropertyTitle`, `…PropertyArtist`, artwork, playback rate | 10 min |
+| Now Playing blank in CarPlay | No metadata published | Same fix as Lock Screen — MediaPlayer apps populate `nowPlayingInfo` with `MPMediaItemPropertyTitle`, `…PropertyArtist`, artwork, playback rate; NowPlaying-framework apps return `content` from the `MediaSession` model | 10 min |
 | Custom buttons don't appear | Configured after `pushTemplate` | Configure at `templateApplicationScene(_:didConnect:)` | 5 min |
 | Buttons work on device, not CarPlay simulator | Debugger attachment interferes with audio session activation | Test without debugger attached (run from Xcode, detach, re-connect in CarPlay Simulator) | 1 min |
 | Album art missing | `MPMediaItemArtwork` not configured for the right size | Set artwork via `MPMediaItemArtwork(boundsSize:requestHandler:)` and return a scaled `UIImage` | 15 min |

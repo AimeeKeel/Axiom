@@ -386,6 +386,7 @@ An `AppShortcut` for a schema intent can be gated inside `appShortcuts` with `if
 | `INIntentsSupported` (Info.plist) | `INPlayMediaIntent` (plus `INAddMediaIntent`, `INUpdateMediaAffinityIntent`, `INSearchForMediaIntent` if handled) — Xcode's target General → Supported Intents |
 | `INSupportedMediaCategories` | at least one of `INMediaCategoryMusic`, `INMediaCategoryPodcasts`, `INMediaCategoryAudiobooks`, `INMediaCategoryRadio`, `INMediaCategoryVideo`, `INMediaCategoryGeneral` (sound effects, white noise). "To opt in to Siri media control, you must choose at least one category" |
 | `NSSiriUsageDescription` | Required — the string shown in the authorization alert |
+| `SRResearchDataGeneration` | Optional `NO` — stops SensorKit research apps collecting Face Metrics while your SiriKit app is in use |
 | Authorization | `INPreferences.requestSiriAuthorization(_:)` from the iOS app at a moment that explains why |
 | Handler location | **In the app** (iOS 14+): `UIApplicationDelegate.application(_:handlerFor:)`; SwiftUI via `@UIApplicationDelegateAdaptor`. **Only invoked in apps that support multiple scenes** (`UIApplicationSupportsMultipleScenes`). Handle playback in the app: an Intents extension is a separate short-lived process with no access to your player |
 
@@ -445,7 +446,7 @@ Apple's measured traffic (WWDC 2020-10060): more than half of requests are gener
 
 ## Part 3 — Now Playing Commands (Both Siris)
 
-Siri sends "pause", "next track", "skip ahead 30 seconds", "play it slower" to the same `MPRemoteCommandCenter` handlers as Control Center and CarPlay buttons — no SiriKit, no authorization. Answers to "what song/band/album is this?" come from `MPNowPlayingInfoCenter` title/artist/album. Not supporting a command: don't register it (Siri explains gracefully), disable it temporarily (e.g. no skipping during an ad), or fail it (generic error). `changeShuffleMode`/`changeRepeatMode` toggle modes on the current queue; starting playback shuffled is `INPlayMediaIntent`/`playAudio`. Implementation: axiom-media (skills/now-playing.md).
+Siri sends "pause", "next track", "skip ahead 30 seconds", "play it slower" to the same command handlers as Control Center and CarPlay buttons — `MPRemoteCommandCenter` targets, or on 27 the NowPlaying framework's `MediaCommand` closures — no SiriKit, no authorization. Answers to "what song/band/album is this?" come from the published title/artist/album: `MPNowPlayingInfoCenter`, or the `MediaSession` content. An app uses one of the two APIs for local playback, never both (undefined behavior). Not supporting a command: don't register it (Siri explains gracefully), disable it temporarily (e.g. no skipping during an ad), or fail it (generic error). `changeShuffleMode`/`changeRepeatMode` toggle modes on the current queue; starting playback shuffled is `INPlayMediaIntent`/`playAudio`. Implementation: axiom-media (skills/now-playing.md).
 
 ## Resources
 

@@ -58,6 +58,8 @@ struct ConversationFooter: View {
 }
 ```
 
+With no applicable actions the view is zero-size and doesn't affect layout, so place one under **every** message — it appears inline (animated) once actions exist. Give each message an `id` that is stable across launches; cached suggestions are matched by `id`. Message content is never sent to Apple servers.
+
 `previousMessages` defaults to `[]`, so `SuggestedActionsView(message:)` is valid when you have no thread context. `previousMessagesLimit` is the system's supported maximum; follow Apple's docs for the expected ordering of the messages you pass.
 
 ## Pre-generate (optional)

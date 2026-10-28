@@ -36,7 +36,7 @@ Questions you can ask your assistant that will draw from this reference:
 
 ## What's Covered
 
-- Version support across iOS 13 through the 27 releases
+- Version support across iOS 13 through the 27 releases, and why visionOS gets diagnostics only, never performance metrics
 - The new Swift API (27 releases): `MetricManager` setup, `MetricReport` interval entries, the full `MetricResult` metric inventory (including Metal frame rate and storage metrics, and `HitchTimeMetric` with its `HitchTimeRatio` unit — the Swift API has no scroll-specific hitch metric), launch-task tracking, typed diagnostics with termination categories, memory exception diagnostics (iOS 27), and the typed `CallStackTree`
 - Per-state metrics: StateReporting domains, state transitions, the `@ReportableMetadata` macro, and state-grouped report encoding
 - Crash reporter extensions (27 releases; iOS, iPadOS, macOS, visionOS): the CrashReportExtension framework, `CrashedProcess`, in-extension symbolication, binary image inventory, and extension setup

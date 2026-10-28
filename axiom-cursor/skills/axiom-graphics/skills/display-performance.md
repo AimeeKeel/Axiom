@@ -516,6 +516,8 @@ MXMetricManager.shared.add(metricsManager)
 - `scrollHitchTimeRatio`: Time spent hitching while scrolling (UIScrollView only)
 - `hitchTimeRatio` (iOS 26+ / macOS 26+): Time spent hitching in all tracked animations
 
+Metric reports cover the previous 24 hours and arrive at most once a day — a trend signal, not a live one. visionOS (native apps and compatible iPhone/iPad apps) gets diagnostics only, never performance metrics, so hitch and frame-rate telemetry has no MetricKit source there.
+
 ---
 
 ## Part 10: Quick Diagnostic Checklist
