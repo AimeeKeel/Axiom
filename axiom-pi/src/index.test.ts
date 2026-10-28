@@ -68,15 +68,6 @@ describe("axiomPi project gate", () => {
         for (const event of [
           {
             type: "tool_result",
-            toolCallId: "bash",
-            toolName: "bash",
-            input: { command: "swift build" },
-            content: [{ type: "text", text: "error: data race detected" }],
-            details: undefined,
-            isError: false,
-          },
-          {
-            type: "tool_result",
             toolCallId: "write",
             toolName: "write",
             input: {

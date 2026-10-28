@@ -5,7 +5,7 @@
  * This extension adds the two layers Pi can't get from skills alone:
  *   - the `/axiom-*` commands (trigger the matching skill inline), and
  *   - the SessionStart / tool hooks (version ground truth, Swift guardrails,
- *     crash-file routing, Bash skill hints).
+ *     crash-file routing).
  */
 
 import type {
@@ -91,7 +91,7 @@ export default function axiomPi(pi: ExtensionAPI): void {
     pi.sendMessage({ customType: "axiom-crash-hint", content: hint, display: true });
   });
 
-  // --- Post-tool hooks: Swift guardrails + Bash skill hints ----------------
+  // --- Post-tool hooks: Swift guardrails ------------------------------------
   // Advisory only — Pi appends to the tool result; it can't block. Mirrors the
   // Claude Code / Codex guardrails minus format-on-save, which was retired as
   // agentically hazardous (a silent reformat desyncs the file from the model's

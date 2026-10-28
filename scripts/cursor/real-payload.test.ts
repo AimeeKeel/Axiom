@@ -103,11 +103,14 @@ test("Cursor terminal hints name Cursor's /axiom- command form", () => {
 test("Cursor terminal hints keep the Cursor protocol under an inherited Codex marker", () => {
   const payload = {
     ...FIXTURE["post-shell"],
-    tool_input: { command: "swift build" },
-    tool_output: JSON.stringify({ exitCode: 1, output: "error: linker command failed" }),
+    tool_input: { command: "xcodebuild build" },
+    tool_output: JSON.stringify({ exitCode: 65, output: "** BUILD FAILED **\nerror: linker command failed" }),
+    duration: 240_000,
   };
   const context = (invoke("post-shell", payload, { ...process.env, AXIOM_HARNESS: "codex" }).response as { additional_context?: string }).additional_context ?? "";
-  assert.match(context, /Build configuration issue/);
+  // Codex's form would read "skill axiom-fix-build"; Cursor's names the command.
+  assert.match(context, /Long xcodebuild \(240s\)/);
+  assert.match(context, /Try: \/axiom-fix-build/);
 });
 
 test("live Cursor Shell tool_output is a JSON string keyed exitCode/output", () => {

@@ -338,8 +338,8 @@
     },
     {
       "path": "scripts/posttool-bash-hints.py",
-      "sha256": "bf1fdd843bb7e8a2ac27e1e484bd5301fe917edcc06a46f46be2b2566047334b",
-      "bytes": 33166
+      "sha256": "5fc91de3a7d82807a60b6f8d0cd780b9c979c1a8bb4702444f7b4e7b3649281d",
+      "bytes": 20422
     },
     {
       "path": "scripts/pretool-crash-route.py",
@@ -1939,7 +1939,7 @@
   ],
   "totals": {
     "files": 387,
-    "bytes": 7986841
+    "bytes": 7974097
   },
   "excludedMirrors": 30,
   "classes": {

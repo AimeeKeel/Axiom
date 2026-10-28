@@ -1,11 +1,9 @@
-import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
 import {
   unscopedStateVars,
   unguardedRelationships,
   classifyCrashPath,
   crashFileHint,
-  bashOutputHints,
   inputPath,
   swiftGuardrailWarning,
   toolResultHint,
@@ -113,19 +111,6 @@ describe("crashFileHint", () => {
   });
 });
 
-describe("bashOutputHints", () => {
-  it("returns the matching skill hints, in rule order", () => {
-    expect(bashOutputHints("error: Sendable closure; linker command failed")).toEqual([
-      "💡 Concurrency issue — load the axiom-concurrency skill.",
-      "💡 Build configuration issue — try /axiom-fix-build.",
-    ]);
-  });
-
-  it("is empty for empty output", () => {
-    expect(bashOutputHints("")).toEqual([]);
-  });
-});
-
 describe("inputPath", () => {
   it("reads either path or filePath, else undefined", () => {
     expect(inputPath({ path: "/a" })).toBe("/a");
@@ -180,29 +165,8 @@ describe("toolResultHint", () => {
     expect(toolResultHint({ toolName: "edit", input: { path: "/a/x.txt" }, content: [] }, readSwift)).toBeNull();
   });
 
-  it("returns bash skill hints from output text", () => {
-    const hint = toolResultHint(
-      { toolName: "bash", input: {}, content: [{ type: "text", text: "data race here" }] },
-      readSwift,
-    );
-    expect(hint).toBe("💡 Concurrency issue — load the axiom-concurrency skill.");
-  });
-
-  it("returns null when nothing matches", () => {
-    expect(
-      toolResultHint({ toolName: "bash", input: {}, content: [{ type: "text", text: "all good" }] }, readSwift),
-    ).toBeNull();
-  });
-});
-
-
-describe("shared Bash hint precision corpus", () => {
-  const cases = JSON.parse(readFileSync(new URL("../../scripts/fixtures/bash-hint-cases.json", import.meta.url), "utf8")) as {
-    name: string; command: string; output: string; expectedHints: string[];
-  }[];
-  it.each(cases)("$name", ({ command, output, expectedHints }) => {
-    const result = toolResultHint({ toolName: "bash", input: { command }, content: [{ type: "text", text: output }] }, () => "");
-    const hints = [...(result ?? "").matchAll(/axiom-[\w-]+/g)].map((match) => match[0]);
-    expect(hints).toEqual(expectedHints);
+  it("adds nothing to bash results, whatever their output", () => {
+    const content = [{ type: "text", text: "A.swift:3:5: error: data race detected\nld: linker command failed" }];
+    expect(toolResultHint({ toolName: "bash", input: { command: "swift build" }, content }, readSwift)).toBeNull();
   });
 });

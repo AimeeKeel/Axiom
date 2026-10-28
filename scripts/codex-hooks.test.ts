@@ -174,7 +174,7 @@ describe("generated Codex terminal hook", () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
     const command = manifest.hooks.PostToolUse.find((group: { matcher: string }) => group.matcher === "Bash").hooks[0].command;
     const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "axiom-terminal-scope-"));
-    const hints = "💡 Database migration issue. Try: skill axiom-data\n💡 Memory issue detected. Try: skill axiom-performance";
+    const hints = "💡 Slow test run (300s). Try: skill axiom-testing for parallelization, simulator reuse, .serialized traits";
     try {
       fs.mkdirSync(path.join(workspace, ".git"));
       for (const testCase of [
@@ -186,8 +186,8 @@ describe("generated Codex terminal hook", () => {
         if (testCase.apple) fs.writeFileSync(path.join(workspace, "Package.swift"), "// swift-tools-version: 6.0\n");
         const result = spawnSync("sh", ["-lc", command], {
           cwd: workspace, encoding: "utf8",
-          input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "swift build" },
-            tool_response: { output: "CoreData: error during migration\nLeaks: memory leak in MyClass", exit_code: 0 } }),
+          input: JSON.stringify({ tool_name: "Bash", tool_input: { command: "xcodebuild test" }, duration_ms: 300_001,
+            tool_response: { output: "Test passed", exit_code: 0 } }),
           env: { ...process.env, PLUGIN_ROOT: pluginRoot, AXIOM_SESSION_CONTEXT: testCase.override },
         });
         const context = result.stdout ? JSON.parse(result.stdout).hookSpecificOutput.additionalContext : null;
@@ -202,15 +202,15 @@ describe("generated Codex terminal hook", () => {
     const pluginRoot = path.resolve("axiom-codex");
     const manifest = JSON.parse(fs.readFileSync(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
     const command = manifest.hooks.PostToolUse.find((group: { matcher: string }) => group.matcher === "Bash").hooks[0].command;
-    const payload = { tool_name: "Bash", tool_input: { command: "swift build" }, tool_response: "data race detected" };
+    const payload = { tool_name: "Bash", tool_input: { command: "xcodebuild test" }, tool_response: "Test passed", duration_ms: 300_001 };
     for (const cwd of [process.cwd(), path.resolve("docs")]) {
       const result = spawnSync("sh", ["-lc", command], {
         cwd, input: JSON.stringify(payload), encoding: "utf8",
-        env: { ...process.env, PLUGIN_ROOT: pluginRoot, CLAUDE_TOOL_OUTPUT: "linker command failed" },
+        env: { ...process.env, PLUGIN_ROOT: pluginRoot },
       });
       assert.deepEqual({ status: result.status, stderr: result.stderr, output: JSON.parse(result.stdout) }, {
         status: 0, stderr: "", output: { hookSpecificOutput: {
-          hookEventName: "PostToolUse", additionalContext: "💡 Concurrency issue. Try: skill axiom-concurrency",
+          hookEventName: "PostToolUse", additionalContext: "💡 Slow test run (300s). Try: skill axiom-testing for parallelization, simulator reuse, .serialized traits",
         } },
       });
     }

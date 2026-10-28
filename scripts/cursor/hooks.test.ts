@@ -198,16 +198,12 @@ test("adapter relays Axiom Shell hints as advisory context", () => {
       hook_event_name: "postToolUse",
       tool_name: "Shell",
       tool_input: { command: "xcodebuild test" },
-      tool_output: JSON.stringify({
-        stdout: "Unable to simultaneously satisfy constraints",
-        stderr: "",
-        output: "",
-      }),
-      duration: 12_345,
+      tool_output: JSON.stringify({ stdout: "Test passed", stderr: "", output: "" }),
+      duration: 300_001,
     }));
 
     assert.deepEqual(Object.keys(response), ["additional_context"]);
-    assert.match(response.additional_context, /axiom-uikit/);
+    assert.match(response.additional_context, /Slow test run \(300s\)/);
     // The hook's Claude Code JSON form must never leak into Cursor's plain context.
     assert.doesNotMatch(response.additional_context, /hookSpecificOutput/);
   });
@@ -259,8 +255,9 @@ test("adapter gates Shell and Write children on the workspace, not its own cwd",
     };
     const shell = (workspace: string) => invoke(adapter, "post-shell", JSON.stringify({
       tool_name: "Shell",
-      tool_input: { command: "swift build" },
-      tool_output: JSON.stringify({ stdout: "error: data race detected", stderr: "", output: "" }),
+      tool_input: { command: "xcodebuild test" },
+      tool_output: JSON.stringify({ stdout: "Test passed", stderr: "", output: "" }),
+      duration: 300_001,
       workspace_roots: [workspace],
     }), 10_000, options).response;
     const write = (roots: string[]) => invoke(adapter, "post-write", JSON.stringify({
@@ -281,7 +278,7 @@ test("adapter gates Shell and Write children on the workspace, not its own cwd",
         appleSecondRootWrite: write([plain, apple]),
       },
       {
-        appleShell: { additional_context: "💡 Concurrency issue. Try: skill axiom-concurrency" },
+        appleShell: { additional_context: "💡 Slow test run (300s). Try: skill axiom-testing for parallelization, simulator reuse, .serialized traits" },
         plainShell: {},
         appleWrite: stateFinding,
         appleSecondRootWrite: stateFinding,

@@ -40,13 +40,11 @@ class TestProjectScope(unittest.TestCase):
                     "posttool-bash-hints.py",
                     {
                         "tool_name": "Bash",
-                        "tool_input": {"command": "swift build"},
-                        "tool_response": {
-                            "output": "error: data race detected",
-                            "exit_code": 1,
-                        },
+                        "tool_input": {"command": "xcodebuild test"},
+                        "tool_response": {"output": "Test passed", "exit_code": 0},
+                        "duration_ms": 300_001,
                     },
-                    "axiom-concurrency",
+                    "Slow test run",
                 ),
                 (
                     "swift-guardrails.py",
