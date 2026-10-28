@@ -1273,8 +1273,8 @@
     },
     {
       "path": "skills/axiom-media/skills/now-playing.md",
-      "sha256": "ec94601725aec2704857c4cb7014dbdcb1b63f2423c2594d21d23fa3277a34ae",
-      "bytes": 60592
+      "sha256": "50c42c318572b28fc61b7fa65e3ca55b4465132d57185d3de1a1436ad37eaf68",
+      "bytes": 61278
     },
     {
       "path": "skills/axiom-media/skills/photo-library-ref.md",
@@ -1939,7 +1939,7 @@
   ],
   "totals": {
     "files": 387,
-    "bytes": 7961010
+    "bytes": 7961696
   },
   "excludedMirrors": 30,
   "classes": {

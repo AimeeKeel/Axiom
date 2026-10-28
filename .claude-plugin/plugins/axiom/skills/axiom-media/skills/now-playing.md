@@ -773,17 +773,20 @@ NotificationCenter.default.addObserver(
     object: nil,
     queue: .main
 ) { [weak self] _ in
-    guard self?.isPlaying == true else { return }
-
-    do {
-        try AVAudioSession.sharedInstance().setActive(true)
-        self?.session?.becomeActiveIfPossible { _ in }
-    } catch {
-        print("Failed to reactivate audio session: \(error)")
+    MainActor.assumeIsolated {  // queue: .main delivers on the main thread
+        guard self?.isPlaying == true else { return }
+        do {
+            try AVAudioSession.sharedInstance().setActive(true)
+            self?.session?.becomeActiveIfPossible { _ in }
+        } catch {
+            print("Failed to reactivate audio session: \(error)")
+        }
     }
 }
 
 // 3. Handle interruptions (phone call, Siri)
+// InterruptionType and InterruptionOptions are deprecated in iOS 27; an app targeting 27 observes
+// AVAudioSession.DidBecomeInactiveMessage and ResumptionRecommendationMessage (see avfoundation-ref).
 NotificationCenter.default.addObserver(
     forName: AVAudioSession.interruptionNotification,
     object: nil,
@@ -795,10 +798,12 @@ NotificationCenter.default.addObserver(
         return
     }
 
-    if type == .ended {
-        // ✅ Reactivate after interruption
+    if type == .ended,
+       let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt,
+       AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume) {
+        // ✅ Reactivate only when the system says playback may resume
         try? AVAudioSession.sharedInstance().setActive(true)
-        self?.session?.becomeActiveIfPossible { _ in }
+        MainActor.assumeIsolated { self?.session?.becomeActiveIfPossible { _ in } }
     }
 }
 ```
@@ -1269,8 +1274,8 @@ Key shapes:
   - `HomeMediaContent(id:sourceName:contentDescription:type:duration:artwork:)`, `GenericContent(id:title:subtitle:type:duration:artwork:)`
 - **Optional metadata** — settable `var`s on every content type, assigned after init: `isExplicit`, `isExcludedFromSuggestions` (default `false`), `genre`. `MusicContent` adds `composer` and `isrc`; `BookContent` adds `chapter: (current: Int, total: Int)?`. Apple's doc-comment samples pass `isExplicit:` to the init and mention a metadata "trailing closure" — neither exists.
 - **`MediaCommand`** factories: `.play`, `.pause`, `.stop`, `.togglePlayPause`, `.next`, `.previous`, `.skipForward(preferredIntervals:)`, `.skipBackward(preferredIntervals:)` (both default `[10]`), `.seekToPosition`, `.seekForward(beginAction:endAction:)`, `.seekBackward(…)`, `.changePlaybackRate(supported:)`, `.changeRepeatMode(current:supported:)`, `.changeShuffleMode(current:supported:)`, `.feedback(title:shortTitle:status:)`. Chain `.enabled(_:)` to make one unavailable from state (no next track, no skipping during an ad).
-- **`Artwork(id:artworkProvider:)`** — lazy `(CGSize) async throws -> ArtworkRepresentation`; build it with `ArtworkRepresentation(data:)` or `(cgImage:)` (both `throws`; `.noRepresentationAvailable` for undecodable or unsupported image data). The `id` is the system's cache key — keep it stable per image, not per track.
-- **`AnimatedArtwork(id:supportedAspectRatios:preview:video:)`** — `preview` is `(CGSize, AspectRatio) async throws -> ArtworkRepresentation`, `video` is `(CGSize, AspectRatio) async throws -> URL`. Pass at least one ratio (`.square`, `.tall`; `AnimatedArtwork.compatibleAspectRatios` lists what the device accepts). Attach it via the content init's `animatedArtwork:` overload, which requires a non-optional `artwork:`.
+- **`Artwork(id:artworkProvider:)`** — lazy `@Sendable (CGSize) async throws -> ArtworkRepresentation`, so capture Sendable values or `await` a `@MainActor` model, never a plain non-Sendable class; build it with `ArtworkRepresentation(data:)` or `(cgImage:)` (both `throws`; `.noRepresentationAvailable` for undecodable or unsupported image data). The `id` is the system's cache key — keep it stable per image, not per track.
+- **`AnimatedArtwork(id:supportedAspectRatios:preview:video:)`** — `preview` is `@Sendable (CGSize, AspectRatio) async throws -> ArtworkRepresentation`, `video` is `@Sendable (CGSize, AspectRatio) async throws -> URL`. `supportedAspectRatios` defaults to `[.square]` (the other is `.tall`; `AnimatedArtwork.compatibleAspectRatios` lists what the device accepts). Attach it via the content init's `animatedArtwork:` overload, which requires a non-optional `artwork:`.
 
 ### Session lifecycle and primacy
 
