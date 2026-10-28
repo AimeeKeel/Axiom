@@ -54,6 +54,125 @@ import os
     #expect(result.failedTests == 2)
   }
 
+  // Real Swift 6.4.2 output: a display-named test is identified by its display name in the log,
+  // with the function name only in verbose output, and by its function name in the event stream.
+  @Test(arguments: [
+    """
+    􀟈  Test case passing 1 argument x → 1 to "doubles" started.
+    􀢄  Test "adds numbers" recorded an issue at T.swift:2:36: Expectation failed: 1 + 1 == 3
+    􀢄  Test "doubles" recorded an issue with 1 argument x → 1 at T.swift:3:56: Expectation failed: x * 2 == 3
+    """,
+    """
+    􀟈  Test case passing 1 argument x → 1 (Swift.Int) to "doubles" (aka 'double(x:)') started.
+    􀢄  Test "doubles" (aka 'double(x:)') recorded an issue with 1 argument x → 1 at T.swift:3:56: Expectation failed: x * 2 == 3
+    􀢄  Test "adds numbers" (aka 'add()') recorded an issue at T.swift:2:36: Expectation failed: 1 + 1 == 3
+    """,
+  ])
+  func pairsDisplayNamedSwiftTestingIssuesAcrossLogAndEvents(log: String) throws {
+    let events = readEvents(
+      data: try fixture("display-names-6.3-swift-6.4.2", suffix: "jsonl", folder: "tests"),
+      context: context)
+    let result = reconcileDiagnostics(
+      batches: [readLog(data: Data(log.utf8), context: context), events], context: context)
+    #expect(
+      result.diagnostics.map { "\($0.test?.id ?? "nil") \($0.sources)" }.sorted() == [
+        "DT.add()/T.swift:2:2 [AxBuildCore.Source.log, AxBuildCore.Source.events]",
+        "DT.double(x:)/T.swift:3:2 [AxBuildCore.Source.log, AxBuildCore.Source.events]",
+      ])
+    #expect(result.failedTests == 2)
+    #expect(result.issues == [])
+  }
+
+  // Real xcodebuild output: the log names the test by display name; xcresult's Test Case node
+  // carries the display name as `name` and the function as `nodeIdentifier`.
+  @Test func pairsDisplayNamedSwiftTestingIssuesAcrossLogAndTestResults() throws {
+    let log = readLog(
+      data: Data(
+        """
+        􀟈 Test case passing 1 argument x → 1 to "doubles" started.
+        􀢄 Test "doubles" recorded an issue with 1 argument x → 1 at T.swift:3:56: Expectation failed: x * 2 == 3
+        􀢄 Test "adds numbers" recorded an issue at T.swift:2:36: Expectation failed: 1 + 1 == 3
+        """.utf8), context: context)
+    let results = readTestResults(
+      data: try fixture("display-names-test-results", suffix: "json", folder: "tests"),
+      context: context)
+    let result = reconcileDiagnostics(batches: [log, results], context: context)
+    #expect(
+      result.diagnostics.map { "\($0.test?.id ?? "nil") \($0.sources.count)" }.sorted() == [
+        "test://com.apple.xcode/dispname/DT/add() 2",
+        "test://com.apple.xcode/dispname/DT/double(x:) 2",
+      ])
+    #expect(result.failedTests == 2)
+    #expect(result.issues == [])
+  }
+
+  func displayNamedEvent(_ name: String, line: Int, displayName: String) -> Diagnostic {
+    Diagnostic(
+      id: .init("pending"), kind: .test, severity: .error, message: "Expectation failed: x",
+      sources: [.events], file: "/fixture/T.swift", line: line, column: 5,
+      test: .init(id: "DT.\(name)/T.swift:\(line):2", isFailure: true, framework: .swiftTesting),
+      testName: name, displayName: displayName)
+  }
+
+  @Test func pairsTestsSharingADisplayNameByLocation() {
+    let log = readLog(
+      data: Data(
+        """
+        􀢄  Test "same" recorded an issue at T.swift:2:5: Expectation failed: x
+        􀢄  Test "same" recorded an issue at T.swift:5:5: Expectation failed: x
+        """.utf8), context: context)
+    // Reverse order, so pairing by position alone would cross the two tests.
+    let events = [
+      displayNamedEvent("s2()", line: 5, displayName: "same"),
+      displayNamedEvent("s1()", line: 2, displayName: "same"),
+    ]
+    let result = reconcileDiagnostics(batches: [log, .init(diagnostics: events)], context: context)
+    #expect(
+      result.diagnostics.map { "\($0.test?.id ?? "nil") \($0.line ?? 0) \($0.sources.count)" } == [
+        "DT.s1()/T.swift:2:2 2 2", "DT.s2()/T.swift:5:2 5 2",
+      ])
+    #expect(result.failedTests == 2)
+  }
+
+  @Test(arguments: ["s1()", "Suite/s1()"])
+  func pairsVerboseDisplayNameWithTheFunctionNameInOrOutOfASuite(testName: String) {
+    let log = readLog(
+      data: Data(
+        "􀢄  Test \"same\" (aka 's1()') recorded an issue at T.swift:2:5: Expectation failed: x"
+          .utf8), context: context)
+    var event = displayNamedEvent("s1()", line: 2, displayName: "same")
+    event.testName = testName
+    let result = reconcileDiagnostics(batches: [log, .init(diagnostics: [event])], context: context)
+    #expect(result.diagnostics.map(\.sources) == [[.log, .events]])
+  }
+
+  @Test func pairsADisplayNameEqualToItsFunctionNameAcrossLogAndTestResults() {
+    let log = readLog(
+      data: Data(
+        "􀢄 Test \"add()\" recorded an issue at T.swift:2:36: Expectation failed: 1 + 1 == 3".utf8),
+      context: context)
+    let json = """
+      {"testNodes":[{"nodeType":"Unit test bundle","name":"DT","children":[{"nodeType":"Test Case",\
+      "name":"add()","nodeIdentifier":"add()","nodeIdentifierURL":"test://fixture/DT/add()",\
+      "result":"Failed","children":[{"nodeType":"Failure Message","name":"Expectation failed: 1 + 1 == 3",\
+      "sourceLocation":{"filePath":"/fixture/T.swift","lineNumber":2}}]}]}]}
+      """
+    let results = readTestResults(data: Data(json.utf8), context: context)
+    let result = reconcileDiagnostics(batches: [log, results], context: context)
+    #expect(result.diagnostics.map(\.sources) == [[.log, .testResults]])
+    #expect(result.failedTests == 1)
+  }
+
+  @Test func keepsDisplayNamedRecordsApartWhenTheVerboseFunctionNameDiffers() {
+    let log = readLog(
+      data: Data(
+        "􀢄  Test \"same\" (aka 'other()') recorded an issue at T.swift:2:5: Expectation failed: x"
+          .utf8), context: context)
+    let events = [displayNamedEvent("s1()", line: 2, displayName: "same")]
+    let result = reconcileDiagnostics(batches: [log, .init(diagnostics: events)], context: context)
+    #expect(result.diagnostics.map(\.sources) == [[.log], [.events]])
+  }
+
   @Test(arguments: [false, true]) func expectedStructuredSourceGatesTheFailedTestCount(
     completed: Bool
   ) {

@@ -24,6 +24,7 @@ private struct EventLocation: Decodable {
 private struct TestDescriptor: Decodable {
   var id: String
   var name: String
+  var displayName: String?
   var sourceLocation: EventLocation?
 }
 private struct EventMessage: Decodable {
@@ -155,7 +156,7 @@ func readEvents(data: Data, context: ReaderContext) -> ReadBatch {
             column: location?.column.flatMap { $0 > 0 ? $0 : nil },
             test: metadata,
             target: descriptor?.sourceLocation?.fileID?.components(separatedBy: "/").first,
-            testName: descriptor?.name))
+            testName: descriptor?.name, displayName: descriptor?.displayName))
       }
     } catch {
       batch.issues.append(
@@ -227,7 +228,8 @@ func readTestResults(data: Data, context: ReaderContext) -> ReadBatch {
         execution = .init(
           id: node.nodeIdentifierURL ?? node.nodeIdentifier, name: node.nodeIdentifier ?? node.name,
           target: inherited?.target, source: .testResults,
-          failed: node.result == "Failed" ? true : node.result == "Passed" ? false : nil)
+          failed: node.result == "Failed" ? true : node.result == "Passed" ? false : nil,
+          displayName: node.name)
         if let execution { batch.executions.append(execution) }
 
       }
@@ -258,7 +260,8 @@ func readTestResults(data: Data, context: ReaderContext) -> ReadBatch {
             sources: [.testResults], file: file,
             line: node.sourceLocation?.lineNumber.flatMap { $0 > 0 ? $0 : nil },
             test: .init(id: execution?.id, isFailure: true, aliases: alias),
-            target: execution?.target, testName: execution?.name))
+            target: execution?.target, testName: execution?.name,
+            displayName: execution?.displayName))
       }
       for child in (node.children ?? []).reversed() { pending.append((child, execution)) }
     }

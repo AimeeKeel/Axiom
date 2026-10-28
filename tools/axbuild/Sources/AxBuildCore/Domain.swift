@@ -137,6 +137,7 @@ struct Diagnostic: Codable, Equatable, Sendable {
   var test: TestMetadata?
   var target: String?
   var testName: String? = nil
+  var displayName: String? = nil
   var synthetic = false
   var preview: Preview?
   var alternateMessages: [AlternateMessage]?
@@ -174,6 +175,7 @@ struct TestExecution: Equatable, Sendable {
   var target: String?
   var source: Source
   var failed: Bool?
+  var displayName: String? = nil
 }
 
 struct Location: Codable, Equatable, Sendable {

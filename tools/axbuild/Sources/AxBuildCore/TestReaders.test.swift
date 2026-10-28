@@ -108,7 +108,7 @@ import os
             id: "test://com.apple.xcode/Calc/CalcTests/addFailsST()", isFailure: true,
             aliases: [
               .init(source: .testResults, id: "test://com.apple.xcode/Calc/CalcTests/addFailsST()")
-            ]), target: "CalcTests", testName: "addFailsST()"),
+            ]), target: "CalcTests", testName: "addFailsST()", displayName: "addFailsST()"),
         .init(
           id: .init("d2"), kind: .test, severity: .error,
           message: "XCTAssertEqual failed: (\"5\") is not equal to (\"4\") - XC_MARKER sum wrong",
@@ -119,7 +119,8 @@ import os
               .init(
                 source: .testResults,
                 id: "test://com.apple.xcode/Calc/CalcTests/XCTestCases/testAddFailsXC")
-            ]), target: "CalcTests", testName: "XCTestCases/testAddFailsXC()"),
+            ]), target: "CalcTests", testName: "XCTestCases/testAddFailsXC()",
+          displayName: "testAddFailsXC()"),
       ])
     #expect(batch.issues == [])
   }

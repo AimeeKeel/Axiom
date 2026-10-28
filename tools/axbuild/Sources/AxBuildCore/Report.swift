@@ -125,6 +125,15 @@ private func testName(_ diagnostic: Diagnostic) -> TestName {
     target: moduleName(diagnostic.target),
     suite: parts.count > 1 ? parts.dropLast().joined(separator: "/") : nil, method: method)
 }
+// The log names a display-named Swift Testing test by its quoted display name, followed in verbose
+// output by its function name; structured sources name it by function.
+private func logNamesDisplayName(_ log: Diagnostic, of other: Diagnostic) -> Bool {
+  guard log.sources == [.log], let id = log.test?.id, let name = other.displayName else {
+    return false
+  }
+  let function = other.testName?.split(separator: "/").last.map(String.init)
+  return id == "\"\(name)\"" || function.map { id == "\"\(name)\" (aka '\($0)')" } == true
+}
 private func normalizedMessage(_ message: String, test: Bool) -> String {
   var text =
     test
@@ -234,7 +243,8 @@ private func compatibleRecords(_ left: Diagnostic, _ right: Diagnostic) -> Bool 
     let sameID = left.test?.id != nil && left.test?.id == right.test?.id
     guard
       sameID
-        || (a.method != nil && a.method == b.method && sameFile && left.line != nil
+        || (((a.method != nil && a.method == b.method) || logNamesDisplayName(left, of: right)
+          || logNamesDisplayName(right, of: left)) && sameFile && left.line != nil
           && right.line != nil)
     else { return false }
   } else if !sameFile || left.line != right.line || left.column != right.column {
@@ -376,6 +386,7 @@ func reconcileDiagnostics(batches: [ReadBatch], context: ReaderContext) -> Recon
           merged.test = metadata
         }
         merged.testName = merged.testName ?? incoming.testName
+        merged.displayName = merged.displayName ?? incoming.displayName
         merged.notes = merged.notes ?? incoming.notes
         merged.fixIts = merged.fixIts ?? incoming.fixIts
         result.diagnostics[index] = merged

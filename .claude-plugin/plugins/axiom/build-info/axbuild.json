@@ -3,13 +3,13 @@
   "inputs": {
     "tools/axbuild/Makefile": "b73bb0bfeb449f6b8315eb5b693a3ddb00044d4532cd7d4be272c996683d0f9f",
     "tools/axbuild/Package.swift": "5dae40dfacdbfdb5973562c1203fd1bdf6343664ec1dcbc78da8526605b2420b",
-    "tools/axbuild/Sources/AxBuildCore/Domain.swift": "da916e4f67980e1a97aedd30b7a4d0161fd9fd506ca4db2ce5825fb8986dc5fc",
+    "tools/axbuild/Sources/AxBuildCore/Domain.swift": "e0c43c11ed7f75880e0203925ea84f15202f9498084351516710ec07dbb42fec",
     "tools/axbuild/Sources/AxBuildCore/Invocation.swift": "12311e20f605732ace54bab5decf9bdf78ba31c9a51c0888e8f2e09c4743e615",
     "tools/axbuild/Sources/AxBuildCore/LogReader.swift": "a816aa5c666fef60bc85d304860f4b2fadf15b6267efb18901cda716409e26fc",
-    "tools/axbuild/Sources/AxBuildCore/Report.swift": "76a1f9c8a275428ce285e75702700c89b9cae4eb26f94a18bc177445886b9d60",
+    "tools/axbuild/Sources/AxBuildCore/Report.swift": "f701ed0bfb279d3c7ea29d593ab46d6a2b8d47ff3aabb86133c17afc9a42de78",
     "tools/axbuild/Sources/AxBuildCore/Runner.swift": "1a94b66796758752ff057889ce5dda8915e2f5b9b0736e9059fbb689880ea3d3",
-    "tools/axbuild/Sources/AxBuildCore/TestReaders.swift": "11b8889a4ead7d0f6422971c8d94edce72cb8734572f95717475a0b0e9161d79",
+    "tools/axbuild/Sources/AxBuildCore/TestReaders.swift": "66dd8e490e6529f271ca3c7e0cc50b4ad0ce13c23d1a5a2c0670b2a03a896267",
     "tools/axbuild/Sources/axbuild/main.swift": "921ed4e6198d785a98ad353ef0c23fd03dc1e9462c62d67388c3610bf6e63af3"
   },
-  "binary": "93b709c5c64b6ac6208448233dd8b3721dc1f7c66887a5bd320bfc1d85c60f76"
+  "binary": "dad716c87c592b97bf67e24bbc29741df75acc93929bc1855d2e5766047d15fd"
 }
