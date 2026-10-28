@@ -102,6 +102,74 @@ import Testing
     #expect(result.diagnostics.map { "\($0.file ?? "nil"):\($0.line ?? 0)" } == ["\(file):\(row)"])
   }
 
+  @Test func reportsSwiftTestingIssueWhoseLocationCannotBeRead() {
+    let result = readLog(
+      data: Data("􀢄  Test f() recorded an issue at somewhere: Issue recorded".utf8), context: context)
+    #expect(result.diagnostics.isEmpty)
+    #expect(result.issues.map(\.operation) == ["locate Swift Testing issue"])
+  }
+
+  @Test func keepsDetailValueContainingLineSeparator() {
+    let log =
+      "􀢄  Test sepArg(m:) recorded an issue at T.swift:7:49: Expectation failed: m.isEmpty\n􀄵  m → \"a\u{2028}b\""
+    #expect(
+      readLog(data: Data(log.utf8), context: context).diagnostics.map { $0.test?.messages } == [
+        ["m → \"a\u{2028}b\""]
+      ])
+  }
+
+  // Real Swift Testing 6.4 output: each case's arguments are printed when it starts, so the issue
+  // line's arguments can be removed exactly even when they or the file name contain " at ".
+  @Test(arguments: [
+    (
+      "􀟈  Test case passing 1 argument x → 1 to paramAtFile(x:) started.\n􀢄  Test paramAtFile(x:) recorded an issue with 1 argument x → 1 at Arrive at Gate.swift:4:50: Expectation failed: x == 2",
+      "paramAtFile(x:) Arrive at Gate.swift:4:50 Expectation failed: x == 2"
+    ),
+    (
+      "􀟈  Test case passing 1 argument s → \"boom at Y.swift:1:2: bad\" to argLoc(s:) started.\n􀢄  Test argLoc(s:) recorded an issue with 1 argument s → \"boom at Y.swift:1:2: bad\" at Arrive at Gate.swift:5:73: Expectation failed: s.isEmpty",
+      "argLoc(s:) Arrive at Gate.swift:5:73 Expectation failed: s.isEmpty"
+    ),
+    (
+      "􀟈  Test case passing 1 argument m → a\u{2028}b to sepArg(m:) started.\n􀢄  Test sepArg(m:) recorded an issue with 1 argument m → a\u{2028}b at Arrive at Gate.swift:7:49: Expectation failed: m.description.isEmpty",
+      "sepArg(m:) Arrive at Gate.swift:7:49 Expectation failed: m.description.isEmpty"
+    ),
+    (
+      "􀢄  Test parse() recorded an issue at P.swift:12:5: Expectation failed: (line → \"􀢄  Test admits(pin:) recorded an issue with 1 argument pin → main-display at 3.0 at T.swift:3:104: Expectation failed\")",
+      "parse() P.swift:12:5 Expectation failed: (line → \"􀢄  Test admits(pin:) recorded an issue with 1 argument pin → main-display at 3.0 at T.swift:3:104: Expectation failed\")"
+    ),
+    (
+      "􀟈  Test case passing 1 argument b → box at 1 (PTests.Box) to boxed(b:) started.\n􀢄  Test boxed(b:) recorded an issue with 1 argument b → box at 1 at Go at Home.swift:6:52: Expectation failed: b.v == 0",
+      "boxed(b:) Go at Home.swift:6:52 Expectation failed: b.v == 0"
+    ),
+    (
+      "􀟈  Test case passing 2 arguments n → 1 (Swift.Int), s → \"q\" (Swift.String) to two(n:s:) started.\n􀢄  Test two(n:s:) recorded an issue with 2 arguments n → 1, s → \"q\" at Go at Home.swift:7:60: Expectation failed: n == 0",
+      "two(n:s:) Go at Home.swift:7:60 Expectation failed: n == 0"
+    ),
+    (
+      "􀟈  Test case passing 1 argument s → \"a\" to \"maps x to y\" started.\n􀢄  Test \"maps x to y\" recorded an issue with 1 argument s → \"a\" at Go at Home.swift:5:74: Expectation failed: s.isEmpty",
+      "\"maps x to y\" Go at Home.swift:5:74 Expectation failed: s.isEmpty"
+    ),
+    (
+      "􀟈  Test case passing 1 argument b → box to boxed(b:) started.\n􀟈  Test case passing 1 argument b → box at Go to boxed(b:) started.\n􀢄  Test boxed(b:) recorded an issue with 1 argument b → box at Go at Home.swift:6:52: Expectation failed: b.v == 0",
+      "boxed(b:) Home.swift:6:52 Expectation failed: b.v == 0"
+    ),
+    (
+      "􀢄  Test sepArg(m:) recorded an issue with 1 argument m → a\u{2028}b at T.swift:7:49: Expectation failed: m.isEmpty",
+      "sepArg(m:) T.swift:7:49 Expectation failed: m.isEmpty"
+    ),
+    (
+      "􀢄  Test note() recorded an issue at T.swift:3:5: a\u{2028}b",
+      "note() T.swift:3:5 a\u{2028}b"
+    ),
+  ])
+  func locatesParameterizedSwiftTestingIssueFromItsCaseArguments(log: String, expected: String) {
+    let result = readLog(data: Data(log.utf8), context: context)
+    #expect(
+      result.diagnostics.map {
+        "\($0.test?.id ?? "nil") \($0.file ?? "nil"):\($0.line ?? 0):\($0.column ?? 0) \($0.message)"
+      } == [expected])
+  }
+
   @Test func acceptsUnlocatedVirtualSourceWithoutParseIssue() {
     let result = readLog(
       data: Data("<unknown>:0: error: unable to load standard library\n".utf8), context: context)

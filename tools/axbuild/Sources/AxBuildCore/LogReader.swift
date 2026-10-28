@@ -59,18 +59,53 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
       pattern: "^(.+?):([0-9]+)(?::([0-9]+))?: (fatal error|error|warning|note|remark): (.*)$")
     let xctest = try NSRegularExpression(pattern: "^(-\\[.+?\\]) : (.*)$")
     let swiftTest = try NSRegularExpression(
-      pattern:
-        "^\\S+\\s+Test (.+?) recorded (an issue|a known issue|a warning)(?:.*?) at (.+?):([0-9]+):([0-9]+): (.*)$"
-    )
-    // An argument description can itself contain " at ", so after one the path cannot; a file name
-    // may, so this narrower form applies only to parameterized cases.
-    let swiftTestWithArguments = try NSRegularExpression(
-      pattern:
-        "^\\S+\\s+Test (.+?) recorded (an issue|a known issue|a warning) with [0-9]+ arguments? .*? at ((?:(?! at ).)+?):([0-9]+):([0-9]+): (.*)$"
-    )
+      pattern: "^\\S+\\s+Test (.+?) recorded (an issue|a known issue|a warning)( .*)$",
+      options: .dotMatchesLineSeparators)
+    let swiftTestLocation = try NSRegularExpression(
+      pattern: "^(.+?):([0-9]+):([0-9]+): (.*)$", options: .dotMatchesLineSeparators)
+    // Without its case's start line, an argument description can itself contain " at ", so after
+    // one the path cannot; a file name may, so this applies only when no start line matches.
+    let unmatchedArguments = try NSRegularExpression(
+      pattern: "^ with [0-9]+ arguments? .*? at ((?:(?! at ).)+?:[0-9]+:[0-9]+: .*)$",
+      options: .dotMatchesLineSeparators)
+    let swiftTestCase = try NSRegularExpression(
+      pattern: "^\\S+\\s+Test case passing (.+) started\\.$", options: .dotMatchesLineSeparators)
+    // Verbose start lines add each argument's type, which issue lines omit.
+    let argumentType = try NSRegularExpression(
+      pattern: " \\((?:[^()]|\\([^()]*\\))*\\)(?=, \\S+ → | to )", options: .dotMatchesLineSeparators)
+    var startedCases: Set<String> = []
+    var unlocatedIssue: String?
+    func swiftTestIssue(_ line: String) -> [String]? {
+      guard let head = captures(swiftTest, in: line) else { return nil }
+      let rest = head[2]
+      var location: String?
+      if rest.hasPrefix(" with ") {
+        let arguments = rest.dropFirst(" with ".count)
+        let suffix = " to \(head[0])"
+        // The longest arguments that a started case printed leave the location.
+        var end = arguments.endIndex
+        while location == nil,
+          let at = arguments.range(of: " at ", options: .backwards, range: arguments.startIndex..<end)
+        {
+          if startedCases.contains(String(arguments[..<at.lowerBound]) + suffix) {
+            location = String(arguments[at.upperBound...])
+          }
+          end = at.lowerBound
+        }
+        location = location ?? captures(unmatchedArguments, in: rest)?.first
+      } else if let at = rest.range(of: " at ") {
+        location = String(rest[at.upperBound...])
+      }
+      guard let location, let found = captures(swiftTestLocation, in: location) else {
+        unlocatedIssue = line
+        return nil
+      }
+      return [head[0], head[1]] + found
+    }
     let tool = try NSRegularExpression(
       pattern: "^(?:([^|]+?): )?(fatal error|error|warning|note|remark): (.+)$")
-    let detail = try NSRegularExpression(pattern: "^(?:↳|􀄵)\\s+(.*)$")
+    let detail = try NSRegularExpression(
+      pattern: "^(?:↳|􀄵)\\s+(.*)$", options: .dotMatchesLineSeparators)
     let trap = try NSRegularExpression(
       pattern: "^(.+?):([0-9]+): ((?:Fatal error|Precondition failed|Assertion failed)(?:: .*)?)$")
     var block: Int?
@@ -103,7 +138,14 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
       {
         batch.crashed = true
       }
-      if let found = captures(swiftTestWithArguments, in: line) ?? captures(swiftTest, in: line) {
+      if let started = captures(swiftTestCase, in: line)?.first {
+        startedCases.insert(started)
+        let range = NSRange(started.startIndex..<started.endIndex, in: started)
+        startedCases.insert(
+          argumentType.stringByReplacingMatches(in: started, range: range, withTemplate: ""))
+      }
+      unlocatedIssue = nil
+      if let found = swiftTestIssue(line) {
         block = nil
         let known = found[1] == "a known issue"
         let warning = found[1] == "a warning"
@@ -124,6 +166,13 @@ func readLog(data: Data, context: ReaderContext) -> ReadBatch {
             line: row, column: column,
             test: .init(id: found[0], isFailure: !known && !warning, framework: .swiftTesting)))
         testDetails = batch.diagnostics.count - 1
+      } else if let unlocated = unlocatedIssue {
+        block = nil
+        testDetails = nil
+        batch.issues.append(
+          .init(
+            kind: .parseFailed, operation: "locate Swift Testing issue",
+            message: "No readable source location in: \(unlocated.prefix(200))"))
       } else if let found = captures(located, in: line),
         let severity = Severity(rawValue: found[3] == "fatal error" ? "error" : found[3])
       {

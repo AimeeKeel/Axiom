@@ -538,6 +538,20 @@ private func probe(
   }
 }
 
+// Toolchains whose event stream semantics are validated by Fixtures/tests captures; each row is
+// also in Fixtures/toolchain-compatibility.json with its fixtures. Others use the retained log.
+let validatedEventToolchains: [(identity: String, eventVersion: String)] = [
+  ("swiftlang-6.4.0.34.1 clang-2100.3.34.1", "6.3"),
+  ("swiftlang-6.4.2.1.9 clang-2100.4.1.1", "6.3"),
+]
+
+func validatedEventVersion(swiftVersion: String?, help: String?) -> String? {
+  guard let swiftVersion, let help, help.contains("--event-stream-output-path"),
+    help.contains("--event-stream-version")
+  else { return nil }
+  return validatedEventToolchains.first { swiftVersion.contains("(\($0.identity))") }?.eventVersion
+}
+
 @concurrent
 func execute(
   invocation: Invocation, environment: [String: String], limits: CollectionLimits = .production,
@@ -637,11 +651,8 @@ func execute(
       environment: environment, run: folder, name: "version", interruption: interruption,
       limits: limits)
     run.issues += version.1
-    if version.0?.contains("swiftlang-6.4.0.34.1 clang-2100.3.34.1") == true,
-      help.0?.contains("--event-stream-output-path") == true,
-      help.0?.contains("--event-stream-version") == true
-    {
-      capabilities.eventVersion = "6.3"
+    if let eventVersion = validatedEventVersion(swiftVersion: version.0, help: help.0) {
+      capabilities.eventVersion = eventVersion
     } else if optionPath(
       "--event-stream-output-path", args: invocation.childArgs, cwd: invocation.effectiveCwd)
       == nil

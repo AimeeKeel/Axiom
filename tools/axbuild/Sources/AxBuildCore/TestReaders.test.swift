@@ -59,15 +59,17 @@ import os
     #expect(batch.issues.contains { $0.kind == .parseFailed } == !nested)
   }
 
-  @Test func preservesAvailableParameterizedCaseIDs() throws {
-    let batch = readEvents(data: try fixture("semantics-0", extension: "jsonl"), context: context)
+  @Test(arguments: ["semantics-0", "semantics-0-swift-6.4.2"])
+  func preservesAvailableParameterizedCaseIDs(name: String) throws {
+    let batch = readEvents(data: try fixture(name, extension: "jsonl"), context: context)
+    // Parallel cases finish in either order, so pair each case ID with its argument value.
     let actual = batch.diagnostics.filter { $0.test?.id?.contains("parameterized") == true }.map {
-      $0.test?.caseID
-    }
+      "\($0.test?.messages?.first { $0.hasPrefix("value → ") } ?? "nil") | \($0.test?.caseID ?? "nil")"
+    }.sorted()
     #expect(
       actual == [
-        "Parameterized test case ID: argumentIDs: [Testing.Test.Case.Argument.ID(bytes: [107, 134, 178, 115, 255, 52, 252, 225, 157, 107, 128, 78, 255, 90, 63, 87, 71, 173, 164, 234, 162, 47, 29, 73, 192, 30, 82, 221, 183, 135, 91, 75])], discriminator: 0, isStable: true",
-        "Parameterized test case ID: argumentIDs: [Testing.Test.Case.Argument.ID(bytes: [212, 115, 94, 58, 38, 94, 22, 238, 224, 63, 89, 113, 139, 155, 93, 3, 1, 156, 7, 216, 182, 197, 31, 144, 218, 58, 102, 110, 236, 19, 171, 53])], discriminator: 0, isStable: true",
+        "value → 1 | Parameterized test case ID: argumentIDs: [Testing.Test.Case.Argument.ID(bytes: [107, 134, 178, 115, 255, 52, 252, 225, 157, 107, 128, 78, 255, 90, 63, 87, 71, 173, 164, 234, 162, 47, 29, 73, 192, 30, 82, 221, 183, 135, 91, 75])], discriminator: 0, isStable: true",
+        "value → 2 | Parameterized test case ID: argumentIDs: [Testing.Test.Case.Argument.ID(bytes: [212, 115, 94, 58, 38, 94, 22, 238, 224, 63, 89, 113, 139, 155, 93, 3, 1, 156, 7, 216, 182, 197, 31, 144, 218, 58, 102, 110, 236, 19, 171, 53])], discriminator: 0, isStable: true",
       ])
   }
 
@@ -122,8 +124,9 @@ import os
     #expect(batch.issues == [])
   }
 
-  @Test func separatesKnownWarningsUnexpectedPassAndParameterizedFailures() throws {
-    let batch = readEvents(data: try fixture("semantics-6.3", extension: "jsonl"), context: context)
+  @Test(arguments: ["semantics-6.3", "semantics-6.3-swift-6.4.2"])
+  func separatesKnownWarningsUnexpectedPassAndParameterizedFailures(name: String) throws {
+    let batch = readEvents(data: try fixture(name, extension: "jsonl"), context: context)
     let observed = batch.diagnostics.map {
       "\($0.testName ?? "nil"):\($0.severity.rawValue):\($0.test?.isFailure.map(String.init) ?? "null"):\($0.test?.isKnown.map(String.init) ?? "null")"
     }.sorted()

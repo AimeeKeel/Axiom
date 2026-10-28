@@ -4,6 +4,45 @@ import Testing
 @testable import AxBuildCore
 
 @Suite struct RunnerTests {
+  static let streamHelp =
+    "  --event-stream-output-path <event-stream-output-path>\n  --event-stream-version <event-stream-version>"
+
+  // Each validated row is backed by semantics fixtures captured from that toolchain.
+  @Test(arguments: [
+    ("Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)", streamHelp, "6.3"),
+    ("Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)", streamHelp, "6.3"),
+    ("Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)", "  --verbose", nil),
+    ("Apple Swift version 6.5 (swiftlang-6.5.0.1.1 clang-2200.0.1.1)", streamHelp, nil),
+    ("Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.10)", streamHelp, nil),
+    (
+      "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)",
+      "  --event-stream-output-path <event-stream-output-path>", nil
+    ),
+  ])
+  func selectsEventStreamVersionOnlyForValidatedToolchains(
+    version: String, help: String, expected: String?
+  ) {
+    #expect(validatedEventVersion(swiftVersion: version, help: help) == expected)
+  }
+
+  @Test func compatibilityTableMatchesValidatedToolchainsAndItsFixturesExist() throws {
+    struct Table: Decodable {
+      struct Row: Decodable { var swift: String, clang: String, eventCLI: String, fixtures: [String] }
+      var toolchains: [Row]
+    }
+    let url = try #require(
+      Bundle.module.url(
+        forResource: "toolchain-compatibility", withExtension: "json", subdirectory: "Fixtures"))
+    let rows = try JSONDecoder().decode(Table.self, from: Data(contentsOf: url)).toolchains
+    #expect(
+      rows.map { "swiftlang-\($0.swift) clang-\($0.clang) \($0.eventCLI)" }.sorted()
+        == validatedEventToolchains.map { "\($0.identity) \($0.eventVersion)" }.sorted())
+    let missing = rows.flatMap(\.fixtures).filter {
+      Bundle.module.url(forResource: $0, withExtension: "jsonl", subdirectory: "Fixtures/tests") == nil
+    }
+    #expect(missing == [])
+  }
+
   @Test func readerDeadlineUsesRemainingSharedBudget() {
     let limits = CollectionLimits(probe: 5, reader: 30, collection: 60, grace: 5, reap: 1)
     #expect(limits.readerDeadline(start: 145, sharedDeadline: 160) == 160)
