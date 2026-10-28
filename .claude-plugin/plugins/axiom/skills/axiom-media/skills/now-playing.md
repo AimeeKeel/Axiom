@@ -29,22 +29,23 @@
 - Integrating CarPlay Now Playing (covered in Pattern 6)
 - Working with MusicKit/Apple Music content (covered in Pattern 7)
 
+❌ **Do NOT use this skill for**:
+- Background audio configuration details (see AVFoundation skill)
+
 ### iOS 26 Note
 
 iOS 26 introduces **Liquid Glass visual design** for Lock Screen and Control Center Now Playing widgets. This is **automatic system behavior** — no code changes required. The patterns in this skill remain valid for iOS 26.
 
-### OS27 Note — the NowPlaying framework
+### NowPlaying framework `OS27`
 
-`OS27` adds a brand-new Swift-native **NowPlaying framework** (`import NowPlaying`) — an `@Observable`, command-declarative successor to the MediaPlayer C-style APIs (`MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` + `MPNowPlayingSession`) that Patterns 1–8 teach. If you target iOS 27+ and are starting fresh, prefer it — see [NowPlaying Framework (Modern, Swift-Native)](#nowplaying-framework-modern-swift-native-os27). Apple's session positions it as the modern path but does **not** deprecate the MediaPlayer APIs, so Patterns 1–8 stay correct for apps supporting iOS &lt;27.
-
-❌ **Do NOT use this skill for**:
-- Background audio configuration details (see AVFoundation skill)
+The 27 releases add a Swift-native **NowPlaying framework** (`import NowPlaying`) — an `@Observable`, command-declarative alternative to the dictionary- and target-based MediaPlayer APIs (`MPNowPlayingInfoCenter` + `MPRemoteCommandCenter`) that Patterns 2–8 teach. Pattern 1 (audio session, `audio` background mode) applies to both. For a new 27+ app, use it — see [NowPlaying Framework (Modern, Swift-Native)](#nowplaying-framework-modern-swift-native-os27), including its rule against mixing the two.
 
 ## Related Skills
 
 - **swift-concurrency** - For @MainActor patterns, weak self in closures, async artwork loading
 - **memory-debugging** - For retain cycles in command handlers
 - **avfoundation-ref** - For AVAudioSession configuration details
+- **system-media-routing** - Media Sharing Extensions (AVSystemRouting): playing to non-AirPlay devices through the system device picker
 
 ---
 
@@ -116,8 +117,8 @@ if let info = MPNowPlayingInfoCenter.default().nowPlayingInfo {
 ## Decision Tree
 
 ```
-Starting fresh on iOS 27+ (OS27)?
-└─ Use the NowPlaying framework (jump to "NowPlaying Framework" section) — the patterns below are the MediaPlayer path for iOS <27
+Starting fresh with a 27+ deployment target?
+└─ Use the NowPlaying framework (jump to "NowPlaying Framework" section); still do Pattern 1. The rest of this tree is the MediaPlayer path
 
 Now Playing not working? (MediaPlayer path — MPNowPlayingInfoCenter / MPRemoteCommandCenter)
 ├─ Info never appears at all?
@@ -922,15 +923,18 @@ Testing: Verified with 10 track changes, zero flicker.
 | **CarPlay**: Custom buttons don't appear | Configured at wrong time | Configure at `templateApplicationScene(_:didConnect:)` | 5 min |
 | **CarPlay**: Works on device, not simulator | Debugger attached | Run without debugger for reliable testing | 1 min |
 | **MusicKit**: Now Playing wrong | Overwriting automatic data | Don't set `nowPlayingInfo` when using ApplicationMusicPlayer | 5 min |
+| **NowPlaying** `OS27`: erratic metadata or commands | A `MediaSession` alongside `MPNowPlayingInfoCenter`/`MPRemoteCommandCenter` calls — undefined behavior per Apple | One API per process for local playback; delete the MediaPlayer calls on the 27 path | 15 min |
 
 ---
 
 ## Expert Checklist
 
+MediaPlayer path. On the NowPlaying path only the first two items apply; never add the MediaPlayer items alongside a `MediaSession`.
+
 ### Before Implementing Now Playing
 - [ ] Added `audio` to UIBackgroundModes in Info.plist
 - [ ] AVAudioSession category is `.playback` without `.mixWithOthers`
-- [ ] Decided: Manual (MPNowPlayingInfoCenter) or Automatic (MPNowPlayingSession)?
+- [ ] Decided: NowPlaying framework (27+), Manual (MPNowPlayingInfoCenter), or Automatic (MPNowPlayingSession)?
 
 ### AVAudioSession Setup
 - [ ] `setCategory(.playback)` called at app launch
@@ -1175,9 +1179,11 @@ Prefer the async forms unless you're bridging callback-based code.
 
 ## NowPlaying Framework (Modern, Swift-Native) `OS27`
 
-`import NowPlaying` is a new Swift framework that replaces the manual MediaPlayer dance — building an `MPNowPlayingInfoCenter.nowPlayingInfo` dictionary by hand and registering per-command handlers on `MPRemoteCommandCenter` (Patterns 1–4). Instead, your `@Observable` player model conforms to `MediaSessionRepresentable`, you hand it to a `MediaSession`, and the system **observes the model** — Lock Screen, Control Center, CarPlay, and the rest stay in sync automatically, with no manual refresh calls.
+`import NowPlaying` is a Swift-native alternative to the manual MediaPlayer work — building an `MPNowPlayingInfoCenter.nowPlayingInfo` dictionary by hand and registering per-command handlers on `MPRemoteCommandCenter` (Patterns 2–4). Pattern 1 still applies: `.playback` audio session and the `audio` background mode. Instead, your `@Observable` player model conforms to `MediaSessionRepresentable`, you hand it to a `MediaSession`, and the system **observes the model** — every Now Playing surface stays in sync automatically, with no manual refresh calls: Lock Screen, Control Center, Dynamic Island, StandBy, CarPlay, AirPlay-capable accessories, Apple Watch, and Now Playing on Apple TV and Vision Pro.
 
-Local path: all platforms. Remote path: iOS app plus its extension only (not Mac Catalyst).
+**One API per process for local playback.** Apple's framework overview: "Don't mix the Now Playing framework with the `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` APIs from the Media Player framework for local playback. Doing so results in undefined behavior." Migrate the whole local path at once — a leftover `nowPlayingInfo` write, or an `MPRemoteCommandCenter` target added "just for CarPlay" or "just for Siri", is mixing; NowPlaying sessions already reach CarPlay and Apple Watch. Apple scopes the rule to local playback, not remote sessions. `ApplicationMusicPlayer` publishes from its own process, and Apple states no rule for running it beside a `MediaSession`; keep one publisher active at a time — the handoff in now-playing-musickit.md, with `session = nil` in place of clearing `nowPlayingInfo` while Apple Music plays.
+
+Local path: all platforms. Remote path: iOS and iPadOS apps plus their extension — not Mac Catalyst.
 
 ### Local playback (the common case)
 
@@ -1206,7 +1212,7 @@ final class PlayerModel: MediaSessionRepresentable {
             artistName: track.artist,
             albumName: track.album,
             type: .audio,
-            duration: .finite(track.duration),      // or .live for streams
+            duration: .finite(track.duration),      // or .live for live broadcasts
             artwork: Artwork(id: track.artworkID) { size in   // same id = same cached image
                 try ArtworkRepresentation(data: await track.artworkData(for: size))
             }
@@ -1263,44 +1269,58 @@ final class PlayerModel: MediaSessionRepresentable {
 
 Key shapes:
 - **`MediaSessionRepresentable`** (`@MainActor`) requires exactly four members: `id`, `content`, `playbackSnapshot`, `commands`.
-- **`MediaPlaybackSnapshot(state:defaultPlaybackRate:elapsedTime:timestamp:)`** — `PlaybackState` is `.stopped`, `.playing(rate:)`, `.paused`, `.buffering`, `.interrupted` (system interruption such as a call; resuming afterwards is your job). `rate` is the actual speed (e.g. during fast-forward); `defaultPlaybackRate` is the baseline the player returns to. Documented preconditions: a `.playing(rate:)` rate must be finite and non-zero, and `defaultPlaybackRate` finite and > 0 — so never pass a paused `AVPlayer.rate` (0) into `.playing(rate:)`.
-- **`MediaDuration`** is `.live`, `.continuous`, or `.finite(TimeInterval)`.
-- **Content inits** (each also has an overload adding `animatedArtwork:`):
-  - `MusicContent(id:songTitle:artistName:albumName:type:duration:artwork:)`
-  - `PodcastContent(id:episodeTitle:showName:releaseDate:type:duration:artwork:)` — `releaseDate:` takes `Date?` but has no default
-  - `BookContent(id:title:authorName:narratorName:type:duration:artwork:)`
-  - `MovieContent(id:title:duration:artwork:)`, `TVShowContent(id:episodeTitle:showName:duration:artwork:)` — no `type:`
-  - `RadioContent(id:stationName:programName:type:duration:artwork:)` — `duration` defaults to `.live`
-  - `HomeMediaContent(id:sourceName:contentDescription:type:duration:artwork:)`, `GenericContent(id:title:subtitle:type:duration:artwork:)`
-- **Optional metadata** — settable `var`s on every content type, assigned after init: `isExplicit`, `isExcludedFromSuggestions` (default `false`), `genre`. `MusicContent` adds `composer` and `isrc`; `BookContent` adds `chapter: (current: Int, total: Int)?`. Apple's doc-comment samples pass `isExplicit:` to the init and mention a metadata "trailing closure" — neither exists.
-- **`MediaCommand`** factories: `.play`, `.pause`, `.stop`, `.togglePlayPause`, `.next`, `.previous`, `.skipForward(preferredIntervals:)`, `.skipBackward(preferredIntervals:)` (both default `[10]`), `.seekToPosition`, `.seekForward(beginAction:endAction:)`, `.seekBackward(…)`, `.changePlaybackRate(supported:)`, `.changeRepeatMode(current:supported:)`, `.changeShuffleMode(current:supported:)`, `.feedback(title:shortTitle:status:)`. Chain `.enabled(_:)` to make one unavailable from state (no next track, no skipping during an ad).
-- **`Artwork(id:artworkProvider:)`** — lazy `@Sendable (CGSize) async throws -> ArtworkRepresentation`, so capture Sendable values or `await` a `@MainActor` model, never a plain non-Sendable class; build it with `ArtworkRepresentation(data:)` or `(cgImage:)` (both `throws`; `.noRepresentationAvailable` for undecodable or unsupported image data). The `id` is the system's cache key — keep it stable per image, not per track.
-- **`AnimatedArtwork(id:supportedAspectRatios:preview:video:)`** — `preview` is `@Sendable (CGSize, AspectRatio) async throws -> ArtworkRepresentation`, `video` is `@Sendable (CGSize, AspectRatio) async throws -> URL`. `supportedAspectRatios` defaults to `[.square]` (the other is `.tall`; `AnimatedArtwork.compatibleAspectRatios` lists what the device accepts). Attach it via the content init's `animatedArtwork:` overload, which requires a non-optional `artwork:`.
+- **`MediaPlaybackSnapshot(state:defaultPlaybackRate:elapsedTime:timestamp:)`** — all but `state` default (`1.0`, `nil`, `nil`). For `.finite` content pass `elapsedTime` plus the `timestamp` it was sampled at, so the system can extrapolate the position; for `.continuous`/`.live` content `state` alone is enough. `PlaybackState`: `.playing(rate:)` (`rate` defaults to `1.0`, so `.playing()` is normal speed); `.paused` (halted, resumable); `.buffering` (delayed while loading); `.stopped` (nothing loaded, or playback ended completely); `.interrupted` (a call or alarm interrupted playback — resuming afterwards is your job). `rate` is the actual speed (e.g. during fast-forward); `defaultPlaybackRate` is the baseline the player returns to. Documented preconditions: a `.playing(rate:)` rate must be finite and non-zero, and `defaultPlaybackRate` finite and > 0 — so never pass a paused `AVPlayer.rate` (0) into `.playing(rate:)`.
+- **`MediaDuration`**: `.finite(TimeInterval)`; `.live` (a live broadcast or stream); `.continuous` (no defined end and not live — a soundscape, a looping recording, a generated stream). The `duration:` parameter is `MediaDuration?`; pass `nil` when unknown.
+- **Content types** — pick the one matching the media; each init also has an overload adding `animatedArtwork:`. Fill in every field you have: accessories differ in what they show.
+
+| Type | For | Init (defaults) |
+|---|---|---|
+| `MusicContent` | songs, albums, playlists | `(id:songTitle:artistName:albumName:type:duration:artwork:)` |
+| `PodcastContent` | episodes | `(id:episodeTitle:showName:releaseDate:type:duration:artwork:)` — `releaseDate: Date?` has no default |
+| `BookContent` | audiobooks, spoken word | `(id:title:authorName:narratorName:type:duration:artwork:)` — `narratorName` `nil`, `type` `.audio` |
+| `MovieContent` | films, documentaries | `(id:title:duration:artwork:)` — no `type:`; always video |
+| `TVShowContent` | series episodes | `(id:episodeTitle:showName:duration:artwork:)` — no `type:`; always video |
+| `RadioContent` | stations, live streams | `(id:stationName:programName:type:duration:artwork:)` — `programName` `nil`, `type` `.audio`, `duration` `.live` |
+| `HomeMediaContent` | camera feeds, baby monitors, ambient soundscapes | `(id:sourceName:contentDescription:type:duration:artwork:)` |
+| `GenericContent` | anything else | `(id:title:subtitle:type:duration:artwork:)` — `subtitle` `nil` |
+
+- **Optional metadata** — settable `var`s on every content type, assigned after init: `isExplicit`, `isExcludedFromSuggestions` (default `false`), `genre`. `MusicContent` adds `composer` and `isrc`; `BookContent` adds `chapter: (current: Int, total: Int)?`. There is no `isExplicit:` init parameter, no metadata trailing closure, and no `collectionID` or `serviceID` property.
+- **`MediaCommand`** factories: `.play`, `.pause`, `.stop`, `.togglePlayPause`, `.next`, `.previous`, `.skipForward(preferredIntervals:)`, `.skipBackward(preferredIntervals:)` (both default `[10]`), `.seekToPosition`, `.seekForward(beginAction:endAction:)`, `.seekBackward(…)`, `.changePlaybackRate(supported:)`, `.changeRepeatMode(current:supported:)`, `.changeShuffleMode(current:supported:)`, `.feedback(title:shortTitle:status:)` (`title` and `shortTitle` default to `nil`, `status` to `.neutral`). Semantics worth knowing:
+  - `skipForward`/`skipBackward` closures receive the interval the user chose — use it, not a hard-coded value ("skip ahead 30 seconds" from Siri).
+  - `seekForward`/`seekBackward` pair a `beginAction` (press-and-hold starts) with an `endAction` (release) — start and stop your rate change or scrub there.
+  - `changePlaybackRate(supported:)` lists the rates your player can play; the closure receives the chosen one.
+  - `changeRepeatMode`/`changeShuffleMode`: `supported: nil` means all modes. Repeat `.one` repeats the item, `.all` the container; shuffle `.items` shuffles songs, `.collections` shuffles albums while keeping each album's order.
+
+  Chain `.enabled(_:)` to make one unavailable from state (no next track, no skipping during an ad) — a disabled command still appears in the interface; the system just doesn't invoke its handler.
+- **`Artwork(id:artworkProvider:)`** — lazy `@Sendable (CGSize) async throws -> ArtworkRepresentation`, so capture Sendable values or `await` a `@MainActor` model, never a plain non-Sendable class; build it with `ArtworkRepresentation(data:)` (throws `.noRepresentationAvailable` for undecodable or unsupported data) or `(cgImage:)` (also `throws`). The `id` is the system's cache key — keep it stable per image, not per track. Return the requested size when you can; one dimension may differ when your image's aspect ratio does, so don't crop or pad to match, and when the request exceeds your largest asset, return that asset rather than upscaling.
+- **`AnimatedArtwork(id:supportedAspectRatios:preview:video:)`** — `preview` is `@Sendable (CGSize, AspectRatio) async throws -> ArtworkRepresentation`, `video` is `@Sendable (CGSize, AspectRatio) async throws -> URL`. `supportedAspectRatios` defaults to `[.square]` (1:1; the other is `.tall`, 3:4; `AnimatedArtwork.compatibleAspectRatios` lists what the device accepts). Provide at least one ratio — the system requests a preview and a video for each. Use it only when the item has a matching animated asset, such as motion album art. Attach it via the content init's `animatedArtwork:` overload, which requires a non-optional `artwork:`.
 
 ### Session lifecycle and primacy
 
 - **`MediaSession`** is `@MainActor`, conforms to `Observable`, and is **unavailable in iOS app extensions**. Publish = create it + `requestToBecomeApplicationPrimary()`; unpublish = drop your last reference (set it to `nil`). There is no `end()` for local sessions.
-- **Multiple sessions** — one app can run several (say a music player and a podcast player); each observes its own representable. `requestToBecomeApplicationPrimary()` picks which one represents the app; `canBecomeApplicationPrimary` reports whether it can. Observe `isApplicationPrimary` (and, on iOS, `isSystemPrimary`) to reflect primacy in your UI.
-- **`requestToBecomeSystemPrimary()`** (iOS only) requests Lock Screen / Control Center display and also makes the session app-primary; display is not guaranteed. **Your app must be in the foreground — from the background the request has no effect.** Not needed for ordinary local playback; use it when the user focuses one of several sessions or to take over from another app.
+- **Multiple sessions** — one app can run several (say a music player and a podcast player); each observes its own representable. `requestToBecomeApplicationPrimary()` picks which one represents the app; `canBecomeApplicationPrimary` reports whether it can. Observe `isApplicationPrimary` (and, on iOS/iPadOS/Mac Catalyst, `isSystemPrimary`) to reflect primacy in your UI.
+- **`requestToBecomeSystemPrimary()`** (iOS, iPadOS and Mac Catalyst apps; not extensions) requests Lock Screen / Control Center display and also makes the session app-primary; display is not guaranteed. **Your app must be in the foreground — from the background the request has no effect.** Not needed for ordinary local playback. The system-primary session should be the one your UI is prominently showing — call it when the user focuses one of several sessions, or to take over from another app.
 - **Errors** — `MediaSessionError`: `.invalidState` (session can't become primary), `.sessionInvalidated`, `.internalFailure`.
 
-### Remote / server-driven playback (iOS-only)
+### Remote / server-driven playback (iOS and iPadOS)
 
-For apps that control playback happening on **another device** (a speaker, TV, or cast target), NowPlaying provides a push-driven app-extension model so the system surfaces stay live even when your app isn't running:
+For apps that control playback happening on **another device** (a speaker, TV, or cast target), NowPlaying provides a push-driven app-extension model so the system surfaces stay live even when your app isn't running. This publishes Now Playing for playback you already drive over your own connection; sending playback to a Chromecast or DLNA device through the system picker is system-media-routing.md.
 
-- Your attributes type conforms to **`RemoteMediaSessionAttributes`** (Codable, `id` required) and is shared by app and extension. From the app: `RemoteMediaSession.start(attributes:)`, `.update(_:)` (throws `.invalidAttributes` if `attributes.id` doesn't match the session), `.end()`, `.sessions()`, `.requestToBecomeSystemPrimary()` (foreground-only, as above). Errors: `RemoteMediaSessionError.invalidAttributes` / `.internalFailure`.
-- A `@main` type conforming to **`RemoteMediaSessionExtension`** (an `ExtensionFoundation.AppExtension`) returns `RemoteMediaSessionExtensionConfiguration(extension: self)` from `var configuration: RemoteMediaSessionExtensionConfiguration<Self>` and implements `func session(_ attributes:) async throws -> Session`. Its `Info.plist` needs `EXAppExtensionAttributes` → `EXExtensionPointIdentifier` = `com.apple.nowplaying.remote-media`. The framework caches the sessions you return and routes later updates and commands to the same instance — open a backend connection once and reuse it.
-- The **`RemoteMediaSessionRepresentable`** has the four local members plus `func update(_ attributes:)` — called with new attributes from a push or from the app's `update(_:)`; fold them into your `@Observable` state — and `var devices: [MediaDevice]` (`[]` when no device is actively playing).
-- **`MediaDevice(id:name:type:capabilities:)`** advertises volume via `.absoluteVolume(_:onChange:)` (0.0–1.0) or `.relativeVolume(onIncrement:onDecrement:)`; pass `[]` for none. `id` must be stable across sessions. `name`: non-empty, ≤250 chars, starts alphanumeric, ends alphanumeric or `.`, otherwise only alphanumerics, whitespace, and `' - , & # .` — no emoji or SF Symbols. `DeviceType`: `.speaker`, `.tv`, `.phone`, `.tablet`, `.wearable`, `.desktop`, `.laptop`, `.setTopBox`, `.mediaStick`, `.gamingConsole`, `.web`, `.car`; `.speakerGroup` and `.tvAndSpeaker` need iOS 27.2. (`NowPlaying.MediaDevice` is distinct from the separate `MediaDevice.framework`.)
+- Your attributes type conforms to **`RemoteMediaSessionAttributes`** (Codable) and is shared by app and extension; the app encodes it, the extension decodes it. Keep it to the fields you need — it is also the push payload. `id` must be stable and unique: the system matches start/update/end events and routes push tokens by it. From the app: `RemoteMediaSession.start(attributes:)`, `.update(_:)` (throws `.invalidAttributes` if `attributes.id` doesn't match the session), `.end()`, `.sessions()`, `.requestToBecomeSystemPrimary()` (foreground-only, as above). Errors: `RemoteMediaSessionError.invalidAttributes` / `.internalFailure`; `start` also rethrows the encoding error when the attributes fail to encode.
+- A `@main` type conforming to **`RemoteMediaSessionExtension`** (an `ExtensionFoundation.AppExtension`) returns `RemoteMediaSessionExtensionConfiguration(extension: self)` from `var configuration: RemoteMediaSessionExtensionConfiguration<Self>` and implements `func session(_ attributes:) async throws -> Session`, where `Session` is your `RemoteMediaSessionRepresentable` type. Its `Info.plist` needs `EXAppExtensionAttributes` → `EXExtensionPointIdentifier` = `com.apple.nowplaying.remote-media`; the code alternative is `var extensionPoint: AppExtensionPoint { AppExtensionPoint.Identifier(host: "com.apple.nowplaying", name: "remote-media") }`. The extension handles the commands the system routes to the device — each command closure forwards to your server or device. The framework caches the sessions you return and routes later updates and commands to the same instance — open a backend connection once and reuse it.
+- The **`RemoteMediaSessionRepresentable`** (`@MainActor`, like the local protocol) has the four local members plus `func update(_ attributes:)` — called with new attributes from a push or from the app's `update(_:)`; fold them into your `@Observable` state — and `var devices: [MediaDevice]` (`[]` when no device is actively playing).
+- **`MediaDevice(id:name:type:capabilities:)`** advertises volume via `.absoluteVolume(_:onChange:)` (0.0–1.0) or `.relativeVolume(onIncrement:onDecrement:)`; pass `[]` for none. `id` must be stable across sessions and launches (a serial number or hardware address). `type` picks the icon the system shows. `name`: non-empty, ≤250 chars, starts alphanumeric, ends alphanumeric or `.`, otherwise only alphanumerics, whitespace, and `' - , & # .` — no emoji or SF Symbols. `DeviceType`: `.speaker`, `.tv`, `.phone`, `.tablet`, `.wearable`, `.desktop`, `.laptop`, `.setTopBox`, `.mediaStick`, `.gamingConsole`, `.web`, `.car`; `.speakerGroup` and `.tvAndSpeaker` need iOS 27.2. (`NowPlaying.MediaDevice` is distinct from the separate `MediaDevice.framework`.)
 
 #### Push notifications
 
-Two token kinds, both `Data?` and both rotating — hex-encode each new value, send it to your server, and invalidate the old one. `pushToStartToken` is `nil` until the system provisions it.
+Two token kinds, both `Data?` and both rotating — hex-encode each new value, send it to your server over HTTPS, and invalidate the old one. Tokens are device-scoped identifiers: keep them only as long as you deliver updates, under your privacy policy. `pushToStartToken` is `nil` until the system provisions it.
+
+**Known issue (iOS 27 release notes, 186036238):** both token kinds are always provisioned for the **production** APNs environment, even when `aps-environment` is `development`. Apple's workaround: test and validate against the production environment.
 
 | Token | Where to read it | Used for |
 |---|---|---|
 | Push-to-start | `RemoteMediaSession<Attrs>.pushToStartToken` / `.pushToStartTokenUpdates` (app) | `start` events |
-| Per-session update | `pushToken` / `pushTokenUpdates` on the representable — observed **inside the extension** | `update` and `end` events |
+| Per-session update | `pushToken` / `pushTokenUpdates` — supplied by the framework on the representable (don't declare them), observed **inside the extension** | `update` and `end` events |
 
 APNs headers: `apns-push-type: nowplaying`, `apns-topic: <bundle-id>.push-type.nowplaying`. Payload:
 
@@ -1312,7 +1332,11 @@ APNs headers: `apns-push-type: nowplaying`, `apns-topic: <bundle-id>.push-type.n
 
 ### Relationship to the MediaPlayer patterns
 
-NowPlaying is the recommended path on 27. `MPNowPlayingInfoCenter`, `MPRemoteCommandCenter`, and `MPNowPlayingSession` carry no deprecation in the 27 SDK, so Patterns 1–8 remain correct for apps that support OS versions before 27 or haven't migrated.
+`MPNowPlayingInfoCenter`, `MPRemoteCommandCenter`, and `MPNowPlayingSession` carry no deprecation in the 27 SDK, so Patterns 1–8 remain correct for apps that support OS versions before 27 or haven't migrated.
+
+The two are alternatives, never layers. An app that supports both 26 and 27 picks one path at runtime — the 27 branch of an `#available` check publishes through `MediaSession`, the other through Patterns 2–8 — and the 27 branch makes no MediaPlayer Now Playing calls at all.
+
+---
 
 ## Siri and Now Playing
 
@@ -1326,7 +1350,9 @@ Siri drives an audio app through three separate paths; this skill owns two of th
 
 Neither of the first two needs SiriKit authorization. An unregistered command makes Siri explain it isn't supported; a temporarily disabled one (no skipping during an ad) does the same.
 
-**Entity annotations `OS27`** — give Siri the app entities behind what's playing, most specific first, so "play the live version" or "add this to my playlist" resolve against your catalog. Use your Audio-schema entities (the schema intents act on them), never a `TransientAppEntity`, which has no persistent identifier; see axiom-integration (skills/siri-audio-ref.md).
+**Entity annotations `OS27`** — give Siri the app entities behind what's playing, most specific first, so "play the live version" or "add this to my playlist" resolve against your catalog. Use your Audio-schema entities (the schema intents act on them), never a `TransientAppEntity`, which has no persistent identifier; see axiom-integration (skills/siri-audio-ref.md). `appEntityIdentifiers` is unavailable in app extensions, so remote sessions — built in the `RemoteMediaSessionExtension` — can't carry annotations.
+
+Use the variant that matches the API publishing your session — never both.
 
 ```swift
 import AppIntents
@@ -1346,10 +1372,12 @@ func annotate(_ info: inout [String: Any], song: SongEntity, artist: ArtistEntit
 }
 ```
 
+---
+
 ## Resources
 
 **WWDC**: 2022-110338, 2017-251, 2019-501, 2026-312
 
-**Docs**: /nowplaying, /nowplaying/publishing-media-sessions, /nowplaying/publishing-remote-media-sessions, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
+**Docs**: /nowplaying, /nowplaying/publishing-media-sessions, /nowplaying/publishing-remote-media-sessions, /nowplaying/content-types-and-metadata, /nowplaying/playback-commands, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
 
-**Skills**: skills/avfoundation-ref.md, skills/now-playing-carplay.md, skills/now-playing-musickit.md
+**Skills**: skills/avfoundation-ref.md, skills/now-playing-carplay.md, skills/now-playing-musickit.md, skills/system-media-routing.md

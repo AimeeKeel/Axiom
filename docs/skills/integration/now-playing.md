@@ -92,14 +92,16 @@ Questions you can ask your assistant that will draw from this skill:
 - Always paired with static `MPMediaItemPropertyArtwork`, for iOS 18 and as the system fallback
 
 ### NowPlaying Framework (iOS 27+)
-- `import NowPlaying` – The Swift-native successor to the MediaPlayer dictionary and command APIs
+- `import NowPlaying` – The Swift-native alternative to the MediaPlayer dictionary and command APIs
 - Your `@Observable` model conforms to `MediaSessionRepresentable`, and the system observes it, so there are no manual refreshes
-- Strongly typed content (`MusicContent`, `PodcastContent`, `MovieContent`, …) instead of a string-keyed dictionary
-- A declarative `[MediaCommand]` array with `async` closures instead of per-command `MPRemoteCommandCenter` targets
-- Playback snapshots that pair the elapsed time with a timestamp, so the system can advance the progress bar on its own between updates
+- Strongly typed content (`MusicContent`, `PodcastContent`, `MovieContent`, …) instead of a string-keyed dictionary, with a guide to which type fits which media and what each initializer fills in for you
+- A declarative `[MediaCommand]` array with `async` closures instead of per-command `MPRemoteCommandCenter` targets, and what each command passes your closure, such as the skip interval the listener chose
+- Playback snapshots that pair the elapsed time with a timestamp, so the system can advance the progress bar on its own between updates, and when a snapshot needs only the playback state
 - The session life cycle: configuring the audio session first, running more than one session, removing a session, and the rule that `requestToBecomeSystemPrimary()` only works while your app is in the foreground
-- Playback on other devices (iOS only): remote sessions, backed by a `RemoteMediaSessionExtension` app extension, that your server can start, update, and end with push notifications while your app isn't running
+- Playback on other devices (iPhone and iPad only): remote sessions, backed by a `RemoteMediaSessionExtension` app extension, that your server can start, update, and end with push notifications while your app isn't running
+- A known issue in iOS 27: remote-session push tokens always target the production APNs environment, so test pushes must go through production
 - The MediaPlayer APIs aren't deprecated, so Patterns 1–8 still apply to apps that support versions before iOS 27
+- Use one API or the other for playback on the device, never both: Apple says mixing the NowPlaying framework with `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` results in undefined behavior
 
 ### Siri
 - Siri's "pause", "next", and "what song is this?" use the same commands and metadata as the Lock Screen
@@ -160,6 +162,7 @@ This page documents the `now-playing` skill (in the `axiom-media` suite), which 
 - [now-playing-carplay](/reference/now-playing-carplay) – CarPlay Now Playing details: `CPNowPlayingTemplate` buttons, entitlement setup, and CarPlay-specific debugging
 - [now-playing-musickit](/reference/now-playing-musickit) – `ApplicationMusicPlayer` publishing and hybrid apps that mix Apple Music with your own content
 - [siri-audio](/skills/integration/siri-audio) – "Play X in MyApp" and other Siri requests that start playback, which go through App Intents rather than Now Playing commands
+- [system-media-routing](/skills/integration/system-media-routing) – Media Sharing Extensions: playing to non-AirPlay speakers and TVs through the system device picker, the third topic of the NowPlaying WWDC session
 - [avfoundation-ref](/reference/avfoundation-ref) – `AVAudioSession` configuration in depth, plus spatial audio formats
 - [memory-debugging](/skills/debugging/memory-debugging) – Retain cycle diagnosis in closure-based command handlers
 - [swift-concurrency](/skills/concurrency/swift-concurrency) – `@MainActor` patterns for async artwork loading
@@ -168,4 +171,4 @@ This page documents the `now-playing` skill (in the `axiom-media` suite), which 
 
 **WWDC**: 2017-251, 2019-501, 2022-110338, 2026-312
 
-**Docs**: /nowplaying, /nowplaying/publishing-media-sessions, /nowplaying/publishing-remote-media-sessions, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
+**Docs**: /nowplaying, /nowplaying/publishing-media-sessions, /nowplaying/publishing-remote-media-sessions, /nowplaying/content-types-and-metadata, /nowplaying/playback-commands, /mediaplayer/mpnowplayinginfocenter, /mediaplayer/mpnowplayingsession, /mediaplayer/mpremotecommandcenter, /mediaplayer/mpmediaitemanimatedartwork, /mediaplayer/providing-animated-artwork-for-media-items
