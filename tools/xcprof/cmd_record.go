@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -103,6 +106,7 @@ type recordSpec struct {
 	timeLimit    string // effective, normalized to a single xctrace unit
 	runName      string
 	noPrompt     bool
+	launchToken  string // per-recording token passed to the launched target (launch_cleanup.go)
 }
 
 // RecordReport is the structured output of `xcprof record`. The full command is
@@ -124,6 +128,8 @@ type RecordReport struct {
 	OK          bool     `json:"ok"`
 	Notes       []string `json:"notes,omitempty"`
 	Problems    []string `json:"problems,omitempty"`
+	// LaunchCleanup reports processes a launch left behind: the one record stopped and any it would not.
+	LaunchCleanup *LaunchCleanup `json:"launch_cleanup,omitempty"`
 }
 
 // stringList is a repeatable string flag (e.g. --instrument A --instrument B).
@@ -136,10 +142,14 @@ func (s *stringList) Set(v string) error {
 }
 
 // runRecordCmd is indirected so tests can drive runRecord without spawning
-// xctrace. Production points it at ExecRun against `xcrun`.
+// xctrace. Production runs `xcrun`, interrupting it on cancellation so it saves the trace.
 var runRecordCmd = func(ctx context.Context, timeout time.Duration, argv []string) (ExecResult, error) {
-	return ExecRun(ctx, timeout, "xcrun", argv...)
+	return ExecRunInterruptible(ctx, timeout, recordInterruptGrace, "xcrun", argv...)
 }
+
+// recordInterruptGrace is how long an interrupted xctrace gets to save its trace
+// before it is killed.
+const recordInterruptGrace = 30 * time.Second
 
 // normalizeDuration renders a duration in a single unit xctrace accepts
 // (`time[ms|s|m|h]`): whole seconds as Ns, otherwise milliseconds.
@@ -335,6 +345,9 @@ func buildRecordArgv(s recordSpec) []string {
 	case s.attach != "":
 		argv = append(argv, "--attach", s.attach)
 	case len(s.launchCmd) > 0:
+		if s.launchToken != "" {
+			argv = append(argv, "--env", recordTokenVar+"="+s.launchToken)
+		}
 		argv = append(argv, "--launch", "--")
 		argv = append(argv, s.launchCmd...)
 	}
@@ -487,6 +500,11 @@ func runRecord(out io.Writer, args []string) int {
 		runName:      o.runName,
 		noPrompt:     o.noPrompt,
 	}
+	// A launch on this Mac gets a token so its leftover copies can be identified
+	// afterward; a --device launch runs elsewhere and leaves nothing local.
+	if len(spec.launchCmd) > 0 && spec.device == "" {
+		spec.launchToken = newRecordToken()
+	}
 	argv := buildRecordArgv(spec)
 
 	rep := RecordReport{
@@ -524,9 +542,17 @@ func runRecord(out io.Writer, args []string) int {
 		return 2
 	}
 
-	ctx := context.Background()
+	// Ctrl-C, SIGTERM from an MCP client's timeout, or a closed terminal cancels the
+	// recording instead of killing xcprof, so the launch cleanup still runs. Default
+	// signal handling returns for the export that follows.
+	sigCtx, stopSignals := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 	limitD, _ := time.ParseDuration(limit) // limit is normalized; parse can't fail
-	res, runErr := runRecordCmd(ctx, limitD+recordExecGrace, argv)
+	res, runErr := runRecordCmd(sigCtx, limitD+recordExecGrace, argv)
+	ctx := context.WithoutCancel(sigCtx)
+	if spec.launchToken != "" {
+		rep.LaunchCleanup = cleanupLaunch(ctx, spec.launchToken, launchCommandLines(spec.launchCmd, cwd))
+	}
+	stopSignals()
 
 	// Ground truth is the saved trace, not xctrace's exit code: a `--launch`
 	// recording terminated at the time limit returns the killed target's exit
@@ -550,6 +576,9 @@ func runRecord(out io.Writer, args []string) int {
 
 	rep.OK = true
 	switch {
+	case errors.Is(runErr, context.Canceled):
+		rep.Notes = append(rep.Notes,
+			"recording interrupted; the saved trace covers the time before the interrupt")
 	case IsTimeoutError(runErr):
 		rep.Notes = append(rep.Notes,
 			"recording exceeded the exec budget and was terminated; the saved trace may be incomplete")
@@ -593,6 +622,17 @@ func writeRecord(out io.Writer, rep RecordReport, human bool) int {
 		}
 		for _, p := range rep.Problems {
 			fmt.Fprintf(out, "  - %s\n", p)
+		}
+		if c := rep.LaunchCleanup; c != nil {
+			for _, pid := range c.Killed {
+				fmt.Fprintf(out, "  launch cleanup: killed pid %d\n", pid)
+			}
+			for _, s := range c.Survivors {
+				fmt.Fprintf(out, "  launch survivor: pid %d (ppid %d, state %s) %s — %s\n", s.PID, s.PPID, s.State, s.Command, s.Reason)
+			}
+			for _, e := range c.Errors {
+				fmt.Fprintf(out, "  launch cleanup error: %s\n", e)
+			}
 		}
 		return 0
 	}
