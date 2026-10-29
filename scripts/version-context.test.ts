@@ -37,8 +37,9 @@ function python(body: string, cases: unknown = null): unknown {
     body,
     "print(json.dumps(out))",
   ].join("\n");
+  // Bounded: one run hung with the child blocked on a stdin execFileSync never closed (Axiom-yuss).
   return JSON.parse(
-    execFileSync("python3", ["-c", script], { input: JSON.stringify(cases), encoding: "utf8" }),
+    execFileSync("python3", ["-c", script], { input: JSON.stringify(cases), encoding: "utf8", timeout: 30_000 }),
   );
 }
 
