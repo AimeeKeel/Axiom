@@ -17,7 +17,7 @@ The Swift interface only names the schemas (`AppSchema.Entity("SongEntity")`); t
 
 - Shapes are checked by the **`ExtractAppIntentsMetadata` build phase**, not the type checker. That phase runs **only after Swift compiles cleanly** — a single unrelated Swift error hides every schema error, which reads as "no enforcement". Fix Swift errors first.
 - A failing schema prints `error: At least one halting error was produced during export, so no AppIntents metadata have been exported and this target is not usable with AppIntents until errors are resolved`. Nothing ships to Siri until it is clean.
-- "Required" means **must be declared, with exactly the stated optionality** — a required `String?` declared as `String` fails ("must be optional"), and the reverse fails ("must not be optional").
+- "Required" means **must be declared, with exactly the stated optionality** — a required `String?` declared as `String` fails (27.2: "to be optional"; 27.1: "must be optional"), and the reverse fails too.
 - **Extra members are allowed and unchecked**: additional stored properties on entities, additional intent parameters, additional enum cases. No Audio entity or intent has optional schema members — the required set is the whole schema.
 - The macro turns plain `var`s into `@Property`/`@Parameter`; you may still write `@Parameter(default: [])` to set a default.
 - The intents are independent: adopting `playAudio` without `warmupAudioQueue` (or any other subset) builds clean. Unlike Messages, the Audio domain has no schema-completeness build error.
@@ -87,9 +87,9 @@ No 27.1 Audio intent takes `invocationSource`, `appViewIdentifier`, or `activity
 Every `audioEntity`/`target` parameter and the `recognizeAudio` result is the union `AudioItemCases`: song, album, artist, playlist, songCollection, classicalMusicRecording, liveRadioStation, algorithmicRadioStation, radioShowEpisode, radioShow, podcastShow, podcastEpisode, podcastCollection, audiobook, ambientSound, newsBrief, newsProvider.
 
 - Declare it with `@UnionValue` on an enum whose cases wrap your schema entities. **Any subset** of cases is valid — keep the ones you can play (Apple: "Keep the cases that your app supports and remove the rest").
-- A case wrapping a non-schema entity, or a non-entity (`String`), fails: `Parameter 'audioEntity' does not match required AppSchemaIntent type 'AudioItemCases:(…)'`.
+- A case wrapping a non-schema entity, or a non-entity (`String`), fails: `… requires type of parameter 'audioEntity' to be a @UnionValue with cases limited to the types …` (27.2; 27.1 says `does not match required AppSchemaIntent type 'AudioItemCases:(…)'`).
 - A single entity type in place of the union fails with the same error. There is no "songs-only" `playAudio`.
-- `playlist.owner` is a second union, `OwnerCases:(Person | String)` — `case person(IntentPerson)` + `case name(String)`. A plain `String?` fails: `Property 'owner' type does not match required AppSchemaEntity property type 'OwnerCases:(Person | String)'`.
+- `playlist.owner` is a second union, `OwnerCases:(Person | String)` — `case person(IntentPerson)` + `case name(String)`. A plain `String?` fails: `AppSchemaEntity 'audio.playlist' requires type of property 'owner' to be a @UnionValue with cases limited to the types Person or String` (27.2; 27.1: `Property 'owner' type does not match required AppSchemaEntity property type 'OwnerCases:(Person | String)'`).
 
 ### Resolvability — every entity Siri can pass you
 
@@ -360,16 +360,16 @@ An `AppShortcut` for a schema intent can be gated inside `appShortcuts` with `if
 | Error text (metadata phase unless noted) | Fix |
 |---|---|
 | `Missing required property 'X' from AppSchemaEntity 'audio.Y'` + `fixit: var X: T` | Declare it with exactly that type and optionality |
-| `Required AppSchemaEntity property 'X' must be optional` / `must not be optional` | Match the table's optionality |
-| `Property 'X' type does not match required AppSchemaEntity property type 'T'` | Relationship → your schema entity type; `owner` → the `Person \| String` union |
+| `AppSchemaEntity 'audio.Y' requires type of property 'X' to be optional` (Xcode 27.2; 27.1: `Required AppSchemaEntity property 'X' must be optional` / `must not be optional`) | Match the table's optionality |
+| `AppSchemaEntity 'audio.Y' requires type of property 'X' to be T` (27.2; 27.1: `Property 'X' type does not match required AppSchemaEntity property type 'T'`) | Relationship → your schema entity type; `owner` → the `Person \| String` union |
 | `Missing required parameter 'X' from AppSchemaIntent 'audio.Y'` | Add the parameter (names differ: `target` for affinity) |
-| `Required AppSchemaIntent parameter 'X' must be optional` / `must not be optional` | `warmupAudioQueueResult`/`queueLocation` optional; `playbackAttributes`/`affinityState` not |
-| `Parameter 'playbackAttributes' does not match required AppSchemaIntent parameter of 'Set<Schema<PlaybackAttributes>>'` | `Set<YourPlaybackAttributes>`, not an array |
-| `Parameter 'audioEntity' does not match required AppSchemaIntent type 'AudioItemCases:(…)'` | `@UnionValue` enum whose cases are all Audio-schema entities |
-| `AppSchemaIntent 'audio.warmupAudioQueue' requires that 'perform()' include a 'ReturnsValue<Schema<WarmupAudioQueueResult>>'` | Return your warmup result entity |
-| `AppSchemaIntent 'audio.recognizeAudio' requires that 'perform()' include a 'ReturnsValue<Array<AudioItemCases:(…)>>'` | Return `[AudioItem]` |
+| `AppSchemaIntent 'audio.Y' requires type of parameter 'X' to be optional` (27.2; 27.1: `Required AppSchemaIntent parameter 'X' must be optional` / `must not be optional`) | `warmupAudioQueueResult`/`queueLocation` optional; `playbackAttributes`/`affinityState` not |
+| `… requires type of parameter 'playbackAttributes' to be a set of @AppEnum(schema: .audio.playbackAttributes)` (27.2; 27.1: `Parameter 'playbackAttributes' does not match required AppSchemaIntent parameter of 'Set<Schema<PlaybackAttributes>>'`) | `Set<YourPlaybackAttributes>`, not an array |
+| `… requires type of parameter 'audioEntity' to be a @UnionValue with cases limited to the types @AppEntity(schema: .audio.song), …` (27.2; 27.1: `Parameter 'audioEntity' does not match required AppSchemaIntent type 'AudioItemCases:(…)'`) | `@UnionValue` enum whose cases are all Audio-schema entities |
+| `AppSchemaIntent 'audio.warmupAudioQueue' requires that 'perform()' must return @AppEntity(schema: .audio.warmupAudioQueueResult)` (27.2; 27.1: `… include a 'ReturnsValue<Schema<WarmupAudioQueueResult>>'`) | Return your warmup result entity |
+| `AppSchemaIntent 'audio.recognizeAudio' requires that 'perform()' must return an array of a @UnionValue with cases limited to the types …` (27.2; 27.1: `… include a 'ReturnsValue<Array<AudioItemCases:(…)>>'`) | Return `[AudioItem]` |
 | `… requires UnionValue case 'X' to conform to 'IndexedEntity', 'UniqueAppEntity', 'TransientAppEntity', provide a default 'EntityStringQuery', or provide an 'IntentValueQuery'` | See Resolvability |
-| `'X' conforming to 'audio.Y' requires enum case 'Z'` | Add the case |
+| `Type 'X' is missing case 'Z' required by AppSchemaEnum 'audio.Y'` (27.2; 27.1: `'X' conforming to 'audio.Y' requires enum case 'Z'`) | Add the case |
 | `type 'X' does not conform to protocol 'CaseDisplayRepresentable'` (Swift) | Add `caseDisplayRepresentations` |
 | `'self' used before all stored properties are initialized` (Swift, schema entity init) | Assign non-schema properties, including `id`, first |
 | `'AudioStartingIntent' is deprecated: renamed to 'AudioPlaybackIntent'` (Swift warning) | Drop the conformance or use `AudioPlaybackIntent` |

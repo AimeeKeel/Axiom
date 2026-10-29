@@ -2,6 +2,7 @@
  * App Intents schema census: what the build enforces for every system schema.
  *
  *   node scripts/app-schemas.ts census    # probe the active Xcode's SDK, rewrite app-schemas.json
+ *                                         # (APP_SCHEMAS_KEEP_PROBE=1 keeps the probe and its build logs; 0 or empty does not)
  *   node scripts/app-schemas.ts           # regenerate the reference from app-schemas.json
  *   node scripts/app-schemas.ts --check   # non-zero when the reference is stale, or the installed SDK
  *                                         # lists schemas the census does not
@@ -15,7 +16,12 @@
  *   3. every required member declared with a deliberately wrong type, so it reports the right one;
  *   4. a control that adopts every schema exactly as recorded, rebuilt while it surfaces
  *      requirements no earlier pass can reach (file content types, static members);
- *   5. the control with unions cut to their first case, then their last, then one wrong case.
+ *   5. the control with unions cut to their first case, then their last, then one wrong case;
+ *   6. the control with each member typed as a module type in SUBSTITUTES declared as its older substitute,
+ *      built at the iOS deployment target each such row claims.
+ *
+ * From 27.2 the processor lists a union's cases without its name, so names come from the processor's own
+ * schema database (AppIntentSchemas.sqlite), keyed by the member that takes the union.
  *
  * Whatever the control still rejects lands in `unconfirmed`, which the reference prints and a
  * unit test refuses. Run the census after each SDK lands.
@@ -25,6 +31,8 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 export const CENSUS_FILE = path.join(ROOT, "scripts/app-schemas.json");
@@ -40,8 +48,12 @@ const INTERFACE = "System/Library/Frameworks/AppIntents.framework/Modules/AppInt
 export type Kind = "intent" | "entity" | "enum";
 /** `deprecated`: release and replacement, from the accessor's own `@available(…, deprecated:)`. */
 export type SchemaDecl = { domain: string; kind: Kind; name: string; id: string; available: string; deprecated?: string };
-/** `contentTypes`: UTType supertypes the parameter's `supportedContentTypes` must draw from. */
-export type Member = { name: string; type: string; optional: boolean; contentTypes?: string[] };
+/**
+ * `contentTypes`: UTType supertypes the parameter's `supportedContentTypes` must draw from. `alsoAccepts`: an older
+ * type (SUBSTITUTES) the control also built with in place of `type`, so `type`'s availability does not narrow the row;
+ * `alsoAcceptsFrom`: the deployment target that build ran at (`iOS 18.0`).
+ */
+export type Member = { name: string; type: string; optional: boolean; contentTypes?: string[]; alsoAccepts?: string; alsoAcceptsFrom?: string };
 export type IntentShape = {
   name: string;
   available: string;
@@ -69,7 +81,7 @@ export type DomainCensus = {
   singleCase: Record<string, SingleCase>;
 };
 type SingleCase = "yes" | "no" | "unverified";
-export type Census = { xcode: string; sdk: string; domains: DomainCensus[]; unconfirmed: string[] };
+export type Census = { xcode: string; sdk: string; types?: Record<string, string>; domains: DomainCensus[]; unconfirmed: string[] };
 type MetadataKind = "error" | "warning" | "fixit";
 export type Diagnostics = { metadata: Array<{ line: number; kind: MetadataKind; message: string }>; swift: string[] };
 type BuildResult = Diagnostics & { succeeded: boolean };
@@ -203,24 +215,130 @@ function splitTopLevel(text: string, separator: string): string[] {
   return parts;
 }
 
-/** A type as appintentsmetadataprocessor prints it, in the spelling a developer writes. Records unions it meets. */
-export function processorType(raw: string, ids: Map<string, string>, unions: Map<string, string[]>): string {
+/** Records a union's cases, refusing a name that arrives with two different case lists. */
+function recordUnion(name: string, cases: string[], unions: Map<string, string[]>): string {
+  const known = unions.get(name);
+  if (known && known.join("|") !== cases.join("|")) {
+    throw new Error(`union ${name} appears with two case lists: ${known.join(", ")} and ${cases.join(", ")}`);
+  }
+  unions.set(name, cases);
+  return name;
+}
+
+/** `A, B, or C`, `A, B or C` and `A or B`, as the 27.2 processor lists a union's cases. */
+function proseCases(list: string): string[] {
+  const commas = splitTopLevel(list, ", ");
+  const last = commas.pop()!;
+  return [...commas, ...(last.startsWith("or ") ? [last.slice(3)] : splitTopLevel(last, " or "))];
+}
+
+/**
+ * A type as appintentsmetadataprocessor prints it, in the spelling a developer writes. Records unions it meets.
+ * Through 27.1 the processor named unions (`OwnerCases:(Person | String)`); from 27.2 it lists only their
+ * cases, so the caller supplies `unionName`, from the processor's schema database (`schemaUnionNames`), and
+ * `where`, the key and database it looked in. Throws on a spelling that is still prose afterwards.
+ */
+export function processorType(raw: string, ids: Map<string, string>, unions: Map<string, string[]>, unionName?: string, where?: string): string {
   let m: RegExpExecArray | null;
   if ((m = /^(\w+)Cases:\((.*)\)$/.exec(raw))) {
-    const cases = splitTopLevel(m[2], " | ").map((c) => processorType(c, ids, unions));
-    const known = unions.get(m[1]);
-    if (known && known.join("|") !== cases.join("|")) {
-      throw new Error(`union ${m[1]} appears with two case lists: ${known.join(", ")} and ${cases.join(", ")}`);
-    }
-    unions.set(m[1], cases);
-    return m[1];
+    return recordUnion(m[1], splitTopLevel(m[2], " | ").map((c) => processorType(c, ids, unions)), unions);
   }
-  if ((m = /^Array<(.*)>$/.exec(raw))) return `[${processorType(m[1], ids, unions)}]`;
-  if ((m = /^Set<(.*)>$/.exec(raw))) return `Set<${processorType(m[1], ids, unions)}>`;
+  if ((m = /^a @UnionValue with cases limited to the types (.*)$/.exec(raw))) {
+    const cases = proseCases(m[1]);
+    if (!unionName) throw new Error(`union of ${cases.join(", ")} has no name: no ${where ?? "schema database entry"}`);
+    return recordUnion(unionName, cases.map((c) => processorType(c, ids, unions)), unions);
+  }
+  if ((m = /^(?:Array<(.*)>|an array of (.*))$/.exec(raw))) return `[${processorType(m[1] ?? m[2], ids, unions, unionName, where)}]`;
+  if ((m = /^(?:Set<(.*)>|a set of (.*))$/.exec(raw))) return `Set<${processorType(m[1] ?? m[2], ids, unions, unionName, where)}>`;
   if ((m = /^Schema<(\w+)>$/.exec(raw))) return ids.get(m[1]) ?? m[1];
+  if ((m = /^@App(?:Entity|Enum)\(schema: (\.\w+\.\w+)\)$/.exec(raw))) return m[1];
   if ((m = /^SystemEntity<.*\.(\w+)\.(\w+)Entity>$/.exec(raw))) return `${m[1]}.${m[2]}`;
+  // 27.2 names system types by their entity (GeoToolbox.PlaceDescriptorEntity); only these modules' types are meant.
+  if ((m = /^(GeoToolbox|VisualIntelligence)\.(\w+)Entity$/.exec(raw))) return `${m[1]}.${m[2]}`;
   if ((m = /^Codable<Swift\.(\w+)>$/.exec(raw))) return m[1];
-  return PROCESSOR_NAMES[raw] ?? ids.get(raw) ?? raw;
+  const type = PROCESSOR_NAMES[raw] ?? ids.get(raw) ?? raw;
+  if (/\s|^@/.test(type)) throw new Error(`unrecognized processor type '${raw}'; teach processorType its spelling`);
+  return type;
+}
+
+/**
+ * The union each schema member (`SendMessageIntent#destination`) or result (`…#perform()`) takes, from
+ * rows of the processor's schema database, whose types wrap others as `optional`, `array` or `set`. Only a
+ * schema's highest `version` counts; a key given two names throws.
+ */
+export function schemaUnionNames(
+  schemas: Array<{ id: string; version?: number[]; members: Array<{ name: string; type: unknown }>; result?: unknown }>,
+): Map<string, string> {
+  const newer = (a: number[] = [], b: number[] = []) => {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+    return false;
+  };
+  const latest = new Map<string, (typeof schemas)[number][]>();
+  for (const s of schemas) {
+    const kept = latest.get(s.id)?.[0];
+    if (!kept || newer(s.version, kept.version)) latest.set(s.id, [s]);
+    else if (!newer(kept.version, s.version)) latest.get(s.id)!.push(s);
+  }
+  const unionIn = (type: unknown): string | undefined => {
+    if (!type || typeof type !== "object") return undefined;
+    const t = type as Record<string, { _0?: { id?: string } } | undefined>;
+    if (t.unionSchema) return t.unionSchema._0?.id;
+    const wrapped = t.optional ?? t.array ?? t.set;
+    return wrapped ? unionIn(wrapped._0) : undefined;
+  };
+  const names = new Map<string, string>();
+  const name = (k: string, union: string | undefined) => {
+    if (!union) return;
+    if (names.has(k) && names.get(k) !== union) throw new Error(`schema database: ${k} is both ${names.get(k)} and ${union}`);
+    names.set(k, union);
+  };
+  for (const s of [...latest.values()].flat()) {
+    for (const m of s.members) name(`${s.id}#${m.name}`, unionIn(m.type));
+    name(`${s.id}#perform()`, unionIn(s.result));
+  }
+  return names;
+}
+
+/** The `@available` stack of a top-level public type in a module's .swiftinterface, as one tag. */
+export function declaredAvailability(text: string, name: string): string {
+  const lines = text.split("\n");
+  const at = lines.findIndex((l) => new RegExp(`^(?:[@\\w]+ )*?(?:public|open) (?:final )?(?:struct|class|enum|actor) ${name}\\b`).test(l));
+  if (at < 0) throw new Error(`the interface declares no top-level public type ${name}`);
+  const clauses: string[] = [];
+  for (let j = at - 1; j >= 0 && lines[j].startsWith("@"); j--) {
+    if (lines[j].startsWith("@available(") && !/\bdeprecated\b/.test(lines[j])) clauses.unshift(lines[j].slice("@available(".length, -1));
+  }
+  return normalizeAvailability(clauses);
+}
+
+/** `declaredAvailability` of a module-qualified type (`GeoToolbox.PlaceDescriptor`) in the SDK at `sdkPath`; errors name both. */
+export function typeAvailability(sdkPath: string, type: string): string {
+  const [module, name] = type.split(".");
+  const file = path.join(sdkPath, `System/Library/Frameworks/${module}.framework/Modules/${module}.swiftmodule/arm64e-apple-ios.swiftinterface`);
+  try {
+    return declaredAvailability(fs.readFileSync(file, "utf8"), name);
+  } catch (error) {
+    throw new Error(`${type} (${file}): ${(error as Error).message}`, { cause: error });
+  }
+}
+
+/**
+ * Older Swift types the processor may also accept for a module type, for code that runs before that type exists.
+ * Pass 6 tries each; a member records one only after the control built with it. CLPlacemark's AppIntents conformance is
+ * iOS 16 and macOS 13, older than every schema, so a member that also accepts it narrows no row.
+ */
+const SUBSTITUTES: Record<string, string> = { "GeoToolbox.PlaceDescriptor": "CoreLocation.CLPlacemark" };
+
+/** Prefixes of qualified census types that name no module of their own: Foundation's `Calendar.RecurrenceRule`. */
+const NOT_MODULES = ["Calendar", "Swift", "Foundation", "AppIntents"];
+
+/** Module-qualified types (`GeoToolbox.PlaceDescriptor`) that recorded members, returns and union cases name. */
+export function moduleTypes(domains: DomainCensus[]): string[] {
+  const named = domains.flatMap((d) => [
+    ...[...d.intents, ...d.entities].flatMap((s) => [...("parameters" in s ? s.parameters : s.properties).map((m) => m.type), ("returns" in s && s.returns) || ""]),
+    ...Object.values(d.unions).flat(),
+  ]);
+  return unique(named.flatMap((t) => [...t.matchAll(/\b([A-Z]\w+)\.[A-Z]\w+/g)].filter((m) => !NOT_MODULES.includes(m[1])).map((m) => m[0]))).sort(byCode);
 }
 
 /** A fix-it's Swift type, placeholders (`<#FolderEntity#>`) resolved to schema accessors. */
@@ -242,7 +360,7 @@ export function formatFixit(raw: string, ids: Map<string, string>): string {
 
 const METADATA_ERROR = /\/Probe\/All\.swift:(\d+): (error|warning): (.*)$/;
 const METADATA_FIXIT = /\/Probe\/All\.swift:(\d+):\d+: fixit: (.*)$/;
-const PROCESSOR_ERROR = /^error: (.*'\w+\.\w+'.*)$/;
+const PROCESSOR_MESSAGE = /^(error|warning): (.*'\w+\.\w+'.*)$/;
 const SWIFT_ERROR = /(?:\/Probe\/\w+\.swift:\d+:\d+|^macro expansion @\w+:\d+:\d+): error: (.*)$/;
 
 export function parseDiagnostics(log: string): Diagnostics {
@@ -252,13 +370,13 @@ export function parseDiagnostics(log: string): Diagnostics {
   for (const line of log.split("\n")) {
     const error = METADATA_ERROR.exec(line);
     const fixit = METADATA_FIXIT.exec(line);
-    const located = PROCESSOR_ERROR.exec(line);
+    const unlocated = PROCESSOR_MESSAGE.exec(line);
     const entry = error
       ? { line: Number(error[1]), kind: error[2] as MetadataKind, message: error[3] }
       : fixit
         ? { line: Number(fixit[1]), kind: "fixit" as MetadataKind, message: fixit[2] }
-        : located
-          ? { line: 0, kind: "error" as MetadataKind, message: located[1] }
+        : unlocated
+          ? { line: 0, kind: unlocated[1] as MetadataKind, message: unlocated[2] }
           : undefined;
     if (entry) {
       const k = `${entry.line}\0${entry.kind}\0${entry.message}`;
@@ -285,12 +403,17 @@ export type Finding =
 const FINDINGS: Array<[RegExp, (m: RegExpExecArray) => Finding]> = [
   [/^Missing required (?:parameter|property) '(\w+)' from AppSchema\w+ '[\w.]+'$/, (m) => ({ kind: "missing", name: m[1] })],
   [/ requires enum case '(\w+)'$/, (m) => ({ kind: "case", name: m[1] })],
+  [/^Type '\w+' is missing case '(\w+)' required by AppSchemaEnum '[\w.]+'$/, (m) => ({ kind: "case", name: m[1] })],
   [/ requires that 'perform\(\)' include a 'ReturnsValue<(.+)>'$/, (m) => ({ kind: "returns", type: m[1] })],
+  [/ requires that 'perform\(\)' must return (.+)$/, (m) => ({ kind: "returns", type: m[1] })],
   [
     /^(?:Parameter|Property) '(\w+)' (?:type )?does not match required AppSchema\w+ (?:type|parameter of|property of|property type) '(.+)'$/,
     (m) => ({ kind: "type", name: m[1], type: m[2] }),
   ],
   [/^Required AppSchema\w+ (?:parameter|property) '(\w+)' must (not )?be optional$/, (m) => ({ kind: "optionality", name: m[1], optional: !m[2] })],
+  // 27.2 says "to be optional" where 27.1 said "must be optional", so this precedes the type wording.
+  [/^\w+ '[\w.]+' requires type of (?:parameter|property) '(\w+)' to be optional$/, (m) => ({ kind: "optionality", name: m[1], optional: true })],
+  [/^\w+ '[\w.]+' requires type of (?:parameter|property) '(\w+)' to be (.+)$/, (m) => ({ kind: "type", name: m[1], type: m[2] })],
   [
     /^The 'supportedTypeIdentifiers' argument of parameter '(\w+)' must specify at least one UTType subtype of the following supertypes: (.+)$/,
     (m) => ({ kind: "contentTypes", name: m[1], supertypes: [...m[2].matchAll(/'([^']+)'/g)].map((t) => t[1]) }),
@@ -312,10 +435,54 @@ export function classifyMetadata(message: string): Finding | undefined {
 // ---------------------------------------------------------------------------------------
 // Rendering
 
-/** Orders availability tags by release: `OS27` > `iOS 26.2+; …` > `iOS 18+, …`. */
-export function availabilityRank(available: string): number {
-  const m = /^OS(\d+)/.exec(available) ?? /(\d+(?:\.\d+)?)/.exec(available);
-  return m ? Number(m[1]) : 0;
+/** Platforms `OS27` stands for: watchOS and tvOS never carry a schema. */
+const SCHEMA_PLATFORMS = ["iOS", "macOS", "visionOS"];
+
+/** An availability tag (`iOS 18+, macOS 15+; not visionOS`) as platform to version, or `unavailable`. */
+function platformVersions(tag: string): Map<string, string> {
+  const [introduced, excluded] = tag.split("; not ");
+  const versions = new Map<string, string>();
+  for (const part of introduced.split(", ")) {
+    const any = /^OS(\d+)$/.exec(part) ?? /^anyAppleOS ([\d.]+)\+$/.exec(part);
+    const one = /^(\w+) ([\d.]+)\+$/.exec(part);
+    if (any) for (const p of SCHEMA_PLATFORMS) versions.set(p, any[1]);
+    else if (one) versions.set(one[1], one[2]);
+    else throw new Error(`unrecognized availability tag ${tag}`);
+  }
+  for (const p of excluded?.split("/") ?? []) versions.set(p, "unavailable");
+  return versions;
+}
+
+const newerVersion = (a: string, b: string) => {
+  const [x, y] = [a.split(".").map(Number), b.split(".").map(Number)];
+  for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0);
+  return false;
+};
+
+/**
+ * `own` narrowed to where every tag in `named` is also available: each of `own`'s platforms takes the newest
+ * version any tag gives it. Spelled as `own` or a schema tag when one matches, else per platform.
+ */
+function availableWith(row: string, own: string, named: string[], schemaTags: string[]): string {
+  const merged = platformVersions(own);
+  for (const tag of named) {
+    const versions = platformVersions(tag);
+    for (const [platform, mine] of [...merged]) {
+      if (mine === "unavailable") continue;
+      const version = versions.get(platform);
+      if (version === undefined) throw new Error(`${row}: ${tag} says nothing about ${platform}, where the row is available`);
+      if (version === "unavailable" || newerVersion(version, mine)) merged.set(platform, version);
+    }
+  }
+  const spells = (tag: string) => {
+    const v = platformVersions(tag);
+    return v.size === merged.size && [...merged].every(([p, version]) => v.get(p) === version);
+  };
+  const spelled = [own, ...schemaTags].find(spells);
+  if (spelled) return spelled;
+  const introduced = [...merged].filter(([, v]) => v !== "unavailable").map(([p, v]) => `${p} ${v}`);
+  const excluded = [...merged].filter(([, v]) => v === "unavailable").map(([p]) => `${p}, unavailable`);
+  return normalizeAvailability([`${introduced.join(", ")}, *`, ...excluded]);
 }
 
 function mostCommon(values: string[]): string {
@@ -336,8 +503,16 @@ function members(list: Member[]): string {
   return typed + constraints.join("");
 }
 
+const membersOfSchema = (s: Schema): Member[] => ("parameters" in s ? s.parameters : "properties" in s ? s.properties : []);
 const namedTypes = (s: Schema) =>
-  [...("parameters" in s ? s.parameters : "properties" in s ? s.properties : []).map((m) => m.type), ("returns" in s && s.returns) || ""];
+  [...membersOfSchema(s).filter((m) => !m.alsoAccepts).map((m) => m.type), ("returns" in s && s.returns) || ""];
+
+/** An availability tag cut to the platforms schemas exist on. */
+function onSchemaPlatforms(tag: string): string {
+  const versions = [...platformVersions(tag)].filter(([p]) => SCHEMA_PLATFORMS.includes(p));
+  const introduced = versions.filter(([, v]) => v !== "unavailable").map(([p, v]) => `${p} ${v}`);
+  return normalizeAvailability([`${introduced.join(", ")}, *`, ...versions.filter(([, v]) => v === "unavailable").map(([p]) => `${p}, unavailable`)]);
+}
 
 export function renderSchemaReference(census: Census): string {
   const out: string[] = [];
@@ -350,12 +525,29 @@ export function renderSchemaReference(census: Census): string {
   const availability = new Map<string, string>();
   for (const d of census.domains) for (const s of [...d.entities, ...d.enums]) availability.set(`.${d.name}.${s.name}`, s.available);
   const unions = new Map(census.domains.flatMap((d) => Object.entries(d.unions)));
-  // A row is usable only where every type it names exists: iOS 18 Photos intents take the OS27 `.photos.asset`.
+  const typeTag = (row: string, type: string): string => {
+    if (!census.types) throw new Error(`${row} names ${type}, but the census file records no type availability; run node scripts/app-schemas.ts census`);
+    const tag = census.types?.[type];
+    if (!tag) throw new Error(`${row} names ${type}, whose availability the census does not record; run node scripts/app-schemas.ts census`);
+    return tag;
+  };
+  // A row is usable only where every type it names exists: schemas, and module types such as GeoToolbox.PlaceDescriptor.
   const effective = (s: Schema): string => {
     const named = namedTypes(s).flatMap((t) => [t, ...[...t.matchAll(/\b[A-Z]\w*\b/g)].flatMap((u) => unions.get(u[0]) ?? [])]);
-    const refs = named.flatMap((t) => [...t.matchAll(/\.[a-z]\w*\.\w+/g)].map((m) => availability.get(m[0]) ?? s.available));
-    return [s.available, ...refs].reduce((a, b) => (availabilityRank(b) > availabilityRank(a) ? b : a));
+    const schemaTags = named.flatMap((t) => [...t.matchAll(/\.[a-z]\w*\.\w+/g)].map((m) => availability.get(m[0]) ?? s.available));
+    const typeTags = named.flatMap((t) => [...t.matchAll(/\b([A-Z]\w+)\.[A-Z]\w+/g)].filter((m) => !NOT_MODULES.includes(m[1])).map((m) => typeTag(s.name, m[0])));
+    return availableWith(s.name, s.available, [...schemaTags, ...typeTags], schemaTags);
   };
+  // Through schemas too: an intent taking `.photos.asset` needs what the asset's own properties need.
+  const settle = census.domains.flatMap((d) => [...d.entities, ...d.enums].map((s): [string, Schema] => [`.${d.name}.${s.name}`, s]));
+  for (let round = 0, changed = true; changed; round++) {
+    if (round > settle.length) throw new Error("schema availabilities never settled");
+    changed = false;
+    for (const [accessor, s] of settle) {
+      const next = effective(s);
+      if (next !== availability.get(accessor)) [changed] = [true, availability.set(accessor, next)];
+    }
+  }
 
   for (const domain of census.domains) {
     const all = [...domain.intents, ...domain.entities, ...domain.enums];
@@ -396,6 +588,23 @@ export function renderSchemaReference(census: Census): string {
       out.push("| Union (`@UnionValue`) | Cases | Builds with only its first case, and with only its last |", "|---|---|---|");
       for (const [name, cases] of domainUnions) out.push(`| \`${name}\` | \`${cases.join(", ")}\` | ${domain.singleCase[name]} |`);
       out.push("");
+    }
+    // Members whose module type is newer than their row, but which also built as an older substitute.
+    const substituted = new Map<string, string[]>();
+    for (const s of [...domain.intents, ...domain.entities]) {
+      const row = platformVersions(effective(s));
+      for (const m of membersOfSchema(s).filter((m) => m.alsoAccepts)) {
+        const type = platformVersions(typeTag(s.name, m.type));
+        const older = [...row].some(([p, v]) => v !== "unavailable" && type.get(p) !== undefined && type.get(p) !== "unavailable" && newerVersion(type.get(p)!, v));
+        if (!older) continue;
+        if (!m.alsoAcceptsFrom) throw new Error(`${s.name}.${m.name} builds as ${m.alsoAccepts} at no recorded deployment target; run node scripts/app-schemas.ts census`);
+        push(substituted, `${m.type}\0${m.alsoAccepts}\0${m.alsoAcceptsFrom}`, `\`${s.name}.${m.name}\``);
+      }
+    }
+    for (const [k, list] of substituted) {
+      const [type, substitute, from] = k.split("\0");
+      const named = list.length < 2 ? list.join("") : `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`;
+      out.push(`${named} also build${list.length === 1 ? "s" : ""} as \`${substitute}\` (measured at an ${from} deployment target), the type to declare where \`${type}\` (${onSchemaPlatforms(census.types![type])}) is unavailable.`, "");
     }
     const warned = domain.intents.filter((i) => i.warnings?.length);
     if (warned.length > 0) {
@@ -456,7 +665,7 @@ export type Source = { text: string; owners: Array<{ line: number; key: string }
 export function assemble(parts: Array<{ key?: string; text: string }>): Source {
   // Module-qualified census types (GeoToolbox.PlaceDescriptor) need their module imported.
   const modules = unique(parts.flatMap((p) => [...p.text.matchAll(/\b([A-Z]\w+)\.[A-Z]\w+/g)].map((m) => m[1])))
-    .filter((m) => !["Calendar", "Swift", "Foundation", "AppIntents"].includes(m) && !/^[EINU]_/.test(m))
+    .filter((m) => !NOT_MODULES.includes(m) && !/^[EINU]_/.test(m))
     .sort(byCode);
   const header = ["AppIntents", "Foundation", "UniformTypeIdentifiers", ...modules].map((m) => `import ${m}\n`).join("") + "\n" +
     "func probeValue<T>() -> T { fatalError() }\n\n" +
@@ -561,16 +770,40 @@ type CensusRun = {
   shapes: Shapes;
   /** First domain whose schemas name each union; its probe type is `U_<domain>_<union>`. */
   unionOwner: Map<string, string>;
+  /** `readUnionNames`: the processor's schema database and the union each schema member takes. */
+  unionDatabase: UnionDatabase;
 };
 
 const push = <T>(map: Map<string, T[]>, k: string, v: T) => map.set(k, [...(map.get(k) ?? []), v]);
 const stubFor = (c: CensusRun, d: SchemaDecl) => STUBS[c.shapes.conformance.get(key(d)) ?? ""];
+/** The union a schema member (or `perform()`) takes, for processor messages that no longer name it, and where it looked. */
+export const unionNameOf = (c: Pick<CensusRun, "decls" | "unionDatabase">, k: string, member: string): [string | undefined, string] => {
+  const id = `${c.decls.find((d) => key(d) === k)?.id ?? k}#${member}`;
+  const { file, names, error } = c.unionDatabase;
+  const why = error ? `, which could not be read: ${error.message}` : file && !fs.existsSync(file) ? ", which does not exist" : "";
+  return [names.get(id), `${id} in ${file ?? "a schema database (xcrun found no appintentsmetadataprocessor)"}${why}`];
+};
 const membersOf = (c: CensusRun, k: string) => (c.shapes.members.get(k) ?? []).slice().sort((a, b) => byCode(a.name, b.name));
 
 function run(command: string, args: string[], cwd?: string): string {
   const result = spawnSync(command, args, { cwd, encoding: "utf8" });
   if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed: ${result.stderr || result.stdout}`);
   return result.stdout.trim();
+}
+
+/** An empty probe app at `dir` with an iOS deployment target. */
+function probeProject(dir: string, deploymentTarget: string): void {
+  fs.mkdirSync(path.join(dir, "Probe"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "Probe/App.swift"), 'import SwiftUI\n@main struct P: App { var body: some Scene { WindowGroup { Text("p") } } }\n');
+  fs.writeFileSync(path.join(dir, "project.yml"), [
+    "name: Census", "targets:", "  Census:", "    type: application", "    platform: iOS",
+    `    deploymentTarget: "${deploymentTarget}"`, "    sources: [Probe]", "    settings:", "      base:",
+    "        PRODUCT_BUNDLE_IDENTIFIER: com.example.census", "        GENERATE_INFOPLIST_FILE: YES",
+    "        SWIFT_VERSION: 6.0", "        CODE_SIGNING_ALLOWED: NO", "",
+  ].join("\n"));
+  // xcodegen lists sources at generation time; a file created afterwards is never compiled.
+  fs.writeFileSync(path.join(dir, "Probe/All.swift"), "");
+  run("xcodegen", ["generate", "--quiet"], dir);
 }
 
 function build(dir: string, source: Source, label: string): BuildResult {
@@ -605,13 +838,27 @@ function diagnosticOwner(source: Source, d: Diagnostics["metadata"][number]): st
   return d.line === 0 && named ? `${named[2]}.${named[1].toLowerCase()}.${named[3]}` : ownerOf(source, d.line);
 }
 
-/** Calls `visit` per diagnostic with its owning schema; prints what neither it nor the classifier recognized. */
-function eachMetadata(source: Source, diagnostics: Diagnostics, label: string, visit: Visit) {
+/** Calls `visit` per diagnostic with its owning schema; prints and returns what neither it nor the classifier recognized. */
+export function eachMetadata(source: Source, diagnostics: Diagnostics, label: string, visit: Visit): string[] {
+  const unrecognized: string[] = [];
   for (const d of diagnostics.metadata) {
     const finding = d.kind === "error" ? classifyMetadata(d.message) : undefined;
     const owner = diagnosticOwner(source, d);
-    if (!owner || !visit(owner, d.kind, d.message, finding)) console.log(`  ${label}: unrecognized: ${owner ?? `line ${d.line}`}: ${d.message}`);
+    if (owner && visit(owner, d.kind, d.message, finding)) continue;
+    // A warning names no schema when it carries no location; it cannot shorten a shape, so it is only reported.
+    if (!owner && d.kind === "warning") {
+      console.log(`  ${label}: warning with no owner: ${d.message}`);
+      continue;
+    }
+    unrecognized.push(`${owner ?? `line ${d.line}`}: ${d.message}`);
+    console.log(`  ${label}: unrecognized: ${unrecognized.at(-1)}`);
   }
+  return unrecognized;
+}
+
+/** Passes 2 and 3 read every message as a finding, so one they cannot read would leave a schema's shape short. */
+function refuseUnrecognized(label: string, unrecognized: string[]): void {
+  if (unrecognized.length > 0) throw new Error(`${label}: ${unrecognized.length} processor message(s) unrecognized (listed above); teach FINDINGS their wording`);
 }
 
 /** Pass 1: Swift names the protocols each schema macro adds. */
@@ -648,7 +895,7 @@ function requiredMembers(c: CensusRun): string[] {
     throw new Error("pass2: the processor reported no missing members, so the probe never reached it; the census would be empty");
   }
   const fixits = new Map<string, Map<string, string>>();
-  eachMetadata(source, result, "pass2", (owner, kind, message, finding) => {
+  refuseUnrecognized("pass2", eachMetadata(source, result, "pass2", (owner, kind, message, finding) => {
     if (kind === "warning") return true;
     if (kind === "fixit") {
       const m = /^var (\w+): (.+)$/.exec(message);
@@ -657,9 +904,9 @@ function requiredMembers(c: CensusRun): string[] {
     }
     if (finding?.kind === "missing") push(c.shapes.missing, owner, finding.name);
     else if (finding?.kind === "case") push(c.shapes.cases, owner, finding.name);
-    else if (finding?.kind === "returns") c.shapes.returns.set(owner, processorType(finding.type, c.ids, c.shapes.unions));
+    else if (finding?.kind === "returns") c.shapes.returns.set(owner, processorType(finding.type, c.ids, c.shapes.unions, ...unionNameOf(c, owner, "perform()")));
     return finding !== undefined;
-  });
+  }));
   // Entity properties whose fix-it names a type that is neither Swift nor a schema (a union) get typed in pass 3.
   const opaque: string[] = [];
   for (const d of c.decls.filter((d) => d.kind === "entity")) {
@@ -699,12 +946,12 @@ function memberTypes(c: CensusRun, opaque: string[]): void {
   const result = build(c.dir, source, "pass3");
   const types = new Map<string, Map<string, string>>();
   const optionals = new Map<string, Set<string>>();
-  eachMetadata(source, result, "pass3", (owner, kind, _message, finding) => {
+  refuseUnrecognized("pass3", eachMetadata(source, result, "pass3", (owner, kind, _message, finding) => {
     if (kind !== "error") return true;
     if (finding?.kind === "type") types.set(owner, (types.get(owner) ?? new Map()).set(finding.name, finding.type));
     else if (finding?.kind === "optionality" && finding.optional) optionals.set(owner, (optionals.get(owner) ?? new Set()).add(finding.name));
     return finding !== undefined;
-  });
+  }));
   for (const d of c.decls) {
     const k = key(d);
     if (d.kind === "intent") {
@@ -713,7 +960,7 @@ function memberTypes(c: CensusRun, opaque: string[]): void {
         const raw = types.get(k)?.get(name);
         const declared = stubs.find((p) => p.name === name)?.type ?? "ProbeEntity";
         // No mismatch for a ProbeEntity: the processor accepted an entity that adopts no schema.
-        let type = raw ? processorType(raw, c.ids, c.shapes.unions) : declared.replace("ProbeEntity", "AppEntity");
+        let type = raw ? processorType(raw, c.ids, c.shapes.unions, ...unionNameOf(c, k, name)) : declared.replace("ProbeEntity", "AppEntity");
         // DeleteIntent's `entities` mismatch names the element type.
         if (c.shapes.conformance.get(k) === "DeleteIntent" && name === "entities" && !type.startsWith("[")) type = `[${type}]`;
         push(c.shapes.members, k, { name, type, optional: optionals.get(k)?.has(name) ?? false });
@@ -721,7 +968,13 @@ function memberTypes(c: CensusRun, opaque: string[]): void {
     } else if (d.kind === "entity") {
       for (const member of c.shapes.members.get(k) ?? []) {
         const raw = types.get(k)?.get(member.name);
-        if (raw) member.type = processorType(raw, c.ids, c.shapes.unions);
+        if (!raw) continue;
+        const type = processorType(raw, c.ids, c.shapes.unions, ...unionNameOf(c, k, member.name));
+        // A fix-it that names a union (`var owner: <#Owner#>?`) must name the one the database does.
+        if (opaque.includes(`${k}#${member.name}`) && type !== member.type) {
+          throw new Error(`pass3: ${k}#${member.name}: the fix-it names ${member.type} but the processor's type reads as ${type}`);
+        }
+        member.type = type;
       }
     }
   }
@@ -747,18 +1000,27 @@ function probeSwift(c: CensusRun, type: string): string {
       c.unionOwner.has(word) ? `U_${c.unionOwner.get(word)}_${word}` : word === "AppEntity" ? "ProbeEntity" : word);
 }
 
-function controlSource(c: CensusRun, unionCases: (name: string, cases: string[]) => string[] = (_, cases) => cases): Source {
+/** A part of the control: only these schemas and unions. */
+type ProbeSubset = { keys: Set<string>; unions: Set<string> };
+
+function controlSource(
+  c: CensusRun,
+  unionCases: (name: string, cases: string[]) => string[] = (_, cases) => cases,
+  substitute = false,
+  only?: ProbeSubset,
+): Source {
   const swift = (t: string) => probeSwift(c, t);
+  const memberSwift = (m: Member) => (substitute && SUBSTITUTES[m.type] ? SUBSTITUTES[m.type] : swift(m.type));
   const parameter = (m: Member) => {
     const types = m.contentTypes ? `(supportedContentTypes: [${m.contentTypes.map((t) => `UTType("${t}")!`).join(", ")}])` : "";
-    return `@Parameter${types} var ${m.name}: ${swift(m.type)}${m.optional ? "?" : ""}`;
+    return `@Parameter${types} var ${m.name}: ${memberSwift(m)}${m.optional ? "?" : ""}`;
   };
   return assemble([
-    ...[...c.unionOwner].map(([name, domain]) => ({
+    ...[...c.unionOwner].filter(([name]) => !only || only.unions.has(name)).map(([name, domain]) => ({
       text: ["@UnionValue", `enum U_${domain}_${name} {`,
         ...unionCases(name, c.shapes.unions.get(name)!).map((t, i) => `    case v${i}(${swift(t)})`), "}"].join("\n") + "\n",
     })),
-    ...c.decls.map((d) => {
+    ...c.decls.filter((d) => !only || only.keys.has(key(d))).map((d) => {
       const k = key(d);
       if (d.kind === "intent") {
         const returns = c.shapes.returns.get(k);
@@ -766,7 +1028,7 @@ function controlSource(c: CensusRun, unionCases: (name: string, cases: string[])
         return { key: k, text: intentText(d, extra, membersOf(c, k).map(parameter), returns && swift(returns)) };
       }
       if (d.kind === "entity") {
-        const properties = membersOf(c, k).map((m) => `var ${m.name}: ${swift(m.type)}${m.optional ? "?" : ""}`);
+        const properties = membersOf(c, k).map((m) => `var ${m.name}: ${memberSwift(m)}${m.optional ? "?" : ""}`);
         return { key: k, text: entityText(d, c.shapes.conformance.get(k), properties, true) };
       }
       return { key: k, text: enumText(d, (c.shapes.cases.get(k) ?? []).slice().sort(byCode)) };
@@ -857,12 +1119,150 @@ function singleCase(c: CensusRun): Map<string, SingleCase> {
   return result;
 }
 
+/** The schemas and unions a schema's probe needs: itself, and every schema and union its members, return and union cases name. */
+function probeNeeds(c: CensusRun, start: string): ProbeSubset {
+  const needs: ProbeSubset = { keys: new Set(), unions: new Set() };
+  const visit = (types: string[]) => {
+    for (const t of types) {
+      for (const [accessor] of t.matchAll(/\.[a-z]\w*\.\w+/g)) {
+        const d = c.byAccessor.get(accessor);
+        if (d) add(key(d));
+      }
+      for (const [word] of t.matchAll(/\b[A-Z]\w*\b/g)) {
+        if (!c.unionOwner.has(word) || needs.unions.has(word)) continue;
+        needs.unions.add(word);
+        visit(c.shapes.unions.get(word)!);
+      }
+    }
+  };
+  const add = (k: string) => {
+    if (needs.keys.has(k)) return;
+    needs.keys.add(k);
+    visit([...membersOf(c, k).map((m) => m.type), c.shapes.returns.get(k) ?? ""]);
+  };
+  add(start);
+  return needs;
+}
+
+/**
+ * Pass 6: the control with every member typed exactly as a SUBSTITUTES key declared as its substitute. Pass 3 already
+ * saw the processor reject a wrong type for each such member, so a schema that builds this way accepts the substitute.
+ * The point of a substitute is code below the module type's release, so each schema is built at the iOS deployment
+ * target its row claims, in a probe holding only the schemas that target's rows need. macOS and visionOS are not built.
+ */
+function substitutes(c: CensusRun): void {
+  const candidates = c.decls.flatMap((d) =>
+    membersOf(c, key(d)).filter((m) => SUBSTITUTES[m.type]).map((m) => ({ key: key(d), member: m.name, m })));
+  const byTarget = new Map<string, ProbeSubset & { widened: Set<string> }>();
+  for (const k of unique(candidates.map((x) => x.key))) {
+    const needs = probeNeeds(c, k);
+    const target = claimedTarget([...needs.keys].map((n) => c.decls.find((d) => key(d) === n)!.available));
+    const group = byTarget.get(target) ?? { keys: new Set<string>(), unions: new Set<string>(), widened: new Set<string>() };
+    group.widened.add(k);
+    for (const n of needs.keys) group.keys.add(n);
+    for (const u of needs.unions) group.unions.add(u);
+    byTarget.set(target, group);
+  }
+  for (const [target, group] of byTarget) {
+    const label = `substitutes-ios${target}`;
+    const dir = path.join(c.dir, label);
+    probeProject(dir, target);
+    const source = controlSource(c, undefined, true, group);
+    const result = build(dir, source, label);
+    const errors = result.metadata.filter((d) => d.kind === "error").map((d) => ({ owner: diagnosticOwner(source, d), message: d.message }));
+    const mine = candidates.filter((x) => group.widened.has(x.key));
+    const accepted = new Set(acceptedSubstitutes(label, mine, { succeeded: result.succeeded, errors }));
+    for (const x of mine) {
+      if (!accepted.has(x)) console.log(`  ${label}: ${x.key}#${x.member} does not build as ${SUBSTITUTES[x.m.type]}`);
+      else [x.m.alsoAccepts, x.m.alsoAcceptsFrom] = [SUBSTITUTES[x.m.type].split(".").pop(), `iOS ${target}`];
+    }
+  }
+}
+
+/** The iOS deployment target a widened row claims: the newest iOS release among the tags of every schema its probe holds. */
+export function claimedTarget(tags: string[]): string {
+  let newest = "0";
+  for (const tag of tags) {
+    const version = platformVersions(tag).get("iOS");
+    if (version === undefined || version === "unavailable") throw new Error(`${tag} is not available on iOS, where pass 6 builds`);
+    if (newerVersion(version, newest)) newest = version;
+  }
+  return newest.includes(".") ? newest : `${newest}.0`;
+}
+
+/**
+ * Pass 6's verdict: the candidates whose schema the substitute build did not reject. An error it cannot pin on a
+ * candidate's schema says nothing about which substitute failed, so it stops the census instead of passing the rest.
+ */
+export function acceptedSubstitutes<T extends { key: string }>(
+  label: string,
+  candidates: T[],
+  build: { succeeded: boolean; errors: Array<{ owner: string | undefined; message: string }> },
+): T[] {
+  const unowned = build.errors.filter((e) => e.owner === undefined).map((e) => e.message);
+  if (unowned.length > 0) throw new Error(`${label}: ${unowned.length} error(s) with no owning schema: ${unowned.join("; ")}`);
+  const keys = new Set(candidates.map((x) => x.key));
+  const stray = build.errors.filter((e) => !keys.has(e.owner!));
+  if (stray.length > 0) {
+    throw new Error(`${label}: errors in ${unique(stray.map((e) => e.owner)).join(", ")}, which substitutes no member: ${stray.map((e) => e.message).join("; ")}`);
+  }
+  if (!build.succeeded && build.errors.length === 0) throw new Error(`${label}: failed with no attributable error`);
+  const rejected = new Set(build.errors.map((e) => e.owner));
+  return candidates.filter((x) => !rejected.has(x.key));
+}
+
+/** `APP_SCHEMAS_KEEP_PROBE`: set to anything but "0" or empty keeps the probe and its logs. */
+export const keepProbe = (value: string | undefined) => value !== undefined && value !== "" && value !== "0";
+
+export type UnionDatabase = { file?: string; names: Map<string, string>; error?: Error };
+
+/**
+ * Union names from the schema database appintentsmetadataprocessor ships beside it. The 27.2 processor stopped
+ * naming unions in its messages; the database's union ids are the names it printed through 27.1. `names` is
+ * empty without the database, which leaves any nameless union to fail in `processorType`.
+ */
+export function readUnionNames(databaseFile?: string): UnionDatabase {
+  let file = databaseFile;
+  if (!file) {
+    const processor = spawnSync("xcrun", ["--find", "appintentsmetadataprocessor"], { encoding: "utf8" });
+    if (processor.status !== 0) return { names: new Map() };
+    file = path.resolve(path.dirname(processor.stdout.trim()), "../lib/AppIntentSchemas.framework/Resources/AppIntentSchemas.sqlite");
+  }
+  if (!fs.existsSync(file)) return { file, names: new Map() };
+  // A census that never meets a nameless union does not need the database, so a failure here waits for one that does.
+  try {
+    return { file, names: readDatabase(file) };
+  } catch (error) {
+    return { file, names: new Map(), error: error as Error };
+  }
+}
+
+function readDatabase(file: string): Map<string, string> {
+  // A plain read-only open of the toolchain's copy fails with "unable to open database file"; immutable does not.
+  const db = new DatabaseSync(`${pathToFileURL(file).href}?immutable=1`, { readOnly: true });
+  try {
+    const parse = (json: unknown) => (typeof json === "string" ? JSON.parse(json) : null);
+    // entitySchema stores versions as TEXT.
+    const version = "CAST(versionMajor AS INTEGER) AS major, CAST(versionMinor AS INTEGER) AS minor, CAST(versionPatch AS INTEGER) AS patch";
+    const rows = [
+      ...db.prepare(`SELECT id, ${version}, _parameters AS members, _result AS result FROM intentSchema`).all(),
+      ...db.prepare(`SELECT id, ${version}, _properties AS members FROM entitySchema`).all(),
+    ];
+    return schemaUnionNames(rows.map((r) => ({
+      id: String(r.id), version: [Number(r.major), Number(r.minor), Number(r.patch)], members: parse(r.members) ?? [], result: parse(r.result),
+    })));
+  } finally {
+    db.close();
+  }
+}
+
 /** The installed iphoneos SDK's schemas, or `undefined` without Xcode (CI on Linux). */
-export function readInterface(): { decls: SchemaDecl[]; sdkVersion: string } | undefined {
+export function readInterface(): { decls: SchemaDecl[]; sdkVersion: string; sdkPath: string } | undefined {
   const sdk = spawnSync("xcrun", ["--sdk", "iphoneos", "--show-sdk-path"], { encoding: "utf8" });
   if (sdk.status !== 0) return undefined;
+  const sdkPath = sdk.stdout.trim();
   const sdkVersion = run("xcrun", ["--sdk", "iphoneos", "--show-sdk-version"]);
-  return { decls: parseSchemaInterface(fs.readFileSync(path.join(sdk.stdout.trim(), INTERFACE), "utf8")), sdkVersion };
+  return { decls: parseSchemaInterface(fs.readFileSync(path.join(sdkPath, INTERFACE), "utf8")), sdkVersion, sdkPath };
 }
 
 export function runCensus(): Census {
@@ -872,7 +1272,7 @@ export function runCensus(): Census {
   // The device SDK, not the simulator's: VisualIntelligence.framework ships only in iphoneos.
   const sdk = readInterface();
   if (!sdk) throw new Error("xcrun found no iphoneos SDK; the census needs Xcode");
-  const { decls, sdkVersion } = sdk;
+  const { decls, sdkVersion, sdkPath } = sdk;
   const [xcodeLine, buildLine] = run("xcodebuild", ["-version"]).split("\n");
   const xcode = `${xcodeLine} (${buildLine.replace("Build version ", "")})`;
   const unclassified = unique(decls.map((d) => d.domain)).filter((d) => !DOMAIN_TIERS[d]);
@@ -881,17 +1281,7 @@ export function runCensus(): Census {
   }
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "app-schemas-"));
-  fs.mkdirSync(path.join(dir, "Probe"));
-  fs.writeFileSync(path.join(dir, "Probe/App.swift"), 'import SwiftUI\n@main struct P: App { var body: some Scene { WindowGroup { Text("p") } } }\n');
-  fs.writeFileSync(path.join(dir, "project.yml"), [
-    "name: Census", "targets:", "  Census:", "    type: application", "    platform: iOS",
-    `    deploymentTarget: "${sdkVersion}"`, "    sources: [Probe]", "    settings:", "      base:",
-    "        PRODUCT_BUNDLE_IDENTIFIER: com.example.census", "        GENERATE_INFOPLIST_FILE: YES",
-    "        SWIFT_VERSION: 6.0", "        CODE_SIGNING_ALLOWED: NO", "",
-  ].join("\n"));
-  // xcodegen lists sources at generation time; a file created afterwards is never compiled.
-  fs.writeFileSync(path.join(dir, "Probe/All.swift"), "");
-  run("xcodegen", ["generate", "--quiet"], dir);
+  probeProject(dir, sdkVersion);
   console.log(`census of ${decls.length} schemas, ${xcode}, iphoneos ${sdkVersion}; probe in ${dir}`);
 
   const c: CensusRun = {
@@ -904,12 +1294,14 @@ export function runCensus(): Census {
       cases: new Map(), unions: new Map(), statics: new Map(), warnings: new Map(),
     },
     unionOwner: new Map(),
+    unionDatabase: readUnionNames(),
   };
   conformances(c);
   memberTypes(c, requiredMembers(c));
   claimUnions(c);
   const unconfirmed = confirm(c);
   const single = unconfirmed.length === 0 ? singleCase(c) : new Map<string, SingleCase>();
+  if (unconfirmed.length === 0) substitutes(c);
 
   const tierOrder = Object.keys(TIER_TEXT);
   const domainOrder = unique(decls.map((d) => d.domain))
@@ -934,8 +1326,11 @@ export function runCensus(): Census {
       singleCase: Object.fromEntries(unions.map((name) => [name, single.get(name) ?? "unverified"])),
     };
   });
-  fs.rmSync(dir, { recursive: true, force: true });
-  return { xcode, sdk: `iphoneos ${sdkVersion}`, domains, unconfirmed };
+  // A row is usable only where the module types it names exist (Photos' iOS 18 asset takes iOS 26 GeoToolbox).
+  const types = Object.fromEntries(moduleTypes(domains).map((t) => [t, typeAvailability(sdkPath, t)]));
+  if (keepProbe(process.env.APP_SCHEMAS_KEEP_PROBE)) console.log(`kept the probe and its logs in ${dir}`);
+  else fs.rmSync(dir, { recursive: true, force: true });
+  return { xcode, sdk: `iphoneos ${sdkVersion}`, types, domains, unconfirmed };
 }
 
 if (process.argv[1] && fs.realpathSync(process.argv[1]) === import.meta.filename) {

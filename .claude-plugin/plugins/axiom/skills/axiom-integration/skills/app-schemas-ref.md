@@ -4,9 +4,9 @@ What the build enforces for every App Intents system schema (`@AppIntent(schema:
 
 ## Reading the Tables
 
-- **Every listed member is required.** The build fails without it, and extra parameters, properties and cases are allowed. `?` is the type you must declare, not permission to leave the member out: `dueDate: DateComponents?` must be declared, as optional. A required member declared non-optional fails with `must be optional`, and the reverse with `must not be optional`. The build reports nothing about members that are not required, so none appear here.
+- **Every listed member is required.** The build fails without it, and extra parameters, properties and cases are allowed. `?` is the type you must declare, not permission to leave the member out: `dueDate: DateComponents?` must be declared, as optional. A required member declared non-optional fails with `to be optional` (Xcode 27.1: `must be optional`), and the reverse fails too (27.1: `must not be optional`). The build reports nothing about members that are not required, so none appear here.
 - **Types are spelled the way you write them.** `.notes.folder` means your own type that adopts `@AppEntity(schema: .notes.folder)`. `AppEntity` means any entity type of yours: the build accepted one that adopts no schema.
-- **Unions.** A capitalized name that is not a Swift type, such as `AudioItem`, is a `@UnionValue` enum of your own; build messages call it `AudioItemCases`. You choose the enum's name and its case names. Each case's payload type comes from the union's row. In the last column, `yes` means the build accepted the union cut to only its first case and to only its last, and rejected it cut to one wrong case. `no` means a cut failed. `unverified` means the wrong case also built, so the cuts prove nothing. Middle cases were not tested alone. Every entity a union wraps must also be resolvable (below).
+- **Unions.** A capitalized name that is not a Swift type, such as `AudioItem`, is a `@UnionValue` enum of your own; Xcode 27.1's build messages call it `AudioItemCases`, and 27.2 spells out `a @UnionValue with cases limited to the types …`. You choose the enum's name and its case names. Each case's payload type comes from the union's row. In the last column, `yes` means the build accepted the union cut to only its first case and to only its last, and rejected it cut to one wrong case. `no` means a cut failed. `unverified` means the wrong case also built, so the cuts prove nothing. Middle cases were not tested alone. Every entity a union wraps must also be resolvable (below).
 - **Adopting a schema means adopting what it names.** `createReminder` takes `.reminders.list`, `.reminders.section` and `.reminders.locationTrigger`, so each needs a type of yours adopting that schema, with that schema's own required members, down to the enums they use.
 - **Parameter entities must be resolvable.** Every entity an intent takes as a parameter, and every entity a union wraps, needs `IndexedEntity`, `UniqueAppEntity` or `TransientAppEntity`, a default `EntityStringQuery`, or an `IntentValueQuery` returning that type. The build enforces it, and the tables do not show it. Measured in Audio, Notes and Reminders. An entity used only as a property, such as `.notes.account`, builds with a plain `EntityQuery`.
 - **A protocol after a name** means the schema macro adds that conformance, so Swift demands its members before the schema check runs:
@@ -20,9 +20,9 @@ What the build enforces for every App Intents system schema (`@AppIntent(schema:
 - **"needs `static let …`"** is a static member the build demands by value.
 - **Every entity** also needs `id`, `displayRepresentation` and `static let defaultQuery`. **Every enum** needs `caseDisplayRepresentations` covering its cases. Never declare `typeDisplayRepresentation` on a schema type, because the macro supplies it.
 - **Tiers** follow Apple's grouping. Apple documents Primary domains for Apple Intelligence and Siri, Shortcuts-specific domains for the Shortcuts app, and Single-purpose domains each for one system feature (the Japan side-button assistant, visual intelligence).
-- **Platforms.** No domain exists on watchOS or tvOS. A domain's Platforms value applies to each of its rows unless the row is tagged. A row's tag is the newest release among the row itself and every schema type it names: `.photos.cleanupPhoto` is an iOS 18 schema, but it takes the `OS27` `.photos.asset`, so it is usable from 27. For a deployment target below a row's release, gate every schema type, union and query with `@available` for that release, and exclude watchOS and tvOS: for 27, `@available(anyAppleOS 27, *) @available(watchOS, unavailable) @available(tvOS, unavailable)`. Without the exclusions, any target that also builds for watchOS or tvOS fails with `'reminders' is unavailable in watchOS` (or that domain's name).
+- **Platforms.** No domain exists on watchOS or tvOS. A domain's Platforms value applies to each of its rows unless the row is tagged. A row's tag is the newest release among the row itself and every type it names, schema or not, unless the build also accepts an older type for that member: `.photos.asset` and Journal's `createEntry`, `updateEntry` and `entry` list `location: GeoToolbox.PlaceDescriptor?`, which is iOS 26, but `location: CLPlacemark?` builds from an iOS 18 deployment target (measured at 18.0, 26.0 and 27.2), so those rows keep their iOS 18 availability and code below iOS 26 declares `CLPlacemark?`. For a deployment target below a row's release, gate every schema type, union and query with `@available` for that release, and exclude watchOS and tvOS: for 27, `@available(anyAppleOS 27, *) @available(watchOS, unavailable) @available(tvOS, unavailable)`. Without the exclusions, any target that also builds for watchOS or tvOS fails with `'reminders' is unavailable in watchOS` (or that domain's name).
 - **"deprecated in 27; use `.x.y`"** is the SDK's own deprecation. The replacements are themselves `OS27`. On a 27 deployment target, adopt the replacement. Below that, keep the deprecated schema for older releases and gate the replacement with `@available`.
-- **Build warnings** under a domain are use-case checks. The build succeeds without them, but the named use case is incomplete. Each carries Xcode's fix-it.
+- **Build warnings** under a domain are use-case checks. The build succeeds without them, but the named use case is incomplete. Each carries Xcode's fix-it. On Xcode 27.2, Maps' `App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'` printed in a control build that also had schema errors and not in the clean build of the same Maps code, so the 27.2 census, which reads the clean build, lists none.
 
 ## Build Errors
 
@@ -31,10 +31,10 @@ All of these come from the `ExtractAppIntentsMetadata` phase, which runs only af
 | Error | Fix |
 |---|---|
 | `Missing required parameter 'x' from AppSchemaIntent 'd.i'` / `Missing required property 'x' from AppSchemaEntity 'd.e'` | Declare `x` with the type and optionality in the row |
-| `'T' conforming to 'd.e' requires enum case 'c'` | Add case `c` |
-| `… does not match required AppSchemaIntent type 'T'` / `… parameter of 'Array<T>'` / `Property 'x' type does not match required AppSchemaEntity property type 'T'` | Use the row's type. `Schema<XEntity>` is your type adopting that schema; `XCases:(A \| B)` is a union |
-| `Required AppSchemaIntent parameter 'x' must be optional` (or `must not be optional`) | Match the row's `?` |
-| `AppSchemaIntent 'd.i' requires that 'perform()' include a 'ReturnsValue<T>'` | Return `some IntentResult & ReturnsValue<YourType>` |
+| `Type 'T' is missing case 'c' required by AppSchemaEnum 'd.e'` (Xcode 27.2; 27.1: `'T' conforming to 'd.e' requires enum case 'c'`) | Add case `c` |
+| `AppSchemaIntent 'd.i' requires type of parameter 'x' to be T` / `AppSchemaEntity 'd.e' requires type of property 'x' to be T` (27.2; 27.1: `… does not match required AppSchemaIntent type 'T'` / `Property 'x' type does not match required AppSchemaEntity property type 'T'`) | Use the row's type. In 27.2, `@AppEntity(schema: .d.e)` is your type adopting that schema, `an array of T` / `a set of T` are `[T]` / `Set<T>`, and `a @UnionValue with cases limited to the types A or B` is a union (27.1 spelled these `Schema<XEntity>`, `Array<T>` and `XCases:(A \| B)`) |
+| `… requires type of parameter 'x' to be optional` / `… of property 'x' to be optional` (27.2; 27.1: `Required AppSchemaIntent parameter 'x' must be optional` or `must not be optional`) | Match the row's `?` |
+| `AppSchemaIntent 'd.i' requires that 'perform()' must return T` (27.2; 27.1: `… include a 'ReturnsValue<T>'`) | Return `some IntentResult & ReturnsValue<YourType>` |
 | `The 'supportedTypeIdentifiers' argument of parameter 'x' must specify at least one UTType subtype of the following supertypes: …` | `@Parameter(supportedContentTypes: [.image])` with a conforming type |
 | `AppSchemaIntent 'X' requires 'E' to conform to 'IndexedEntity', 'UniqueAppEntity', 'TransientAppEntity', provide a default 'EntityStringQuery', or provide an 'IntentValueQuery'` | Make `E` resolvable: adopt `IndexedEntity`, or make its `defaultQuery` an `EntityStringQuery` |
 | `AssistantSchemaIntent 'assistant.activate' requires 'supportedModes = .foreground'` | `static let supportedModes: IntentModes = .foreground` |
@@ -42,7 +42,7 @@ All of these come from the `ExtractAppIntentsMetadata` phase, which runs only af
 | `type 'X' does not conform to protocol 'OpenIntent'` (or `DeleteIntent`, `FileEntity`, …), a Swift error | Add that protocol's members (above) |
 
 <!-- generated by node scripts/app-schemas.ts from scripts/app-schemas.json; edit those, not the text below -->
-Census: Xcode 27.1 (27A9275), iphoneos 27.1 SDK. A control build adopting every schema exactly as listed produced no errors.
+Census: Xcode 27.2 (27B48), iphoneos 27.2 SDK. A control build adopting every schema exactly as listed produced no errors.
 
 ## Audio
 
@@ -230,10 +230,6 @@ Enums with no required cases: `amenity`, `incident`, `navigationPreferences`, `o
 |---|---|---|
 | `MapsLocation` | `.maps.place, .maps.currentLocation` | yes |
 
-Build warnings (the build still succeeds):
-
-- `startNavigation`: App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'. Fix-it: `extension .maps.place: IntentValueQuery { func values(for input: [GeoToolbox.PlaceDescriptor]) async throws -> [.maps.place] }`
-
 ## Messages
 
 **Tier**: Primary. **Platforms**: OS27
@@ -302,26 +298,26 @@ Enums with no required cases: `conversationAttribute`, `customReaction`, `messag
 
 ## Photos
 
-**Tier**: Primary. **Platforms**: OS27
+**Tier**: Primary. **Platforms**: iOS 18+, macOS 15+, visionOS 2+
 
 | Intent | Required parameters | Returns |
 |---|---|---|
 | `addAssetsToAlbum` | `album: .photos.album, assets: [.photos.asset]` | — |
 | `cleanupPhoto` | `target: .photos.asset` | — |
 | `copyEdits` | `target: .photos.asset` | — |
-| `createAlbum` (iOS 18+, macOS 15+, visionOS 2+) | `name: String` | `.photos.album` |
+| `createAlbum` | `name: String` | `.photos.album` |
 | `createAssets` | `files: [IntentFile]` | `[.photos.asset]` |
 | `crop` | `target: .photos.asset` | — |
-| `deleteAlbum` (DeleteIntent) (iOS 18+, macOS 15+, visionOS 2+) | `entities: [.photos.album]` | — |
+| `deleteAlbum` (DeleteIntent) | `entities: [.photos.album]` | — |
 | `deleteAssets` (DeleteIntent) | `entities: [.photos.asset]` | — |
 | `duplicateAssets` | `entities: [.photos.asset]` | `[.photos.asset]` |
-| `editAsset` | `asset: .photos.asset` | — |
-| `openAlbum` (OpenIntent) (iOS 18+, macOS 15+, visionOS 2+) | `target: .photos.album` | — |
+| `editAsset` `OS27` | `asset: .photos.asset` | — |
+| `openAlbum` (OpenIntent) | `target: .photos.album` | — |
 | `openAsset` (OpenIntent), deprecated in 27; use `.system.open` | `target: .photos.asset` | — |
 | `pasteEdits` | `target: [.photos.asset]` | — |
 | `postToSharedAlbum` | `assets: [.photos.asset]?, comment: String?, files: [IntentFile]?, sharedAlbum: .photos.album` | — |
 | `removeAssetsFromAlbum` | `album: .photos.album, assets: [.photos.asset]` | — |
-| `search` (ShowInAppSearchResultsIntent) (iOS 18+, macOS 15+, visionOS 2+), deprecated in 27; use `.system.searchInApp` | `criteria: StringSearchCriteria` | — |
+| `search` (ShowInAppSearchResultsIntent), deprecated in 27; use `.system.searchInApp` | `criteria: StringSearchCriteria` | — |
 | `setDepth` | `target: .photos.asset, value: Double` | — |
 | `setExposure` | `target: .photos.asset, value: Double` | — |
 | `setFilter` | `filterType: .photos.filterType, target: .photos.asset` | — |
@@ -331,17 +327,19 @@ Enums with no required cases: `conversationAttribute`, `customReaction`, `messag
 | `straighten` | `target: .photos.asset` | — |
 | `toggleDepth` | `isEnabled: Bool, target: .photos.asset` | — |
 | `toggleSuggestedEdits` | `isEnabled: Bool, target: .photos.asset` | — |
-| `updateAlbum` (iOS 18+, macOS 15+, visionOS 2+) | `name: String, target: .photos.album` | — |
+| `updateAlbum` | `name: String, target: .photos.album` | — |
 | `updateAsset` | `isFavorite: Bool?, isHidden: Bool?, name: String?, target: [.photos.asset]` | — |
-| `updateRecognizedPerson` (iOS 18+, macOS 15+, visionOS 2+) | `isFavorite: Bool?, name: String?, target: .photos.recognizedPerson` | — |
+| `updateRecognizedPerson` | `isFavorite: Bool?, name: String?, target: .photos.recognizedPerson` | — |
 
 | Entity | Required properties |
 |---|---|
-| `album` (iOS 18+, macOS 15+, visionOS 2+) | `albumType: .photos.albumType, creationDate: Date?, name: String` |
+| `album` | `albumType: .photos.albumType, creationDate: Date?, name: String` |
 | `asset` | `aperture: Double?, assetType: .photos.assetType?, creationDate: Date?, exposure: Double?, filter: .photos.filterType?, hasSuggestedEdits: Bool, isFavorite: Bool, isHidden: Bool, isPortraitModeEnabled: Bool?, location: GeoToolbox.PlaceDescriptor?, saturation: Double?, warmth: Double?` |
-| `recognizedPerson` (iOS 18+, macOS 15+, visionOS 2+) | `isFavorite: Bool, name: String` |
+| `recognizedPerson` | `isFavorite: Bool, name: String` |
 
-Enums with no required cases: `albumType` (iOS 18+, macOS 15+, visionOS 2+), `assetType` (iOS 18+, macOS 15+, visionOS 2+), `filterType` (iOS 18+, macOS 15+, visionOS 2+), `rotationDirection` (iOS 18+, macOS 15+, visionOS 2+)
+Enums with no required cases: `albumType`, `assetType`, `filterType`, `rotationDirection`
+
+`asset.location` also builds as `CLPlacemark` (measured at an iOS 18.0 deployment target), the type to declare where `GeoToolbox.PlaceDescriptor` (iOS 26+, macOS 26+, visionOS 26+) is unavailable.
 
 ## Reminders
 
@@ -479,6 +477,8 @@ Enums with no required cases: `clearHistoryTimeFrame`
 | Entity | Required properties |
 |---|---|
 | `entry` | `entryDate: Date?, location: GeoToolbox.PlaceDescriptor?, mediaItems: [IntentFile], message: AttributedString?, title: String?` |
+
+`createEntry.location`, `updateEntry.location` and `entry.location` also build as `CLPlacemark` (measured at an iOS 18.0 deployment target), the type to declare where `GeoToolbox.PlaceDescriptor` (iOS 26+, macOS 26+, visionOS 26+) is unavailable.
 
 ## Presentation
 

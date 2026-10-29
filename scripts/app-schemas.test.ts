@@ -10,9 +10,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import {
+  acceptedSubstitutes,
   assemble,
+  claimedTarget,
   type Census,
   CENSUS_FILE,
   classifyMetadata,
@@ -26,8 +29,17 @@ import {
   processorType,
   REFERENCE_FILE,
   renderSchemaReference,
+  readUnionNames,
   replaceGeneratedSection,
   schemaIds,
+  schemaUnionNames,
+  declaredAvailability,
+  moduleTypes,
+  eachMetadata,
+  keepProbe,
+  readInterface,
+  typeAvailability,
+  unionNameOf,
 } from "./app-schemas.ts";
 
 const INTERFACE = `@available(anyAppleOS 27.0, *)
@@ -174,6 +186,62 @@ describe("processorType", () => {
     });
   }
 
+  // The 27.2 processor spells types in prose; each must land on the 27.1 spelling above.
+  const prose: Array<[string, string]> = [
+    ["@AppEntity(schema: .browser.tab)", ".browser.tab"],
+    ["@AppEnum(schema: .camera.captureMode)", ".camera.captureMode"],
+    ["an array of File", "[IntentFile]"],
+    ["an array of @AppEntity(schema: .photos.asset)", "[.photos.asset]"],
+    ["a set of @AppEnum(schema: .audio.playbackAttributes)", "Set<.audio.playbackAttributes>"],
+    ["a set of String", "Set<String>"],
+    ["GeoToolbox.PlaceDescriptorEntity", "GeoToolbox.PlaceDescriptor"],
+    ["an array of GeoToolbox.PlaceDescriptorEntity", "[GeoToolbox.PlaceDescriptor]"],
+    ["VisualIntelligence.SemanticContentDescriptorEntity", "VisualIntelligence.SemanticContentDescriptor"],
+  ];
+  for (const [raw, expected] of prose) {
+    it(`reads the 27.2 spelling ${raw} as ${expected}`, () => {
+      assert.equal(processorType(raw, IDS, new Map()), expected);
+    });
+  }
+
+  it("names a 27.2 union, which the message no longer names, by the name it is given", () => {
+    const unions = new Map<string, string[]>();
+    const type = processorType("an array of a @UnionValue with cases limited to the types Codable<Swift.Duration> or Date", IDS, unions, "EventAlarm");
+    assert.deepEqual({ type, unions: [...unions] }, { type: "[EventAlarm]", unions: [["EventAlarm", ["Duration", "Date"]]] });
+  });
+
+  it("reads a 27.2 union of three or more cases in order", () => {
+    const unions = new Map<string, string[]>();
+    processorType(
+      "a @UnionValue with cases limited to the types an array of Person, @AppEntity(schema: .messages.messagePerson), or an array of @AppEntity(schema: .messages.messagePerson)",
+      IDS, unions, "MessageDestination",
+    );
+    assert.deepEqual([...unions], [["MessageDestination", ["[IntentPerson]", ".messages.messagePerson", "[.messages.messagePerson]"]]]);
+  });
+
+  it("throws on a 27.2 union it has no name for, naming where it looked", () => {
+    assert.throws(
+      () => processorType("a @UnionValue with cases limited to the types Person or String", IDS, new Map(), undefined, "PlaylistEntity#owner in /x/AppIntentSchemas.sqlite"),
+      /union of Person, String has no name: no PlaylistEntity#owner in \/x\/AppIntentSchemas\.sqlite/,
+    );
+  });
+
+  it("reads a 27.2 union listed without a serial comma", () => {
+    const unions = new Map<string, string[]>();
+    processorType("a @UnionValue with cases limited to the types Person, String or Date", IDS, unions, "Pick");
+    assert.deepEqual([...unions], [["Pick", ["IntentPerson", "String", "Date"]]]);
+  });
+
+  it("keeps a module-qualified Entity name it has no rule for", () => {
+    assert.equal(processorType("AppIntents.TransientAppEntity", IDS, new Map()), "AppIntents.TransientAppEntity");
+  });
+
+  for (const raw of ["a type conforming to schema 'NoteEntity'", "@AppEntity(schema: .notes)", "an array of a type conforming to schema 'X'"]) {
+    it(`throws on the unrecognized spelling ${raw}, naming it`, () => {
+      assert.throws(() => processorType(raw, IDS, new Map()), (e: Error) => e.message.includes(`unrecognized processor type '${raw.replace(/^an array of /, "")}'`));
+    });
+  }
+
   it("names a union by its cases type and records the cases once", () => {
     const unions = new Map<string, string[]>();
     const type = processorType("Array<ItemCases:(Schema<NoteEntity> | Array<Person> | String)>", IDS, unions);
@@ -181,6 +249,161 @@ describe("processorType", () => {
       type: "[Item]",
       unions: [["Item", [".notes.note", "[IntentPerson]", "String"]]],
     });
+  });
+});
+
+describe("schemaUnionNames", () => {
+  it("names the union each member and result takes, through optional, array and set wrappers, and skips the rest", () => {
+    const union = (id: string) => ({ unionSchema: { _0: { _cases: [], id } } });
+    const names = schemaUnionNames([
+      {
+        id: "SendMessageIntent",
+        members: [
+          { name: "content", type: { optional: { _0: { attributedString: {} } } } },
+          { name: "destination", type: union("MessageDestination") },
+          { name: "location", type: { optional: { _0: union("EventLocation") } } },
+        ],
+        result: { array: { _0: union("AudioItem") } },
+      },
+      { id: "EventEntity", members: [{ name: "alarms", type: { set: { _0: union("EventAlarm") } } }], result: null },
+    ]);
+    assert.deepEqual([...names], [
+      ["SendMessageIntent#destination", "MessageDestination"],
+      ["SendMessageIntent#location", "EventLocation"],
+      ["SendMessageIntent#perform()", "AudioItem"],
+      ["EventEntity#alarms", "EventAlarm"],
+    ]);
+  });
+
+  const union = (id: string) => ({ unionSchema: { _0: { _cases: [], id } } });
+  it("reads only the highest version of a schema, comparing versions as numbers", () => {
+    const names = schemaUnionNames([
+      { id: "PhotoEntity", version: [1, 10, 0], members: [{ name: "place", type: union("New") }] },
+      { id: "PhotoEntity", version: [1, 9, 0], members: [{ name: "place", type: union("Old") }] },
+    ]);
+    assert.deepEqual([...names], [["PhotoEntity#place", "New"]]);
+  });
+
+  it("throws when one member is given two union names", () => {
+    assert.throws(
+      () => schemaUnionNames([
+        { id: "EventEntity", members: [{ name: "alarms", type: union("EventAlarm") }] },
+        { id: "EventEntity", members: [{ name: "alarms", type: union("Alarm") }] },
+      ]),
+      /EventEntity#alarms is both EventAlarm and Alarm/,
+    );
+  });
+});
+
+describe("readUnionNames", () => {
+  const database = readUnionNames();
+  const present = database.file !== undefined && fs.existsSync(database.file);
+  it("names, for every member and result the committed census types with a union, the union the census records", { skip: !present && `no schema database (${database.file ?? "no Xcode"})` }, () => {
+    assert.equal(database.error, undefined);
+    const census: Census = JSON.parse(fs.readFileSync(CENSUS_FILE, "utf8"));
+    const ids = new Map(readInterface()!.decls.map((d) => [`${d.domain}.${d.kind}.${d.name}`, d.id]));
+    const unions = census.domains.flatMap((d) => Object.keys(d.unions));
+    const expected: Array<[string, string]> = [];
+    const actual: Array<[string, string | undefined]> = [];
+    for (const d of census.domains) {
+      const schemas = [
+        ...d.intents.map((s) => ["intent", s, [...s.parameters, ...(s.returns ? [{ name: "perform()", type: s.returns }] : [])]] as const),
+        ...d.entities.map((s) => ["entity", s, s.properties] as const),
+      ];
+      for (const [kind, s, members] of schemas) {
+        for (const m of members) {
+          const union = unions.find((u) => new RegExp(`\\b${u}\\b`).test(m.type));
+          if (!union) continue;
+          const k = `${ids.get(`${d.name}.${kind}.${s.name}`)}#${m.name}`;
+          expected.push([k, union]);
+          actual.push([k, database.names.get(k)]);
+        }
+      }
+    }
+    assert.ok(expected.length > 0);
+    assert.deepEqual(actual, expected);
+  });
+
+  it("keeps, rather than throws, an error reading the database, with the file it read", () => {
+    const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "app-schemas-test-")), "AppIntentSchemas.sqlite");
+    fs.writeFileSync(file, "not a database");
+    const read = readUnionNames(file);
+    assert.deepEqual({ file: read.file, names: [...read.names], failed: read.error instanceof Error }, { file, names: [], failed: true });
+  });
+});
+
+describe("unionNameOf", () => {
+  const decls = DECLS;
+  it("raises a kept database error, with the database file, only when a union lacks a name", () => {
+    const database = { file: "/x/AppIntentSchemas.sqlite", names: new Map<string, string>(), error: new Error("file is not a database") };
+    const [name, where] = unionNameOf({ decls, unionDatabase: database }, "notes.entity.note", "owner");
+    assert.equal(processorType("String", IDS, new Map(), name, where), "String");
+    assert.throws(
+      () => processorType("a @UnionValue with cases limited to the types Person or String", IDS, new Map(), name, where),
+      /union of Person, String has no name: no NoteEntity#owner in \/x\/AppIntentSchemas\.sqlite, which could not be read: file is not a database/,
+    );
+  });
+});
+
+describe("keepProbe", () => {
+  const cases: Array<[string | undefined, boolean]> = [[undefined, false], ["", false], ["0", false], ["1", true], ["yes", true]];
+  for (const [value, expected] of cases) {
+    it(`reads APP_SCHEMAS_KEEP_PROBE=${JSON.stringify(value)} as ${expected ? "keep" : "remove"}`, () => {
+      assert.equal(keepProbe(value), expected);
+    });
+  }
+});
+
+describe("declaredAvailability", () => {
+  const text = [
+    "import Swift",
+    "@available(iOS 26.0, macOS 26.0, visionOS 26.0, watchOS 26.0, tvOS 26.0, *)",
+    "extension GeoToolbox.PlaceDescriptor : Swift.Hashable {",
+    "  public struct Inner {",
+    "  }",
+    "}",
+    "@available(iOS 26.4, macOS 26.4, *)",
+    "@available(visionOS, unavailable)",
+    "@frozen nonisolated public struct PlaceDescriptor : Swift::Sendable {",
+    "}",
+  ].join("\n");
+
+  it("reads the @available stack of a top-level public type declaration", () => {
+    assert.equal(declaredAvailability(text, "PlaceDescriptor"), "iOS 26.4+, macOS 26.4+; not visionOS");
+  });
+
+  it("throws when the interface does not declare the type at top level", () => {
+    assert.throws(() => declaredAvailability(text, "Inner"), /declares no top-level public type Inner/);
+  });
+
+  it("skips deprecation clauses in the stack", () => {
+    const deprecated = text.replace("@available(visionOS, unavailable)", '@available(visionOS, unavailable)\n@available(iOS, deprecated: 27.0, message: "Use Other")\n@available(*, deprecated, message: "Use Other")');
+    assert.equal(declaredAvailability(deprecated, "PlaceDescriptor"), "iOS 26.4+, macOS 26.4+; not visionOS");
+  });
+});
+
+describe("typeAvailability", () => {
+  it("names the type and the interface it read when reading fails", () => {
+    const sdk = fs.mkdtempSync(path.join(os.tmpdir(), "app-schemas-sdk-"));
+    const file = path.join(sdk, "System/Library/Frameworks/GeoToolbox.framework/Modules/GeoToolbox.swiftmodule/arm64e-apple-ios.swiftinterface");
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, "import Swift\n");
+    assert.throws(() => typeAvailability(sdk, "GeoToolbox.PlaceDescriptor"), (e: Error) =>
+      e.message.startsWith(`GeoToolbox.PlaceDescriptor (${file}): `) && e.message.includes("declares no top-level public type PlaceDescriptor"));
+  });
+});
+
+describe("moduleTypes", () => {
+  it("lists each module-qualified type a member, return or union names, but not Foundation's Calendar", () => {
+    const domain = (name: string, type: string, unions: Record<string, string[]>): Census["domains"][number] => ({
+      name, tier: "primary", enums: [], singleCase: {}, unions,
+      intents: [{ name: "i", available: "OS27", parameters: [{ name: "p", type, optional: false }], returns: "[VisualIntelligence.SemanticContentDescriptor]" }],
+      entities: [{ name: "e", available: "OS27", properties: [{ name: "r", type: "Calendar.RecurrenceRule", optional: true }] }],
+    });
+    assert.deepEqual(
+      moduleTypes([domain("a", "[GeoToolbox.PlaceDescriptor]", {}), domain("b", "Where", { Where: ["LinkPresentation.LinkMetadata", "String"] })]),
+      ["GeoToolbox.PlaceDescriptor", "LinkPresentation.LinkMetadata", "VisualIntelligence.SemanticContentDescriptor"],
+    );
   });
 });
 
@@ -243,6 +466,33 @@ describe("parseDiagnostics", () => {
   });
 });
 
+describe("parseDiagnostics without a location", () => {
+  it("keeps a processor warning that carries no file and line", () => {
+    const log = "warning: App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'";
+    assert.deepEqual(parseDiagnostics(log).metadata, [
+      { line: 0, kind: "warning", message: "App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'" },
+    ]);
+  });
+});
+
+describe("eachMetadata", () => {
+  it("returns every message neither the visitor nor the classifier recognized", () => {
+    const source = assemble([{ key: "notes.intent.createNote", text: "struct A {\n}\n" }]);
+    const line = source.owners[0].line;
+    const diagnostics = {
+      swift: [],
+      metadata: [
+        { line, kind: "error" as const, message: "Missing required parameter 'name' from AppSchemaIntent 'notes.createNote'" },
+        { line, kind: "error" as const, message: "Something Apple has not said before" },
+        { line: 0, kind: "warning" as const, message: "no owner here" },
+        { line: 0, kind: "error" as const, message: "no owner for this error" },
+      ],
+    };
+    const unrecognized = eachMetadata(source, diagnostics, "pass2", (_owner, _kind, _message, finding) => finding !== undefined);
+    assert.deepEqual(unrecognized, ["notes.intent.createNote: Something Apple has not said before", "line 0: no owner for this error"]);
+  });
+});
+
 describe("classifyMetadata", () => {
   // Verbatim processor messages from the 27.1 census logs.
   const cases: Array<[string, unknown]> = [
@@ -276,6 +526,22 @@ describe("classifyMetadata", () => {
       { kind: "static", name: "supportedModes", value: ".foreground" },
     ],
     ["'OpenIntent' must have 'target' as the only required parameter", { kind: "noShape" }],
+    // Verbatim processor messages from the 27.2 (27B48) census logs.
+    ["Type 'N_audio_activity' is missing case 'cooking' required by AppSchemaEnum 'audio.activity'", { kind: "case", name: "cooking" }],
+    [
+      "AppSchemaIntent 'notes.appendText' requires that 'perform()' must return @AppEntity(schema: .notes.note)",
+      { kind: "returns", type: "@AppEntity(schema: .notes.note)" },
+    ],
+    [
+      "AppSchemaIntent 'journal.createEntry' requires type of parameter 'mediaItems' to be an array of File",
+      { kind: "type", name: "mediaItems", type: "an array of File" },
+    ],
+    [
+      "AppSchemaEntity 'audio.playlist' requires type of property 'owner' to be a @UnionValue with cases limited to the types Person or String",
+      { kind: "type", name: "owner", type: "a @UnionValue with cases limited to the types Person or String" },
+    ],
+    ["AppSchemaIntent 'audio.playAudio' requires type of parameter 'queueLocation' to be optional", { kind: "optionality", name: "queueLocation", optional: true }],
+    ["AppSchemaEntity 'audio.playlist' requires type of property 'owner' to be optional", { kind: "optionality", name: "owner", optional: true }],
     ["Something Apple has not said before", undefined],
   ];
   for (const [message, expected] of cases) {
@@ -305,7 +571,7 @@ describe("assemble and ownerOf", () => {
 describe("interfaceDrift", () => {
   it("lists schemas only the SDK has as + and only the census has as -", () => {
     const census: Census = {
-      xcode: "", sdk: "", unconfirmed: [],
+      xcode: "", sdk: "", unconfirmed: [], types: {},
       domains: [{
         name: "notes", tier: "primary", unions: {}, singleCase: {}, enums: [],
         intents: [{ name: "createNote", available: "OS27", parameters: [] }],
@@ -322,6 +588,7 @@ describe("interfaceDrift", () => {
 const SMALL: Census = {
   xcode: "Xcode 27.1 (27A9275)",
   sdk: "iphoneos 27.1",
+  types: {},
   domains: [
     {
       name: "notes",
@@ -430,6 +697,150 @@ describe("renderSchemaReference", () => {
     );
   });
 
+  it("tags a row by the availability of a module type it names, directly or through a union, on the row's own platforms", () => {
+    const old = "iOS 18+, macOS 15+, visionOS 2+";
+    const place = (type: string) => [{ name: "location", type, optional: true }];
+    const census: Census = {
+      xcode: "X", sdk: "S", unconfirmed: [],
+      types: {
+        "GeoToolbox.PlaceDescriptor": "iOS 26+, macOS 26+, visionOS 26+, watchOS 26+, tvOS 26+",
+        "VisualIntelligence.SemanticContentDescriptor": "iOS 26+, macOS 27+, macCatalyst 27+",
+      },
+      domains: [{
+        name: "photos", tier: "primary", enums: [], singleCase: { Where: "yes" },
+        unions: { Where: ["GeoToolbox.PlaceDescriptor", "String"] },
+        intents: [
+          { name: "search", available: old, parameters: place("[Where]") },
+          { name: "share", available: "iOS 18+; not macOS", parameters: place("GeoToolbox.PlaceDescriptor") },
+          { name: "find", available: "iOS 26+, macOS 27+; not visionOS", parameters: place("VisualIntelligence.SemanticContentDescriptor") },
+          { name: "pin", available: "OS27", parameters: place("GeoToolbox.PlaceDescriptor") },
+        ],
+        entities: [
+          { name: "album", available: old, properties: [] },
+          { name: "asset", available: old, properties: [{ name: "location", type: "GeoToolbox.PlaceDescriptor", optional: true, alsoAccepts: "CLPlacemark", alsoAcceptsFrom: "iOS 18.0" }] },
+          { name: "spot", available: old, properties: place("GeoToolbox.PlaceDescriptor") },
+          { name: "cover", available: old, properties: [] },
+          { name: "folder", available: old, properties: [] },
+        ],
+      }],
+    };
+    const rows = renderSchemaReference(census).split("\n").filter((l) => l.startsWith("| `"));
+    assert.deepEqual(rows.map((r) => r.split(" | ")[0]), [
+      "| `search` (iOS 26+, macOS 26+, visionOS 26+)",
+      "| `share` (iOS 26+; not macOS)",
+      "| `find` (iOS 26+, macOS 27+; not visionOS)",
+      "| `pin` `OS27`",
+      "| `album`",
+      "| `asset`",
+      "| `spot` (iOS 26+, macOS 26+, visionOS 26+)",
+      "| `cover`",
+      "| `folder`",
+      "| `Where`",
+    ]);
+  });
+
+  it("does not narrow a row by a member that also builds as an older type, and says which members those are", () => {
+    const old = "iOS 18+, macOS 15+, visionOS 2+";
+    const location = { name: "location", type: "GeoToolbox.PlaceDescriptor", optional: true, alsoAccepts: "CLPlacemark", alsoAcceptsFrom: "iOS 18.0" };
+    const census: Census = {
+      xcode: "X", sdk: "S", unconfirmed: [],
+      types: { "GeoToolbox.PlaceDescriptor": "iOS 26+, macOS 26+, visionOS 26+, watchOS 26+, tvOS 26+" },
+      domains: [{
+        name: "journal", tier: "shortcuts", enums: [], singleCase: {}, unions: {},
+        intents: [
+          { name: "createEntry", available: old, parameters: [location], returns: ".journal.entry" },
+          { name: "pinEntry", available: "OS27", parameters: [location] },
+        ],
+        entities: [{ name: "entry", available: old, properties: [location] }],
+      }],
+    };
+    const lines = renderSchemaReference(census).split("\n");
+    assert.deepEqual(lines.filter((l) => l.startsWith("| `") || l.includes("CLPlacemark")), [
+      "| `createEntry` | `location: GeoToolbox.PlaceDescriptor?` | `.journal.entry` |",
+      "| `pinEntry` `OS27` | `location: GeoToolbox.PlaceDescriptor?` | — |",
+      "| `entry` | `location: GeoToolbox.PlaceDescriptor?` |",
+      "`createEntry.location` and `entry.location` also build as `CLPlacemark` (measured at an iOS 18.0 deployment target), the type to declare where `GeoToolbox.PlaceDescriptor` (iOS 26+, macOS 26+, visionOS 26+) is unavailable.",
+    ]);
+  });
+
+  it("drops a platform a named type is unavailable on", () => {
+    const census: Census = {
+      xcode: "X", sdk: "S", unconfirmed: [],
+      types: { "Kit.Thing": "iOS 26+, macOS 26+; not visionOS" },
+      domains: [{
+        name: "notes", tier: "primary", enums: [], singleCase: {}, unions: {},
+        intents: [
+          { name: "a", available: "iOS 18+, macOS 15+, visionOS 2+", parameters: [{ name: "t", type: "Kit.Thing", optional: false }] },
+          { name: "b", available: "iOS 18+, macOS 15+, visionOS 2+", parameters: [] },
+          { name: "c", available: "iOS 18+, macOS 15+, visionOS 2+", parameters: [] },
+        ],
+        entities: [],
+      }],
+    };
+    const rows = renderSchemaReference(census).split("\n").filter((l) => l.startsWith("| `"));
+    assert.deepEqual(rows.map((r) => r.split(" | ")[0]), ["| `a` (iOS 26+, macOS 26+; not visionOS)", "| `b`", "| `c`"]);
+  });
+
+  it("throws when a named type's availability omits one of the row's platforms", () => {
+    const census: Census = {
+      xcode: "X", sdk: "S", unconfirmed: [],
+      types: { "Kit.Thing": "iOS 26+, macOS 26+" },
+      domains: [{
+        name: "notes", tier: "primary", enums: [], singleCase: {}, unions: {},
+        intents: [{ name: "a", available: "iOS 18+, macOS 15+, visionOS 2+", parameters: [{ name: "t", type: "Kit.Thing", optional: false }] }],
+        entities: [],
+      }],
+    };
+    assert.throws(() => renderSchemaReference(census), /a: iOS 26\+, macOS 26\+ says nothing about visionOS, where the row is available/);
+  });
+
+  it("asks for a new census when the census file predates recording type availability", () => {
+    const census = {
+      xcode: "X", sdk: "S", unconfirmed: [],
+      domains: [{
+        name: "notes", tier: "primary", enums: [], singleCase: {}, unions: {}, entities: [],
+        intents: [{ name: "a", available: "OS27", parameters: [{ name: "t", type: "Kit.Thing", optional: false }] }],
+      }],
+    } as unknown as Census;
+    assert.throws(() => renderSchemaReference(census), /records no type availability.*run node scripts\/app-schemas\.ts census/);
+  });
+
+  it("carries a module type's availability through every schema that names the schema naming it", () => {
+    const old = "iOS 18+, macOS 15+, visionOS 2+";
+    const census: Census = {
+      xcode: "X", sdk: "S", unconfirmed: [],
+      types: { "LinkPresentation.LinkMetadata": "iOS 26+, macOS 26+, visionOS 26+, watchOS 26+, tvOS 26+" },
+      domains: [{
+        name: "photos", tier: "primary", enums: [], singleCase: {}, unions: {},
+        intents: [
+          { name: "delete", available: old, parameters: [{ name: "entities", type: "[.photos.asset]", optional: false }] },
+          { name: "open", available: old, parameters: [{ name: "target", type: ".photos.album", optional: false }] },
+        ],
+        entities: [
+          { name: "album", available: old, properties: [{ name: "cover", type: ".photos.asset", optional: true }] },
+          { name: "asset", available: old, properties: [{ name: "link", type: "LinkPresentation.LinkMetadata", optional: true }, { name: "album", type: ".photos.album", optional: true }] },
+          { name: "a", available: old, properties: [] },
+          { name: "b", available: old, properties: [] },
+          { name: "c", available: old, properties: [] },
+          { name: "d", available: old, properties: [] },
+          { name: "e", available: old, properties: [] },
+        ],
+      }],
+    };
+    const rows = renderSchemaReference(census).split("\n").filter((l) => l.startsWith("| `"));
+    assert.deepEqual(rows.map((r) => r.split(" | ")[0]), [
+      "| `delete` (iOS 26+, macOS 26+, visionOS 26+)",
+      "| `open` (iOS 26+, macOS 26+, visionOS 26+)",
+      "| `album` (iOS 26+, macOS 26+, visionOS 26+)",
+      "| `asset` (iOS 26+, macOS 26+, visionOS 26+)",
+      "| `a`",
+      "| `b`",
+      "| `c`",
+      "| `d`",
+      "| `e`",
+    ]);
+  });
+
   it("lists every schema the control build still rejected", () => {
     const rendered = renderSchemaReference({ ...SMALL, unconfirmed: ["notes intent createNote: Some error"] });
     assert.equal(
@@ -442,6 +853,76 @@ describe("renderSchemaReference", () => {
         "## Notes",
       ].join("\n"),
     );
+  });
+  it("refuses a member that also builds as an older type without the deployment target that was measured", () => {
+    const census: Census = {
+      xcode: "X", sdk: "S", unconfirmed: [],
+      types: { "GeoToolbox.PlaceDescriptor": "iOS 26+, macOS 26+, visionOS 26+, watchOS 26+, tvOS 26+" },
+      domains: [{
+        name: "journal", tier: "shortcuts", enums: [], singleCase: {}, unions: {}, intents: [],
+        entities: [{
+          name: "entry", available: "iOS 18+, macOS 15+, visionOS 2+",
+          properties: [{ name: "location", type: "GeoToolbox.PlaceDescriptor", optional: true, alsoAccepts: "CLPlacemark" }],
+        }],
+      }],
+    };
+    assert.throws(() => renderSchemaReference(census), /entry\.location builds as CLPlacemark at no recorded deployment target; run node scripts\/app-schemas\.ts census/);
+  });
+});
+
+describe("claimedTarget", () => {
+  const old = "iOS 18+, macOS 15+, visionOS 2+";
+  for (const [tags, target] of [
+    [[old], "18.0"],
+    [[old, old], "18.0"],
+    [[old, "OS27"], "27.0"],
+    [["iOS 26.2+; not macOS/visionOS", old], "26.2"],
+  ] as const) {
+    it(`builds ${tags.join(" with ")} at iOS ${target}, the newest iOS release among them`, () => {
+      assert.equal(claimedTarget([...tags]), target);
+    });
+  }
+
+  it("refuses a schema that is not on iOS, naming its tag", () => {
+    assert.throws(() => claimedTarget([old, "macOS 27+"]), /macOS 27\+ is not available on iOS/);
+  });
+});
+
+describe("acceptedSubstitutes", () => {
+  const candidates = [
+    { key: "photos.entity.asset", member: "location" },
+    { key: "journal.entity.entry", member: "location" },
+    { key: "journal.intent.createEntry", member: "location" },
+  ];
+  const control = "requires type of property 'location' to be GeoToolbox.PlaceDescriptorEntity";
+
+  it("accepts every candidate when the substitute build succeeded", () => {
+    assert.deepEqual(acceptedSubstitutes("substitutes", candidates, { succeeded: true, errors: [] }), candidates);
+  });
+
+  it("accepts no member of a schema the substitute build rejected", () => {
+    const errors = [{ owner: "journal.entity.entry", message: control }];
+    assert.deepEqual(acceptedSubstitutes("substitutes", candidates, { succeeded: false, errors }), [candidates[0], candidates[2]]);
+  });
+
+  it("refuses an error with no owning schema, naming its message, rather than accept the rest", () => {
+    const errors = [{ owner: undefined, message: control }, { owner: "journal.entity.entry", message: control }];
+    assert.throws(
+      () => acceptedSubstitutes("substitutes", candidates, { succeeded: false, errors }),
+      new RegExp(`substitutes: 1 error\\(s\\) with no owning schema: ${control}`),
+    );
+  });
+
+  it("refuses an error owned by a schema with no substituted member", () => {
+    const errors = [{ owner: "photos.enum.assetType", message: "something" }];
+    assert.throws(
+      () => acceptedSubstitutes("substitutes", candidates, { succeeded: false, errors }),
+      /substitutes: errors in photos\.enum\.assetType, which substitutes no member: something/,
+    );
+  });
+
+  it("refuses a failed build with no error", () => {
+    assert.throws(() => acceptedSubstitutes("substitutes", candidates, { succeeded: false, errors: [] }), /substitutes: failed with no attributable error/);
   });
 });
 

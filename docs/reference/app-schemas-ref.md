@@ -5,13 +5,13 @@ description: Required shapes of every App Intents schema domain — intent param
 
 # App Schemas Reference
 
-Lookup reference for every App Intents system schema (`@AppIntent(schema:)`, `@AppEntity(schema:)`, `@AppEnum(schema:)`), across every domain. Apple's SDK names each schema but not its shape: the required members are enforced only as build errors. This reference records those shapes for each domain. It's produced by a script that builds a probe app against the iOS 27.1 SDK, then confirms the result with a control build that adopts every schema exactly as listed.
+Lookup reference for every App Intents system schema (`@AppIntent(schema:)`, `@AppEntity(schema:)`, `@AppEnum(schema:)`), across every domain. Apple's SDK names each schema but not its shape: the required members are enforced only as build errors. This reference records those shapes for each domain. It's produced by a script that builds a probe app against the iOS 27.2 SDK, then confirms the result with a control build that adopts every schema exactly as listed.
 
 ## When to Use This Reference
 
 Use this reference when:
 - You're adopting a schema in any domain (Notes, Reminders, Calendar, Mail, Photos, Messages, Clock, Maps, Files, and the rest) and need its required parameters, properties, or enum cases
-- A build fails in the App Intents metadata phase with `Missing required parameter`, `Missing required property`, `requires enum case`, or `must be optional`
+- A build fails in the App Intents metadata phase with `Missing required parameter`, `Missing required property`, `is missing case … required by AppSchemaEnum`, or `to be optional` (Xcode 27.1: `requires enum case`, `must be optional`)
 - You need to know what a schema's `perform()` must return
 - You want to know which domains Apple documents for Siri and which for the Shortcuts app
 - You're checking whether a schema is deprecated, and what replaces it
@@ -32,7 +32,7 @@ Questions you can ask your assistant that will draw from this reference:
 ### Reading the Tables
 - Type spellings, optionality, and union types
 - Conformances the schema macros add (`OpenIntent`, `DeleteIntent`, `ShowInAppSearchResultsIntent`, `FileEntity`, `UniqueAppEntity`)
-- Content-type requirements for file parameters, static members, deprecations, and use-case build warnings
+- Content-type requirements for file parameters, static members, deprecations, and use-case build warnings (on Xcode 27.2, observed only while other schema errors remain)
 - Each schema build error and its fix
 
 ### Primary Domains (Apple Intelligence and Siri)

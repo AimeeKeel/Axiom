@@ -1,6 +1,11 @@
 {
-  "xcode": "Xcode 27.1 (27A9275)",
-  "sdk": "iphoneos 27.1",
+  "xcode": "Xcode 27.2 (27B48)",
+  "sdk": "iphoneos 27.2",
+  "types": {
+    "GeoToolbox.PlaceDescriptor": "iOS 26+, macOS 26+, visionOS 26+, watchOS 26+, tvOS 26+",
+    "LinkPresentation.LinkMetadata": "iOS 26.4+, macOS 26.4+, visionOS 26.4+, watchOS 26.4+, tvOS 26.4+",
+    "VisualIntelligence.SemanticContentDescriptor": "iOS 26+, macOS 27+, macCatalyst 27+"
+  },
   "domains": [
     {
       "name": "audio",
@@ -1881,10 +1886,7 @@
               "optional": false
             }
           ],
-          "returns": ".maps.navigationSession",
-          "warnings": [
-            "App Intents use case 'Start Navigation' is missing the schema 'maps.placeIntentValueQuery'. Fix-it: `extension .maps.place: IntentValueQuery { func values(for input: [GeoToolbox.PlaceDescriptor]) async throws -> [.maps.place] }`"
-          ]
+          "returns": ".maps.navigationSession"
         },
         {
           "name": "stopNavigation",
@@ -2053,7 +2055,9 @@
             {
               "name": "place",
               "type": "GeoToolbox.PlaceDescriptor",
-              "optional": false
+              "optional": false,
+              "alsoAccepts": "CLPlacemark",
+              "alsoAcceptsFrom": "iOS 27.0"
             },
             {
               "name": "priceRange",
@@ -3173,7 +3177,7 @@
         },
         {
           "name": "asset",
-          "available": "OS27",
+          "available": "iOS 18+, macOS 15+, visionOS 2+",
           "properties": [
             {
               "name": "aperture",
@@ -3223,7 +3227,9 @@
             {
               "name": "location",
               "type": "GeoToolbox.PlaceDescriptor",
-              "optional": true
+              "optional": true,
+              "alsoAccepts": "CLPlacemark",
+              "alsoAcceptsFrom": "iOS 18.0"
             },
             {
               "name": "saturation",
@@ -3502,7 +3508,9 @@
             {
               "name": "place",
               "type": "GeoToolbox.PlaceDescriptor",
-              "optional": false
+              "optional": false,
+              "alsoAccepts": "CLPlacemark",
+              "alsoAcceptsFrom": "iOS 27.0"
             }
           ]
         },
@@ -4419,7 +4427,9 @@
             {
               "name": "location",
               "type": "GeoToolbox.PlaceDescriptor",
-              "optional": true
+              "optional": true,
+              "alsoAccepts": "CLPlacemark",
+              "alsoAcceptsFrom": "iOS 18.0"
             },
             {
               "name": "mediaItems",
@@ -4476,7 +4486,9 @@
             {
               "name": "location",
               "type": "GeoToolbox.PlaceDescriptor",
-              "optional": true
+              "optional": true,
+              "alsoAccepts": "CLPlacemark",
+              "alsoAcceptsFrom": "iOS 18.0"
             },
             {
               "name": "mediaItems",
@@ -4514,7 +4526,9 @@
             {
               "name": "location",
               "type": "GeoToolbox.PlaceDescriptor",
-              "optional": true
+              "optional": true,
+              "alsoAccepts": "CLPlacemark",
+              "alsoAcceptsFrom": "iOS 18.0"
             },
             {
               "name": "mediaItems",
