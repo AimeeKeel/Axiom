@@ -146,7 +146,22 @@ let isLocal = AssetPackManager.shared.assetPackIsAvailableLocally(withID: "Tutor
 let status = try await AssetPackManager.shared.status(relativeTo: someAssetPack)
 ```
 
-`status(relativeTo:)`, `localStatus(ofAssetPackWithID:)`, and `assetPackIsAvailableLocally(withID:)` are all available from 26.4. The original `status(ofAssetPackWithID:)` is deprecated from 26.4 in favor of `status(relativeTo:)`. Only `assetPackIsAvailableLocally(withID:)` is synchronous; the other queries are `async`.
+`status(relativeTo:)`, `localStatus(ofAssetPackWithID:)`, and `assetPackIsAvailableLocally(withID:)` are all available from 26.4. The original `status(ofAssetPackWithID:)` is deprecated from 26.4 in favor of `status(relativeTo:)`. Of these three, only `assetPackIsAvailableLocally(withID:)` is synchronous; the other two are `async`.
+
+#### Local version and installed size — from 27.2
+
+```swift
+@available(anyAppleOS 27.2, *)
+@available(watchOS, unavailable)
+func describeLocalPack() async throws -> (version: Int, bytes: Int64) {
+    let manager = AssetPackManager.shared
+    let version = try manager.localVersion(ofAssetPackWithID: "Tutorial")   // synchronous
+    let bytes = try await manager.localSize(ofAssetPackWithID: "Tutorial", calculationMethod: .allocated)
+    return (version, bytes)
+}
+```
+
+Both throw `ManagedBackgroundAssetsError.assetPackNotFound(withID:)` when the pack isn't on the device. `localSize` is the installation size, which can exceed the download size, and it can take a long time for a pack with many files — don't call it on a hot path. `.allocated` approximates the bytes freed by removing the pack (use it for a "frees X" label); `.logical` counts file bytes, which compression and alignment can push above or below disk usage.
 
 ### Reading file contents
 
@@ -1104,7 +1119,7 @@ struct CustomDownloaderExtension: BADownloaderExtension {
 
 ## API Quick Reference
 
-- **`AssetPackManager.shared`** — Actor. Methods: `manifest` (27; replaces `assetPack(withID:)` + `allAssetPacks`, both deprecated 27), `ensureLocalAvailability(of:)` (deprecated 26.4), `ensureLocalAvailability(of:requireLatestVersion:)` (26.4), `ensureLocalAvailability(of:requireLatestVersions:)` (Set, 27), `statusUpdates`, `statusUpdates(forAssetPackWithID:)`, `localStatus(ofAssetPackWithID:)`, `status(relativeTo:)`, `assetPackIsAvailableLocally(withID:)`, `contents(at:searchingInAssetPackWithID:options:)`, `descriptor(for:searchingInAssetPackWithID:)`, `url(for:)`, localized variants `contents(at:asLocalizedFor:options:)` / `descriptor(for:asLocalizedFor:)` / `url(for:asLocalizedFor:)` (27), `resolvedLanguage` / `locallyAvailableLanguages` / `reconcilePreferredLanguages()` (27), `checkForUpdates()`, `remove(assetPackWithID:)`
+- **`AssetPackManager.shared`** — Actor. Methods: `manifest` (27; replaces `assetPack(withID:)` + `allAssetPacks`, both deprecated 27), `ensureLocalAvailability(of:)` (deprecated 26.4), `ensureLocalAvailability(of:requireLatestVersion:)` (26.4), `ensureLocalAvailability(of:requireLatestVersions:)` (Set, 27), `statusUpdates`, `statusUpdates(forAssetPackWithID:)`, `localStatus(ofAssetPackWithID:)`, `status(relativeTo:)`, `assetPackIsAvailableLocally(withID:)`, `localVersion(ofAssetPackWithID:)` / `localSize(ofAssetPackWithID:calculationMethod:)` (27.2), `contents(at:searchingInAssetPackWithID:options:)`, `descriptor(for:searchingInAssetPackWithID:)`, `url(for:)`, localized variants `contents(at:asLocalizedFor:options:)` / `descriptor(for:asLocalizedFor:)` / `url(for:asLocalizedFor:)` (27), `resolvedLanguage` / `locallyAvailableLanguages` / `reconcilePreferredLanguages()` (27), `checkForUpdates()`, `remove(assetPackWithID:)`
 - **`AssetPackManifest`** — `assetPacks`, `assetPack(withID:)` (27), `primaryLanguage` / `availableLanguages` / `resolvedLanguage` / `localizedAssetPacks` / `localizedAssetPacks(for:)` (27)
 - **`AssetPack.language: Locale.Language?`** (27) — `nil` when the pack isn't localized
 - **`AssetPackManager.LocalAvailabilityError`** (27) — `successes: Set<AssetPack>`, `failures: [AssetPack: any Error]`

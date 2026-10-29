@@ -3,12 +3,12 @@
   "files": [
     {
       "path": ".cursor-plugin/plugin.json",
-      "sha256": "86b63d8bf24208c5ec04b7135eb5ed1da8d4a74ffaebf05186fd20c5992239fb",
+      "sha256": "5a52444c6b46478381b4f9a5c04b7257107260f07d678bf78d97e75a8e0ea285",
       "bytes": 578
     },
     {
       "path": "README.md",
-      "sha256": "8f8ef328f14bb88664a45ad221267a3c755f36d88658d0fff1e63eb09e488a8c",
+      "sha256": "7678149fdf94a9f5153e88ec182d7d6d9ef23c98fa7a4a6ff51b92f1da910a95",
       "bytes": 4374
     },
     {
@@ -918,8 +918,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/app-schemas-ref.md",
-      "sha256": "5fa6515ea15e965b59533555a48691573caa40964e2fc5aeade7884922e75622",
-      "bytes": 40883
+      "sha256": "c7ccaf00a43606cd583cfbd2df93b7beb02a12dd6a5c5bd5ba606d51550faac2",
+      "bytes": 41871
     },
     {
       "path": "skills/axiom-integration/skills/app-shortcuts-ref.md",
@@ -928,8 +928,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/background-assets-ref.md",
-      "sha256": "ce9cfd9d8afb870436f8fc67dbf75285ff67d9d000cc14f5c38a6fb8ace283ca",
-      "bytes": 51709
+      "sha256": "5287cbcbe7ea9788dc16795e1382efa1d0a0f2022413e248858f6289d83a374b",
+      "bytes": 52748
     },
     {
       "path": "skills/axiom-integration/skills/background-assets.md",
@@ -1063,8 +1063,8 @@
     },
     {
       "path": "skills/axiom-integration/skills/siri-audio-ref.md",
-      "sha256": "f1a0ef6c16f5f48cf765e4ea3adb73a157f7ae22df71c824e128d6a31ae847ee",
-      "bytes": 31920
+      "sha256": "0d24624e3f06d4607e30ae1f438f410c01c1b575a796cdbcba56887b51be2141",
+      "bytes": 32973
     },
     {
       "path": "skills/axiom-integration/skills/siri-audio.md",
@@ -1108,8 +1108,8 @@
     },
     {
       "path": "skills/axiom-location/skills/core-location-ref.md",
-      "sha256": "7dbc033a66da6ed1108b92dba3fb71356de21006cb37e08716897e84bf8914e4",
-      "bytes": 21657
+      "sha256": "019a332669b31e1361c50d9ae08387c016dffd8c349df6817f30b9c6fc0f80a9",
+      "bytes": 22515
     },
     {
       "path": "skills/axiom-location/skills/core-location.md",
@@ -1213,8 +1213,8 @@
     },
     {
       "path": "skills/axiom-media/skills/camera-capture-ref.md",
-      "sha256": "e7bdb48dd5a2cf8951c92f5d7ee89981731ae0f0592ae0c63f064791ed021cb1",
-      "bytes": 51838
+      "sha256": "b0e0980b2ef4a5cd09695e7d57fe0dd0952426d08299c353c4e6225a8072c316",
+      "bytes": 51707
     },
     {
       "path": "skills/axiom-media/skills/camera-capture.md",
@@ -1633,8 +1633,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/26-ref.md",
-      "sha256": "0c38a968270e53aee446a0433a26b3ce728b2a9d0dd4904462449a2367e4df39",
-      "bytes": 54282
+      "sha256": "64f7616a7b3eda12e319c1a08c5c3a196e5a89d5003f0a16f6e8fd59dbc48e35",
+      "bytes": 54507
     },
     {
       "path": "skills/axiom-swiftui/skills/animation-ref.md",
@@ -1673,8 +1673,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/iphone-duo.md",
-      "sha256": "ce2dc4169a882c78256debcdd021e3bb6f425bc4f3b974a41bc66bcf902202e5",
-      "bytes": 44271
+      "sha256": "a66addb20b640987446c1be4a65fefca20bd34ea03d7f3ff21dea78719493655",
+      "bytes": 44310
     },
     {
       "path": "skills/axiom-swiftui/skills/layout-ref.md",
@@ -1728,8 +1728,8 @@
     },
     {
       "path": "skills/axiom-swiftui/skills/toolbars.md",
-      "sha256": "d07ab7f89df53b04f2b496a84242c0aae8152320e426c6814ed478a9a45bfe61",
-      "bytes": 34289
+      "sha256": "31706e29e68dabc3823356a77faf664af4d8159e0519253d44378973098cfe1b",
+      "bytes": 35747
     },
     {
       "path": "skills/axiom-testing/SKILL.md",
@@ -1768,8 +1768,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/device-control-ref.md",
-      "sha256": "248843448524eb79f7a6c5931fb43e0cf64094bf37816ccc50f716420d5630f9",
-      "bytes": 32954
+      "sha256": "af0de3d7f585236f7e8cdeed4bad849c7bb9b1a8a380c6a7637ae5268534730b",
+      "bytes": 32947
     },
     {
       "path": "skills/axiom-tools/skills/getting-started.md",
@@ -1783,8 +1783,8 @@
     },
     {
       "path": "skills/axiom-tools/skills/xcprof-ref.md",
-      "sha256": "4a3fb7f0cb35fbd112127e0c46b27136c07762754555fc7d6ac95053d45f3519",
-      "bytes": 16154
+      "sha256": "afe84e4de7ce5761c41555bf5f19545a7d221605a97f5a45045b039d13b9476b",
+      "bytes": 16869
     },
     {
       "path": "skills/axiom-tools/skills/xcsym-ref.md",
@@ -1803,8 +1803,8 @@
     },
     {
       "path": "skills/axiom-uikit/skills/adaptive-layout.md",
-      "sha256": "9586ef3b15a496773e6ea3454c2271a4e9d4d223edde08442ac6df420a2b8818",
-      "bytes": 6039
+      "sha256": "420f0fe7056c2c8a2bc0ba8f4a0ef21f416a960ba9f64fa1637f96131834e75f",
+      "bytes": 6714
     },
     {
       "path": "skills/axiom-uikit/skills/auto-layout-debugging.md",
@@ -1843,8 +1843,8 @@
     },
     {
       "path": "skills/axiom-uikit/skills/uikit-modernization.md",
-      "sha256": "83b6fccada55a978e76e3ca7b99946d7470b922eb7e4b6472d58d151198b3b0a",
-      "bytes": 26924
+      "sha256": "e964a45541211e90c71a803ddcea8b15db004e93812da4a345d9a3ee387fcf81",
+      "bytes": 28876
     },
     {
       "path": "skills/axiom-vision/SKILL.md",
@@ -1923,23 +1923,23 @@
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-ref.md",
-      "sha256": "2f1a52fbf266e586c0ea91dc1cbc2a9b2178c1d0c14cf90187acae89c3ba2f46",
-      "bytes": 35546
+      "sha256": "b9a061e902a71c6218d0c038729d0849778a0a26823ae3f50a7f4daffe2a28ca",
+      "bytes": 38536
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-setup.md",
-      "sha256": "51a52c85aac3136a71aae9a4e64643f4bed193c3dbfc198f4584956ffe4694f7",
-      "bytes": 17741
+      "sha256": "3da2f52780634807bcb824615cc773ed70bfd52656d57aa52a7f3740b809ca24",
+      "bytes": 18277
     },
     {
       "path": "skills/axiom-xcode-mcp/skills/xcode-mcp-tools.md",
-      "sha256": "2b7c42b90db1808b785ae7c611c6dc5436375439983d7e2ced58cc7e70b48fe3",
-      "bytes": 16938
+      "sha256": "df6c1913ed22c2d26a07232aeeddc382c149e4ddd676bb538ec4e4d2f6cbde1a",
+      "bytes": 18405
     }
   ],
   "totals": {
     "files": 387,
-    "bytes": 7974720
+    "bytes": 7988577
   },
   "excludedMirrors": 30,
   "classes": {

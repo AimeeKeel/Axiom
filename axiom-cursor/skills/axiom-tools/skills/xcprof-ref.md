@@ -91,13 +91,23 @@ xcprof record --preset cpu --attach MyApp --dry-run                 # preview th
 
 A launched recording (`-- <cmd>`) terminated at the time limit makes `xctrace` exit non-zero (it returns the killed target's status) **while still saving a valid trace**. `record` trusts the saved bundle, not the exit code: it reports `ok: true` with a `notes` entry explaining the benign non-zero exit.
 
-### Native launch cleanup limitation
+### Launch cleanup
 
-With Xcode 27.2 beta 2 (`27B5028f`), native macOS CPU recordings can leave a stopped startup process after the recorder and sampled process exit. Direct `xctrace` reproduces this without xcprof or MCP. A saved trace and `ok: true` do not establish process cleanup; xcprof has no operation-specific cleanup policy for that survivor.
+With Xcode 27.2, `xctrace record --launch` can leave a second copy of the target behind after the recording ends — stopped (state `T`), parented by launchd.
 
-The requested time limit bounds recording configuration, not total startup/export time or a suspended process's lifetime. In five captures requesting 10 seconds, CPU sample spans were 9.774–10.012 seconds and exported duration reached 15.483 seconds including startup. These observations do not establish behavior on other toolchains or platforms.
+On a launch recorded on this Mac (`-- <cmd>`, no `--device`), `record` passes the target a random per-recording token in its environment (`XCPROF_RECORD_ID`), and afterwards SIGKILLs every process carrying that token — the target or a descendant that inherited its environment — that is stopped and parented by launchd. Processes without this recording's token — ones already running, or launched by another recording — are never touched. Ctrl-C, SIGTERM or a closed terminal interrupts xctrace so it can save the trace, and cleanup still runs.
 
-Verify processes owned by the recording operation afterward. Preserve pre-existing and concurrent processes using the same executable; do not kill by executable name. If ownership cannot be established, report the survivor and the uncertainty rather than terminating it.
+`launch_cleanup` reports the outcome, including when `ok` is `false`:
+
+- `killed` — PIDs killed and confirmed gone. No action.
+- `survivors` — `{pid, ppid, state, command, reason}` for processes this recording launched that `record` would not or could not kill, plus stopped copies of the launch command whose environment `ps` can't read (Apple platform binaries hide it), so ownership isn't proven. Give the user the PID, command and reason; never kill one yourself.
+- `errors` — the process listing failed after the recording, so nothing was checked; tell the user a stopped copy may remain.
+
+Absent for `--attach`, `--all-processes`, `--device`, `--dry-run`, and launches that left nothing behind.
+
+The requested time limit bounds recording configuration, not total startup/export time or a suspended process's lifetime.
+
+Direct `xctrace record --launch` (without xcprof) does no such cleanup: check for a stopped copy afterward, and never kill by executable name.
 
 ## Comparing traces (regression detection)
 

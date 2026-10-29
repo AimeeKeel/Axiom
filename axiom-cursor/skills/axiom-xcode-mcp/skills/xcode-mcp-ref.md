@@ -5,28 +5,29 @@ Complete reference for every tool exposed by Xcode's MCP server. `xcrun mcpbridg
 transport; on Xcode 27 the service behind it can run headless (`xcrun mcp-server`) — see
 `axiom-xcode-mcp (skills/xcode-mcp-setup.md)`.
 
-**Source**: live `tools/list` on Xcode 27.1 RC (27A9275), `serverInfo` version 25320,
-protocol 2025-06-18. The 54-tool set and every tool schema are identical to the released
-27.0 (27A266a, `serverInfo` 25317) and beta 6 (27A5252f, `serverInfo` 25295.11).
+**Source**: live `tools/list` on the Xcode 27.2 RC (27B48, `serverInfo` 25463), 54 tools,
+captured headless by an unapproved agent with no workspace open. Entries describe that schema.
 
-**Xcode 27.2 beta 2 (27B5028f, `serverInfo` 25447.1)** lists 53 tools. Its unapproved/no-workspace
-and approved/with-workspace captures have identical names and schemas: `DocumentationSearch`
-is absent, `RenderPreview` gains destination selection, and `InvokeDebuggerCommand` changes
-its variable-inspection guidance. The entries below retain the 27.1 RC baseline and label
-these beta-2 differences. `GetCodeCoverage` is advertised in the 27.2 beta 2 release notes
-(181141715) but absent from both captures; no callable schema was verified. Check the live
-`tools/list` before using a tool or a build-specific parameter.
+**Earlier builds differ.** The released 27.0 (27A266a), beta 6 and the 27.1 RC (27A9275,
+`serverInfo` 25320) share one 54-tool schema set. 27.2 beta 2 (27B5028f, `serverInfo` 25447.1)
+lists 53 — `DocumentationSearch` is absent from both its unapproved/no-workspace and
+approved/with-workspace captures — and first adds `RenderPreview` destination selection and
+`InvokeDebuggerCommand`'s `p`/`v` guidance. The 27.2 RC adds `RenderPreview` display modes
+and regroups its output, `XcodeMakeDir` `directoryKind`, and `AddInfoPlist` `dictionary`.
+Entry notes and the `RenderPreview` table mark build-specific fields. `GetCodeCoverage`,
+announced in the 27.2 beta 2 and RC release notes (181141715), is absent from every capture
+through 27B48; no callable schema was
+verified. Check the live `tools/list` before using a tool or a build-specific parameter.
 
-**All 54 tools are listed even with no workspace open** (verified on beta 6 and again on the
-27.0 SDK: `xcrun mcp-server
-status` reported `Open workspaces: none` and `tools/list` still returned 54, `DocumentationSearch`
-included). The server does advertise `capabilities.tools.listChanged: true`, so treat the set as
+**All 54 tools are listed even with no workspace open** (verified on beta 6, the 27.0 SDK and
+the 27.2 RC: `tools/list` returned 54, `DocumentationSearch` included, with no workspace open).
+The server does advertise `capabilities.tools.listChanged: true`, so treat the set as
 dynamic rather than fixed — but do not read a short list as "open a workspace".
 
 **`workspaceIdentifier` is required in practice wherever tested** — even when only one workspace
-is open, and even though it appears in no tool's `required` list. 46 of the 54 tools accept it;
+is open, and even though only `XcodeCloseWorkspace` lists it as `required`. 46 of the 54 tools accept it;
 omitting it on `XcodeListSchemes` and `XcodeListTargets` returned an error naming the valid
-identifiers, so assume the same for the rest rather than treating the empty `required` list as
+identifiers, so assume the same for the rest rather than treating its absence from `required` as
 permission to skip it:
 
 ```
@@ -49,8 +50,8 @@ tools are gone. Code written against a beta-5 running-Xcode capture will break.
 **Reading the entries below**: `*` marks required fields. `(+ workspaceIdentifier)` on the Params
 line means the tool accepts it; it is omitted from each list to avoid repeating it 46 times.
 `Returns` fields come from each tool's `outputSchema`. All 54 declare one and responses carry
-`structuredContent`, but a few declare an **empty** schema (`UpdateTargetBuildSetting`) — those
-entries have no `Returns` line, which means "no structured fields", not "undocumented".
+`structuredContent`, but one declares an **empty** schema (`UpdateTargetBuildSetting`) — its
+entry has no `Returns` line, which means "no structured fields", not "undocumented".
 
 Apple's own spelling is preserved even where inconsistent: `DeviceInteractionSynthesize` takes
 `interactSessionKey` while `DeviceInteractionInstallAndRun` and `DeviceInteractionEndSession` take
@@ -82,7 +83,7 @@ Opens an Xcode workspace or project at the given path and returns its workspace 
 
 Closes a workspace that was opened with XcodeOpenWorkspace, identified by its workspace identifier.
 
-- **Params** (+ `workspaceIdentifier`): none
+- **Params**: `workspaceIdentifier`* — The identifier of the workspace to close (as returned by XcodeOpenWorkspace or XcodeListWorkspaces)
 
 - **Returns**: `message`*
 
@@ -180,11 +181,13 @@ Lists files and directories in the Xcode project structure at the specified path
 
 ### XcodeMakeDir
 
-Creates directories and groups in the Xcode project structure.
+Creates directories in the Xcode project structure. Creates a file system synchronized (buildable) folder by default, or a classic group when requested.
 
-- **Params** (+ `workspaceIdentifier`): `directoryPath`* — Project navigator relative path for the directory to create
+- **Params** (+ `workspaceIdentifier`): `directoryPath`* — Project navigator relative path for the directory to create; `directoryKind` — `folder` (default) or `group` (27.2 RC)
 
 - **Returns**: `message`*, `success`*, `createdPath`
+
+- **Notes**: `folder` creates a file-system-synchronized (buildable) folder; `group` creates a classic group backed by a directory on disk. The schema types `directoryKind` as a plain string, not an enum, and the server "falls back to whatever the parent supports", so the requested kind is not guaranteed. Builds before the 27.2 RC take only `directoryPath`.
 
 ### XcodeMV
 
@@ -302,7 +305,7 @@ Sends an lldb command to Xcode's active debugging session and returns the output
 
 - **Returns**: `debugSessionActive`*, `isWaitingForMore`*, `output`*, `processIdentifier`
 
-- **Notes**: The 27.2 beta 2 description recommends `p` or `v` for variable inspection,
+- **Notes**: `timeout` defaults to 30s; raise it for commands that resume execution (`continue`). `isWaitingForMore: true` means the command timed out and may still be running — check with a simple command such as `thread list`. From 27.2 beta 2 the description recommends `p` or `v` for variable inspection,
   reserving `po` or `expression` for operations that need them (function calls, casts,
   arithmetic). The process must already be running with the debugger attached;
   `RunProject(attachDebugger: true)` can establish that session. Check `process status`
@@ -410,40 +413,46 @@ Changes the active run destination for the currently active scheme.
 
 Builds and renders a Preview and waits until a snapshot of the resulting UI is available.
 
-- **Params** (+ `workspaceIdentifier`): `sourceFilePath`* — The path to the file within the Xcode project organization…; `previewCanvasControlOverrides` — Optional overrides for the canvas controls, only applicable to preview types that support each…; `previewDefinitionIndexInFile` — The zero based index of the #Preview macro or PreviewProvider struct definition in the source…; `previewLocalizationOverride` — A locale identifier to preview in (e.g. "fr", "ja"); `previewVariantOverrides` — A dictionary mapping variant group names to variant names for any preview variants that should…; `timeout` — The time in seconds to wait for the rendering of the preview to complete
+- **Params** (+ `workspaceIdentifier`): `sourceFilePath`* — The path to the file within the Xcode project organization…; `displayMode` — `static` (default) or `interactive`, from `supportedOverrides.displayModes`; `preferredRenderDestination` — object of optional `identifier`, `platformName`, `deviceModelName`, `systemVersion`; `previewCanvasControlOverrides` — `groupItemIndex`, `timelineIndex`, `toggleState`; `previewDefinitionIndexInFile` — The zero based index of the #Preview macro or PreviewProvider struct definition in the source…; `previewLocalizationOverride` — A locale identifier to preview in (e.g. "fr", "ja"); `previewVariantOverrides` — A dictionary mapping variant group names to variant names for any preview variants that should…; `snapshotDelay` — integer seconds an interactive preview runs before capture; `timeout` — The time in seconds to wait for the rendering of the preview to complete
 
-- **Returns**: `displayName`, `errors`, `previewSnapshotPath`, `renderedDestination`, `sourceLineNumber`, `supportedCanvasControlOverrides`, `supportedLocalizations`, `supportedPreviewVariantOverrides`
+- **Returns**: `errors`*, `displayName`, `renderedDestination`, `snapshot` (`path`*), `sourceLineNumber`, `supportedOverrides` (`canvasControls`, `displayModes`, `localizations`, `previewVariants`, `renderDestinations`)
 
-- **Notes**: `timeout` defaults to 120s. Use `supportedLocalizations` and variant keys returned by a previous call rather than guessing override values.
+- **Notes**: `timeout` defaults to 120s. Take every override value from the `supportedOverrides` of a previous call for the same active scheme (and, except for `preferredRenderDestination`, the same run destination) rather than guessing. Apple's input descriptions name output fields that don't exist — `groupItemIndexes` and `toggleState`; the real fields are `canvasControls.groupItems` and `canvasControls.toggleStates`. Don't call in parallel while passing `previewLocalizationOverride`. `snapshotDelay` applies only to `interactive`, counts against `timeout`, and must be at least 0 and less than `timeout`, or the call fails. `displayName` matches the canvas tab title; `sourceLineNumber` (1-based) separates previews that share a name.
 
-#### Destination selection in Xcode 27.2 beta 2
+#### Destination selection
 
-The 27B5028f schema adds optional input `preferredRenderDestination`, an object with four
-optional string fields: `identifier`, `platformName`, `deviceModelName`, `systemVersion`.
-Use values from a prior call's `availableRenderDestinations` for the same active scheme.
-Every supplied field must match; omitted fields impose no constraint, and the first matching
-destination is selected. Omitting the object lets the server choose automatically.
+`preferredRenderDestination` takes values from a prior call's
+`supportedOverrides.renderDestinations` for the same active scheme. Every supplied field must
+match; omitted fields impose no constraint, and the first matching destination is selected.
+Omitting the object lets the server choose automatically. Each `renderDestinations` entry
+requires `identifier`; the array is omitted when the server cannot determine destinations.
+An unmatched preference falls back to automatic selection and adds a message to `errors`, so
+compare `renderedDestination.identifier` (required whenever `renderedDestination` is present)
+with your selection rather than assuming the preference was honored.
 
-The output adds optional `availableRenderDestinations`, an array whose entries require
-`identifier`; `platformName`, `deviceModelName`, and `systemVersion` are optional strings.
-The array can be omitted if the server cannot determine destinations. Beta 2 also adds
-`renderedDestination.identifier`: the `renderedDestination` object remains optional, but
-`identifier` is required when that object is present; its other three string fields remain
-optional. The top-level `errors` array becomes required in the beta-2 output schema.
-The schema specifies that an unmatched preference falls back to automatic selection and
-adds a message to `errors`; inspect the returned destination identity and errors rather
-than assuming the preference was honored. The preference, available-destination array,
-and rendered identifier are absent from the 27.1 RC (27A9275) schema, whose output has
-no required fields.
+`supportedOverrides.canvasControls.groupItems` entries are objects with required integer
+`index` and optional `title` (titles can repeat); pass `index` as
+`previewCanvasControlOverrides.groupItemIndex`. The array is omitted when the preview has no
+group-item control.
 
-#### Canvas group items in Xcode 27.2 beta 2
+#### Field names by build
 
-The 27B5028f schema changes `supportedCanvasControlOverrides.groupItems` from an array of
-integers to an array of objects. Each object requires integer `index` and can include string
-`title`; titles need not be unique. Pass the selected object's `index` as
-`previewCanvasControlOverrides.groupItemIndex`. The group-items array is optional and is
-omitted when the preview has no group-item control. The 27A9275 schema declares integer
-entries instead; inspect the live schema before consuming this field.
+A client that reads the earlier field names finds no snapshot path and no override lists in
+the 27.2 RC's output. Read field paths from the live `outputSchema`.
+
+| Field | 27.2 RC (27B48) | 27.2 beta 2 (27B5028f) | 27.1 RC (27A9275) and earlier |
+|---|---|---|---|
+| Snapshot path | `snapshot.path` | `previewSnapshotPath` | `previewSnapshotPath` |
+| Canvas controls | `supportedOverrides.canvasControls` | `supportedCanvasControlOverrides` | `supportedCanvasControlOverrides` |
+| Localizations | `supportedOverrides.localizations` | `supportedLocalizations` | `supportedLocalizations` |
+| Preview variants | `supportedOverrides.previewVariants` | `supportedPreviewVariantOverrides` | `supportedPreviewVariantOverrides` |
+| Render destinations | `supportedOverrides.renderDestinations` | `availableRenderDestinations` | absent |
+| Display modes | `supportedOverrides.displayModes` | absent | absent |
+| Inputs `displayMode`, `snapshotDelay` | present | absent | absent |
+| Input `preferredRenderDestination` | present | present | absent |
+| `groupItems` entries | `{index*, title}` objects | `{index*, title}` objects | integers |
+| `errors` | required | required | optional (no output field required) |
+| `renderedDestination.identifier` | required when object present | required when object present | absent (object still has platform, model, version) |
 
 ---
 
@@ -581,9 +590,11 @@ Add a new entitlement to the project's entitlements file.
 
 Add or update an Info.plist key in the project.
 
-- **Params** (+ `workspaceIdentifier`): `infoPlistKey`* — The Info.plist key to add or change; `infoPlistValueType`* — The type of the Info.plist value; `targetName`* — The name of the Xcode target whose Info.plist key should be added or updated; `infoPlistDictionaryItems` — A JSON-encoded string representing an array of dictionaries; `infoPlistValue` — The value as a string; `infoPlistValueItems` — Array of string values; `projectPath` — The project-organization path of the .xcodeproj that owns the target…
+- **Params** (+ `workspaceIdentifier`): `infoPlistKey`* — The Info.plist key to add or change; `infoPlistValueType`* — `bool`, `string`, `int`, `stringArray`, `dictionary`, or `dictionaryArray`; `targetName`* — The name of the Xcode target whose Info.plist key should be added or updated; `infoPlistDictionaryItems` — A JSON-encoded string: one dictionary for `dictionary`, an array of dictionaries for `dictionaryArray`; `infoPlistValue` — The value as a string (`bool`, `string`, `int`); `infoPlistValueItems` — Array of string values (`stringArray`); `projectPath` — The project-organization path of the .xcodeproj that owns the target…
 
 - **Returns**: `result`*, `errorDescription`
+
+- **Notes**: Use `dictionary` for a single dictionary value such as App Transport Security settings (`'{"NSAllowsArbitraryLoads": true}'`) and `dictionaryArray` only for an array of dictionaries. `dictionary` is new in the 27.2 RC; earlier enums lack it, and their descriptions pointed App Transport Security at `dictionaryArray`. Check the live enum first; where `dictionary` is absent, don't wrap a dictionary-valued key such as `NSAppTransportSecurity` in `dictionaryArray` — the tool has no single-dictionary type on that build. Not for entitlements — use `AddEntitlement`.
 
 ---
 
@@ -597,7 +608,7 @@ Searches Apple Developer Documentation using semantic matching.
 
 - **Returns**: `documents`*
 
-- **Notes**: Listed without an open workspace on beta 6 and the released 27.0, and present in the 27.1 RC capture. Absent on 27.2 beta 2 (27B5028f), including the approved-with-workspace capture. The tool set is dynamic: re-list and check the server/build when it is missing; its absence alone does not establish a workspace or approval requirement. Use `axiom-apple-docs` for bundled guides and SDK-first Apple documentation research when this tool is unavailable.
+- **Notes**: Listed on the 27.2 RC (27B48) to an unapproved agent with no workspace open, as on beta 6 and the released 27.0, and present in the 27.1 RC capture. Absent on 27.2 beta 2 (27B5028f), including the approved-with-workspace capture. The tool set is dynamic: re-list and check the server/build when it is missing; its absence alone does not establish a workspace or approval requirement. Use `axiom-apple-docs` for bundled guides and SDK-first Apple documentation research when this tool is unavailable.
 
 ## Resources
 

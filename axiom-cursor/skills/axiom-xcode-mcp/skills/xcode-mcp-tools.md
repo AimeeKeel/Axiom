@@ -20,7 +20,7 @@ Real output — the identifier is a readable slug, not a UUID:
 ```
 
 **It is required even when only one workspace is open.** The parameter is absent from every
-tool's `required` list, so it looks optional — it isn't. Calling `XcodeListSchemes` with no
+tool's `required` list except `XcodeCloseWorkspace`'s, so it looks optional — it isn't. Calling `XcodeListSchemes` with no
 arguments against a single open workspace returns:
 
 ```
@@ -102,6 +102,10 @@ Fast iteration on failing tests.
 6. RunAllTests(workspaceIdentifier) as final verification
 ```
 
+**No coverage tool is listed.** The 27.2 release notes announce `GetCodeCoverage`, but no
+listing through the 27.2 RC includes it — see `axiom-xcode-mcp (skills/xcode-mcp-setup.md)`.
+Don't call it or invent parameters unless the live `tools/list` shows its schema.
+
 **Why `RunSomeTests` first**: Running a single test takes seconds. Running all tests takes minutes. Iterate on the failing test, then verify the full suite once it passes.
 
 **`tests` is an array of specifiers**, each with `targetName` and `testIdentifier` — not bare
@@ -111,14 +115,14 @@ test names. Source them from `GetTestList`.
 `fullTestListPath` in grep-friendly form. On a large suite, grep that file for `TEST_TARGET`,
 `TEST_IDENTIFIER`, or `TEST_FILE_PATH` rather than assuming the inline list is everything.
 
-**Parsing test results**: Look for `testResult` field in the response. Failed tests include failure messages with file paths and line numbers.
+**Parsing test results**: Read `counts.failed`, then each `results[]` entry's `state` and `errorMessages` (plain strings). `results` lists failures first and truncates at 100; `fullSummaryPath` holds the complete summary.
 
 ## Workflow: PreviewVerify
 
 Render SwiftUI previews and verify UI changes visually.
 
 ```
-1. RenderPreview(workspaceIdentifier, sourceFilePath, previewDefinitionIndexInFile: 0) → image artifact
+1. RenderPreview(workspaceIdentifier, sourceFilePath, previewDefinitionIndexInFile: 0) → image path
 2. Review the rendered image for correctness
 3. If making changes: XcodeUpdate → RenderPreview again
 4. Compare before/after for regressions
@@ -126,13 +130,30 @@ Render SwiftUI previews and verify UI changes visually.
 
 **Use cases**: Verifying layout changes, checking dark mode appearance, confirming Liquid Glass effects render correctly.
 
-`RenderPreview` also takes `previewLocalizationOverride` (a locale identifier), `previewVariantOverrides`, and `previewCanvasControlOverrides` — use the `supportedLocalizations` and variant keys returned by a previous invocation rather than guessing. Default `timeout` is 120s.
+**Read the image path from the build's output schema.** The 27.2 RC (27B48) returns it as
+`snapshot.path` and groups every supported override under `supportedOverrides`
+(`canvasControls`, `localizations`, `previewVariants`, `renderDestinations`, `displayModes`).
+Earlier 27 builds return `previewSnapshotPath` and top-level `supportedLocalizations`,
+`supportedPreviewVariantOverrides`, and `supportedCanvasControlOverrides` — a client reading
+the old names finds no snapshot path or override lists on the RC. The per-build table is in
+`axiom-xcode-mcp (skills/xcode-mcp-ref.md)`.
 
-### Choose a Render Destination on Xcode 27.2 beta 2
+`RenderPreview` also takes `previewLocalizationOverride` (a locale identifier), `previewVariantOverrides`, and `previewCanvasControlOverrides` — use values returned by a previous invocation rather than guessing, and don't run calls in parallel while passing a localization override. Default `timeout` is 120s.
 
-**Check the live schema first.** On 27B5028f, `RenderPreview` accepts
-`preferredRenderDestination` and can return `availableRenderDestinations`. The 27.1 RC
-(27A9275) schema has neither field; use automatic rendering on that build.
+### Capture an Interactive Preview on the 27.2 RC
+
+The 27.2 RC adds `displayMode`: `static` (the default) captures a static snapshot;
+`interactive` runs the preview, then captures it after `snapshotDelay` seconds. Pass only a
+mode listed in a prior call's `supportedOverrides.displayModes`. `snapshotDelay` is an
+integer, counts against `timeout`, and must be at least 0 and less than `timeout`, or the
+call fails. Builds before the RC have neither input.
+
+### Choose a Render Destination
+
+**Check the live schema first.** The 27.2 RC returns destinations in
+`supportedOverrides.renderDestinations`; 27.2 beta 2 (27B5028f) returns them in
+`availableRenderDestinations`. Both accept `preferredRenderDestination`. The 27.1 RC
+(27A9275) has neither; use automatic rendering on that build.
 
 First call `RenderPreview` without a preference. Use your project's workspace identifier
 and source path in both examples:
@@ -145,9 +166,9 @@ and source path in both examples:
 }
 ```
 
-If `availableRenderDestinations` is returned, select an entry and use its exact `identifier`
-in a subsequent `RenderPreview` call for the same active scheme. Replace the placeholder
-below with that returned identifier:
+If destinations are returned, select an entry and use its exact `identifier` in a subsequent
+`RenderPreview` call for the same active scheme. Replace the placeholder below with that
+returned identifier:
 
 ```json
 {
@@ -155,7 +176,7 @@ below with that returned identifier:
   "sourceFilePath": "MyApp/ContentView.swift",
   "previewDefinitionIndexInFile": 0,
   "preferredRenderDestination": {
-    "identifier": "identifier-from-availableRenderDestinations"
+    "identifier": "identifier-from-renderDestinations"
   }
 }
 ```
@@ -163,22 +184,23 @@ below with that returned identifier:
 You can also constrain `platformName`, `deviceModelName`, and `systemVersion` using returned
 values; all specified fields must match. If destinations are unavailable, keep automatic
 selection. The schema specifies automatic fallback plus an `errors` message when a preference
-matches nothing. On this build, `errors` is required by the output schema; when the optional
-`renderedDestination` object is present, it includes a required `identifier`. Compare that
-identifier with the selection and inspect errors to confirm the result.
+matches nothing. On both 27.2 builds `errors` is required by the output schema, and when the
+optional `renderedDestination` object is present it includes a required `identifier`. Compare
+that identifier with the selection and inspect errors to confirm the result.
 
-For argument-based previews on 27B5028f, `supportedCanvasControlOverrides.groupItems` contains
-objects with required integer `index` and optional string `title`. Use the returned `index`
-as `previewCanvasControlOverrides.groupItemIndex`; titles can repeat. The group-items array
-can be omitted when the control is unavailable. This differs from the integer-entry array
-declared by the 27A9275 schema.
+For argument-based previews on both 27.2 builds, `groupItems` (under
+`supportedOverrides.canvasControls` on the RC, `supportedCanvasControlOverrides` on beta 2)
+contains objects with required integer `index` and optional string `title`. Use the returned
+`index` as `previewCanvasControlOverrides.groupItemIndex`; titles can repeat. The group-items
+array can be omitted when the control is unavailable. The 27.1 RC declares integer entries
+instead.
 
 ## Workflow: Debugger Inspection
 
 Start with a debugger-attached process (`RunProject` with `attachDebugger: true` if needed).
 Use `InvokeDebuggerCommand` with `command: "process status"` to check the process state before
 issuing commands that require it to be stopped, unless that state is already known.
-The 27.2 beta 2 description recommends `p` or `v` for variable inspection. Use `po` or
+From 27.2 beta 2 the tool's description recommends `p` or `v` for variable inspection. Use `po` or
 `expression` when you need function calls, casts, or arithmetic. These are LLDB commands
 inside the `command` parameter, not additional MCP tools.
 
@@ -205,17 +227,13 @@ Query Apple's documentation corpus through MCP.
 ```
 
 **Check that the tool is listed before calling it.** The server advertises
-`capabilities.tools.listChanged: true`. Beta 6 and released 27.0 list all 54 tools with no
-workspace open, including `DocumentationSearch`; 27.1 RC (27A9275) has the same 54 schemas.
-On 27.2 beta 2 (27B5028f), `DocumentationSearch` is absent from both the unapproved/no-workspace
-and approved/with-workspace captures. A shorter list alone does not establish a workspace or
-approval problem. Re-list and check the selected Xcode/build and `xcrun mcp-server status`.
-When the tool is unavailable, use `axiom-apple-docs` for bundled guides and SDK-first Apple
-documentation research.
-
-`GetCodeCoverage` is advertised in the 27.2 beta 2 release notes but absent from both measured
-27B5028f listings. Verify a live callable schema before using it; do not invent its parameters
-from the release-note summary.
+`capabilities.tools.listChanged: true`. The 27.2 RC (27B48), beta 6 and released 27.0 list
+all 54 tools with no workspace open, including `DocumentationSearch`; the 27.1 RC (27A9275)
+lists it too. On 27.2 beta 2 (27B5028f), `DocumentationSearch` is absent from both the
+unapproved/no-workspace and approved/with-workspace captures. A shorter list alone does not
+establish a workspace or approval problem. Re-list and check the selected Xcode/build and
+`xcrun mcp-server status`. When the tool is unavailable, use `axiom-apple-docs` for bundled
+guides and SDK-first Apple documentation research.
 
 `query` is required; `frameworks` is an optional array that scopes the search (all frameworks if omitted). Matching is semantic, not keyword.
 
@@ -233,7 +251,7 @@ from the release-note summary.
 | Search for files | `XcodeGlob` | Pattern matching within the project |
 | Search file contents | `XcodeGrep` | Content search with line numbers |
 | List directory | `XcodeLS` | Directory listing |
-| Create directory | `XcodeMakeDir` | Creates directories |
+| Create directory | `XcodeMakeDir` | Synchronized (buildable) folder by default; `directoryKind: "group"` (27.2 RC) for a classic group. Falls back to what the parent supports |
 
 ### Destructive Operations (Require Confirmation)
 
@@ -320,7 +338,7 @@ After `XcodeUpdate`, the project may need a build to surface new diagnostics. Do
 |---------|---------|
 | "I'll just use xcodebuild" | MCP gives IDE state + navigator diagnostics + previews that CLI doesn't |
 | "Read tool works fine for Xcode files" | `XcodeRead` sees Xcode's project view including generated files and resolved packages |
-| "Skip the identifier, I only have one project" | `workspaceIdentifier` is required even with one workspace open, despite being absent from `required`. Call `XcodeListWorkspaces` first. |
+| "Skip the identifier, I only have one project" | `workspaceIdentifier` is required even with one workspace open, despite being absent from almost every tool's `required` list. Call `XcodeListWorkspaces` first. |
 | "No workspace is open, so MCP is broken" | Normal headless starting state. `XcodeOpenWorkspace` or `XcodeNewProject` — don't ask the user to open Xcode. |
 | "tools/list worked, so I'm approved" | `tools/list` is not gated; only `tools/call` checks approval. Confirm your agent under `Permitted agents` first. |
 | "Run all tests every time" | `RunSomeTests` for iteration, `RunAllTests` for verification — saves minutes per cycle |

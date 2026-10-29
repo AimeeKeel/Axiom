@@ -745,6 +745,25 @@ func startHeading(manager: CLLocationManager, mapView: MKMapView) {
 }
 ```
 
+In SwiftUI, `.locationHeadingAnchor(manager:isEnabled:)` makes a view the heading body (iOS only, from 27.2; unavailable on macOS, watchOS, tvOS and visionOS). The most recent view to claim a manager wins; when it disappears or `isEnabled` turns `false`, the manager has no body until another view claims it. Gate with `#available(iOS 27.2, *)`; on 27.0–27.1, assign `headingBody` to a `UIView` you own (for example through `UIViewRepresentable`).
+
+```swift
+import SwiftUI
+import CoreLocation
+
+@available(iOS 27.2, *)
+struct CompassView: View {
+    @State private var manager = CLLocationManager()
+
+    var body: some View {
+        Image(systemName: "location.north.line")
+            .locationHeadingAnchor(manager: manager)
+            .onAppear { manager.startUpdatingHeading() }
+            .onDisappear { manager.stopUpdatingHeading() }
+    }
+}
+```
+
 ---
 
 ## Troubleshooting Quick Reference
