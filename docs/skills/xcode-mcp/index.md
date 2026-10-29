@@ -46,13 +46,13 @@ Questions you can ask your assistant that will draw from these skills:
 - "Run just the failing test, not the whole suite"
 - "Render the preview for my ContentView"
 - "My MCP tool call just hangs and never returns"
-- "How do I choose a preview destination on Xcode 27.2 beta 2?"
+- "How do I render an interactive preview, or choose a preview destination, on Xcode 27.2?"
 
 ## What These Skills Provide
 
 - **Setup guides** – Five MCP clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI), in attached or headless mode
 - **Workflow patterns** – Workspace bootstrap, iterative BuildFix and TestFix loops, preview verification
-- **Tool references** – The 54-tool 27.1 RC baseline, verified 27.2 beta 2 differences, return schemas, and gotchas
+- **Tool references** – The 54-tool Xcode 27.2 RC schemas, the fields that differ on 27.2 beta 2 and earlier builds, return shapes, and gotchas
 - **Workspace targeting** – Identifier management, and why an identifier is required even with one project open
 - **Troubleshooting** – Hung calls, agent approval, empty tool lists, stale connections
 - **Conflict resolution** – When to use MCP tools, `xcodebuild`, or your assistant's standard file tools
@@ -67,12 +67,12 @@ The `axiom-xcode-mcp` router reads your question and loads one of four specializ
 | `axiom-xcode-mcp` | Router | Routes to the right specialized skill |
 | [`xcode-mcp-setup`](/skills/xcode-mcp/xcode-mcp-setup) | Discipline | Enable, connect, and troubleshoot per client |
 | [`xcode-mcp-tools`](/skills/xcode-mcp/xcode-mcp-tools) | Discipline | Workflow patterns, gotchas, workspace targeting |
-| [`xcode-mcp-ref`](/reference/xcode-mcp-ref) | Reference | Baseline tool schemas and build-specific differences |
+| [`xcode-mcp-ref`](/reference/xcode-mcp-ref) | Reference | Xcode 27.2 RC tool schemas and the fields that differ on other builds |
 | [`axe-ref`](/reference/axe-ref) | Reference | AXe simulator input (`tap`/`type`/`swipe`) |
 
 ## The Xcode MCP Tools
 
-Xcode 27 beta 6 and Xcode 27.0 list all 54 tools with no workspace open, including `DocumentationSearch`, and the 27.1 RC has the same schemas. Xcode 27.2 beta 2 (27B5028f) lists 53 tools, without `DocumentationSearch`, whether or not the agent is approved and a workspace is open; it adds preview-destination fields to `RenderPreview`, and the `GetCodeCoverage` tool its release notes mention is absent. Check the live list before calling a tool: a shorter list alone doesn't mean a workspace or approval problem. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
+The Xcode 27.2 RC (27B48) and Xcode 27.0 list all 54 tools with no workspace open, including `DocumentationSearch`, and the 27.1 RC lists the same 54. Xcode 27.2 beta 2 (27B5028f) lists 53, without `DocumentationSearch`, whether or not the agent is approved and a workspace is open. On 27.2 builds `RenderPreview` can choose a render destination, and on the RC it also renders interactive previews and returns its results under new field names. The `GetCodeCoverage` tool announced in the 27.2 beta 2 and RC release notes is absent through the RC. Check the live tool list before calling a tool, because a shorter list alone doesn't mean a workspace or approval problem. The full per-tool reference is in [Xcode MCP Reference](/reference/xcode-mcp-ref).
 
 | Category | Tools |
 |----------|-------|
@@ -93,13 +93,13 @@ Xcode 27 beta 6 and Xcode 27.0 list all 54 tools with no workspace open, includi
 
 ## Requirements
 
-- **Xcode 26.3+** with MCP enabled in Settings > Intelligence, and a project open
+- **Xcode 26.3+** with MCP enabled in Settings > Intelligence and a project open (attached mode)
 - **Xcode 27** additionally supports headless operation with Xcode closed, after a one-time `sudo xcrun mcp-server enable`
 - **macOS** with Xcode installed
 
 ## Related
 
-- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics (Derived Data, zombie processes) — use it when the problem is the Xcode environment, not MCP
-- [Apple Documentation Access](/skills/integration/apple-docs) – Reads the for-LLM guides bundled inside Xcode — use it for those guides, and when `DocumentationSearch`, which searches Apple's developer documentation, is missing
-- [Build Debugging](/skills/debugging/build-debugging) – Dependency resolution for CocoaPods and SPM — use it for build debugging without MCP
+- [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment-first diagnostics (Derived Data, zombie `xcodebuild` processes) — use it when the problem is the Xcode environment, not MCP
+- [Apple Documentation Access](/skills/integration/apple-docs) – Reads the for-LLM guides bundled inside Xcode — use it for those guides, and as the fallback when `DocumentationSearch` is missing
+- [Build Debugging](/skills/debugging/build-debugging) – Dependency and build-configuration failures (CocoaPods, SPM, framework conflicts) — use it when a build fails for reasons MCP tools can't fix
 - [Device Control](/reference/device-control-ref) – Drive simulators and devices from the command line with `devicectl`, `simctl`, and Axiom's tools, without keeping Xcode open

@@ -5,7 +5,7 @@ description: Setup for Xcode's built-in MCP server — attached and headless mod
 
 # Xcode MCP Setup
 
-Connecting external AI clients (Claude Code, Cursor, Codex, VS Code, Gemini CLI) to Xcode's MCP server, attached to a running Xcode or headless with Xcode closed — plus per-client configuration, the agent approval model, the `run-agent` launch path, and connection troubleshooting.
+Xcode's MCP (Model Context Protocol) server lets an AI client such as Claude Code, Cursor, or Codex build, test, and read your project through Xcode. This skill covers connecting a client to that server, approving the agent, and fixing a connection that fails or hangs.
 
 ## When to Use
 
@@ -15,8 +15,8 @@ Use this skill when:
 - Running MCP in CI, or on a machine where you don't want Xcode open
 - A tool call is rejected with "This agent isn't approved to use Xcode's tools yet" (Xcode 27 beta 6 and later), or hangs forever with no error (beta 5 and earlier)
 - A client connects but `tools/list` returns empty
-- `DocumentationSearch` or the release-noted `GetCodeCoverage` is absent on Xcode 27.2 beta 2
-- mcpbridge reports "Connection refused"
+- `DocumentationSearch` is missing on Xcode 27.2 beta 2, or the `GetCodeCoverage` tool named in the release notes is missing from your tool list
+- `xcrun mcpbridge` reports "Connection refused"
 - Permission prompts reappear every session
 - Targeting one of multiple running Xcode instances
 
@@ -33,17 +33,6 @@ Use this skill when:
 - "How do I export Xcode's built-in skills?"
 - "Is missing DocumentationSearch on Xcode 27.2 beta 2 an approval problem?"
 
-## Two Modes
-
-Which setup you need depends on whether a human is at the keyboard.
-
-| Mode | Needs | Xcode.app running? |
-|------|-------|--------------------|
-| Attached (Xcode 26.3+) | A project open in Xcode, Intelligence toggle on | Yes |
-| Headless (Xcode 27) | A one-time `sudo` opt-in | No |
-
-Attached mode suits a developer already working in Xcode. Headless mode suits CI, agents that shouldn't depend on a GUI session, or anyone who'd rather not keep Xcode open. Either way, clients register the same command, `xcrun mcpbridge`, which is the transport. Behind it, the running Xcode serves attached mode and `xcrun mcp-server` serves headless mode. `mcp-server` doesn't exist before Xcode 27.
-
 ## What This Skill Provides
 
 - **Mode selection** – What attached and headless modes each require, and which to pick
@@ -53,17 +42,28 @@ Attached mode suits a developer already working in Xcode. Headless mode suits CI
 - **Approval and the unapproved-agent trap** – Attached-mode dialogs, headless `sudo` grants, time-boxed trust for unsigned agents, and the `Permitted agents` check; rejected calls from beta 6 on versus silent hangs through beta 5
 - **Multi-Xcode targeting** – The auto-detection fallback, plus `MCP_XCODE_PID`, `MCP_XCODE_SESSION_ID`, and `DEVELOPER_DIR`
 - **Troubleshooting decision tree and table** – Hangs, connection failures, empty tool lists, wrong workspace, repeated prompts
-- **Build-specific tool lists** – On 27.2 beta 2 (27B5028f), an unapproved agent with no workspace and an approved one with a workspace see the same 53 tools, neither including `DocumentationSearch` or `GetCodeCoverage`
+- **Build-specific tool lists** – Why 27.2 beta 2 (27B5028f) lists 53 tools without `DocumentationSearch`, approved or not, while the 27.2 RC (27B48) lists all 54, and why no build through the RC lists `GetCodeCoverage`
 - **Letting Xcode launch the agent** – `xcrun agent` (an alias for `xcrun mcpbridge run-agent`) starts an agent with Xcode's resolved config; `xcrun agent skills export` writes Xcode's 10 built-in skill bundles to disk
-- **Extending Xcode's agent** – Per-agent config folders (Claude Agent, Codex, Gemini) for custom models, MCP servers, and skills, plus Agents → Permissions and Plug-ins
+- **Extending Xcode's agent** – Per-agent config folders (Claude Agent, Codex, Gemini) for custom models, MCP servers, and skills, plus built-in slash commands and the Agents → Permissions and Plug-ins settings
+
+## Two Modes
+
+Which setup you need depends on whether a human is at the keyboard.
+
+| Mode | Needs | Xcode.app running? |
+|------|-------|--------------------|
+| Attached (Xcode 26.3+) | A project open in Xcode, and external agents allowed in Settings → Intelligence | Yes |
+| Headless (Xcode 27) | A one-time `sudo` opt-in | No |
+
+Attached mode suits a developer already working in Xcode. Headless mode suits CI, agents that shouldn't depend on a GUI session, or anyone who'd rather not keep Xcode open. Either way, your client runs the same command, `xcrun mcpbridge`, which relays its requests to whichever service is running: Xcode itself in attached mode, or `xcrun mcp-server` in headless mode. `mcp-server` doesn't exist before Xcode 27.
 
 ## Documentation Scope
 
-This page documents the `xcode-mcp-setup` skill in the `axiom-xcode-mcp` suite. The skill file contains comprehensive guidance your assistant uses when answering your questions, including each client's configuration, the headless permission commands, and the troubleshooting decision tree.
+This page documents the `xcode-mcp-setup` skill in the `axiom-xcode-mcp` suite. The skill file holds the full guidance your assistant draws on, including each client's configuration, the headless permission commands, and the troubleshooting decision tree.
 
 ## Related
 
 - [Xcode MCP Tools](/skills/xcode-mcp/xcode-mcp-tools) – Once setup works, this skill covers workspace bootstrap, workflow patterns, and tool gotchas
-- [Xcode MCP Reference](/reference/xcode-mcp-ref) – Baseline parameters and return shapes, plus verified 27.2 beta 2 differences
+- [Xcode MCP Reference](/reference/xcode-mcp-ref) – Parameters and return shapes for the 27.2 RC, plus the fields that differ on earlier builds
 - [Xcode Debugging](/skills/debugging/xcode-debugging) – Environment diagnostics for problems that aren't MCP-related (Derived Data, zombie xcodebuild processes, simulators)
 - [Device Control](/reference/device-control-ref) – Driving simulators and devices without MCP at all
