@@ -531,6 +531,38 @@ extension View {
 
 UIKit peers (`UINavigationItem.subtitle`, `largeSubtitleView`, and their appearance gotchas) are in axiom-uikit (skills/uikit-modernization.md).
 
+### Title alignment — from iOS 27.2
+
+The bar picks a leading or centered title from context. `.toolbarTitleAlignment(_:)` overrides it (`.automatic`, `.leading`, `.center`); `.center` never falls back to the default alignment (UIKit documents the same case: a centered title that doesn't fit shifts toward the leading edge, then truncates). A custom `.title`-placement item reads `@Environment(\.toolbarTitleAlignment)` to match what the bar resolved (`.automatic` means not resolved).
+
+```swift
+@available(iOS 27.2, *)
+struct LibraryScreen: View {
+    var body: some View {
+        NavigationStack {
+            AlbumList()
+                .navigationTitle("Library")
+                .toolbarTitleAlignment(.center)
+                .toolbar { ToolbarItem(placement: .title) { AlbumTitle() } }
+        }
+    }
+}
+
+@available(iOS 27.2, *)
+struct AlbumTitle: View {
+    @Environment(\.toolbarTitleAlignment) private var alignment
+
+    var body: some View {
+        VStack(alignment: alignment == .center ? .center : .leading) {
+            Text("Library").font(.headline)
+            Text("128 Albums").font(.caption)
+        }
+    }
+}
+```
+
+The `ToolbarTitleAlignment` type and the environment value exist on every platform at 27.2, but the modifier is iOS-only. Shared code compiles against the type and fails on the modifier; gate the modifier with `#if os(iOS)`. UIKit peer: `navigationItem.titleAlignment` in axiom-uikit (skills/uikit-modernization.md).
+
 ---
 
 ## ToolbarItemPlacement Reference

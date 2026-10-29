@@ -241,6 +241,35 @@ Large titles now sit at the top of the scroll view and scroll with the content. 
 
 SwiftUI peers (`.navigationSubtitle` plus the `.title`, `.subtitle`, `.largeTitle`, and `.largeSubtitle` toolbar placements) are in axiom-swiftui (skills/toolbars.md) Pattern 14.
 
+#### Title alignment — from iOS 27.2
+
+The bar picks leading or centered titles from context and the item's `style`. Override it with `navigationItem.titleAlignment` (`.automatic`, `.leading`, `.center`). A custom `titleView` reads what the bar actually used from its own `navigationTitleAlignment` trait (`.automatic` = not resolved yet). Use it to align content within the size the view already reported, never to decide that size:
+
+```swift
+@available(iOS 27.2, *)
+final class AlbumTitleView: UIView {
+    private let stack = UIStackView()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        stack.axis = .vertical
+        addSubview(stack)
+        registerForTraitChanges([UITraitNavigationTitleAlignment.self]) { (self: Self, _: UITraitCollection) in
+            self.stack.alignment = self.traitCollection.navigationTitleAlignment == .center ? .center : .leading
+        }
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+}
+// vc.navigationItem.titleAlignment = .center
+// vc.navigationItem.titleView = AlbumTitleView()
+```
+
+- **Platform split** — the `UINavigationItem.TitleAlignment` type and the trait exist on iOS, tvOS and visionOS 27.2, but the `titleAlignment` property is iOS-only. Shared tvOS/visionOS code compiles against the type and fails on the setter; gate the setter with `#if os(iOS)`.
+- **`.center` never falls back to leading.** A title that can't be centered shifts toward the leading edge to clear trailing bar items, and truncates only when it can shift no further. `.automatic` may choose leading.
+
+SwiftUI peer: `.toolbarTitleAlignment(_:)` in axiom-swiftui (skills/toolbars.md) Pattern 14.
+
 ## New 27 additive APIs
 
 | API | Scope | Use |
@@ -253,7 +282,7 @@ SwiftUI peers (`.navigationSubtitle` plus the `.title`, `.subtitle`, `.largeTitl
 | `CLLocationManager.headingBody` | `iOS27`/`macOS27`/`watchOS27` | replaces the deprecated `headingOrientation` |
 | `UITraitCollection.systemPrefersReducedResourceUsage` (+ `UITraitSystemPrefersReducedResourceUsage`, `.systemPrefersReducedResourceUsageDidChange`) | `iOS27`/`tvOS27`/`visionOS27` | system asks the app to cut discretionary work under resource pressure — react via `registerForTraitChanges`; see `axiom-performance (energy.md)` for the response playbook |
 
-`UIView` conforms to the CoreMotion/CoreLocation Body protocols, so you set `motionManager.deviceMotionBody = view` / `locationManager.headingBody = view` directly.
+`UIView` conforms to the CoreMotion/CoreLocation Body protocols, so you set `motionManager.deviceMotionBody = view` / `locationManager.headingBody = view` directly. SwiftUI got view modifiers for the same job in iOS 27.2 (iOS only): `.deviceMotionAnchor(manager:isEnabled:)`, `.locationHeadingAnchor(manager:isEnabled:)` and, for `NISession.originBody`, `.nearbyInteractionOriginAnchor(session:isEnabled:)` — the most recent view to claim a manager wins.
 
 #### Nav bar minimization in depth `OS27`
 

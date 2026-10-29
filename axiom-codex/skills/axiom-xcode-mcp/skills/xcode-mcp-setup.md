@@ -40,8 +40,8 @@ xcrun mcp-server open /abs/MyApp.xcodeproj   # launch if needed, then open the p
 xcrun mcp-server status               # verify; add --format json for machine-readable output
 ```
 
-`open` requires a project or workspace path. Xcode 27.1 RC has no `mcp-server start`
-command; its `open --help` describes the launch operation. Check the selected Xcode's
+`open` requires a project or workspace path. Through the 27.2 RC (27B48) there is no
+`mcp-server start` command; `open` launches the service if needed. Check the selected Xcode's
 `xcrun mcp-server --help` before using a command from another build.
 
 Winding down:
@@ -175,9 +175,10 @@ sudo xcrun mcp-server approve <id> --for-24-hours   # or --always
 sudo xcrun mcp-server allow-folder /path/to/Projects --for-24-hours
 sudo xcrun mcp-server deny <id>                     # pending request, agent, or folder
 sudo xcrun mcp-server clear-permissions             # revoke everything
+xcrun mcp-server show-logs                          # dump the agent activity log; prints its path
 ```
 
-Get the `<id>` from `xcrun mcp-server status`.
+Get the `<id>` from `xcrun mcp-server status`. `sudo xcrun mcp-server reset-all` also exists: it deletes all stored permission state (every agent and folder grant, yours included) and kills the running server immediately, closing its open workspaces; the next use shows onboarding again. Ask the user before running it.
 
 **An unapproved agent is rejected, not served — and beta 6 changed how loudly.** Through beta 5 this
 was the biggest headless trap: `initialize` succeeded and returned full `serverInfo`, then the first
@@ -199,10 +200,12 @@ successful tool listing is not evidence you can call anything. And **approval is
 act that prompts the user, and it grants the agent *and* that project's folder together.
 
 **A missing tool is not proof of missing approval or a workspace.** On 27.2 beta 2
-(27B5028f), the unapproved/no-workspace and approved/with-workspace listings are identical:
-53 tools, with neither `DocumentationSearch` nor the release-noted `GetCodeCoverage`.
-Compare the selected build's live schema before changing permissions or opening a workspace
-to recover an absent tool. The 27.1 RC (27A9275) lists 54 tools, including `DocumentationSearch`.
+(27B5028f), the unapproved/no-workspace and approved/with-workspace listings were identical:
+53 tools, without `DocumentationSearch`. The 27.2 RC (27B48) lists 54, `DocumentationSearch`
+included, to an unapproved agent with no workspace open; the 27.1 RC (27A9275) also lists 54. The
+release-noted `GetCodeCoverage` is absent from every listing through the 27.2 RC. Compare the
+selected build's live schema before changing permissions or opening a workspace to recover an
+absent tool.
 
 **Before issuing tool calls, confirm your agent appears under `Permitted agents` in
 `xcrun mcp-server status`.** Its output also lists `Permitted folders` and `Open workspaces`:
@@ -346,8 +349,8 @@ digraph troubleshoot {
 | "Connection refused" (attached) | Xcode not running or MCP toggle off | Launch Xcode, enable MCP in Settings > Intelligence |
 | "Connection refused" (headless) | Service not running, or headless never enabled | `xcrun mcp-server status`; then `xcrun mcp-server open <path>`, or `sudo xcrun mcp-server enable` first |
 | tools/list returns empty | Cause not established by the empty list alone | Inspect errors, selected Xcode/build and `xcrun mcp-server status`; re-list before changing permissions or workspaces |
-| `DocumentationSearch` missing from tools/list | Build-specific tool surface: absent on 27.2 beta 2 (27B5028f), even with approval and a workspace; present on beta 6, 27.0 and 27.1 RC | Re-list and verify the selected build; use `axiom-apple-docs` for bundled guides and SDK-first research when absent |
-| `GetCodeCoverage` mentioned in release notes but not listed | Advertised for 27.2 beta 2, but no callable schema in either measured 27B5028f listing | Verify `tools/list` before calling; do not infer parameters or request new permissions from the release note |
+| `DocumentationSearch` missing from tools/list | Build-specific tool surface: absent on 27.2 beta 2 (27B5028f), even with approval and a workspace; present on beta 6, 27.0, 27.1 RC and 27.2 RC | Re-list and verify the selected build; use `axiom-apple-docs` for bundled guides and SDK-first research when absent |
+| `GetCodeCoverage` mentioned in release notes but not listed | Announced in the 27.2 beta 2 and RC release notes, but no callable schema in any listing through the 27.2 RC (27B48) | Verify `tools/list` before calling; do not infer parameters or request new permissions from the release note |
 | "workspaceIdentifier is required" | Identifier omitted — required even with one workspace open | Use the identifier the error itself lists, or call `XcodeListWorkspaces` |
 | Tools target wrong project | Multiple workspaces open | Call `XcodeListWorkspaces`, pass the right `workspaceIdentifier` |
 | Repeated permission prompts | Unsigned agents get time-boxed grants; "Always allow" still expires | Expected — re-approve, or run a signed agent binary |

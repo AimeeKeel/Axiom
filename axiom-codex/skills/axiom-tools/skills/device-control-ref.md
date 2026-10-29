@@ -225,10 +225,10 @@ So, in order, when a capture comes back black:
 1. **Read `device info displays`.** A display reporting `off`/`active: false` is the
    answer — usually that you captured the wrong display on a two-display device.
    **iPhone Duo booted in the last few minutes, and every display reports `activeOn`?** Wait
-   and retry before going further. Apple lists it as a known issue (Xcode 27.2 beta 2 release
-   notes, 187146039): Duo screenshots and recordings may be black for up to a few minutes after
-   the device boots, so a fresh boot can send you chasing a display or `screenConfig` cause
-   that isn't there.
+   and retry before going further. Apple lists it as a known issue (Xcode 27.2 release
+   notes, 187146039): Duo screenshots and recordings may be black for up to a few minutes
+   after the device boots, so a fresh boot can send you chasing a display or `screenConfig`
+   cause that isn't there.
 2. **Read the accessibility tree.** A full tree with black pixels points at the display
    rather than the app; an empty tree points at the app, though it also covers axe failing
    to attach or an accessibility-opaque view, so it narrows rather than concludes.
