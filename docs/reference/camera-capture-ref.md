@@ -17,12 +17,12 @@ Use this reference when:
 - Configuring `AVCaptureMovieFileOutput` for video recording
 - Setting up `AVCaptureVideoPreviewLayer` in SwiftUI or UIKit
 - Looking up device types, discovery sessions, or device configuration APIs
-- Adopting deferred start for fast camera launch (iOS 26 and later)
-- Supporting the Center Stage front camera: dynamic aspect ratio, smart framing, sensor orientation compensation (iPhone 17, iPhone Air, and iPhone 17 Pro; iOS 26 and later)
-- Capturing 24 or 48 megapixel photos with prepared photo settings
-- Recording ProRes with Pro Video Storage (iOS 27)
-- Setting lens aperture, shutter, or ISO priority modes, or tuning exposure signals (iOS 27)
-- Enabling continuous autofocus tracking, low-light video noise reduction, or cinematic video metadata capture (iOS 27)
+- Adopting deferred start for fast camera launch (iOS 26+)
+- Supporting the Center Stage front camera: dynamic aspect ratio, smart framing, sensor orientation compensation (iPhone 17, iPhone Air, and iPhone 17 Pro; iOS 26+)
+- Capturing 24- or 48-megapixel photos with prepared photo settings
+- Recording ProRes with Pro Video Storage (iOS 27+)
+- Setting lens aperture, shutter, or ISO priority modes, or tuning exposure signals (iOS 27+)
+- Enabling continuous autofocus tracking, low-light video noise reduction, or cinematic video metadata capture (iOS 27+)
 - Choosing a camera by direction on iPhone Duo (iOS 27.1+)
 
 ## Example Prompts
@@ -48,32 +48,32 @@ Questions you can ask your assistant that will draw from this reference:
 
 ### Session
 - `AVCaptureSession` presets, configuration, lifecycle, notifications, and interruption reasons
-- Deferred start for fast launch (iOS 26 and later)
+- Deferred start for fast launch (iOS 26+)
 - `hardwareCost` and `systemPressureCost`
 
 ### Devices
 - `AVCaptureDevice` types, discovery sessions, and configuration (focus, exposure, zoom, torch)
 - Switching cameras and camera authorization
-- Lens aperture, exposure priority modes, and exposure signals (iOS 27)
-- Continuous autofocus tracking and focus-tracked metadata objects (iOS 27)
-- Center Stage front camera: dynamic aspect ratio, smart framing monitor, sensor orientation compensation, Center Stage control mode and stabilization (iOS 26 and later)
-- iPhone Duo front cameras: the virtual front camera, the individual inner and outer ultra-wide cameras, choosing a camera by direction, mirroring (iOS 27.1+; build with Xcode 27.1, because Xcode 27.2 beta 2 lacks these types)
+- Lens aperture, exposure priority modes, and exposure signals (iOS 27+)
+- Continuous autofocus tracking and focus-tracked metadata objects (iOS 27+)
+- Center Stage front camera: dynamic aspect ratio, smart framing monitor, sensor orientation compensation, Center Stage control mode and stabilization (iOS 26+)
+- iPhone Duo front cameras: the virtual front camera and mirroring, plus the individual inner and outer ultra-wide cameras and choosing a camera by direction (iOS 27.1+; build these with Xcode 27.1, or the Xcode 27.2 RC or later, because Xcode 27.2 beta 2 lacks their types)
 - `AVCaptureDevice.RotationCoordinator` setup, properties, and KVO observation (iOS 17+)
 
 ### Photo Capture
 - `AVCapturePhotoOutput` configuration, responsive capture APIs, and deferred processing
-- High-resolution capture (24 or 48 MP) with prepared photo settings
+- High-resolution 24- or 48-megapixel capture with prepared photo settings
 - `AVCapturePhotoOutputReadinessCoordinator` delegate and capture readiness states
 - `AVCapturePhotoSettings` formats (JPEG, HEIF, RAW), quality prioritization, flash, Apple ProRAW and HDR, resolution, previews and thumbnails
 - `AVCapturePhotoCaptureDelegate` callbacks, including deferred proxy handling
 
 ### Video Recording
 - `AVCaptureMovieFileOutput` recording, delegate, and state properties
-- Low-light video noise reduction on the connection (iOS 27)
-- Cinematic video metadata capture, with the handoff to the Cinematic framework for editing (iOS 27)
-- Pro Video Storage for deterministic high-data-rate recording (iOS 27)
+- Low-light video noise reduction on the connection (iOS 27+)
+- Cinematic video metadata capture, with the handoff to the Cinematic framework for editing (iOS 27+)
+- Pro Video Storage, which reserves space so high-data-rate recording such as ProRes writes at a steady speed (iOS 27+)
 
-### Other 27-Cycle Additions
+### Other OS 27 Additions
 - `AVCaptureBroadcastVideoOutput` and its `ancillaryDataEncoder`
 - `AVExternalStorageDevice.reasonsNotRecommendedForCaptureUse`
 - External-sync `AVError` cases
@@ -134,4 +134,4 @@ This page documents the `camera-capture-ref` skill (in the `axiom-media` suite),
 
 **Tech Talks**: 111465
 
-**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor
+**Docs**: /avfoundation/avcapturesession, /avfoundation/avcapturedevice, /avfoundation/avcapturephotosettings, /avfoundation/avcapturedevice/rotationcoordinator, /avfoundation/avprovideostorage, /avfoundation/avcapturesmartframingmonitor, /avkit/choosing-a-camera-by-the-direction-it-faces, /avfoundation/registering-a-camera-capture-accessory-on-iphone-duo, /avfoundation/supporting-device-rotation-in-your-camera-app

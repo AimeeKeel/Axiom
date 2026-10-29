@@ -9,10 +9,12 @@ Every guide is a `UILayoutGuide` (iOS 9) — constrain to the one that expresses
 | Guide | Expresses |
 |---|---|
 | `view.safeAreaLayoutGuide` (iOS 11) | keep content out of bars, notches, window controls |
-| `view.layoutMarginsGuide` (iOS 9) | the view's standard content inset |
+| `view.layoutMarginsGuide` (iOS 9) | the view's content inset (zero on a plain view from iOS 27.1 — see below) |
 | `view.readableContentGuide` (iOS 9) | comfortable reading width — **caps line length automatically in wide windows**, the UIKit answer to "max readable content width" |
 | `view.keyboardLayoutGuide` (iOS 15) | tracks the docked keyboard; set `followsUndockedKeyboard = true` to also track undocked/floating iPad keyboards |
 | custom `UILayoutGuide` | invisible spacing/alignment regions — no dummy views |
+
+**Layout margins are zero by default from iOS 27.1.** A plain `UIView`'s default `layoutMargins` are zero; a view controller's root view still gets `systemMinimumLayoutMargins`, which vary by presentation context. A subview that should inherit them needs `preservesSuperviewLayoutMargins = true` (default `false`) — otherwise it doesn't inherit them (Apple's iOS 27.2 release notes, 186294594, which say "on iOS 27.1 and later" without saying whether the SDK you build with matters). When a design depends on an inset and the app also runs below 27.1, set `directionalLayoutMargins` explicitly rather than relying on the default.
 
 Safe-area insets aren't symmetric — on iPhone Duo a vertical bar sits on one side. Constrain each edge to its own guide anchor, and in manual layout use `bounds.inset(by: safeAreaInsets)` rather than doubling one side — see axiom-swiftui (skills/iphone-duo.md).
 

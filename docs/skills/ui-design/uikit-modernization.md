@@ -31,6 +31,7 @@ Use this skill when:
 - "My UIKeyCommand doesn't show in the iPad hold-Command HUD"
 - "How do I put a filter button under my large title with `largeSubtitleView`?"
 - "Why does `largeSubtitleTextAttributes` have no effect?"
+- "How do I center my navigation bar title in UIKit?"
 - "What goes in UIApplicationSceneManifest for a single-window app?"
 - "What should I clean up in sceneDidDisconnect?"
 - "How do I open a new window from UIKit code?"
@@ -51,6 +52,7 @@ Use this skill when:
 - **Orientation as a preference** – lock is a request, not a guarantee, and on iPad `requestGeometryUpdate` is refused outright under the windowing model (the error handler is the only signal)
 - **Desktop-class input** – `UIPointerInteraction` pointer effects, `UIHoverGestureRecognizer`, `UIKeyCommand` with `discoverabilityTitle` for the hold-⌘ shortcut HUD, and Scribble (`UIScribbleInteraction` / `UIIndirectScribbleInteraction`) for Pencil handwriting
 - **Navigation bar titles and subtitles (iOS 26)** – `attributedTitle`, `subtitle`, `attributedSubtitle`, `subtitleView`, and the large-title slots (`largeTitle`, `largeSubtitle`, `largeAttributedSubtitle`, `largeSubtitleView`), which property wins, the two-line `titleView` fallback for apps that keep `UIDesignRequiresCompatibility` (where subtitles don't render), and behavior verified on iOS 26.5 and 27 (ignored `largeSubtitleTextAttributes`, `largeSubtitleView` hidden when the title collapses, empty custom views hiding the text subtitle)
+- **Navigation title alignment (iOS 27.2)** – `navigationItem.titleAlignment`, the `navigationTitleAlignment` trait for custom title views, and gating the iOS-only setter in shared tvOS and visionOS code
 - Apple Intelligence touchpoints (menu "Ask Siri", View Annotations, drag-and-drop resource loading)
 - How to let Xcode 27's app-modernization agent do the mechanical rewrites
 

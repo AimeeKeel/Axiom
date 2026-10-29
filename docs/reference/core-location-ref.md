@@ -83,6 +83,7 @@ Questions you can ask your assistant that will draw from this reference:
 ### Heading
 - Compass heading updates (`CLHeading`)
 - `headingBody`, which replaces the deprecated `headingOrientation` (iOS, macOS, and watchOS 27)
+- `locationHeadingAnchor(manager:isEnabled:)`, the SwiftUI modifier that makes a view the heading body (iOS 27.2)
 
 ### Troubleshooting
 - Quick checks for missing updates, background failures, geofences that don't fire, reduced accuracy, and a location icon that stays on

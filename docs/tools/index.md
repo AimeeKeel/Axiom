@@ -1,6 +1,8 @@
 # Tools
 
-Axiom's command-line helpers, built for Apple Silicon Macs, capture build diagnostics, simulator logs, crash reports and Instruments traces, inspect project structure, and drive and check the simulator's UI and accessibility. Your assistant runs each helper from the installed plugin's `tools/` folder after checking that it works. In Claude Code, Axiom's session hook adds that folder to your `PATH`; in Codex, your assistant calls each helper by its full path; in Pi, you link them yourself ([Pi setup](/start/pi-install#command-line-helpers)). Cursor and other MCP clients reach xclog, xcsym and xcprof as tools of [Axiom's MCP server](/start/mcp-install), and, with a shell, run xcproject with `npx -y -p axiom-mcp xcproject`.
+Axiom's command-line helpers, built for Apple Silicon Macs, capture build diagnostics, simulator logs, crash reports and Instruments traces, inspect project structure, and drive and check the simulator's UI and accessibility.
+
+Your assistant runs each helper from the installed plugin's `tools/` folder after checking that it works. In Claude Code, Axiom's session hook adds that folder to your `PATH`; in Codex, your assistant calls each helper by its full path; in Pi, you link them yourself ([Pi setup](/start/pi-install#command-line-helpers)). Cursor and other MCP clients reach xclog, xcsym and xcprof as tools of [Axiom's MCP server](/start/mcp-install), and, with a shell, run xcproject with `npx -y -p axiom-mcp xcproject`.
 
 ## Bundled tools
 
@@ -13,7 +15,7 @@ Axiom's command-line helpers, built for Apple Silicon Macs, capture build diagno
 | [**xcsym**](/reference/xcsym-ref) | Symbolicate and triage crash reports (`.ips`, MetricKit, legacy `.crash`, `.xccrashpoint`) with automatic dSYM discovery |
 | [**xcui**](/reference/xcui-ref) | Drive and assert on the simulator UI and accessibility tree — wait for elements, check them, toggle accessibility settings, handle system dialogs, verify VoiceOver |
 
-xclog, xcprof, xcsym and xcui emit **compact JSON by default**, which costs your assistant few tokens; pass `--human` for a prose view, or pipe to `jq .` for indented JSON.
+xclog, xcsym, xcui and xcprof's `record`, `compare` and `doctor` emit **compact JSON by default**, which costs your assistant few tokens; pass `--human` for a prose view, or pipe to `jq .` for indented JSON. xcprof's `analyze` defaults to a short markdown report; pass `--json` for JSON.
 
 ## axbuild
 
@@ -28,13 +30,13 @@ pgrep -lx xcodebuild; echo "pgrep exit=$?"
 
 By default axbuild prints compact JSON of at most 8,000 bytes; `--format json` indents it. Check `command` (did the build or test succeed?) and `collection` (did axbuild gather every detail?) separately, because a successful build can still have incomplete collection. `omissions` lists what the summary left out. The complete report is `artifacts.report` inside the `artifacts.run` directory, whose path axbuild prints when it starts. Commands that only print information, such as `xcodebuild -list` or `swift --version`, pass through unchanged.
 
-The saved compiler log is the main source of errors; test results and Swift Testing events add to it. If the command printed terminal color codes, as SwiftPM does even into a file, `artifacts.log` in the report names a copy without them; the exact output stays beside it as `build.log`. Keep the result bundle for attachments, coverage and deeper inspection. If axbuild can't tell exactly how many tests failed, the count is `null`, meaning unknown, not zero. Read an existing saved log or report before rebuilding.
+The saved compiler log is the main source of errors; test results and Swift Testing events add to it. If the command printed terminal color codes, as SwiftPM does even into a file, `artifacts.log` in the report names a copy without them; the exact output stays beside it as `build.log`. Keep the result bundle (`.xcresult`) for attachments, coverage and deeper inspection. If axbuild can't tell exactly how many tests failed, the count is `null`, meaning unknown, not zero. Read an existing saved log or report before rebuilding.
 
 ### Availability
 
-The Claude Code and Codex plugins include axbuild. In Pi, put it on your `PATH`. Cursor and MCP setups don't include it, so your assistant saves build output to a log file and reads that instead.
+The Claude Code and Codex plugins include axbuild. In Pi, put it on your `PATH`. Cursor and other MCP clients don't include it, so your assistant saves build output to a log file and reads that instead.
 
-axbuild has been tested with Xcode 27.2 beta (27B5028f) and Swift 6.4 (6.4.0.34.1). With other toolchains, `swift test` runs without automatic Swift Testing event capture and axbuild relies on the log. Xcode 26 hasn't been tested. axbuild is supported on macOS 26 and newer, like the rest of Axiom.
+axbuild has been tested with Swift 6.4 (6.4.0.34.1, from Xcode 27.0 through 27.2 beta 2) and Swift 6.4.2 (6.4.2.1.9, from the Xcode 27.2 RC, 27B48). With other toolchains, `swift test` runs without automatic Swift Testing event capture and axbuild relies on the log. Xcode 26 hasn't been tested. axbuild is supported on macOS 26 and newer, like the rest of Axiom.
 
 ### Known limitations
 
@@ -68,11 +70,11 @@ Each tool has a slash command that uses it and, where it makes sense, an agent t
 | Tool | Command | Agent |
 |------|---------|-------|
 | axbuild | [`/axiom:fix-build`](/commands/build/fix-build), [`/axiom:run-tests`](/commands/testing/run-tests) | [build-fixer](/agents/build-fixer), [test-runner](/agents/test-runner) |
+| xcproject | [`/axiom:status`](/commands/utility/status), [`/axiom:optimize-build`](/commands/build/optimize-build) | [build-optimizer](/agents/build-optimizer), [spm-conflict-resolver](/agents/spm-conflict-resolver) |
 | xclog | [`/axiom:console`](/commands/debugging/console) | — |
 | xcprof | [`/axiom:profile`](/commands/debugging/profile) | [performance-profiler](/agents/performance-profiler) |
 | xcsym | [`/axiom:analyze-crash`](/commands/debugging/analyze-crash) | [crash-analyzer](/agents/crash-analyzer) |
 | xcui | [`/axiom:ui`](/commands/testing/ui) | [simulator-tester](/agents/simulator-tester) |
-| xcproject | [`/axiom:status`](/commands/utility/status), [`/axiom:optimize-build`](/commands/build/optimize-build) | [build-optimizer](/agents/build-optimizer), [spm-conflict-resolver](/agents/spm-conflict-resolver) |
 
 You rarely call these directly — Axiom's skills and agents invoke them for you. The reference pages linked in [Bundled tools](#bundled-tools) document xclog, xcprof, xcsym and xcui for when you want to drive them yourself; axbuild and xcproject are covered on this page.
 

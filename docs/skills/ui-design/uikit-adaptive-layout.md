@@ -24,7 +24,7 @@ Use this skill when:
 
 ## What This Skill Provides
 
-- **The guide table** – `safeAreaLayoutGuide`, `layoutMarginsGuide`, `readableContentGuide` (automatic readable width in wide windows), `keyboardLayoutGuide`, and custom `UILayoutGuide` spacers
+- **The guide table** – `safeAreaLayoutGuide`, `layoutMarginsGuide`, `readableContentGuide` (automatic readable width in wide windows), `keyboardLayoutGuide`, and custom `UILayoutGuide` spacers, plus the iOS 27.1 change that makes a plain view's default layout margins zero
 - **Width-conditional constraint sets** – pre-built compact/regular arrays activated on `registerForTraitChanges`, with the deactivate-before-activate rule
 - **Self-sizing cells** – the constraint-chain requirement behind `automaticDimension` and `.estimated(_:)` dimensions
 - **Environment-driven compositional layout** – column math from `NSCollectionLayoutEnvironment.container.effectiveContentSize`, the UIKit peer of SwiftUI's adaptive grid

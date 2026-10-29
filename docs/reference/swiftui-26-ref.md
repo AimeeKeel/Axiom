@@ -5,12 +5,13 @@ description: iOS 26 and iOS 27 SwiftUI features — Liquid Glass, @Animatable, W
 
 # SwiftUI 26 Reference
 
-Complete API reference for the SwiftUI features introduced in iOS 26, plus the 27-cycle additions that build on them. Covers Liquid Glass, performance, the `@Animatable` macro, WebView, rich text editing, 3D charts and spatial layout.
+Complete API reference for the SwiftUI features introduced in iOS 26, plus the 27-cycle additions that build on them. Covers Liquid Glass, performance, the `@Animatable` macro, WebView, rich text editing, 3D charts, and spatial layout.
 
 ## When to Use This Reference
 
 Use this reference when you need:
 - Liquid Glass APIs and toolbar patterns
+- Concentric corners that follow their container or the device's screen
 - Toolbar transitions and morphing during navigation
 - Performance improvements in iOS 26
 - The `@Animatable` macro for custom animation
@@ -18,6 +19,8 @@ Use this reference when you need:
 - `TextEditor` with `AttributedString`
 - `Chart3D` for 3D data visualization
 - Spatial layout and scene bridging
+- Tappable links, phone numbers, and addresses in text (27 cycle)
+- A hook for observing `WebView` form submissions (27 cycle)
 - List section index and section margins
 - Slider ticks, safe area bars, or line height control
 - Multi-item drag and drop (27 cycle)
@@ -81,15 +84,15 @@ Questions you can ask your assistant that will draw from this reference:
 - `listSectionMargins(_:_:)` – override a section's margins
 - Platform availability, including where each API is unavailable
 
-### Data Detection (iOS 27)
-- `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable (iOS / watchOS / visionOS 27 only — not macOS or tvOS)
+### Data Detection (27 Cycle)
+- `.dataDetection(_:options:)` – makes links, phone numbers, addresses, dates, and money in a view's text tappable (iOS, watchOS, and visionOS 27 only; not macOS, Mac Catalyst, or tvOS)
 - `DataDetector.MatchType` options from the DataDetection framework (iOS 26+), and `String.dataDetectorMatches(_:options:)` for detection without UI
 
 ### Performance Improvements
 - Lists of 100,000+ items on macOS load 6x faster and update 16x faster, with gains on every platform
 - Fewer dropped frames while scrolling
 - Nested `ScrollView`s with lazy stacks
-- The SwiftUI instrument in Instruments 26 (long view body updates, platform view updates)
+- The new SwiftUI instrument (long view body updates, platform view updates)
 
 ### @Animatable Macro
 - Automatic `animatableData` synthesis
@@ -100,11 +103,11 @@ Questions you can ask your assistant that will draw from this reference:
 - `WebView` for URL content
 - `WebPage` observable model – title, URL, loading progress, back-forward list
 - Navigation and load status handling
-- JavaScript execution, custom user agents and custom URL schemes
+- JavaScript execution, custom user agents, and custom URL schemes
 - Scroll control – `webViewScrollPosition(_:)`, `webViewOnScrollGeometryChange(for:of:action:)`, `webViewScrollInputBehavior(_:for:)` (available on iOS but not callable there — no `ScrollInputKind` value exists)
 - Appearance and gestures – `webViewContentBackground(_:)`, `webViewBackForwardNavigationGestures(_:)`, `webViewMagnificationGestures(_:)`, `webViewLinkPreviews(_:)`, `webViewElementFullscreenBehavior(_:)`, `webViewTextSelection(_:)`, and the macOS-only `webViewContextMenu(_:)`
 - WebView inside NavigationStack – safe-area and toolbar interaction, and why `.ignoresSafeArea()` is wrong there
-- Form-submission hook (iOS/macOS/visionOS 27) – `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest` / `overrideReferrer` / `isGlobalPrivacyControlEnabled` / `allowsJSHandleCreationInPageWorld`
+- Form-submission hook (iOS, macOS, and visionOS 27) – `WebPage.FormInfo`, `willSubmit(formInfo:)`, `NavigationPreferences.alternateRequest` / `overrideReferrer` / `isGlobalPrivacyControlEnabled` / `allowsJSHandleCreationInPageWorld`
 - No `WebView` or `WebPage` on tvOS
 
 ### Rich Text Editing
@@ -113,8 +116,8 @@ Questions you can ask your assistant that will draw from this reference:
 - Paragraph styles, attribute transformations, and constraining which attributes users can apply
 
 ### Drag and Drop (27 Cycle)
-- `draggable(containerItemID:)`, `dragContainer(for:)`, `dragContainerSelection(_:)`
-- `DragConfiguration`, `onDragSessionUpdated`, `dragPreviewsFormation(_:)` (macOS)
+- `draggable(containerItemID:)`, `dragContainer(for:)`, `dragContainerSelection(_:)` (iOS and visionOS 27, macOS 26)
+- `DragConfiguration` (`allowDelete` is macOS-only), `onDragSessionUpdated`, and the macOS-only `dragPreviewsFormation(_:)`
 
 ### 3D Charts
 - `Chart3D` container, with closures or data collections
@@ -137,10 +140,10 @@ Questions you can ask your assistant that will draw from this reference:
 - visionOS widget `levelOfDetail`, Live Activities on CarPlay
 
 ### Migration and Troubleshooting
-- Deprecated `UIRequiresFullScreen`, automatic adoptions, customizations to remove, manual adoptions
+- Deprecated `UIRequiresFullScreen` (iPadOS 26), automatic adoptions, customizations to remove, manual adoptions
 - Fixes for common symptoms, including `.toolbarBackground` ignored on `TabView`
 
-## Key Pattern
+## Key Patterns
 
 ### Liquid Glass Navigation
 
@@ -204,6 +207,8 @@ This page documents the `26-ref` skill (in the `axiom-swiftui` suite), the API c
 - [swiftui-performance](/skills/ui-design/swiftui-performance) – profiling with the SwiftUI instrument
 - [swiftui-debugging](/skills/ui-design/swiftui-debugging) – diagnosing views that don't update
 - [typography-ref](/reference/typography-ref) – the typography system behind `lineHeight`
+- [toolbars](/skills/ui-design/toolbars) – toolbar placements, overflow, and item priority beyond the iOS 26 additions here
+- [iphone-duo](/skills/ui-design/iphone-duo) – how concentric corners fit both of iPhone Duo's displays without per-device radii
 
 ## Resources
 

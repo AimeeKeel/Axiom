@@ -62,6 +62,7 @@ Questions you can ask your assistant that will draw from this skill:
 - Overflow and visibility priority with `ToolbarOverflowMenu`, `.visibilityPriority`, and `.topBarPinnedTrailing` (iOS and visionOS 27; `.visibilityPriority` reaches every platform at 27, and macOS at 26.1)
 - Bar minimization on scroll with `toolbarMinimizationBehavior`, safe-area adjustment, and restoration, per `ToolbarPlacement` (OS 27)
 - `EditButton` and `editMode` wiring for `List` editing, and the direct-manipulation alternatives on the Mac
+- Navigation title alignment (iOS 27.2): `toolbarTitleAlignment(_:)` with `.automatic`, `.leading`, or `.center`, reading the resolved alignment from the environment in a custom title, and the `#if os(iOS)` gate for shared code
 - Navigation subtitles (iOS 26): `navigationSubtitle` and the `.title`, `.subtitle`, `.largeTitle`, and `.largeSubtitle` placements, what happens when the title collapses, alignment, and the fallback for iOS 18 and for apps that keep `UIDesignRequiresCompatibility`, where subtitles don't render
 
 ### HIG Sheet Button Rules

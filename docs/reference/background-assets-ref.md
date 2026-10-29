@@ -38,7 +38,7 @@ Questions developers ask that this reference answers:
 ## What's Covered
 
 - **Two layers** – managed (iOS 26+ via `AssetPackManager` + `StoreDownloaderExtension` / `ManagedDownloaderExtension`) and unmanaged legacy (iOS 16.1+ via `BADownloadManager` + `BAURLDownload` + `BADownloaderExtension`)
-- **`AssetPackManager` actor** – full method surface for fetching metadata, ensuring availability (including the batch `ensureLocalAvailability(of:requireLatestVersions:)`, OS 27), streaming status, reading files, lifecycle (`checkForUpdates`, `remove(assetPackWithID:)`); `Sendable` and `SendableMetatype` conformance
+- **`AssetPackManager` actor** – full method surface for fetching metadata, ensuring availability (including the batch `ensureLocalAvailability(of:requireLatestVersions:)`, OS 27), streaming status, local version and installed size (`localVersion(ofAssetPackWithID:)`, `localSize(ofAssetPackWithID:calculationMethod:)`, OS 27.2), reading files, lifecycle (`checkForUpdates`, `remove(assetPackWithID:)`); `Sendable` and `SendableMetatype` conformance
 - **`AssetPack.Status` option set** – seven membership-tested flags, plus the five stream-only `DownloadStatusUpdate` cases
 - **`StoreDownloaderExtension`** – Apple-hosted recommended path; minimal protocol surface (`shouldDownload(_:)`); composition example for Foundation Models adapter gating
 - **`BADownloaderExtension`** – unmanaged server-hosted; the `downloads(for:manifestURL:extensionInfo:)` scheduling entry point, finished/failed download handlers, auth-challenge handler, `extensionWillTerminate()` (deprecated since iOS 16.4); `nsbackgroundassetsd` execution context. Managed server-hosted packs use `ManagedDownloaderExtension` instead

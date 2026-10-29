@@ -22,7 +22,7 @@ The raw log is the primary compiler source. Xcode test results and validated Swi
 
 `omissions` describes bounded output. Read `artifacts.report` for complete diagnostics and evaluated values; artifact paths resolve relative to the absolute `artifacts.run` directory. Caller-owned result paths are preserved and checked for freshness before ingestion. Temporary storage is available for follow-up until the operating system clears it.
 
-Missing optional stream support produces a collection issue and retains log diagnostics. Version 0 and 6.3.0 event schemas have decoders; automatic event flags require an exact validated toolchain mapping. Xcode 27.2 beta build 27B5028f / Swift 6.4 build 6.4.0.34.1 is currently validated. Xcode 26 remains an untested compatibility gap.
+Missing optional stream support produces a collection issue and retains log diagnostics. Version 0 and 6.3.0 event schemas have decoders; automatic event flags require an exact validated toolchain mapping. Swift 6.4 build 6.4.0.34.1 (Xcode 27.0 through 27.2 beta 2, 27B5028f) and Swift 6.4.2 build 6.4.2.1.9 (Xcode 27.2 RC, 27B48) are currently validated. Xcode 26 remains an untested compatibility gap.
 
 Capability probes have five-second limits, result readers 30 seconds, and post-command collection a shared 60 seconds; writing the clean copy precedes that limit. Teardown allows five seconds before KILL and one further second to reap owned children. These limits apply to collection; build/test duration is unrestricted.
 
