@@ -508,8 +508,8 @@
     },
     {
       "path": "skills/axiom-apple-docs/SKILL.md",
-      "sha256": "89fc3f5fa71e1b288a21496a049131383b1fa50e90776a1a9e199b4a487fbe22",
-      "bytes": 10753
+      "sha256": "ead24073795fb1be2ab26c229d45a183aa00595c50cc2892c84b94a3d0996d66",
+      "bytes": 10844
     },
     {
       "path": "skills/axiom-apple-docs/skills/apple-docs-research.md",
@@ -1939,7 +1939,7 @@
   ],
   "totals": {
     "files": 387,
-    "bytes": 7988577
+    "bytes": 7988668
   },
   "excludedMirrors": 30,
   "classes": {
